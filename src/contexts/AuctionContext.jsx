@@ -35,6 +35,15 @@ const AuctionContext = createContext();
 
 export const useAuction = () => useContext(AuctionContext);
 
+const shuffleArray = (array) => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
 export const AuctionProvider = ({ children }) => {
   const { user } = useAuth();
   const [currentAuction, setCurrentAuction] = useState(null);
@@ -65,10 +74,20 @@ export const AuctionProvider = ({ children }) => {
   
   const startAuction = async (roomId) => {
     const roomRef = doc(db, 'auctions', roomId);
+    
+    // Generate randomized order within sets
+    const sets = [...new Set(IPL_PLAYERS.map(p => p.set))];
+    let randomizedIndices = [];
+    sets.forEach(setName => {
+      const setIndices = IPL_PLAYERS.map((p, i) => p.set === setName ? i : -1).filter(i => i !== -1);
+      randomizedIndices = [...randomizedIndices, ...shuffleArray(setIndices)];
+    });
+
     await updateDoc(roomRef, { 
       status: 'active',
+      playerOrder: randomizedIndices,
       currentAuction: {
-        playerId: IPL_PLAYERS[0].id, // Start with first player
+        playerId: IPL_PLAYERS[randomizedIndices[0]].id,
         currentBid: 0,
         highBidderId: '',
         highBidderName: 'No Bids',
@@ -77,6 +96,7 @@ export const AuctionProvider = ({ children }) => {
       },
       logs: arrayUnion(`Auction has started!`)
     });
+    
     // Add to messages collection for chronological sorting
     const msgRef = collection(db, 'auctions', roomId, 'messages');
     await addDoc(msgRef, {
@@ -88,13 +108,13 @@ export const AuctionProvider = ({ children }) => {
     });
   };
 
-const endPlayerAuction = async (roomId) => {
+  const endPlayerAuction = async (roomId) => {
     const roomRef = doc(db, 'auctions', roomId);
     const roomSnap = await getDoc(roomRef);
     if (!roomSnap.exists()) return;
     
     const data = roomSnap.data();
-    const { currentAuction } = data;
+    const { currentAuction, playerOrder } = data;
     const player = IPL_PLAYERS.find(p => p.id === currentAuction.playerId);
     
     const teamDetails = TEAMS.find(t => t.id === currentAuction.highBidderTeamId);
@@ -107,7 +127,7 @@ const endPlayerAuction = async (roomId) => {
       logs: arrayUnion(`${player.name} ${isSold ? `SOLD to ${teamDetails?.name || currentAuction.highBidderName} for ₹${currentAuction.currentBid} Cr` : 'UNSOLD'}`)
     };
 
-    // Add to messages collection for chronological sorting
+    // Chronological Message...
     const msgRef = collection(db, 'auctions', roomId, 'messages');
     await addDoc(msgRef, {
       userId: 'system',
@@ -118,20 +138,14 @@ const endPlayerAuction = async (roomId) => {
     });
 
     if (isSold) {
-      // 1. Update the global 'players' array
       const updatedPlayers = data.players.map(p => {
         if (p.id === currentAuction.highBidderId) {
-          return {
-            ...p,
-            spent: (p.spent || 0) + currentAuction.currentBid,
-            squadCount: (p.squadCount || 0) + 1
-          };
+          return { ...p, spent: (p.spent || 0) + currentAuction.currentBid, squadCount: (p.squadCount || 0) + 1 };
         }
         return p;
       });
       updateData.players = updatedPlayers;
 
-      // 2. Update the specific 'teams' document
       const teamRef = doc(db, 'teams', `${roomId}_${currentAuction.highBidderId}`);
       const teamSnap = await getDoc(teamRef);
       if (teamSnap.exists()) {
@@ -143,17 +157,19 @@ const endPlayerAuction = async (roomId) => {
       }
     }
 
-    // INSTANTLY update the room status so the UI animation fires immediately
     await updateDoc(roomRef, updateData);
 
-    // Wait dynamically before loading next player: shorter for UNSOLD, longer for SOLD
     const waitTime = isSold ? 5000 : 2000;
     
     setTimeout(async () => {
-      const currentIndex = IPL_PLAYERS.findIndex(p => p.id === currentAuction.playerId);
-      const nextPlayer = IPL_PLAYERS[currentIndex + 1];
+      // Find next index from the randomized order
+      const currentPlayerId = currentAuction.playerId;
+      const order = playerOrder || Array.from({ length: IPL_PLAYERS.length }, (_, i) => i);
+      const currentPlayerIndexInOrder = order.findIndex(idx => IPL_PLAYERS[idx] && IPL_PLAYERS[idx].id === currentPlayerId);
+      const nextIndexInOrder = order[currentPlayerIndexInOrder + 1];
       
-      if (nextPlayer) {
+      if (nextIndexInOrder !== undefined) {
+        const nextPlayer = IPL_PLAYERS[nextIndexInOrder];
         await updateDoc(roomRef, {
           currentAuction: {
             playerId: nextPlayer.id,
@@ -165,9 +181,7 @@ const endPlayerAuction = async (roomId) => {
           }
         });
       } else {
-        await updateDoc(roomRef, {
-          status: 'completed'
-        });
+        await updateDoc(roomRef, { status: 'completed' });
       }
     }, waitTime); 
   };

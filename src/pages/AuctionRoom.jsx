@@ -4,7 +4,6 @@ import { useAuction } from '../contexts/AuctionContext';
 import { useAuth } from '../contexts/AuthContext';
 import { IPL_PLAYERS } from '../data/players';
 import {
-   Trophy,
    Wallet,
    History,
    Star,
@@ -34,6 +33,8 @@ import {
    Play,
    Gavel,
    ShieldAlert,
+   Trophy,
+   Clock,
    X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -74,6 +75,7 @@ const AuctionRoom = () => {
    const [error, setError] = useState('');
    const [copied, setCopied] = useState(false);
    const [showPlayersOverlay, setShowPlayersOverlay] = useState(false);
+   const [activeOverlayTab, setActiveOverlayTab] = useState('upcoming');
    const [searchQuery, setSearchQuery] = useState('');
    const [selectedTeamId, setSelectedTeamId] = useState(null);
    const [mobileTab, setMobileTab] = useState('arena'); // arena, squad, activity
@@ -110,6 +112,53 @@ const AuctionRoom = () => {
    const currentBid = currentAuction?.currentAuction?.currentBid || 0;
    const increment = currentBid < 2 ? 0.1 : currentBid < 5 ? 0.25 : 0.5;
    const nextBidAmount = currentBid === 0 ? (currentPlayer?.basePrice || 0) : currentBid + increment;
+   const playerCategories = useMemo(() => {
+      const soldIds = new Set();
+      const soldWithBids = {};
+      roomTeams.forEach(t => {
+         (t.squad || []).forEach(p => {
+            soldIds.add(p.id);
+            soldWithBids[p.id] = { bid: p.bid, teamId: t.teamId };
+         });
+      });
+
+      const playerOrder = currentAuction?.playerOrder || Array.from({ length: IPL_PLAYERS.length }, (_, i) => i);
+      const currentPlayerId = currentAuction?.currentAuction?.playerId;
+      const currentPlayerIndexInOrder = playerOrder.indexOf(IPL_PLAYERS.findIndex(p => p.id === currentPlayerId));
+
+      const upcoming = [];
+      const sold = [];
+      const unsold = [];
+
+      playerOrder.forEach((idx, i) => {
+         const p = IPL_PLAYERS[idx];
+         if (soldIds.has(p.id)) {
+            sold.push({ ...p, ...soldWithBids[p.id] });
+         } else if (i < currentPlayerIndexInOrder) {
+            unsold.push(p);
+         } else {
+            upcoming.push(p);
+         }
+      });
+
+      return { upcoming, sold, unsold };
+   }, [currentAuction?.playerOrder, currentAuction?.currentAuction?.playerId, roomTeams]);
+
+   const filteredPlayers = useMemo(() => {
+      let players = [];
+      if (activeOverlayTab === 'upcoming') players = playerCategories.upcoming;
+      else if (activeOverlayTab === 'sold') players = playerCategories.sold;
+      else if (activeOverlayTab === 'unsold') players = playerCategories.unsold;
+      else if (activeOverlayTab === 'leaderboard') {
+         players = [...playerCategories.sold].sort((a, b) => b.bid - a.bid);
+      }
+
+      return players.filter(p =>
+         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+         p.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+         (p.set || '').toLowerCase().includes(searchQuery.toLowerCase())
+      );
+   }, [activeOverlayTab, playerCategories, searchQuery]);
 
    useEffect(() => {
       if (!id || !user?.uid) return;
@@ -1035,72 +1084,127 @@ const AuctionRoom = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl p-6 md:p-12 flex flex-col items-center"
+                  className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl p-4 md:p-8 flex flex-col items-center"
                >
-                  <div className="w-full max-w-6xl flex items-center justify-between mb-8">
-                     <div className="flex items-center gap-6">
-                        <h2 className="text-2xl md:text-4xl font-black italic tracking-tight uppercase">Mega Auction Roster</h2>
-                        <div className="bg-white/5 border border-white/10 rounded-2xl hidden md:flex items-center px-4 py-2 gap-3 w-80">
-                           <Search size={16} className="text-gray-500" />
+                  <div className="w-full max-w-7xl flex flex-col gap-6 h-full">
+                     {/* Header */}
+                     <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                           <div className="w-10 h-10 bg-yellow-500 rounded-xl flex items-center justify-center text-black">
+                              <LayoutGrid size={24} />
+                           </div>
+                           <div>
+                              <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight">Mega Auction Roster</h2>
+                              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-none">Complete Player Inventory</p>
+                           </div>
+                        </div>
+                        <button
+                           onClick={() => setShowPlayersOverlay(false)}
+                           className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-gray-400 hover:bg-red-500 hover:text-white transition-all cursor-pointer"
+                        >
+                           <X size={20} />
+                        </button>
+                     </div>
+
+                     {/* Tab Stats Row - MATCHING IMAGE */}
+                     <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar border-b border-white/5">
+                        {[
+                           { id: 'upcoming', label: 'Upcoming', icon: Clock, count: playerCategories.upcoming.length, color: 'text-yellow-500' },
+                           { id: 'sold', label: 'Sold', icon: CheckCircle2, count: playerCategories.sold.length, color: 'text-green-500' },
+                           { id: 'unsold', label: 'Unsold', icon: XCircle, count: playerCategories.unsold.length, color: 'text-red-500' },
+                           { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, count: playerCategories.sold.length, color: 'text-blue-500' }
+                        ].map((tab) => (
+                           <button
+                              key={tab.id}
+                              onClick={() => setActiveOverlayTab(tab.id)}
+                              className={`flex items-center gap-3 px-6 py-4 rounded-2xl transition-all whitespace-nowrap group ${
+                                 activeOverlayTab === tab.id 
+                                    ? 'bg-white/10 text-white shadow-[0_4px_20px_rgba(0,0,0,0.3)]' 
+                                    : 'text-gray-500 hover:text-gray-300'
+                              }`}
+                           >
+                              <tab.icon size={18} />
+                              <span className="text-sm font-black uppercase tracking-widest">{tab.label}</span>
+                              <div className={`px-2 py-0.5 rounded-md text-[10px] font-black ${
+                                 activeOverlayTab === tab.id ? 'bg-yellow-500 text-black' : 'bg-white/5 group-hover:bg-white/10'
+                              }`}>
+                                 {tab.count}
+                              </div>
+                           </button>
+                        ))}
+
+                        {/* Search in Tabs row */}
+                        <div className="ml-auto bg-white/5 border border-white/10 rounded-xl hidden md:flex items-center px-4 py-2 gap-3 w-64 lg:w-80">
+                           <Search size={14} className="text-gray-500" />
                            <input
                               type="text"
-                              placeholder="Search by name, role, set..."
-                              className="bg-transparent border-none outline-none focus:ring-0 text-sm font-black placeholder:text-gray-700 w-full"
+                              placeholder="Find player..."
+                              className="bg-transparent border-none outline-none focus:ring-0 text-xs font-bold placeholder:text-gray-700 w-full"
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
                            />
                         </div>
                      </div>
-                     <button
-                        onClick={() => setShowPlayersOverlay(false)}
-                        className="w-10 h-10 md:w-14 md:h-14 bg-white/5 rounded-2xl flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-all cursor-pointer"
-                     >
-                        <XCircle size={24} />
-                     </button>
-                  </div>
 
-                  <div className="w-full max-w-6xl flex-1 overflow-y-auto custom-scrollbar pr-4 pb-12">
-                     {Object.entries(
-                        IPL_PLAYERS.reduce((acc, p) => {
-                           const s = p.set || 'Other';
-                           if (!acc[s]) acc[s] = [];
-                           acc[s].push(p);
-                           return acc;
-                        }, {})
-                     ).map(([setName, players]) => {
-                        const filtered = players.filter(p =>
-                           p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           p.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           setName.toLowerCase().includes(searchQuery.toLowerCase())
-                        );
-
-                        if (filtered.length === 0) return null;
-
-                        return (
-                           <div key={setName} className="mb-12">
-                              <div className="flex items-center gap-4 mb-6">
-                                 <div className="h-px flex-1 bg-white/10" />
-                                 <h3 className="text-sm md:text-xl font-black italic uppercase text-gray-500 tracking-[0.3em]">{setName}</h3>
-                                 <span className="bg-white/5 text-[10px] px-2 py-0.5 rounded font-black">{filtered.length} Players</span>
-                                 <div className="h-px flex-1 bg-white/10" />
-                              </div>
-                              <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
-                                 {filtered.map(p => (
-                                    <div key={p.id} className="bg-white/5 border border-white/5 p-3 md:p-4 rounded-3xl hover:bg-white/10 transition-all group flex flex-col items-center text-center">
-                                       <div className="w-16 h-16 md:w-20 md:h-20 bg-white/10 rounded-2xl overflow-hidden mb-3 border border-white/10 group-hover:scale-110 transition-transform">
-                                          <img src={p.image} className="w-full h-full object-contain" alt={p.name} />
-                                       </div>
-                                       <h5 className="text-[10px] md:text-xs font-black truncate w-full">{p.name}</h5>
-                                       <span className="text-[8px] md:text-[9px] font-bold text-gray-500 uppercase italic mb-2">{p.role}</span>
-                                       <div className="bg-black/40 px-3 py-1 rounded-full border border-white/5 mt-auto">
-                                          <span className="text-[9px] md:text-[10px] font-black text-yellow-500">₹{p.basePrice.toFixed(2)} Cr</span>
-                                       </div>
+                     {/* Content */}
+                     <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-12">
+                        {activeOverlayTab === 'leaderboard' ? (
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {filteredPlayers.map((p, idx) => (
+                                 <div key={p.id} className="bg-white/5 border border-white/5 p-4 rounded-3xl flex items-center gap-4 group">
+                                    <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center font-black text-xl italic text-gray-500">
+                                       #{idx + 1}
                                     </div>
-                                 ))}
-                              </div>
+                                    <div className="w-14 h-14 bg-white/10 rounded-2xl overflow-hidden p-1">
+                                       <img src={p.image} className="w-full h-full object-contain" alt={p.name} />
+                                    </div>
+                                    <div className="flex-1">
+                                       <h5 className="text-sm font-black uppercase mb-0.5">{p.name}</h5>
+                                       <p className="text-[10px] font-bold text-gray-500 uppercase">{p.teamId} • {p.role}</p>
+                                    </div>
+                                    <div className="text-right">
+                                       <div className="text-yellow-500 font-black text-lg">₹{p.bid.toFixed(2)} Cr</div>
+                                       <div className="text-[9px] font-bold text-gray-600 uppercase">Top Bid</div>
+                                    </div>
+                                 </div>
+                              ))}
                            </div>
-                        );
-                     })}
+                        ) : (
+                           <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3 md:gap-4">
+                              {filteredPlayers.map(p => (
+                                 <div key={p.id} className="bg-white/5 border border-white/5 p-3 rounded-2xl hover:bg-white/10 transition-all group relative">
+                                    {p.country !== 'India' && (
+                                       <div className="absolute top-2 right-2 text-blue-500">
+                                          <Wifi size={10} className="rotate-45" />
+                                       </div>
+                                    )}
+                                    <div className="w-16 h-16 md:w-20 md:h-20 bg-white/10 rounded-2xl overflow-hidden mb-3 border border-white/10 group-hover:scale-105 transition-transform mx-auto">
+                                       <img src={p.image} className="w-full h-full object-contain" alt={p.name} />
+                                    </div>
+                                    <div className="text-center">
+                                       <h5 className="text-[10px] md:text-xs font-black truncate mb-0.5">{p.name}</h5>
+                                       <span className="text-[8px] md:text-[9px] font-bold text-gray-500 uppercase italic block mb-2">{p.role}</span>
+                                       
+                                       {activeOverlayTab === 'sold' ? (
+                                          <div className="bg-green-500/10 border border-green-500/20 px-2 py-1 rounded-lg">
+                                             <div className="text-[10px] font-black text-green-500">₹{p.bid.toFixed(2)} Cr</div>
+                                             <div className="text-[8px] font-black text-green-800 uppercase leading-none">{p.teamId}</div>
+                                          </div>
+                                       ) : activeOverlayTab === 'unsold' ? (
+                                          <div className="bg-red-500/10 border border-red-500/20 px-2 py-1 rounded-lg">
+                                             <span className="text-[10px] font-black text-red-500 uppercase">Unsold</span>
+                                          </div>
+                                       ) : (
+                                          <div className="bg-black/40 px-3 py-1 rounded-lg border border-white/5">
+                                             <span className="text-[10px] font-black text-yellow-500">₹{p.basePrice.toFixed(2)} Cr</span>
+                                          </div>
+                                       )}
+                                    </div>
+                                 </div>
+                              ))}
+                           </div>
+                        )}
+                     </div>
                   </div>
                </motion.div>
             )}
