@@ -760,7 +760,7 @@ const AuctionRoom = () => {
                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
                            animate={{ opacity: 1, scale: 1, y: 0 }}
                            exit={{ opacity: 0, scale: 1.1 }}
-                           className={`w-full max-w-2xl mx-auto min-h-[400px] flex flex-col items-center justify-center rounded-[2.5rem] overflow-hidden relative shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/20 ${currentAuction.currentAuction.status === 'sold' ? 'bg-[#004ba0]' : 'bg-red-950'}`}
+                           className={`w-full max-w-2xl mx-auto min-h-[400px] flex flex-col items-center justify-center rounded-[2.5rem] overflow-hidden relative shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/20 ${currentAuction.currentAuction.status === 'sold' ? 'bg-green-500' : 'bg-red-950'}`}
                         >
                            {/* Side Confetti on SOLD */}
                            {currentAuction.currentAuction.status === 'sold' && (
