@@ -60,7 +60,7 @@ const Lobby = () => {
   }, [id]);
 
   useEffect(() => {
-    if (currentAuction?.status === 'bidding') {
+    if (currentAuction?.status === 'active') {
       navigate(`/auction/${id}`);
     }
   }, [currentAuction?.status]);
