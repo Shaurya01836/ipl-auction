@@ -5,9 +5,9 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/1667.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/c/ca/Aiden_Markram_%28cropped%29.jpg",
     "stats": {
       "matches": 138,
       "runs": 4425,
@@ -21,9 +21,9 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/5444.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/3/36/Prime_Minister_Of_Bharat_Shri_Narendra_Damodardas_Modi_with_Arshdeep_Singh_Family_%28Cropped%29.jpg",
     "stats": {
       "matches": 141,
       "wickets": 164,
@@ -36,9 +36,9 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/1113.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/a/ad/Axar_Patel_in_PMO_New_Delhi.jpg",
     "stats": {
       "matches": 108,
       "runs": 6721,
@@ -54,9 +54,9 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/116.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Bhuvneshwar_kumar_With_Rashid_Zirak_%28Bhuvneshwar_Kumar_cropped%29.jpg/951px-Bhuvneshwar_kumar_With_Rashid_Zirak_%28Bhuvneshwar_Kumar_cropped%29.jpg",
     "stats": {
       "matches": 215,
       "wickets": 156,
@@ -69,9 +69,9 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/2740.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/f/fc/Hardik_Pandya_in_PMO_New_Delhi.jpg",
     "stats": {
       "matches": 131,
       "runs": 4648,
@@ -87,7 +87,7 @@ export const IPL_PLAYERS = [
     "role": "Wicket-Keeper",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
     "image": "https://www.iplt20.com/assets/images/players/main/3869.png",
     "stats": {
@@ -103,9 +103,9 @@ export const IPL_PLAYERS = [
     "role": "Wicket-Keeper",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=IshanKishan&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/d7/Ishan_Kishan.jpg",
     "stats": {
       "matches": 237,
       "runs": 5267,
@@ -119,9 +119,9 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=JofraArcher&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/de/Jofra_Archer_%283%29.jpg",
     "stats": {
       "matches": 148,
       "wickets": 160,
@@ -134,9 +134,9 @@ export const IPL_PLAYERS = [
     "role": "Wicket-Keeper",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/509.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/0/01/Jos_Buttler_in_2023.jpg",
     "stats": {
       "matches": 107,
       "runs": 5795,
@@ -150,9 +150,9 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=JoshHazlewood&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/d9/2018_Josh_Hazlewood_%28cropped%29.jpg",
     "stats": {
       "matches": 238,
       "wickets": 154,
@@ -165,9 +165,9 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/1664.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/0/08/Rabada.jpg",
     "stats": {
       "matches": 191,
       "wickets": 116,
@@ -180,9 +180,9 @@ export const IPL_PLAYERS = [
     "role": "Wicket-Keeper",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/1125.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/69/KL_Rahul_at_Femina_Miss_India_2018_Grand_Finale_%28cropped%29.jpg",
     "stats": {
       "matches": 155,
       "runs": 5881,
@@ -196,9 +196,9 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/261.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/9/91/Kuldeep_Yadav_in_PMO_New_Delhi.jpg",
     "stats": {
       "matches": 130,
       "wickets": 185,
@@ -211,9 +211,9 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/3729.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/1d/Lockie_Ferguson.jpg",
     "stats": {
       "matches": 204,
       "wickets": 188,
@@ -226,9 +226,9 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/20574.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/4/41/Marco_Jansen_2022.jpg",
     "stats": {
       "matches": 228,
       "runs": 3262,
@@ -244,9 +244,9 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/940.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/2/2b/2018.01.21.15.22.25-Stoinis_%2839081521620%29.jpg",
     "stats": {
       "matches": 118,
       "runs": 6490,
@@ -262,9 +262,9 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/221.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/73/Mitchell_Marsh.jpg",
     "stats": {
       "matches": 232,
       "runs": 4179,
@@ -280,9 +280,9 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/1215.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/3/38/Mitchell_Starc_2023.jpg",
     "stats": {
       "matches": 185,
       "wickets": 131,
@@ -295,9 +295,9 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=MohammadShami&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/0/01/Mohammed_Shami_Arjuna_Award_%28cropped%29.jpg",
     "stats": {
       "matches": 124,
       "wickets": 172,
@@ -310,9 +310,9 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/3840.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/da/Prime_Minister_Of_Bharat_Shri_Narendra_Damodardas_Modi_with_Mohammad_Siraj_%28cropped%29.jpg",
     "stats": {
       "matches": 198,
       "wickets": 200,
@@ -325,9 +325,9 @@ export const IPL_PLAYERS = [
     "role": "Wicket-Keeper",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/1.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/d5/MS_Dhoni_%28Prabhav_%2723_-_RiGI_2023%29.jpg",
     "stats": {
       "matches": 216,
       "runs": 3707,
@@ -341,7 +341,7 @@ export const IPL_PLAYERS = [
     "role": "Wicket-Keeper",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
     "image": "https://www.iplt20.com/assets/images/players/main/3347.png",
     "stats": {
@@ -357,7 +357,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=NoorAhmad&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -372,9 +372,9 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/488.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/69/Pat_Cummins_fielding_Ashes_2021_%28cropped%29.jpg",
     "stats": {
       "matches": 221,
       "wickets": 193,
@@ -387,9 +387,9 @@ export const IPL_PLAYERS = [
     "role": "Wicket-Keeper",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/20592.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/4/4b/2_02_Phil_Salt.jpg",
     "stats": {
       "matches": 169,
       "runs": 4776,
@@ -403,9 +403,9 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/2885.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/71/Rashid_Khan.jpg",
     "stats": {
       "matches": 182,
       "wickets": 197,
@@ -418,9 +418,9 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/9.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/2/2c/PM_Shri_Narendra_Modi_with_Ravindra_Jadeja_%28Cropped%29.jpg",
     "stats": {
       "matches": 210,
       "runs": 4332,
@@ -436,7 +436,7 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
     "image": "https://www.iplt20.com/assets/images/players/main/3830.png",
     "stats": {
@@ -452,9 +452,9 @@ export const IPL_PLAYERS = [
     "role": "Wicket-Keeper",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/2972.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/77/Rishabh_Pant.jpg",
     "stats": {
       "matches": 223,
       "runs": 6887,
@@ -468,9 +468,9 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/107.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/1e/Prime_Minister_Of_Bharat_Shri_Narendra_Damodardas_Modi_with_Shri_Rohit_Gurunath_Sharma_%28Cropped%29.jpg",
     "stats": {
       "matches": 234,
       "runs": 4021,
@@ -484,9 +484,9 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/5443.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/2/27/Ruturaj_Gaikwad.jpeg",
     "stats": {
       "matches": 156,
       "runs": 4233,
@@ -500,9 +500,9 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/5432.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/1b/The_Prime_Minister_welcomes_the_World_Cup_winning_cricketers_%2852764650104%29_-_Sam_Curran_%28cropped%29.jpg",
     "stats": {
       "matches": 169,
       "runs": 5430,
@@ -518,9 +518,9 @@ export const IPL_PLAYERS = [
     "role": "Wicket-Keeper",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/258.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/70/Sanju_Samson_in_PMO_New_Delhi.jpg",
     "stats": {
       "matches": 187,
       "runs": 3888,
@@ -534,9 +534,9 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=ShimronHetmyer&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/8/8a/Shimron_Hetmyer.jpg",
     "stats": {
       "matches": 168,
       "runs": 6345,
@@ -550,9 +550,9 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/5431.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/63/Shivam_Dube_in_PMO_New_Delhi.jpg",
     "stats": {
       "matches": 177,
       "runs": 5919,
@@ -568,9 +568,9 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/1563.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/a/ae/Shreyas_Iyer_snapped_at_the_airport_%28Cropped%29.jpg",
     "stats": {
       "matches": 167,
       "runs": 4301,
@@ -584,9 +584,9 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/3761.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/3/34/Shubman_Gill_2023_%28cropped%29.jpg",
     "stats": {
       "matches": 101,
       "runs": 5842,
@@ -600,9 +600,9 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/203.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/e/ee/Sunil_Narine.jpg",
     "stats": {
       "matches": 110,
       "runs": 5664,
@@ -618,13 +618,13 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
     "image": "https://www.iplt20.com/assets/images/players/main/20570.png",
     "stats": {
       "matches": 229,
       "runs": 4468,
-      "sr": 140.0,
+      "sr": 140,
       "avg": 40.55
     }
   },
@@ -634,9 +634,9 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/1120.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/0/05/Travis_Head_bowling_at_Perth_Stadium%2C_First_Test_Australia_versus_West_Indies%2C_2_December_2022_03_%28cropped%29.jpg",
     "stats": {
       "matches": 222,
       "runs": 3214,
@@ -650,9 +650,9 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/969.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/2/23/2018.02.03.22.23.14-AUSvNZL_T20_AUS_innings%2C_SCG_%2839533156665%29.jpg",
     "stats": {
       "matches": 183,
       "wickets": 142,
@@ -665,7 +665,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
     "image": "https://www.iplt20.com/assets/images/players/main/5437.png",
     "stats": {
@@ -680,9 +680,9 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/164.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/9/9b/Virat_Kohli_in_PMO_New_Delhi.jpg",
     "stats": {
       "matches": 153,
       "runs": 6887,
@@ -696,9 +696,9 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/20585.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/4/4d/4_20_Will_Jacks.jpg",
     "stats": {
       "matches": 191,
       "runs": 5013,
@@ -714,9 +714,9 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/5447.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/71/Yashasvi_Jaiswal_in_PMO_New_Delhi.jpg",
     "stats": {
       "matches": 141,
       "runs": 4597,
@@ -730,9 +730,9 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/111.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/df/Yuzvendra_Chahal_in_PMO_New_Delhi.jpg",
     "stats": {
       "matches": 249,
       "wickets": 193,
@@ -745,13 +745,13 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "Set 1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=AbhishekSharma&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
       "matches": 126,
       "runs": 1792,
-      "sr": 154.0,
+      "sr": 154,
       "avg": 44.89,
       "wickets": 103,
       "econ": 8.44
@@ -763,7 +763,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "Set 1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=AveshKhan&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -778,7 +778,7 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "Set 1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=AzmatullahOmarzai&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -796,9 +796,9 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "Set 1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=DeepakChahar&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/7b/Deepak_Chahar.jpg",
     "stats": {
       "matches": 80,
       "wickets": 69,
@@ -811,7 +811,7 @@ export const IPL_PLAYERS = [
     "role": "Wicket-Keeper",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "Set 1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=DhruvJurel&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -827,7 +827,7 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "Set 1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=GlennPhillips&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -843,7 +843,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "Set 1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=HarshalPatel&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -858,9 +858,9 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "Set 1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=KhaleelAhmed&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/f/f8/2_29_Khaleel_mugshot.jpg",
     "stats": {
       "matches": 58,
       "wickets": 84,
@@ -873,9 +873,9 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "Set 1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=KrunalPandya&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/b/b3/Krunal_Pandya_and_Hardik_Pandya_%28cropped%29_%28cropped%29.jpg",
     "stats": {
       "matches": 105,
       "runs": 1092,
@@ -891,7 +891,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "Set 1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=MayankYadav&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -906,7 +906,7 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "Set 1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=MitchellSantner&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -924,7 +924,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "Set 1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=PrasidhKrishna&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -939,7 +939,7 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "Set 1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=RajatPatidar&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -955,7 +955,7 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "Set 1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=RiyanParag&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -973,7 +973,7 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "Set 1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=RomarioShepherd&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -991,7 +991,7 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "Set 1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=RovmanPowell&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -1007,7 +1007,7 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "Set 1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=SaiSudharsan&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -1023,7 +1023,7 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "Set 1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=ShardulThakur&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -1032,7 +1032,7 @@ export const IPL_PLAYERS = [
       "sr": 130.82,
       "avg": 39.52,
       "wickets": 67,
-      "econ": 8.0
+      "econ": 8
     }
   },
   {
@@ -1041,7 +1041,7 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "Set 1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=SherfaneRutherford&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -1057,9 +1057,9 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "Set 1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=T.Natarajan&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/65/T_Natarajan.jpg",
     "stats": {
       "matches": 109,
       "wickets": 95,
@@ -1072,7 +1072,7 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "Set 1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=TilakVarma&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -1088,7 +1088,7 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "Set 1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=TristanStubbs&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -1104,9 +1104,9 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "Set 1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=WashingtonSundar&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/2/23/Washington_Sundar.jpg",
     "stats": {
       "matches": 52,
       "runs": 1553,
@@ -1139,7 +1139,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 0.75,
     "set": "Set 2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=BrydonCarse&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/a/ad/1_24_Brydon_Carse.jpg",
     "stats": {
       "matches": 19,
       "runs": 969,
@@ -1224,7 +1224,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 0.75,
     "set": "Set 2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=JamieOverton&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/b/ba/Jamie_Overton.jpg",
     "stats": {
       "matches": 60,
       "runs": 815,
@@ -1242,7 +1242,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.75,
     "set": "Set 2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=JaydevUnadkat&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/7f/2_09_Jaydev_Unadkat_1.jpg",
     "stats": {
       "matches": 53,
       "wickets": 29,
@@ -1401,7 +1401,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 0.75,
     "set": "Set 2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=RyanRickelton&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/9/9b/2_40_Ryan_Rickleton.jpg",
     "stats": {
       "matches": 70,
       "runs": 403,
@@ -1432,7 +1432,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.5,
     "set": "Set 3",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=AjinkyaRahane&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/9/96/Ajinkya_Rahane_2016_%28cropped%29.jpg",
     "stats": {
       "matches": 58,
       "runs": 102,
@@ -1448,7 +1448,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.5,
     "set": "Set 3",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=DevduttPadikkal&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/8/8e/Devdutt_Paddikal_%28cropped%29.jpg",
     "stats": {
       "matches": 54,
       "runs": 884,
@@ -1479,7 +1479,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.5,
     "set": "Set 3",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=IshantSharma&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/0/06/Ishant_Sharma_4.jpg",
     "stats": {
       "matches": 75,
       "wickets": 56,
@@ -1528,7 +1528,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.5,
     "set": "Set 3",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=KarunNair&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Karun_nair_With_Rashid_Zirak.jpg",
     "stats": {
       "matches": 78,
       "runs": 219,
@@ -1544,7 +1544,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.5,
     "set": "Set 3",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=ManishPandey&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Manish_Pandey_%283%29.jpg",
     "stats": {
       "matches": 70,
       "runs": 888,
@@ -1560,7 +1560,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.5,
     "set": "Set 3",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=NitishKumarReddy&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/1e/Nitish_Kumar_Reddy_BGT_2024_%28cropped%29_2.jpg",
     "stats": {
       "matches": 79,
       "runs": 771,
@@ -1608,7 +1608,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.5,
     "set": "Set 3",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=ShahbazAhmed&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/0/05/Shabaz_Ahmed_Senior.jpg",
     "stats": {
       "matches": 69,
       "runs": 370,
@@ -1626,7 +1626,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.5,
     "set": "Set 3",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=ShahrukhKhan&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/6e/Shah_Rukh_Khan_graces_the_launch_of_the_new_Santro.jpg",
     "stats": {
       "matches": 19,
       "runs": 389,
@@ -1642,7 +1642,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.5,
     "set": "Set 3",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=TusharDeshpande&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/e/e0/Tushar_Deshpande.jpg",
     "stats": {
       "matches": 23,
       "wickets": 28,
@@ -1657,7 +1657,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.5,
     "set": "Set 3",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=UmranMalik&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/9/93/Umran_Malik_in_GGM.jpg",
     "stats": {
       "matches": 12,
       "wickets": 60,
@@ -1705,7 +1705,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "Set 4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=AbhinandanSingh&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/en/thumb/d/d4/Royal_Challengers_Bengaluru_Logo.svg/330px-Royal_Challengers_Bengaluru_Logo.svg.png",
     "stats": {
       "matches": 78,
       "wickets": 24,
@@ -1850,7 +1850,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "Set 4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=ArjunTendulkar&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/0/05/Sachin_Tendulkar_family_%28cropped%29.jpg",
     "stats": {
       "matches": 35,
       "runs": 890,
@@ -2078,7 +2078,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "Set 4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=HimmatSingh&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Himmat_Singh_statue.jpg/3096px-Himmat_Singh_statue.jpg",
     "stats": {
       "matches": 37,
       "runs": 410,
@@ -2178,7 +2178,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 11,
       "wickets": 39,
-      "econ": 8.0
+      "econ": 8
     }
   },
   {
@@ -2447,7 +2447,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "Set 4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=RasikhSalam&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/d0/RasikhSalam.jpg",
     "stats": {
       "matches": 62,
       "wickets": 17,
@@ -2478,7 +2478,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "Set 4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=SameerRizvi&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Sameer_rizvi_With_Rashid_Zirak.jpg/6000px-Sameer_rizvi_With_Rashid_Zirak.jpg",
     "stats": {
       "matches": 64,
       "runs": 505,
@@ -2514,7 +2514,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "Set 4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=ShreyasGopal&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/12/Rajasthan_Royals_player_Shreyas_Gopal_in_a_post-match_presentation_during_2019_Indian_Premier_League.png",
     "stats": {
       "matches": 10,
       "wickets": 55,
@@ -2579,7 +2579,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "Set 4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=SuyashSharma&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/a/ae/Suyash_Sharma.png",
     "stats": {
       "matches": 58,
       "wickets": 60,
@@ -2659,7 +2659,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "Set 4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=VaibhavSuryavanshi&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/68/Vaibhav_Suryavanshi_meets_PM_Modi.jpg",
     "stats": {
       "matches": 67,
       "runs": 869,
@@ -2770,9 +2770,9 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "BA1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=CameronGreen&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/b/b4/Cameron_Green_fielding_Boxing_Day_2022_%28cropped%29.jpg",
     "stats": {
       "matches": 236,
       "runs": 3387,
@@ -2786,7 +2786,7 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "BA1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=DavidMiller&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -2802,7 +2802,7 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "BA1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=DevonConway&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -2818,9 +2818,9 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "BA1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=JakeFraser-McGurk&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/8/89/Jake_Fraser_McGurk_2024_clip.png",
     "stats": {
       "matches": 167,
       "runs": 3517,
@@ -2836,7 +2836,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.75,
     "set": "BA1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=PrithviShaw&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/a/a8/Prithvi_shaw.png",
     "stats": {
       "matches": 53,
       "runs": 860,
@@ -2852,7 +2852,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.75,
     "set": "BA1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=SarfarazKhan&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/79/Sarfaraz_Khan.jpg",
     "stats": {
       "matches": 51,
       "runs": 427,
@@ -2884,7 +2884,7 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "AL1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=GusAtkinson&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -2902,7 +2902,7 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "AL1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=LiamLivingstone&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -2920,7 +2920,7 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "AL1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=RachinRavindra&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -2938,9 +2938,9 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "AL1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=VenkateshIyer&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Venkatesh_Iyer.png",
     "stats": {
       "matches": 239,
       "runs": 4555,
@@ -2956,9 +2956,9 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "AL1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=WaninduHasaranga&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Waniya.jpg",
     "stats": {
       "matches": 187,
       "runs": 3686,
@@ -2974,13 +2974,13 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "AL1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=WiaanMulder&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
       "matches": 103,
       "runs": 2243,
-      "sr": 147.0,
+      "sr": 147,
       "avg": 41.86,
       "wickets": 95,
       "econ": 7.35
@@ -2992,9 +2992,9 @@ export const IPL_PLAYERS = [
     "role": "Wicket-Keeper",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "WK1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=BenDuckett&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/f/fd/3_31_Another_four_%28Ben_Duckett_cropped%29.jpg",
     "stats": {
       "matches": 210,
       "runs": 4028,
@@ -3008,7 +3008,7 @@ export const IPL_PLAYERS = [
     "role": "Wicket-Keeper",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "WK1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=FinnAllen&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -3024,7 +3024,7 @@ export const IPL_PLAYERS = [
     "role": "Wicket-Keeper",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "WK1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=JamieSmith&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -3040,9 +3040,9 @@ export const IPL_PLAYERS = [
     "role": "Wicket-Keeper",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "WK1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=JonnyBairstow&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/4/49/2_05_Bairstow_out.jpg",
     "stats": {
       "matches": 65,
       "runs": 2273,
@@ -3072,9 +3072,9 @@ export const IPL_PLAYERS = [
     "role": "Wicket-Keeper",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "WK1",
-    "image": "https://www.iplt20.com/assets/images/players/main/834.png",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/67/QUINTON_DE_KOCK_%2815681398316%29.jpg",
     "stats": {
       "matches": 137,
       "runs": 1412,
@@ -3104,7 +3104,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "FA1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=AkashDeep&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -3119,7 +3119,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "FA1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=AnrichNortje&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -3134,9 +3134,9 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "FA1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=FazalhaqFarooqi&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/2/2a/Fazalhaq_Farooqi.jpg",
     "stats": {
       "matches": 121,
       "wickets": 120,
@@ -3149,7 +3149,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "FA1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=GeraldCoetzee&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -3164,9 +3164,9 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "FA1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=JacobDuffy&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/e/ee/1_01_Jacob_Duffy.jpg",
     "stats": {
       "matches": 238,
       "wickets": 172,
@@ -3179,7 +3179,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "FA1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=MatheeshaPathirana&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -3194,7 +3194,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "FA1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=MattHenry&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -3239,7 +3239,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "SP1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=AkealHosein&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -3254,7 +3254,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "SP1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=MaheeshTheekshana&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -3269,7 +3269,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "SP1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=MujeebRahman&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -3284,7 +3284,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "SP1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=RahulChahar&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -3299,7 +3299,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "SP1",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=RaviBishnoi&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -3364,7 +3364,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "UBA1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=AnmolpreetSingh&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/d4/Anmolpreet_Singh_2.jpg",
     "stats": {
       "matches": 76,
       "runs": 977,
@@ -3520,7 +3520,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "UAL1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=SanvirSingh&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/f/fd/Sanvir_Singh.jpg",
     "stats": {
       "matches": 35,
       "runs": 160,
@@ -3574,7 +3574,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "UAL1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=VijayShankar&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/c/cb/Vijay_Shankar_4.jpg",
     "stats": {
       "matches": 70,
       "runs": 772,
@@ -3656,7 +3656,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "UWK1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=TusharRaheja&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/4/4e/Tushar_Raheja.JPG",
     "stats": {
       "matches": 71,
       "runs": 193,
@@ -3793,7 +3793,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.5,
     "set": "USP1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=KarnSharma&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/2/28/Karn_Sharma_2015.jpg",
     "stats": {
       "matches": 43,
       "wickets": 8,
@@ -3868,7 +3868,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 0.3,
     "set": "USP1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=WahidullahZadran&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Flag_of_Afghanistan_%282013%E2%80%932021%29.svg/960px-Flag_of_Afghanistan_%282013%E2%80%932021%29.svg.png",
     "stats": {
       "matches": 20,
       "wickets": 41,
@@ -3960,9 +3960,9 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "BA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=ReezaHendricks&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/3/37/REEZA_HENDRICKS_%2815519916117%29.jpg",
     "stats": {
       "matches": 63,
       "runs": 1411,
@@ -3992,7 +3992,7 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "BA2",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=SteveSmith&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -4024,7 +4024,7 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "AL2",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=BenDwarshuis&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -4042,9 +4042,9 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "AL2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=DanielSams&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/1c/Daniel_Sams_Batting.jpg",
     "stats": {
       "matches": 97,
       "runs": 1359,
@@ -4060,7 +4060,7 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "AL2",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=DarylMitchell&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -4096,9 +4096,9 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "AL2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=JasonHolder&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/de/Jason_Holder.jpg",
     "stats": {
       "matches": 158,
       "runs": 3237,
@@ -4132,7 +4132,7 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "AL2",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=MichaelBracewell&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -4150,9 +4150,9 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "AL2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=SeanAbbott&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/b/bd/Sean_Abbott_playing_for_the_Sydney_Sixers.jpg",
     "stats": {
       "matches": 126,
       "runs": 4201,
@@ -4218,9 +4218,9 @@ export const IPL_PLAYERS = [
     "role": "Wicket-Keeper",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "WK2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=JoshInglis&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/9/95/Josh_Inglis_The_Test_clip.png",
     "stats": {
       "matches": 215,
       "runs": 5048,
@@ -4250,7 +4250,7 @@ export const IPL_PLAYERS = [
     "role": "Wicket-Keeper",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "WK2",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=KusalPerera&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -4266,9 +4266,9 @@ export const IPL_PLAYERS = [
     "role": "Wicket-Keeper",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "WK2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=ShaiHope&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Shai_Hope.jpg",
     "stats": {
       "matches": 158,
       "runs": 3346,
@@ -4298,7 +4298,7 @@ export const IPL_PLAYERS = [
     "role": "Wicket-Keeper",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "WK2",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=TomBanton&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -4314,7 +4314,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "FA2",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=AdamMilne&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -4359,9 +4359,9 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "FA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=KyleJamieson&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/d9/Kyle_Jamieson_2015_%28cropped%29.jpg",
     "stats": {
       "matches": 109,
       "wickets": 155,
@@ -4374,9 +4374,9 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "FA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=LungisaniNgidi&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/2/2b/Lungi_Ngidi_2022.jpg",
     "stats": {
       "matches": 126,
       "wickets": 104,
@@ -4389,9 +4389,9 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "FA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=MustafizurRahman&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/a/a3/Mustafizur_Rahman_%284%29_%28cropped%29.jpg",
     "stats": {
       "matches": 180,
       "wickets": 144,
@@ -4406,7 +4406,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 1.5,
     "set": "FA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=SaqibMahmood&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/e/e1/2_20_Saqib_Mahmood.jpg",
     "stats": {
       "matches": 51,
       "wickets": 66,
@@ -4421,7 +4421,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 1.5,
     "set": "FA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=UmeshYadav&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Umesh_Yadav.jpg",
     "stats": {
       "matches": 123,
       "wickets": 73,
@@ -4434,7 +4434,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "FA2",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=WilliamOrourke&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -4449,7 +4449,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "SP2",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=MohammadWaqarSalamkheil&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -4481,7 +4481,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 0.75,
     "set": "SP2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=RishadHossain&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/8/84/Rishad_Hossain%2C_2025-02-08_Fortune_Barishal_BPL_2025_Champions_Trophy_Presentation_Dhaka_%28PID-0003668%29_%28cropped%29.jpg",
     "stats": {
       "matches": 34,
       "wickets": 42,
@@ -4575,7 +4575,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "UBA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=MananVohra&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/f/f1/MananVohra_Magic_book_of_record.jpg",
     "stats": {
       "matches": 78,
       "runs": 387,
@@ -4765,11 +4765,11 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "UAL2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=SuyashPrabhudessai&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Suyash_Prabhudessai.jpg",
     "stats": {
       "matches": 59,
       "runs": 840,
-      "sr": 140.0,
+      "sr": 140,
       "avg": 33.86,
       "wickets": 59,
       "econ": 7.45
@@ -4783,7 +4783,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "UAL2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=VickyOstwal&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/en/thumb/4/41/Flag_of_India.svg/960px-Flag_of_India.svg.png",
     "stats": {
       "matches": 50,
       "runs": 367,
@@ -5097,7 +5097,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "USP2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=HimanshuSharma&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/a/a8/HImanshu_sharma_bollywood_film_writer.jpg",
     "stats": {
       "matches": 73,
       "wickets": 36,
@@ -5157,7 +5157,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "USP2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=MuruganAshwin&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/f/f7/M_Ashwin.jpg",
     "stats": {
       "matches": 70,
       "wickets": 57,
@@ -5217,7 +5217,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 1.25,
     "set": "AL3",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=BeauWebster&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/c/cd/2_10_Beau_Webster_mugshot.jpg",
     "stats": {
       "matches": 101,
       "runs": 1932,
@@ -5251,7 +5251,7 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "AL3",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=CooperConnolly&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -5269,9 +5269,9 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "AL3",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=DanielLawrence&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/d5/4_34_Dan_Lawrence_mugshot.jpg",
     "stats": {
       "matches": 186,
       "runs": 5279,
@@ -5287,7 +5287,7 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "AL3",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=GeorgeLinde&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -5305,9 +5305,9 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "AL3",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=GulbadinNaib&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/f/fc/Gulbadin_Naib.jpg",
     "stats": {
       "matches": 118,
       "runs": 2562,
@@ -5325,7 +5325,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 0.75,
     "set": "AL3",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=RehanAhmed&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/4/43/3_57_Rehan_Ahmed.jpg",
     "stats": {
       "matches": 55,
       "runs": 723,
@@ -5341,7 +5341,7 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "AL3",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=TomCurran&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -5359,7 +5359,7 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "AL3",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=WilliamSutherland&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -5377,7 +5377,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "FA3",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=AlzarriJoseph&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -5394,7 +5394,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 1.5,
     "set": "FA3",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=JhyeRichardson&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/e/ed/20251224_Jhye_Richardson_01.jpg",
     "stats": {
       "matches": 94,
       "wickets": 72,
@@ -5437,7 +5437,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "FA3",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=NaveenUlHaq&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -5454,7 +5454,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 0.75,
     "set": "FA3",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=RichardGleeson&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/3/30/Richard_Gleeson.jpg",
     "stats": {
       "matches": 18,
       "wickets": 55,
@@ -5499,7 +5499,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 0.75,
     "set": "FA3",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=TaskinAhmed&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/4/43/Taskin_Ahmed_in_2024_%28cropped%29.jpg",
     "stats": {
       "matches": 67,
       "wickets": 41,
@@ -5918,7 +5918,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 0.4,
     "set": "UWK3",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=TomMoores&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/a/a5/3_41_Matthew_Revis_Tom_Moores_%28cropped%29.jpg",
     "stats": {
       "matches": 73,
       "runs": 455,
@@ -5950,7 +5950,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "UFA3",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=AbhilashShetty&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/7d/Abhilash_shetty_2021.jpg",
     "stats": {
       "matches": 74,
       "wickets": 59,
@@ -6070,7 +6070,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 0.3,
     "set": "UFA3",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=TristanLuus&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/2/2b/SA20Logo.png",
     "stats": {
       "matches": 18,
       "wickets": 40,
@@ -6085,7 +6085,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "USP3",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=AmitKumar&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/5/53/Amit_Kumar_attending_Durga_Puja_in_2021.jpg",
     "stats": {
       "matches": 63,
       "wickets": 16,
@@ -6218,7 +6218,7 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "AL4",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=CharithAsalanka&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -6254,7 +6254,7 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "AL4",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=DwainePretorius&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -6292,7 +6292,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 1.25,
     "set": "AL4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=KyleMayers&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/78/Kyle_Mayers_batting_at_Perth_Stadium%2C_First_Test_Australia_versus_West_Indies%2C_2_December_2022_08.jpg",
     "stats": {
       "matches": 65,
       "runs": 3000,
@@ -6308,7 +6308,7 @@ export const IPL_PLAYERS = [
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 2.0,
+    "basePrice": 2,
     "set": "AL4",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=LiamDawson&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -6364,7 +6364,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 1.25,
     "set": "AL4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=RostonChase&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/12/Roston_Chase_batting_at_Perth_Stadium%2C_First_Test_Australia_versus_West_Indies%2C_2_December_2022_09.jpg",
     "stats": {
       "matches": 124,
       "runs": 2384,
@@ -6382,7 +6382,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 1.5,
     "set": "FA4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=JasonBehrendorff&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/8/80/Jason_behrendorff.jpg",
     "stats": {
       "matches": 59,
       "wickets": 95,
@@ -6395,7 +6395,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
-    "basePrice": 1.0,
+    "basePrice": 1,
     "set": "FA4",
     "image": "https://api.dicebear.com/7.x/initials/svg?seed=JoshuaTongue&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
     "stats": {
@@ -6412,7 +6412,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 0.75,
     "set": "FA4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=MatthewPotts&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/a/a8/2_14_Matthew_Potts_mugshot.jpg",
     "stats": {
       "matches": 28,
       "wickets": 51,
@@ -6427,7 +6427,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 0.75,
     "set": "FA4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=NahidRana&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Nahid_Rana_2024_%28cropped%29.jpg",
     "stats": {
       "matches": 65,
       "wickets": 53,
@@ -6442,7 +6442,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 1.25,
     "set": "FA4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=OllyStone&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Olly_Stone.jpg",
     "stats": {
       "matches": 122,
       "wickets": 63,
@@ -6472,7 +6472,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 0.75,
     "set": "FA4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=TanzimHasanSakib&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Tanzim_Hasan_Sakib_in_2024.jpg",
     "stats": {
       "matches": 56,
       "wickets": 14,
@@ -6519,7 +6519,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "UBA4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=AyazKhan&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/8/88/Ayaz_Khan.jpg",
     "stats": {
       "matches": 10,
       "runs": 277,
@@ -6551,7 +6551,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "UBA4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=MilesHammond&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/b/b5/3_19_Hammond_drives.jpg",
     "stats": {
       "matches": 32,
       "runs": 528,
@@ -7065,7 +7065,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 0.75,
     "set": "FA5",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=BillyStanlake&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/5/5d/2018.02.03.19.47.57-Billy_Stanlake_%2840429028151%29.jpg",
     "stats": {
       "matches": 80,
       "wickets": 49,
@@ -7252,7 +7252,7 @@ export const IPL_PLAYERS = [
       "sr": 141.15,
       "avg": 37.59,
       "wickets": 12,
-      "econ": 8.0
+      "econ": 8
     }
   },
   {
@@ -7299,7 +7299,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "UAL5",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=SiddharthYadav&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/8/8f/Elvish_Yadav_snapped_at_BiggBoss_OTT2_Party_%28cropped%29.jpg",
     "stats": {
       "matches": 17,
       "runs": 295,
@@ -7470,7 +7470,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "UAL6",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=BalKrishna&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/a/ad/Indian_-_Cosmic_Narayana_%28Vishnu%29_as_Infant_Krishna_-_Walters_543081.jpg",
     "stats": {
       "matches": 57,
       "runs": 936,

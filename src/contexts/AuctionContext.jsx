@@ -77,9 +77,18 @@ export const AuctionProvider = ({ children }) => {
       },
       logs: arrayUnion(`Auction has started!`)
     });
+    // Add to messages collection for chronological sorting
+    const msgRef = collection(db, 'auctions', roomId, 'messages');
+    await addDoc(msgRef, {
+      userId: 'system',
+      userName: 'System',
+      text: `Auction has started!`,
+      type: 'log',
+      timestamp: serverTimestamp()
+    });
   };
 
-  const endPlayerAuction = async (roomId) => {
+const endPlayerAuction = async (roomId) => {
     const roomRef = doc(db, 'auctions', roomId);
     const roomSnap = await getDoc(roomRef);
     if (!roomSnap.exists()) return;
@@ -89,13 +98,27 @@ export const AuctionProvider = ({ children }) => {
     const player = IPL_PLAYERS.find(p => p.id === currentAuction.playerId);
     
     const teamDetails = TEAMS.find(t => t.id === currentAuction.highBidderTeamId);
+    
+    // Check if player actually received a bid
+    const isSold = !!currentAuction.highBidderId;
+    
     let updateData = {
-      'currentAuction.status': 'sold',
-      logs: arrayUnion(`${player.name} ${currentAuction.highBidderId ? `SOLD to ${teamDetails?.name || currentAuction.highBidderName} for ₹${currentAuction.currentBid} Cr` : 'UNSOLD'}`)
+      'currentAuction.status': isSold ? 'sold' : 'unsold',
+      logs: arrayUnion(`${player.name} ${isSold ? `SOLD to ${teamDetails?.name || currentAuction.highBidderName} for ₹${currentAuction.currentBid} Cr` : 'UNSOLD'}`)
     };
 
-    if (currentAuction.highBidderId) {
-      // 1. Update the global 'players' array in 'auctions' for the leaderboard
+    // Add to messages collection for chronological sorting
+    const msgRef = collection(db, 'auctions', roomId, 'messages');
+    await addDoc(msgRef, {
+      userId: 'system',
+      userName: 'System',
+      text: `${player.name} ${isSold ? `SOLD to ${teamDetails?.name || currentAuction.highBidderName} for ₹${currentAuction.currentBid} Cr` : 'UNSOLD'}`,
+      type: 'log',
+      timestamp: serverTimestamp()
+    });
+
+    if (isSold) {
+      // 1. Update the global 'players' array
       const updatedPlayers = data.players.map(p => {
         if (p.id === currentAuction.highBidderId) {
           return {
@@ -108,25 +131,30 @@ export const AuctionProvider = ({ children }) => {
       });
       updateData.players = updatedPlayers;
 
-      // 2. Update the specific 'teams' document for the winner
+      // 2. Update the specific 'teams' document
       const teamRef = doc(db, 'teams', `${roomId}_${currentAuction.highBidderId}`);
       const teamSnap = await getDoc(teamRef);
       if (teamSnap.exists()) {
         const teamData = teamSnap.data();
         await updateDoc(teamRef, {
           budgetRemaining: teamData.budgetRemaining - currentAuction.currentBid,
-          squad: arrayUnion(currentAuction.playerId)
+          squad: arrayUnion({ id: currentAuction.playerId, bid: currentAuction.currentBid })
         });
       }
     }
 
+    // INSTANTLY update the room status so the UI animation fires immediately
+    await updateDoc(roomRef, updateData);
+
+    // Wait dynamically before loading next player: shorter for UNSOLD, longer for SOLD
+    const waitTime = isSold ? 5000 : 2000;
+    
     setTimeout(async () => {
       const currentIndex = IPL_PLAYERS.findIndex(p => p.id === currentAuction.playerId);
       const nextPlayer = IPL_PLAYERS[currentIndex + 1];
       
       if (nextPlayer) {
         await updateDoc(roomRef, {
-          ...updateData,
           currentAuction: {
             playerId: nextPlayer.id,
             currentBid: 0,
@@ -138,13 +166,11 @@ export const AuctionProvider = ({ children }) => {
         });
       } else {
         await updateDoc(roomRef, {
-          ...updateData,
           status: 'completed'
         });
       }
-    }, 3000);
+    }, waitTime); 
   };
-
   // Join an existing room in DB
   const joinRoomDb = async (roomId, userId, playerDetails) => {
     const roomRef = doc(db, 'auctions', roomId);
@@ -261,6 +287,16 @@ export const AuctionProvider = ({ children }) => {
       'currentAuction.timerEndsAt': Date.now() + (currentAuction?.settings?.bidTimer || 10) * 1000,
       logs: arrayUnion(`New bid: ₹${amount.toFixed(2)} Cr by ${user.displayName || 'Manager'}`)
     });
+
+    // Add to messages collection for chronological sorting
+    const msgRef = collection(db, 'auctions', currentAuction.id, 'messages');
+    await addDoc(msgRef, {
+      userId: 'system',
+      userName: 'System',
+      text: `New bid: ₹${amount.toFixed(2)} Cr by ${user.displayName || 'Manager'} (${team.teamId})`,
+      type: 'log',
+      timestamp: serverTimestamp()
+    });
   };
 
   const updatePlayerTeam = async (roomId, userId, newTeamId) => {
@@ -299,6 +335,16 @@ export const AuctionProvider = ({ children }) => {
       'currentAuction.status': 'paused',
       logs: arrayUnion(`Auction PAUSED by Admin`)
     });
+    
+    // Add to messages collection for chronological sorting
+    const msgRef = collection(db, 'auctions', roomId, 'messages');
+    await addDoc(msgRef, {
+      userId: 'system',
+      userName: 'System',
+      text: `Auction PAUSED by Admin`,
+      type: 'log',
+      timestamp: serverTimestamp()
+    });
   };
 
   const resumeAuction = async (roomId) => {
@@ -312,6 +358,16 @@ export const AuctionProvider = ({ children }) => {
       'currentAuction.timerEndsAt': Date.now() + (data.settings?.bidTimer || 10) * 1000,
       logs: arrayUnion(`Auction RESUMED by Admin`)
     });
+
+    // Add to messages collection for chronological sorting
+    const msgRef = collection(db, 'auctions', roomId, 'messages');
+    await addDoc(msgRef, {
+      userId: 'system',
+      userName: 'System',
+      text: `Auction RESUMED by Admin`,
+      type: 'log',
+      timestamp: serverTimestamp()
+    });
   };
 
   const endAuction = async (roomId) => {
@@ -319,6 +375,16 @@ export const AuctionProvider = ({ children }) => {
     await updateDoc(roomRef, { 
       status: 'completed',
       logs: arrayUnion(`Auction COMPLETED by Admin`)
+    });
+
+    // Add to messages collection for chronological sorting
+    const msgRef = collection(db, 'auctions', roomId, 'messages');
+    await addDoc(msgRef, {
+      userId: 'system',
+      userName: 'System',
+      text: `Auction COMPLETED by Admin`,
+      type: 'log',
+      timestamp: serverTimestamp()
     });
   };
 
