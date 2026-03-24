@@ -169,33 +169,62 @@ export const AuctionProvider = ({ children }) => {
   // Listen to current auction state live
   const joinAuction = (auctionId, userId) => {
     setLoading(true);
+    let auctionLoaded = false;
+    let teamsLoaded = false;
+    let messagesLoaded = false;
+
+    const checkLoaded = () => {
+      if (auctionLoaded && teamsLoaded && messagesLoaded) {
+        setLoading(false);
+      }
+    };
+
     const unsubAuction = onSnapshot(doc(db, 'auctions', auctionId), (snapshot) => {
+      auctionLoaded = true;
       if (snapshot.exists()) {
         setCurrentAuction({ id: snapshot.id, ...snapshot.data() });
       }
+      checkLoaded();
+    }, (error) => {
+      console.error("Auction snapshot error:", error);
+      setLoading(false);
     });
 
     const teamsQuery = query(collection(db, 'teams'), where('auctionId', '==', auctionId));
     const unsubTeams = onSnapshot(teamsQuery, (snapshot) => {
+      teamsLoaded = true;
       const teamsArr = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setRoomTeams(teamsArr);
       
-      // Also update the local 'team' state if it's the current user
       if (userId) {
         const myTeam = teamsArr.find(t => t.id === `${auctionId}_${userId}`);
         if (myTeam) setTeam(myTeam);
+        else setTeam(null); // Explicitly clear if not found
       }
+      checkLoaded();
+    }, (error) => {
+      console.error("Teams snapshot error:", error);
+      setLoading(false);
     });
 
     const unsubMessages = onSnapshot(query(collection(db, 'auctions', auctionId, 'messages'), orderBy('timestamp', 'asc')), (snapshot) => {
+      messagesLoaded = true;
       setMessages(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      checkLoaded();
+    }, (error) => {
+      console.error("Messages snapshot error:", error);
+      setLoading(false);
     });
 
-    setLoading(false);
     return () => {
       unsubAuction();
       unsubTeams();
       unsubMessages();
+      setCurrentAuction(null);
+      setTeam(null);
+      setRoomTeams([]);
+      setMessages([]);
+      setLoading(true);
     };
   };
 

@@ -34,6 +34,7 @@ import {
   ChevronDown,
   Play,
   Gavel,
+  ShieldAlert,
   X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -55,10 +56,11 @@ const AuctionRoom = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { 
-    currentAuction, 
-    team, 
+    currentAuction,
+    team,
     roomTeams,
-    placeBid, 
+    loading,
+    placeBid,
     joinAuction, 
     endPlayerAuction, 
     pauseAuction, 
@@ -234,6 +236,21 @@ const AuctionRoom = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  if (loading) {
+    return (
+      <div className="h-screen bg-[#050505] text-white flex flex-col items-center justify-center p-8 text-center">
+        <div className="relative">
+          <div className="w-24 h-24 border-4 border-yellow-500/20 border-t-yellow-500 rounded-full animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center">
+             <Gavel size={32} className="text-yellow-500 animate-pulse" />
+          </div>
+        </div>
+        <h2 className="mt-8 text-2xl font-black italic tracking-widest uppercase animate-pulse text-gray-400">Syncing Auction Data...</h2>
+        <p className="mt-2 text-gray-600 text-sm font-bold uppercase tracking-[0.3em]">Connecting to Mega Auction</p>
+      </div>
+    );
+  }
+
   if (currentAuction?.status === 'completed') {
     return (
       <div className="h-screen bg-[#050505] text-white flex flex-col items-center justify-center p-8 text-center">
@@ -248,6 +265,40 @@ const AuctionRoom = () => {
         >
           Back to Home
         </button>
+      </div>
+    );
+  }
+
+  // Team Selection Guard
+  if (!team && !loading && user) {
+    return (
+      <div className="h-screen bg-[#050505] text-white flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
+        {/* Decorative Background Elements */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-500/10 blur-[120px] rounded-full" />
+        
+        <div className="relative z-10 flex flex-col items-center max-w-lg">
+          <div className="w-24 h-24 bg-red-500/20 border border-red-500/30 rounded-3xl flex items-center justify-center text-red-500 mb-8 shadow-2xl">
+            <ShieldAlert size={48} strokeWidth={2.5} />
+          </div>
+          <h2 className="text-4xl md:text-5xl font-black italic tracking-tighter uppercase mb-4">No Franchise Selected</h2>
+          <p className="text-gray-400 text-lg font-medium mb-10 leading-relaxed">
+            You must be assigned to an IPL franchise to participate in the bidding. Please return to the lobby to select your team.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 w-full">
+            <button 
+              onClick={() => navigate(`/lobby/${id}`)}
+              className="flex-1 px-8 py-4 bg-[#ff8c00] text-white font-black rounded-2xl hover:bg-[#ff5500] transition-all active:scale-95 uppercase tracking-widest cursor-pointer shadow-[0_0_30px_rgba(255,140,0,0.3)] flex items-center justify-center gap-2"
+            >
+              <Users size={20} /> Go to Lobby
+            </button>
+            <button 
+              onClick={() => navigate('/')}
+              className="flex-1 px-8 py-4 bg-white/5 border border-white/10 text-gray-400 font-black rounded-2xl hover:bg-white/10 transition-all active:scale-95 uppercase tracking-widest cursor-pointer"
+            >
+              Home
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

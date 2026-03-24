@@ -59,6 +59,12 @@ const Lobby = () => {
     return () => unsub();
   }, [id]);
 
+  useEffect(() => {
+    if (currentAuction?.status === 'bidding') {
+      navigate(`/auction/${id}`);
+    }
+  }, [currentAuction?.status]);
+
   const handleStartAuction = async () => {
     if (isAdmin) {
       setIsStarting(true);
