@@ -53,6 +53,32 @@ export const AuctionProvider = ({ children }) => {
   const [roomTeams, setRoomTeams] = useState([]);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [timeOffset, setTimeOffset] = useState(0);
+
+  React.useEffect(() => {
+    const syncTime = async () => {
+      try {
+        const start = Date.now();
+        const response = await fetch(window.location.origin, { method: 'HEAD', cache: 'no-cache' });
+        const dateHeader = response.headers.get('Date');
+        const end = Date.now();
+        if (dateHeader) {
+          const serverTime = new Date(dateHeader).getTime() + (end - start) / 2;
+          const localTime = Date.now();
+          setTimeOffset(serverTime - localTime);
+        }
+      } catch (e) {
+        console.warn('Time sync failed, using local time');
+      }
+    };
+    syncTime();
+    const interval = setInterval(syncTime, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const getSyncedTime = useCallback(() => {
+    return Date.now() + timeOffset;
+  }, [timeOffset]);
 
   // Create a new room in DB
   const createRoom = useCallback(async (roomId, userId, playerDetails) => {
@@ -110,7 +136,7 @@ export const AuctionProvider = ({ children }) => {
         currentBid: 0,
         highBidderId: '',
         highBidderName: 'No Bids',
-        timerEndsAt: Date.now() + 15000,
+        timerEndsAt: getSyncedTime() + 15000,
         status: 'bidding'
       },
       logs: arrayUnion(`Auction has started!`)
@@ -223,7 +249,7 @@ export const AuctionProvider = ({ children }) => {
               currentBid: 0,
               highBidderId: '',
               highBidderName: 'No Bids',
-              timerEndsAt: Date.now() + (settings?.bidTimer || 10) * 1000,
+              timerEndsAt: getSyncedTime() + (settings?.bidTimer || 10) * 1000,
               status: 'bidding'
             }
           });
@@ -392,18 +418,34 @@ export const AuctionProvider = ({ children }) => {
     if (currentAuction.currentAuction?.highBidderId === user.uid) throw new Error("You are already the highest bidder!");
     
     const auctionDoc = doc(db, 'auctions', currentAuction.id);
+    let finalAmount = amount;
     
-    if (team.budgetRemaining < amount) {
-      throw new Error(`Insufficient budget! You need ₹${amount.toFixed(2)} Cr but only have ₹${team.budgetRemaining.toFixed(2)} Cr remaining.`);
-    }
+    await runTransaction(db, async (transaction) => {
+      const snap = await transaction.get(auctionDoc);
+      if (!snap.exists()) throw new Error("Auction not found!");
+      const data = snap.data();
+      
+      if (data.currentAuction?.status !== 'bidding') throw new Error("Auction is not accepting bids right now.");
+      if (data.currentAuction?.highBidderId === user.uid) throw new Error("You are already the highest bidder!");
+      
+      const currentBid = data.currentAuction?.currentBid || 0;
+      const increment = currentBid < 2 ? 0.1 : currentBid < 5 ? 0.25 : 0.5;
+      const nextAmount = currentBid === 0 ? IPL_PLAYERS.find(p => p.id === data.currentAuction.playerId)?.basePrice || 0 : currentBid + increment;
+      
+      if (team.budgetRemaining < nextAmount) {
+         throw new Error(`Insufficient budget! You need ₹${nextAmount.toFixed(2)} Cr but only have ₹${team.budgetRemaining.toFixed(2)} Cr remaining.`);
+      }
 
-    await updateDoc(auctionDoc, {
-      'currentAuction.currentBid': amount,
-      'currentAuction.highBidderId': user.uid,
-      'currentAuction.highBidderName': user.displayName || 'Manager',
-      'currentAuction.highBidderTeamId': team.teamId, // Store team ID directly
-      'currentAuction.timerEndsAt': Date.now() + (currentAuction?.settings?.bidTimer || 10) * 1000,
-      logs: arrayUnion(`New bid: ₹${amount.toFixed(2)} Cr by ${user.displayName || 'Manager'}`)
+      finalAmount = nextAmount;
+
+      transaction.update(auctionDoc, {
+        'currentAuction.currentBid': nextAmount,
+        'currentAuction.highBidderId': user.uid,
+        'currentAuction.highBidderName': user.displayName || 'Manager',
+        'currentAuction.highBidderTeamId': team.teamId,
+        'currentAuction.timerEndsAt': getSyncedTime() + (data.settings?.bidTimer || 10) * 1000,
+        logs: arrayUnion(`New bid: ₹${nextAmount.toFixed(2)} Cr by ${user.displayName || 'Manager'}`)
+      });
     });
 
     // Add to messages collection for chronological sorting
@@ -411,7 +453,7 @@ export const AuctionProvider = ({ children }) => {
     await addDoc(msgRef, {
       userId: 'system',
       userName: 'System',
-      text: `New bid: ₹${amount.toFixed(2)} Cr by ${user.displayName || 'Manager'} (${team.teamId})`,
+      text: `New bid: ₹${finalAmount.toFixed(2)} Cr by ${user.displayName || 'Manager'} (${team.teamId})`,
       type: 'log',
       timestamp: serverTimestamp()
     });
@@ -524,7 +566,8 @@ export const AuctionProvider = ({ children }) => {
     resumeAuction,
     endAuction,
     sendMessage,
-    messages
+    messages,
+    getSyncedTime
   };
 
   return (

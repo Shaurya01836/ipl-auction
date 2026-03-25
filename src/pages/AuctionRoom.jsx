@@ -69,7 +69,8 @@ const AuctionRoom = () => {
       sendMessage,
       messages,
       updateRoomSettings,
-      kickPlayer
+      kickPlayer,
+      getSyncedTime
    } = useAuction();
    const { user } = useAuth();
    const [timeLeft, setTimeLeft] = useState(15);
@@ -86,6 +87,41 @@ const AuctionRoom = () => {
    const [showParticipantsOverlay, setShowParticipantsOverlay] = useState(false);
    const audioRef = useRef(null);
    const celebrationAudioRef = useRef(null);
+
+   const [optimisticState, setOptimisticState] = useState(null);
+
+   // Clear optimistic state when DB catches up
+   useEffect(() => {
+      if (optimisticState && currentAuction?.currentAuction?.currentBid >= optimisticState.currentBid) {
+         setOptimisticState(null);
+      }
+   }, [currentAuction?.currentAuction?.currentBid, optimisticState]);
+
+   const displayAuctionState = optimisticState || currentAuction?.currentAuction;
+
+   // Audio unlocker for mobile devices
+   useEffect(() => {
+      if (!celebrationAudioRef.current) {
+         celebrationAudioRef.current = new Audio();
+      }
+      const unlockAudio = () => {
+         if (celebrationAudioRef.current) {
+            celebrationAudioRef.current.src = "data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq";
+            celebrationAudioRef.current.play().then(() => {
+               celebrationAudioRef.current.pause();
+               celebrationAudioRef.current.currentTime = 0;
+            }).catch(() => {});
+         }
+      };
+      
+      window.addEventListener('click', unlockAudio, { once: true });
+      window.addEventListener('touchstart', unlockAudio, { once: true });
+      
+      return () => {
+         window.removeEventListener('click', unlockAudio);
+         window.removeEventListener('touchstart', unlockAudio);
+      };
+   }, []);
 
    // Sync completion status
    useEffect(() => {
@@ -113,11 +149,11 @@ const AuctionRoom = () => {
 
 
    const currentPlayer = useMemo(() => {
-      return IPL_PLAYERS.find(p => p.id === currentAuction?.currentAuction?.playerId) || IPL_PLAYERS[0];
-   }, [currentAuction?.currentAuction?.playerId]);
+      return IPL_PLAYERS.find(p => p.id === displayAuctionState?.playerId) || IPL_PLAYERS[0];
+   }, [displayAuctionState?.playerId]);
 
    const isAdmin = currentAuction?.hostId === user?.uid;
-   const currentBid = currentAuction?.currentAuction?.currentBid || 0;
+   const currentBid = displayAuctionState?.currentBid || 0;
    const increment = currentBid < 2 ? 0.1 : currentBid < 5 ? 0.25 : 0.5;
    const nextBidAmount = currentBid === 0 ? (currentPlayer?.basePrice || 0) : currentBid + increment;
    const playerCategories = useMemo(() => {
@@ -131,7 +167,7 @@ const AuctionRoom = () => {
       });
 
       const playerOrder = currentAuction?.playerOrder || Array.from({ length: IPL_PLAYERS.length }, (_, i) => i);
-      const currentPlayerId = currentAuction?.currentAuction?.playerId;
+      const currentPlayerId = displayAuctionState?.playerId;
       const currentPlayerIndexInOrder = playerOrder.indexOf(IPL_PLAYERS.findIndex(p => p.id === currentPlayerId));
 
       const upcoming = [];
@@ -150,7 +186,7 @@ const AuctionRoom = () => {
       });
 
       return { upcoming, sold, unsold };
-   }, [currentAuction?.playerOrder, currentAuction?.currentAuction?.playerId, roomTeams]);
+   }, [currentAuction?.playerOrder, displayAuctionState?.playerId, roomTeams]);
 
    const filteredPlayers = useMemo(() => {
       let players = [];
@@ -197,18 +233,17 @@ const AuctionRoom = () => {
 
 
    useEffect(() => {
-      const status = currentAuction?.currentAuction?.status;
+      const status = displayAuctionState?.status;
       if (status === 'sold') {
-         const teamId = currentAuction?.currentAuction?.highBidderTeamId;
+         const teamId = displayAuctionState?.highBidderTeamId;
          if (teamId && TEAM_SONGS[teamId.toLowerCase()]) {
-            if (celebrationAudioRef.current) {
-               celebrationAudioRef.current.pause();
-               celebrationAudioRef.current.currentTime = 0;
+            const audio = celebrationAudioRef.current;
+            if (audio) {
+               audio.pause();
+               audio.src = TEAM_SONGS[teamId.toLowerCase()];
+               audio.volume = 0.4;
+               audio.play().catch(e => console.warn("Autoplay blocked", e));
             }
-            const audio = new Audio(TEAM_SONGS[teamId.toLowerCase()]);
-            audio.volume = 0.4;
-            audio.play().catch(e => console.warn("Autoplay blocked"));
-            celebrationAudioRef.current = audio;
          }
       } else if (status === 'unsold') {
          const unsoldAudios = [
@@ -218,26 +253,29 @@ const AuctionRoom = () => {
             '/ny-video-online-audio-converter.mp3'
          ];
          const randomAudio = unsoldAudios[Math.floor(Math.random() * unsoldAudios.length)];
-         const audio = new Audio(randomAudio);
-         audio.volume = 0.5;
-         audio.play().catch(e => console.warn("Autoplay blocked"));
-         celebrationAudioRef.current = audio;
+         const audio = celebrationAudioRef.current;
+         if (audio) {
+            audio.pause();
+            audio.src = randomAudio;
+            audio.volume = 0.5;
+            audio.play().catch(e => console.warn("Autoplay blocked", e));
+         }
       } else {
-         if (celebrationAudioRef.current) {
-            celebrationAudioRef.current.pause();
-            celebrationAudioRef.current.currentTime = 0;
-            celebrationAudioRef.current = null;
+         const audio = celebrationAudioRef.current;
+         if (audio) {
+            audio.pause();
+            audio.currentTime = 0;
          }
       }
-   }, [currentAuction?.currentAuction?.status]);
+   }, [displayAuctionState?.status, displayAuctionState?.highBidderTeamId]);
 
 
 
    useEffect(() => {
-      if (currentAuction?.status !== 'active' || !currentAuction?.currentAuction?.timerEndsAt || currentAuction.currentAuction.status !== 'bidding') return;
+      if (currentAuction?.status !== 'active' || !displayAuctionState?.timerEndsAt || displayAuctionState?.status !== 'bidding') return;
 
       const interval = setInterval(() => {
-         const diff = Math.max(0, Math.floor((currentAuction.currentAuction.timerEndsAt - Date.now()) / 1000));
+         const diff = Math.max(0, Math.floor((displayAuctionState.timerEndsAt - getSyncedTime()) / 1000));
 
          if (diff !== timeLeft && diff <= 5 && diff > 0) {
             playBeep(diff === 1 ? 880 : 440, 0.1);
@@ -246,17 +284,17 @@ const AuctionRoom = () => {
          setTimeLeft(diff);
          if (diff === 0) {
             clearInterval(interval);
-            if (isAdmin && currentAuction.currentAuction.status === 'bidding') {
+            if (isAdmin && displayAuctionState.status === 'bidding') {
                endPlayerAuction(id);
             }
          }
       }, 100);
 
       return () => clearInterval(interval);
-   }, [currentAuction?.currentAuction?.timerEndsAt, currentAuction?.currentAuction?.status, timeLeft]);
+   }, [displayAuctionState?.timerEndsAt, displayAuctionState?.status, timeLeft, currentAuction?.status, isAdmin, id, endPlayerAuction]);
 
    const handleBid = async () => {
-      if (currentAuction?.currentAuction?.highBidderId === user?.uid) return;
+      if (displayAuctionState?.highBidderId === user?.uid) return;
 
       // Budget Guard
       if ((team?.budgetRemaining || 0) < nextBidAmount) {
@@ -293,9 +331,20 @@ const AuctionRoom = () => {
 
       playBeep(660, 0.1);
       setError('');
+      
+      setOptimisticState({
+         ...displayAuctionState,
+         currentBid: nextBidAmount,
+         highBidderId: user?.uid,
+         highBidderName: user?.displayName || 'Manager',
+         highBidderTeamId: team?.teamId,
+         timerEndsAt: getSyncedTime() + (currentAuction?.settings?.bidTimer || 10) * 1000
+      });
+
       try {
          await placeBid(nextBidAmount);
       } catch (err) {
+         setOptimisticState(null);
          setError(err.message);
          setTimeout(() => setError(''), 3000);
       }
@@ -378,7 +427,7 @@ const AuctionRoom = () => {
             <div className="flex items-center gap-3">
                {isAdmin && (
                   <div className="flex items-center gap-2">
-                     {currentAuction?.currentAuction?.status === 'paused' ? (
+                     {displayAuctionState?.status === 'paused' ? (
                         <button
                            onClick={() => resumeAuction(id)}
                            className="flex items-center gap-2 bg-green-500/10 border border-green-500/20 px-3 py-1.5 rounded-lg text-green-500 text-[10px] font-black uppercase tracking-widest hover:bg-green-500/20 transition-all cursor-pointer"
@@ -544,13 +593,13 @@ const AuctionRoom = () => {
             <main className={`${mobileTab === 'arena' ? 'flex' : 'hidden'} md:flex flex-1 overflow-y-auto p-4 md:p-8 flex-col items-center custom-scrollbar`}>
                <div className="w-full max-w-4xl flex flex-col gap-4 md:gap-6">
                   <AnimatePresence mode="wait">
-                     {(currentAuction?.currentAuction?.status === 'sold' || currentAuction?.currentAuction?.status === 'unsold') ? (
+                     {(displayAuctionState?.status === 'sold' || displayAuctionState?.status === 'unsold') ? (
                         <motion.div
                            key="celebration"
                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
                            animate={{ opacity: 1, scale: 1, y: 0 }}
                            exit={{ opacity: 0, scale: 1.1 }}
-                           className={`w-full max-w-2xl mx-auto min-h-[400px] flex flex-col items-center justify-center rounded-[2.5rem] overflow-hidden relative shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/20 ${currentAuction.currentAuction.status === 'sold' ? (TEAMS.find(t => t.id === currentAuction.currentAuction.highBidderTeamId)?.color || 'bg-green-500') : 'bg-red-950'}`}
+                           className={`w-full max-w-2xl mx-auto min-h-[400px] flex flex-col items-center justify-center rounded-[2.5rem] overflow-hidden relative shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/20 ${displayAuctionState.status === 'sold' ? (TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.color || 'bg-green-500') : 'bg-red-950'}`}
                         >
                            {/* Confetti deleted for brevity during recovery */}
                            <div className="flex flex-col items-center text-center z-10 px-8 py-10 w-full bg-gradient-to-b from-white/10 to-transparent">
@@ -561,16 +610,16 @@ const AuctionRoom = () => {
                                  {currentPlayer.name}
                               </motion.h2>
                               <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.4, type: 'spring' }} className="text-6xl md:text-8xl font-black italic tracking-tighter text-white drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)] mb-6">
-                                 {currentAuction.currentAuction.status === 'sold' ? 'SOLD' : 'UNSOLD'}
+                                 {displayAuctionState.status === 'sold' ? 'SOLD' : 'UNSOLD'}
                               </motion.div>
-                              {currentAuction.currentAuction.status === 'sold' && (
+                              {displayAuctionState.status === 'sold' && (
                                  <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }} className="flex flex-col items-center gap-4 w-full">
                                     <div className="bg-black/40 backdrop-blur-xl px-10 py-3 rounded-full border border-yellow-500/50 shadow-[0_0_30px_rgba(234,179,8,0.3)]">
-                                       <span className="text-4xl md:text-5xl font-black text-yellow-500 tracking-tight">₹{(currentAuction.currentAuction.currentBid || 0).toFixed(2)} Cr</span>
+                                       <span className="text-4xl md:text-5xl font-black text-yellow-500 tracking-tight">₹{(displayAuctionState.currentBid || 0).toFixed(2)} Cr</span>
                                     </div>
                                     <div className="bg-white/10 backdrop-blur-md px-8 py-3 rounded-2xl border border-white/20 flex items-center gap-3">
-                                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-[10px] ${TEAMS.find(t => t.id === currentAuction.currentAuction.highBidderTeamId)?.color || 'bg-gray-700'}`}>{currentAuction.currentAuction.highBidderTeamId}</div>
-                                       <span className="text-lg md:text-xl font-black uppercase text-white tracking-widest">{TEAMS.find(t => t.id === currentAuction.currentAuction.highBidderTeamId)?.name || 'Franchise'}</span>
+                                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-[10px] ${TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.color || 'bg-gray-700'}`}>{displayAuctionState.highBidderTeamId}</div>
+                                       <span className="text-lg md:text-xl font-black uppercase text-white tracking-widest">{TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.name || 'Franchise'}</span>
                                     </div>
                                  </motion.div>
                               )}
@@ -589,7 +638,7 @@ const AuctionRoom = () => {
                               <div className="flex items-center gap-2 md:gap-3">
                                  <span className="text-[9px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest">High Bidder:</span>
                                  <div className="bg-green-500/20 border border-green-500/30 px-2 py-0.5 md:px-3 md:py-1 rounded-full">
-                                    <span className="text-[9px] md:text-[10px] font-black text-green-400 uppercase tracking-widest italic">{currentAuction?.currentAuction?.highBidderName}</span>
+                                    <span className="text-[9px] md:text-[10px] font-black text-green-400 uppercase tracking-widest italic">{displayAuctionState?.highBidderName}</span>
                                  </div>
                               </div>
                            </div>
@@ -619,10 +668,10 @@ const AuctionRoom = () => {
                                        <div className="text-left">
                                           <span className="text-[8px] md:text-[10px] font-black text-blue-500 uppercase tracking-widest block mb-0.5 md:mb-1">Current Bid</span>
                                           <div className="flex items-center gap-3">
-                                             <span className="text-xl md:text-3xl font-black italic text-white leading-none">₹{(currentAuction?.currentAuction?.currentBid || 0).toFixed(2)} Cr</span>
+                                             <span className="text-xl md:text-3xl font-black italic text-white leading-none">₹{(displayAuctionState?.currentBid || 0).toFixed(2)} Cr</span>
                                           </div>
                                        </div>
-                                       <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl md:rounded-3xl flex flex-col items-center justify-center text-black border-4 border-black/10 shadow-2xl transition-all ${currentAuction?.currentAuction?.status === 'sold' || currentAuction?.currentAuction?.status === 'unsold' ? (currentAuction.currentAuction.status === 'sold' ? 'bg-green-500 scale-110' : 'bg-red-500 scale-110') : 'bg-yellow-500'}`}>
+                                       <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl md:rounded-3xl flex flex-col items-center justify-center text-black border-4 border-black/10 shadow-2xl transition-all ${displayAuctionState?.status === 'sold' || displayAuctionState?.status === 'unsold' ? (displayAuctionState.status === 'sold' ? 'bg-green-500 scale-110' : 'bg-red-500 scale-110') : 'bg-yellow-500'}`}>
                                           <span className="text-xl md:text-3xl font-black leading-none uppercase tracking-tighter">{timeLeft}</span>
                                           <span className="text-[7px] md:text-[8px] font-black uppercase tracking-widest">SEC</span>
                                        </div>
@@ -630,8 +679,8 @@ const AuctionRoom = () => {
                                  </div>
                               </div>
                               <div className="bg-black/40 border-t border-white/5 p-3 md:p-5 flex gap-2 md:gap-4">
-                                 <button onClick={handleBid} disabled={timeLeft === 0 || currentAuction?.currentAuction?.status !== 'bidding' || currentAuction?.currentAuction?.highBidderId === user?.uid} className={`flex-1 h-14 md:h-20 font-black text-lg md:text-2xl rounded-xl md:rounded-2xl flex items-center justify-center gap-2 md:gap-4 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale cursor-pointer shadow-[0_0_40px_rgba(34,197,94,0.3)] ${currentAuction?.currentAuction?.highBidderId === user?.uid ? 'bg-yellow-500/20 text-yellow-500 border border-yellow-500/20' : 'bg-green-500 hover:bg-green-400 text-[#050505]'}`}>
-                                    {currentAuction?.currentAuction?.status === 'paused' ? 'PAUSED' : currentAuction?.currentAuction?.highBidderId === user?.uid ? "LEADING BIDDER" : `PLACE BID: ₹${nextBidAmount.toFixed(2)} Cr`}
+                                 <button onClick={handleBid} disabled={timeLeft === 0 || displayAuctionState?.status !== 'bidding' || displayAuctionState?.highBidderId === user?.uid} className={`flex-1 h-14 md:h-20 font-black text-lg md:text-2xl rounded-xl md:rounded-2xl flex items-center justify-center gap-2 md:gap-4 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale cursor-pointer shadow-[0_0_40px_rgba(34,197,94,0.3)] ${displayAuctionState?.highBidderId === user?.uid ? 'bg-yellow-500/20 text-yellow-500 border border-yellow-500/20' : 'bg-green-500 hover:bg-green-400 text-[#050505]'}`}>
+                                    {displayAuctionState?.status === 'paused' ? 'PAUSED' : displayAuctionState?.highBidderId === user?.uid ? "LEADING BIDDER" : `PLACE BID: ₹${nextBidAmount.toFixed(2)} Cr`}
                                  </button>
                                  <button onClick={() => setShowPlayersOverlay(true)} className="w-14 h-14 md:w-20 md:h-20 bg-[#181818] border border-white/5 rounded-xl md:rounded-2xl flex items-center justify-center text-gray-400"><List size={24} /></button>
                               </div>
