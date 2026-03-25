@@ -7,7 +7,7 @@ import {
   Users,
   Crown,
   UserMinus,
-  LogOut,
+  Home,
   Gavel,
   ShieldAlert,
   Copy,
@@ -16,21 +16,24 @@ import {
   Settings as SettingsIcon,
   CheckCircle2,
   Rocket,
-  AlertCircle
+  AlertCircle,
+  TrendingUp,
+  Zap,
+  Star
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const TEAMS = [
-  { id: 'MI', name: 'Mumbai Indians', color: 'bg-blue-600' },
-  { id: 'CSK', name: 'Chennai Super Kings', color: 'bg-yellow-400 text-black' },
-  { id: 'RCB', name: 'Royal Challengers Bengaluru', color: 'bg-red-600' },
-  { id: 'KKR', name: 'Kolkata Knight Riders', color: 'bg-purple-800' },
-  { id: 'DC', name: 'Delhi Capitals', color: 'bg-blue-500' },
-  { id: 'PBKS', name: 'Punjab Kings', color: 'bg-red-500' },
-  { id: 'RR', name: 'Rajasthan Royals', color: 'bg-pink-600' },
-  { id: 'SRH', name: 'Sunrisers Hyderabad', color: 'bg-orange-500' },
-  { id: 'GT', name: 'Gujarat Titans', color: 'bg-slate-700' },
-  { id: 'LSG', name: 'Lucknow Super Giants', color: 'bg-pink-800' },
+  { id: 'MI', name: 'Mumbai Indians', color: 'bg-blue-600', textColor: 'text-white' },
+  { id: 'CSK', name: 'Chennai Super Kings', color: 'bg-yellow-400', textColor: 'text-black' },
+  { id: 'RCB', name: 'Royal Challengers Bengaluru', color: 'bg-red-600', textColor: 'text-white' },
+  { id: 'KKR', name: 'Kolkata Knight Riders', color: 'bg-purple-800', textColor: 'text-white' },
+  { id: 'DC', name: 'Delhi Capitals', color: 'bg-blue-500', textColor: 'text-white' },
+  { id: 'PBKS', name: 'Punjab Kings', color: 'bg-red-500', textColor: 'text-white' },
+  { id: 'RR', name: 'Rajasthan Royals', color: 'bg-pink-600', textColor: 'text-white' },
+  { id: 'SRH', name: 'Sunrisers Hyderabad', color: 'bg-orange-500', textColor: 'text-white' },
+  { id: 'GT', name: 'Gujarat Titans', color: 'bg-slate-700', textColor: 'text-white' },
+  { id: 'LSG', name: 'Lucknow Super Giants', color: 'bg-pink-800', textColor: 'text-white' },
 ];
 
 const Lobby = () => {
@@ -48,22 +51,23 @@ const Lobby = () => {
   const players = currentAuction?.players || [];
   const currentUserPlayer = players.find(p => p.id === user?.uid);
 
-  // Track which teams are taken and by whom
   const teamAssignments = players.reduce((acc, p) => {
     acc[p.team] = p.name;
     return acc;
   }, {});
 
   useEffect(() => {
-    const unsub = joinAuction(id);
-    return () => unsub();
-  }, [id]);
+    if (id && user?.uid) {
+      const unsub = joinAuction(id, user.uid);
+      return () => unsub();
+    }
+  }, [id, user?.uid]);
 
   useEffect(() => {
     if (currentAuction?.status === 'active') {
       navigate(`/auction/${id}`);
     }
-  }, [currentAuction?.status]);
+  }, [currentAuction?.status, id, navigate]);
 
   const handleStartAuction = async () => {
     if (isAdmin) {
@@ -117,222 +121,310 @@ const Lobby = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] flex flex-col items-center py-6 px-4 font-sans text-white overflow-x-hidden">
-      {/* Top Header Bar */}
-      <div className="w-full max-w-5xl flex items-center justify-between mb-8 px-4">
-        <div className="flex items-center gap-2">
-          <span className="text-gray-500 font-bold uppercase text-sm tracking-widest">Room:</span>
-          <span className="text-yellow-500 text-2xl font-black tracking-[0.2em]">{id}</span>
-        </div>
+    <div className="relative min-h-screen bg-[#050505] flex flex-col items-center py-8 px-4 font-sans text-white overflow-x-hidden">
+      
+      {/* Premium Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-orange-600/20 blur-[120px] rounded-full" />
+        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03]" />
+      </div>
+
+      {/* Top Navigation */}
+      <div className="w-full max-w-6xl flex items-center justify-between mb-10 z-20 px-4">
         <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate('/')}
+            className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all group flex items-center gap-2"
+          >
+            <Home size={20} className="group-hover:scale-110 transition-transform" />
+            <span className="text-[10px] font-black uppercase tracking-widest hidden sm:block">Exit Hub</span>
+          </button>
+          <div className="h-10 w-px bg-white/10" />
+          <div className="flex flex-col">
+            <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none mb-1">Room ID</span>
+            <span className="text-xl font-black text-white italic tracking-tighter">{id}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="flex flex-col items-end mr-4">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black text-green-500 bg-green-500/10 px-2 py-0.5 rounded leading-none uppercase">Live Engine</span>
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_#22c55e]" />
+            </div>
+            <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest mt-1">Ready for Auction</p>
+          </div>
+
           {isAdmin && (
             <button
               onClick={handleStartAuction}
               disabled={isStarting}
-              className="bg-[#ff8c00] hover:bg-[#ff5500] text-white font-black px-6 py-2 rounded-lg flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(255,140,0,0.3)] group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative overflow-hidden group px-8 py-3 bg-gradient-to-r from-orange-600 to-orange-500 rounded-2xl font-black text-xs uppercase tracking-widest shadow-[0_10px_30px_rgba(255,85,0,0.3)] disabled:opacity-50 transition-all active:scale-95"
             >
-              {isStarting ? <Loader2 size={18} className="animate-spin" /> : <Gavel size={18} className="group-hover:rotate-12 transition-transform" />}
-              {isStarting ? 'Starting...' : 'Start'}
+              <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+              <div className="relative flex items-center gap-2">
+                {isStarting ? <Loader2 size={16} className="animate-spin" /> : <Rocket size={16} className="group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />}
+                <span>{isStarting ? 'Igniting...' : 'Start Auction'}</span>
+              </div>
             </button>
           )}
-          <div className="w-8 h-8 rounded-full bg-green-500/20 border border-green-500/50 flex items-center justify-center">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-          </div>
         </div>
       </div>
 
-      <div className="w-full max-w-4xl space-y-6">
-        {/* Invite Friends Section */}
-        <section className="bg-[#111] border border-white/5 rounded-2xl p-5">
-          <div className="flex items-center gap-2 mb-4 text-[#ff8c00] font-bold text-sm">
-            <Share2 size={16} /> Invite Friends
-          </div>
-          <div className="flex gap-3">
-            <div className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-gray-400 font-medium truncate">
-              {window.location.href}
+      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8 z-10">
+        
+        {/* Left Column: Management Hub */}
+        <div className="lg:col-span-5 space-y-6">
+          
+          {/* Share Section */}
+          <motion.section 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="bg-white/[0.03] border border-white/10 rounded-[2rem] p-6 backdrop-blur-3xl shadow-2xl relative overflow-hidden group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent pointer-events-none" />
+            <div className="flex items-center gap-2 mb-4">
+               <Zap size={14} className="text-orange-500" />
+               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Invite Crew Members</h3>
             </div>
-            <button onClick={copyLink} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 transition-colors relative cursor-pointer">
-              {copied ? <CheckCircle2 size={20} className="text-green-500" /> : <Copy size={20} />}
-            </button>
-            <button onClick={shareWhatsApp} className="p-3 bg-[#25D366]/10 hover:bg-[#25D366]/20 rounded-xl border border-[#25D366]/20 transition-colors text-[#25D366] cursor-pointer">
-              <MessageSquare size={20} />
-            </button>
-            <button className="bg-[#ff8c00] text-black font-black px-6 rounded-xl text-sm flex items-center gap-2 cursor-pointer">
-              <Share2 size={16} /> Share
-            </button>
-          </div>
-        </section>
 
-        {/* Select Your Team Grid */}
-        <section className="bg-[#111] border border-white/5 rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2 text-[#ff8c00] font-bold text-sm">
-              <Users size={16} /> Select Your Team
-            </div>
-            {currentUserPlayer && currentUserPlayer.team ? (
-              <div className="flex items-center gap-2 bg-[#ff8c00]/10 border border-[#ff8c00]/30 px-3 py-1.5 rounded-lg">
-                <div className={`w-5 h-5 rounded-full ${TEAMS.find(t => t.id === currentUserPlayer.team)?.color}`} />
-                <span className="text-xs font-black text-[#ff8c00] uppercase italic">
-                  {TEAMS.find(t => t.id === currentUserPlayer.team)?.name}
-                </span>
+            <div className="flex gap-3">
+              <div className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-gray-500 font-medium truncate">
+                {window.location.href}
               </div>
-            ) : (
-              <div className="text-[10px] font-black text-red-500 uppercase animate-pulse flex items-center gap-1">
-                <AlertCircle size={12} /> Please Select a Team
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-            {TEAMS.map((team) => {
-              const isTaken = teamAssignments[team.id];
-              const isMine = currentUserPlayer?.team === team.id;
-
-              return (
-                <button
-                  key={team.id}
-                  onClick={() => handleTeamSelect(team.id)}
-                  disabled={!!isTaken && !isMine}
-                  className={`relative flex flex-col items-center justify-center h-28 rounded-2xl border transition-all duration-300 cursor-pointer ${isMine
-                      ? 'bg-gradient-to-b from-yellow-500/10 to-transparent border-yellow-500 shadow-[0_0_20px_rgba(234,179,8,0.2)]'
-                      : isTaken
-                        ? 'bg-black/40 border-white/5 opacity-40 cursor-not-allowed'
-                        : 'bg-[#181818] border-white/5 hover:border-white/20 hover:bg-[#202020]'
-                    } ${isSelectingTeam === team.id ? 'animate-pulse scale-95' : ''}`}
-                >
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-sm mb-2 shadow-lg ${team.color}`}>
-                    {isSelectingTeam === team.id ? <Loader2 size={20} className="animate-spin" /> : team.id}
-                  </div>
-                  <span className={`text-[10px] font-black uppercase tracking-widest ${isMine ? 'text-yellow-500' : 'text-gray-500'}`}>
-                    {isTaken ? isTaken : team.name}
-                  </span>
-                  {isMine && <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center text-[10px] text-black"><CheckCircle2 size={10} /></div>}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* Tabs and Player List */}
-        <section className="bg-[#111] border border-white/5 rounded-2xl overflow-hidden">
-          <div className="flex border-b border-white/5">
-            {[
-              { id: 'players', icon: Users, label: `Players ${players.length}/10` },
-              { id: 'chat', icon: MessageSquare, label: 'Chat' },
-              { id: 'settings', icon: SettingsIcon, label: 'Settings' }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 py-4 flex items-center justify-center gap-2 text-sm font-bold transition-all cursor-pointer ${activeTab === tab.id
-                    ? 'bg-white/5 text-yellow-500 border-b-2 border-yellow-500'
-                    : 'text-gray-500 hover:text-gray-300 hover:bg-white/[0.02]'
-                  }`}
-              >
-                <tab.icon size={16} /> {tab.label}
+              <button onClick={copyLink} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all border border-white/5 relative group/copy">
+                {copied ? <CheckCircle2 size={18} className="text-green-500" /> : <Copy size={18} className="group-hover/copy:scale-110 transition-transform" />}
               </button>
-            ))}
-          </div>
+              <button 
+                onClick={shareWhatsApp} 
+                className="p-3 bg-[#25D366]/5 hover:bg-[#25D366]/10 rounded-xl transition-all border border-[#25D366]/10 text-[#25D366] group/wa"
+              >
+                <MessageSquare size={18} className="group-hover/wa:scale-110 transition-transform" />
+              </button>
+            </div>
+          </motion.section>
 
-          <div className="p-6">
-            {activeTab === 'players' && (
-              <div className="space-y-3">
-                <AnimatePresence>
-                  {players.map((player) => (
-                    <motion.div
-                      key={player.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="flex items-center justify-between bg-black/20 border border-white/5 p-4 rounded-xl group"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-xl border border-white/10 flex items-center justify-center font-black shadow-inner ${TEAMS.find(t => t.id === player.team)?.color || 'bg-gray-800'}`}>
-                          {player.team || '?'}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-bold text-gray-200">{player.name} {player.id === user?.uid && '(You)'}</p>
-                            {player.isHost && <Crown size={14} className="text-yellow-500" />}
-                          </div>
-                          <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
-                            {TEAMS.find(t => t.id === player.team)?.name || (player.team === '' ? 'Selecting Team...' : player.team)}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-4">
-                        <div className="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-                        {isAdmin && !player.isHost && (
-                          <button
-                            onClick={() => handleKickPlayer(player)}
-                            className="opacity-0 group-hover:opacity-100 p-2 text-gray-600 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer"
-                          >
-                            <UserMinus size={18} />
-                          </button>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
+          {/* Franchise Selector */}
+          <motion.section 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white/[0.03] border border-white/10 rounded-[2rem] p-6 backdrop-blur-3xl shadow-2xl relative"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                 <Star size={14} className="text-yellow-500" />
+                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Claim Franchise</h3>
               </div>
-            )}
-            {activeTab === 'chat' && (
-              <div className="h-40 flex flex-col items-center justify-center text-gray-600 gap-3">
-                <div className="w-12 h-12 rounded-full border-2 border-dashed border-gray-800 flex items-center justify-center">
-                   <MessageSquare size={20} />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-widest">Chat section coming soon</p>
-              </div>
-            )}
+              {currentUserPlayer?.team && (
+                <div className="text-[9px] font-black text-orange-500 bg-orange-500/10 px-2 py-0.5 rounded uppercase">Locked In</div>
+              )}
+            </div>
 
-            {activeTab === 'settings' && (
-              <div className="space-y-6">
-                 <div>
-                    <div className="flex items-center justify-between mb-4">
-                       <div>
-                          <h4 className="font-bold text-gray-200">Bid Timer</h4>
-                          <p className="text-xs text-gray-500">Time allowed for each player auction</p>
-                       </div>
-                       <div className="bg-white/5 px-3 py-1 rounded-lg border border-white/5 text-yellow-500 font-black text-sm">
-                          {currentAuction?.settings?.bidTimer || 10}s
-                       </div>
+            <div className="grid grid-cols-5 gap-3">
+              {TEAMS.map((team) => {
+                const isTaken = teamAssignments[team.id];
+                const isMine = currentUserPlayer?.team === team.id;
+
+                return (
+                  <button
+                    key={team.id}
+                    onClick={() => handleTeamSelect(team.id)}
+                    disabled={!!isTaken && !isMine}
+                    className={`relative group/team flex flex-col items-center justify-center p-2 rounded-2xl transition-all duration-300 border ${
+                      isMine 
+                        ? 'border-yellow-400 bg-yellow-400/5 shadow-[0_0_15px_rgba(250,204,21,0.1)]' 
+                        : isTaken 
+                          ? 'border-white/5 opacity-30 grayscale cursor-not-allowed' 
+                          : 'border-white/5 hover:border-white/20 hover:bg-white/5'
+                    }`}
+                  >
+                    {isMine && (
+                      <motion.div layoutId="lobby-badge" className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-yellow-400 flex items-center justify-center z-20 shadow-lg">
+                        <CheckCircle2 size={10} className="text-black" />
+                      </motion.div>
+                    )}
+
+                    <div className={`w-10 h-10 rounded-full ${team.color} ${team.textColor} flex items-center justify-center font-black text-[10px] mb-2 transition-transform duration-300 ${isMine ? 'scale-110 shadow-lg' : 'group-hover/team:scale-110'}`}>
+                      {isSelectingTeam === team.id ? <Loader2 size={14} className="animate-spin" /> : team.id}
                     </div>
                     
-                    <div className="flex flex-wrap gap-2">
-                       {[5, 10, 15, 20, 25].map((s) => (
-                          <button
-                            key={s}
-                            onClick={() => handleUpdateBidTimer(s)}
-                            disabled={!isAdmin || isUpdatingSettings}
-                            className={`px-4 py-2 rounded-xl border text-sm font-bold transition-all flex items-center gap-2 ${
-                              currentAuction?.settings?.bidTimer === s
-                                ? 'bg-yellow-500 text-black border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.3)]'
-                                : 'bg-white/5 border-white/5 text-gray-400 hover:border-white/20'
-                            } ${!isAdmin ? 'cursor-default' : 'cursor-pointer'} disabled:opacity-50`}
-                          >
-                            {isUpdatingSettings && currentAuction?.settings?.bidTimer !== s && (
-                               <Loader2 size={12} className="animate-spin" />
-                            )}
-                            {s}s
-                          </button>
-                       ))}
-                    </div>
-                 </div>
+                    <span className={`text-[8px] font-black uppercase text-center tracking-tighter truncate w-full ${isMine ? 'text-yellow-400' : isTaken ? 'text-gray-600' : 'text-gray-500'}`}>
+                      {isTaken ? isTaken.split(' ')[0] : team.id}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </motion.section>
+        </div>
 
-                 {!isAdmin && (
-                    <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex gap-3 items-start">
-                       <ShieldAlert size={18} className="text-blue-500 mt-0.5" />
-                       <p className="text-xs text-blue-200 font-medium">Only the room host can modify auction settings.</p>
+        {/* Right Column: Engagement Hub */}
+        <div className="lg:col-span-7">
+          <motion.section 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-[#0c0c0c] border border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl h-full flex flex-col"
+          >
+            {/* Tabs Header */}
+            <div className="flex bg-white/[0.02] p-2 gap-2">
+              {[
+                { id: 'players', icon: Users, label: `Crew` },
+                { id: 'chat', icon: MessageSquare, label: 'Chat' },
+                { id: 'settings', icon: SettingsIcon, label: 'Configs' }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-1 py-4 flex flex-col items-center justify-center gap-1.5 transition-all rounded-2xl ${activeTab === tab.id
+                      ? 'bg-white/5 text-yellow-500 border border-white/10 shadow-inner'
+                      : 'text-gray-600 hover:text-gray-400 hover:bg-white/[0.01]'
+                    }`}
+                >
+                  <tab.icon size={18} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">{tab.id === 'players' ? `${tab.label} (${players.length})` : tab.label}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="p-8 flex-1 overflow-y-auto max-h-[300px]">
+              <AnimatePresence mode="wait">
+                {activeTab === 'players' && (
+                  <motion.div 
+                    key="p-list"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="space-y-4"
+                  >
+                    {players.map((player, idx) => {
+                      const playerTeam = TEAMS.find(t => t.id === player.team);
+                      return (
+                        <motion.div
+                          key={`${player.id}-${idx}`}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0, transition: { delay: idx * 0.05 } }}
+                          className="flex items-center justify-between bg-white/[0.01] border border-white/5 p-4 rounded-2xl group transition-all hover:bg-white/[0.03] hover:border-white/10"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className={`w-12 h-12 rounded-2xl border border-white/10 flex items-center justify-center font-black shadow-2xl relative overflow-hidden ${playerTeam?.color || 'bg-gray-800'}`}>
+                              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none" />
+                              <span className={`${playerTeam?.textColor || 'text-gray-500'} relative z-10 text-xs`}>{player.team || '?'}</span>
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <p className="font-black text-sm text-white uppercase tracking-tight">{player.name}</p>
+                                {player.isHost && <Crown size={14} className="text-yellow-500 fill-yellow-500 " />}
+                                {player.id === user?.uid && <span className="text-[8px] font-black bg-white/10 px-1.5 py-0.5 rounded text-gray-400">YOU</span>}
+                              </div>
+                              <p className="text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mt-0.5">
+                                {playerTeam?.name || (player.team === '' ? 'CALIBRATING...' : player.team)}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-4">
+                            <div className="flex flex-col items-end">
+                               <div className="w-1.5 h-1.5 bg-green-500 rounded-full shadow-[0_0_8px_#22c55e]" />
+                               <span className="text-[8px] font-black text-gray-800 uppercase tracking-tighter mt-1">Synced</span>
+                            </div>
+                            {isAdmin && !player.isHost && (
+                              <button
+                                onClick={() => handleKickPlayer(player)}
+                                className="opacity-0 group-hover:opacity-100 p-2 text-gray-700 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
+                              >
+                                <UserMinus size={18} />
+                              </button>
+                            )}
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </motion.div>
+                )}
+
+                {activeTab === 'chat' && (
+                  <motion.div 
+                    key="chat"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="h-full flex flex-col items-center justify-center py-20 text-center"
+                  >
+                    <div className="w-20 h-20 rounded-[2rem] bg-white/[0.02] border border-dashed border-white/10 flex items-center justify-center mb-6">
+                       <MessageSquare size={32} className="text-gray-700" />
                     </div>
-                 )}
-              </div>
-            )}
-          </div>
-        </section>
+                    <h4 className="text-sm font-black text-gray-500 uppercase tracking-widest mb-2">Comms Offline</h4>
+                    <p className="text-[10px] text-gray-700 font-bold uppercase tracking-widest">Chat engine deployment in next patch</p>
+                  </motion.div>
+                )}
+
+                {activeTab === 'settings' && (
+                  <motion.div 
+                    key="config"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="space-y-8"
+                  >
+                    <div className="p-6 bg-white/[0.02] border border-white/10 rounded-3xl">
+                      <div className="flex items-center justify-between mb-8">
+                         <div>
+                            <h4 className="text-sm font-black text-white uppercase tracking-widest leading-none mb-2">Auction Bid Cycle</h4>
+                            <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">Duration of bidding window per player</p>
+                         </div>
+                         <div className="text-2xl font-black text-yellow-500 italic">
+                            {currentAuction?.settings?.bidTimer || 10}<span className="text-xs ml-1 font-bold not-italic text-gray-600">S</span>
+                         </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-5 gap-3">
+                         {[5, 10, 15, 20, 25].map((s) => (
+                            <button
+                              key={s}
+                              onClick={() => handleUpdateBidTimer(s)}
+                              disabled={!isAdmin || isUpdatingSettings}
+                              className={`py-3 rounded-xl border text-[10px] font-black uppercase transition-all flex flex-col items-center justify-center gap-1 shadow-lg ${
+                                currentAuction?.settings?.bidTimer === s
+                                  ? 'bg-yellow-500 text-black border-yellow-500'
+                                  : 'bg-white/5 border-white/5 text-gray-600 hover:border-white/20'
+                              } disabled:opacity-50`}
+                            >
+                              {s}s
+                              <TrendingUp size={10} className={currentAuction?.settings?.bidTimer === s ? 'text-black' : 'text-gray-800'} />
+                            </button>
+                         ))}
+                      </div>
+                    </div>
+
+                    {!isAdmin && (
+                      <div className="p-5 bg-blue-500/5 border border-blue-500/10 rounded-2xl flex gap-4 items-center">
+                         <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0">
+                            <ShieldAlert size={20} />
+                         </div>
+                         <div>
+                            <p className="text-[9px] text-blue-400 font-black uppercase tracking-widest mb-1">Restricted Control</p>
+                            <p className="text-[10px] text-blue-200/50 font-medium">Only the Hub Host can calibrate auction engine parameters.</p>
+                         </div>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.section>
+        </div>
       </div>
 
-      <footer className="mt-12 text-gray-600 text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-2 opacity-30">
-        <ShieldAlert size={12} /> Fair Play Guidelines Enabled
+      <footer className="mt-auto py-12 flex flex-col items-center gap-6 z-10 ">
+        <div className="h-px w-20 bg-gradient-to-r from-transparent via-gray-600 to-transparent mb-2" />
+        <div className="flex gap-10 text-[9px] font-black uppercase tracking-[0.4em] text-gray-700">
+           <span className="hover:text-yellow-500 transition-colors">Fair Play</span>
+           <span className="hover:text-orange-500 transition-colors">Stadium Engine</span>
+           <span className="hover:text-blue-500 transition-colors">v2026.4</span>
+        </div>
       </footer>
     </div>
   );

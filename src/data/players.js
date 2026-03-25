@@ -89,7 +89,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/3869.png",
+    "image": "https://ichef.bbci.co.uk/ace/standard/3840/cpsprodpb/06ac/live/25dc2a00-39a8-11f0-8237-2dff5f2facd7.jpg",
     "stats": {
       "matches": 225,
       "runs": 6291,
@@ -343,7 +343,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/3347.png",
+    "image": "https://tse1.mm.bing.net/th/id/OIP.FKH4qLMWsToYLbgI5rchWwHaE5?rs=1&pid=ImgDetMain&o=7&rm=3",
     "stats": {
       "matches": 130,
       "runs": 5020,
@@ -359,7 +359,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=NoorAhmad&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://resize.indiatvnews.com/en/resize/newbucket/1200_-/2025/03/noor-1742808642.jpg",
     "stats": {
       "matches": 168,
       "wickets": 145,
@@ -438,7 +438,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/3830.png",
+    "image": "https://d16f573ilcot6q.cloudfront.net/wp-content/uploads/2024/07/2XN1980.webp",
     "stats": {
       "matches": 226,
       "runs": 4722,
@@ -620,7 +620,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/20570.png",
+    "image": "https://ichef.bbci.co.uk/ace/standard/2048/cpsprodpb/9260/live/7c8a5040-6a07-11f0-8dbd-f3d32ebd3327.jpg",
     "stats": {
       "matches": 229,
       "runs": 4468,
@@ -667,7 +667,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://www.iplt20.com/assets/images/players/main/5437.png",
+    "image": "https://english.cdn.zeenews.com/sites/default/files/2025/03/09/1692916-varun-1.jpg",
     "stats": {
       "matches": 161,
       "wickets": 191,
@@ -747,7 +747,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 1,
     "set": "Set 1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=AbhishekSharma&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://thefederal.com/h-upload/2025/02/02/510074-abhishek-sharma-ton.webp",
     "stats": {
       "matches": 126,
       "runs": 1792,
@@ -765,7 +765,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 1,
     "set": "Set 1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=AveshKhan&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://i0.wp.com/www.socialnews.xyz/wp-content/uploads/2023/04/19/1d7fc8e421f3d6ee6c0bc3523b1f0de1.jpg?fit=2000%2C1281&quality=80&zoom=1&ssl=1?v=1681929190",
     "stats": {
       "matches": 71,
       "wickets": 106,

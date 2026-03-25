@@ -4,8 +4,9 @@ import { AuthProvider } from './contexts/AuthContext'
 import { AuctionProvider } from './contexts/AuctionContext'
 import LandingPage from './pages/LandingPage'
 import AuctionRoom from './pages/AuctionRoom'
-import Lobby from './pages/Lobby'
+import AuctionSummary from './pages/AuctionSummary'
 import './index.css'
+import Lobby from './pages/Lobby'
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
               <Route path="/" element={<LandingPage />} />
               <Route path="/lobby/:id" element={<Lobby />} />
               <Route path="/auction/:id" element={<AuctionRoom />} />
+              <Route path="/summary/:id" element={<AuctionSummary />} />
             </Routes>
           </div>
         </AuctionProvider>
