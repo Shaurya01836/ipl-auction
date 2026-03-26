@@ -378,7 +378,7 @@ const AuctionRoom = () => {
                   <Gavel size={32} className="text-yellow-500 animate-pulse" />
                </div>
             </div>
-            <h2 className="mt-8 text-2xl font-black italic tracking-widest uppercase animate-pulse text-gray-400">Syncing Auction Data...</h2>
+            <h2 className="mt-8 text-2xl font-black tracking-widest uppercase animate-pulse text-gray-400">Syncing Auction Data...</h2>
             <p className="mt-2 text-gray-600 text-sm font-bold uppercase tracking-[0.3em]">Connecting to Mega Auction</p>
          </div>
       );
@@ -395,7 +395,7 @@ const AuctionRoom = () => {
                <div className="w-24 h-24 bg-red-500/20 border border-red-500/30 rounded-3xl flex items-center justify-center text-red-500 mb-8 shadow-2xl">
                   <ShieldAlert size={48} strokeWidth={2.5} />
                </div>
-               <h2 className="text-4xl md:text-5xl font-black italic tracking-tighter uppercase mb-4">No Franchise Selected</h2>
+               <h2 className="text-4xl md:text-5xl font-black  tracking-tighter uppercase mb-4">No Franchise Selected</h2>
                <p className="text-gray-400 text-lg font-medium mb-10 leading-relaxed">
                   You must be assigned to an IPL franchise to participate in the bidding. Please return to the lobby to select your team.
                </p>
@@ -514,14 +514,14 @@ const AuctionRoom = () => {
                                  </div>
                                  <div className="overflow-hidden">
                                     <h5 className="text-[11px] font-black truncate max-w-[120px]">{t.name}</h5>
-                                    <span className={`text-[8px] font-bold uppercase tracking-widest ${manager ? 'text-gray-400' : 'text-gray-600 italic'}`}>
+                                    <span className={`text-[8px] font-bold uppercase tracking-widest ${manager ? 'text-gray-400' : 'text-gray-600'}`}>
                                        {manager ? `${manager.name} ${isMyTeam ? '(YOU)' : ''}` : 'Available'}
                                     </span>
                                  </div>
                               </div>
                               <div className="flex items-center gap-4">
                                  <div className="text-right">
-                                    <span className={`text-[10px] font-black italic block leading-none ${manager ? 'text-green-500' : 'text-gray-700'}`}>
+                                    <span className={`text-[10px] font-black block leading-none ${manager ? 'text-green-500' : 'text-gray-700'}`}>
                                        ₹{(teamDoc?.budgetRemaining || 120.0).toFixed(1)} Cr
                                     </span>
                                     <span className="text-[8px] font-bold text-gray-600 uppercase tracking-widest">{teamDoc?.squad?.length || 0}/25</span>
@@ -578,7 +578,7 @@ const AuctionRoom = () => {
                                                                   <span className="text-[7px] font-bold text-gray-400 uppercase tracking-widest">{p?.role}</span>
                                                                </div>
                                                             </div>
-                                                            <span className="text-[8px] font-black italic text-yellow-500">
+                                                            <span className="text-[8px] font-black  text-yellow-500">
                                                                ₹{p?.bidVal ? p.bidVal.toFixed(2) : (p?.basePrice || 0).toFixed(2)} Cr
                                                             </span>
                                                          </div>
@@ -588,7 +588,7 @@ const AuctionRoom = () => {
                                              })}
                                           </div>
                                        ) : (
-                                          <div className="py-4 text-center opacity-30 italic">
+                                          <div className="py-4 text-center opacity-30 ">
                                              <p className="text-[9px] font-black text-white/50 uppercase">No players joined yet</p>
                                           </div>
                                        )}
@@ -621,7 +621,7 @@ const AuctionRoom = () => {
                               <motion.h2 initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter mb-1 drop-shadow-md">
                                  {currentPlayer.name}
                               </motion.h2>
-                              <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.4, type: 'spring' }} className="text-6xl md:text-8xl font-black italic tracking-tighter text-white drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)] mb-6">
+                              <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.4, type: 'spring' }} className="text-6xl md:text-8xl font-black  tracking-tighter text-white drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)] mb-6">
                                  {displayAuctionState.status === 'sold' ? 'SOLD' : 'UNSOLD'}
                               </motion.div>
                               {displayAuctionState.status === 'sold' && (
@@ -644,15 +644,15 @@ const AuctionRoom = () => {
                            <div className="w-full flex flex-col md:flex-row items-center justify-between gap-4 px-2 md:px-4">
                               <div className="flex items-center gap-3 md:gap-4">
                                  <div className="px-2 pb-0.5 md:px-3 bg-yellow-500/20 border border-yellow-500/30 rounded-md">
-                                    <span className="text-[8px] md:text-[9px] font-black text-yellow-500 uppercase tracking-widest italic">{currentPlayer.set}</span>
+                                    <span className="text-[8px] md:text-[9px] font-black text-yellow-500 uppercase tracking-widest ">{currentPlayer.set}</span>
                                  </div>
                                  <span className="text-[9px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest">Base Price:</span>
-                                 <span className="text-lg md:text-xl font-black italic text-white">₹{currentPlayer.basePrice.toFixed(2)} Cr</span>
+                                 <span className="text-lg md:text-xl font-black  text-white">₹{currentPlayer.basePrice.toFixed(2)} Cr</span>
                               </div>
                               <div className="flex items-center gap-2 md:gap-3">
                                  <span className="text-[9px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest">High Bidder:</span>
                                  <div className="bg-green-500/20 border border-green-500/30 px-2 pb-0.5 md:px-3 rounded-md">
-                                    <span className="text-[9px] md:text-[10px] font-black text-green-400 uppercase tracking-widest italic">{displayAuctionState?.highBidderName}</span>
+                                    <span className="text-[9px] md:text-[10px] font-black text-green-400 uppercase tracking-widest ">{displayAuctionState?.highBidderName}</span>
                                  </div>
                               </div>
                            </div>
@@ -667,22 +667,22 @@ const AuctionRoom = () => {
                                  <div className="flex-1 flex flex-col gap-4 md:gap-6 w-full text-center md:text-left">
                                     <div>
                                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2 md:mb-4">
-                                          <span className="bg-blue-600 border border-blue-400/30 text-white text-[8px] md:text-[10px] font-black px-2 py-0.5 md:px-3 md:py-1 rounded-full uppercase italic tracking-widest">{currentPlayer.role}</span>
-                                          <span className="bg-purple-600/20 border border-purple-500/30 text-purple-400 text-[8px] md:text-[10px] font-black px-2 py-0.5 md:px-3 md:py-1 rounded-full uppercase italic tracking-widest">{currentPlayer.type}</span>
+                                          <span className="bg-blue-600 border border-blue-400/30 text-white text-[8px] md:text-[10px] font-black px-2 py-0.5 md:px-3 md:py-1 rounded-full uppercase  tracking-widest">{currentPlayer.role}</span>
+                                          <span className="bg-purple-600/20 border border-purple-500/30 text-purple-400 text-[8px] md:text-[10px] font-black px-2 py-0.5 md:px-3 md:py-1 rounded-full uppercase  tracking-widest">{currentPlayer.type}</span>
                                        </div>
-                                       <h2 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight italic leading-none">{currentPlayer.name}</h2>
+                                       <h2 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight  leading-none">{currentPlayer.name}</h2>
                                     </div>
                                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3 bg-white/5 p-2 md:p-3 rounded-xl md:rounded-2xl border border-white/5 backdrop-blur-sm">
-                                       <div className="text-center group"><span className="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">Matches</span><span className="text-2xl font-black italic">{currentPlayer.stats?.matches || 0}</span></div>
-                                       {currentPlayer.stats?.runs !== undefined && (<div className="text-center border-l border-white/10"><span className="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">Runs</span><span className="text-2xl font-black italic text-yellow-500">{currentPlayer.stats.runs}</span></div>)}
-                                       {currentPlayer.stats?.sr !== undefined && (<div className="text-center border-l border-white/10"><span className="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">S.Rate</span><span className="text-2xl font-black italic">{currentPlayer.stats.sr}</span></div>)}
-                                       {currentPlayer.stats?.wickets !== undefined && (<div className="text-center border-l border-white/10"><span className="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">Wkts</span><span className="text-2xl font-black italic text-green-500">{currentPlayer.stats.wickets}</span></div>)}
+                                       <div className="text-center group"><span className="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">Matches</span><span className="text-2xl font-black ">{currentPlayer.stats?.matches || 0}</span></div>
+                                       {currentPlayer.stats?.runs !== undefined && (<div className="text-center border-l border-white/10"><span className="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">Runs</span><span className="text-2xl font-black  text-yellow-500">{currentPlayer.stats.runs}</span></div>)}
+                                       {currentPlayer.stats?.sr !== undefined && (<div className="text-center border-l border-white/10"><span className="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">S.Rate</span><span className="text-2xl font-black ">{currentPlayer.stats.sr}</span></div>)}
+                                       {currentPlayer.stats?.wickets !== undefined && (<div className="text-center border-l border-white/10"><span className="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">Wkts</span><span className="text-2xl font-black  text-green-500">{currentPlayer.stats.wickets}</span></div>)}
                                     </div>
                                     <div className="flex items-center justify-between mt-2 md:mt-4">
                                        <div className="text-left">
                                           <span className="text-[8px] md:text-[10px] font-black text-blue-500 uppercase tracking-widest block mb-0.5 md:mb-1">Current Bid</span>
                                           <div className="flex items-center gap-3">
-                                             <span className="text-xl md:text-3xl font-black italic text-white leading-none">₹{(displayAuctionState?.currentBid || 0).toFixed(2)} Cr</span>
+                                             <span className="text-xl md:text-3xl font-black text-white leading-none">₹{(displayAuctionState?.currentBid || 0).toFixed(2)} Cr</span>
                                           </div>
                                        </div>
                                        <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl md:rounded-3xl flex flex-col items-center justify-center text-black border-4 border-black/10 shadow-2xl transition-all ${displayAuctionState?.status === 'sold' || displayAuctionState?.status === 'unsold' ? (displayAuctionState.status === 'sold' ? 'bg-green-500 scale-110' : 'bg-red-500 scale-110') : 'bg-yellow-500'}`}>
@@ -746,7 +746,7 @@ const AuctionRoom = () => {
                                   <div key={setName} className="space-y-6">
                                      <div className="flex items-center gap-6">
                                         <div className="h-px flex-1 bg-gradient-to-r from-transparent via-yellow-500/20 to-transparent" />
-                                        <h3 className="text-sm font-black text-yellow-500 uppercase tracking-[0.3em] bg-yellow-500/5 px-6 py-2 rounded-full border border-yellow-500/10 italic">
+                                        <h3 className="text-sm font-black text-yellow-500 uppercase tracking-[0.3em] bg-yellow-500/5 px-6 py-2 rounded-full border border-yellow-500/10 ">
                                            {setName}
                                         </h3>
                                         <div className="h-px flex-1 bg-gradient-to-r from-transparent via-yellow-500/20 to-transparent" />
@@ -760,7 +760,7 @@ const AuctionRoom = () => {
                                               <div className="text-center">
                                                  <h5 className="text-[10px] md:text-xs font-black truncate mb-0.5">{p.name}</h5>
                                                  <div className="flex items-center justify-center gap-2 mb-2">
-                                                    <span className="text-[8px] md:text-[9px] font-bold text-gray-500 uppercase italic">{p.role}</span>
+                                                    <span className="text-[8px] md:text-[9px] font-bold text-gray-500 uppercase ">{p.role}</span>
                                                  </div>
                                                  <div className="bg-black/40 px-3 py-1 rounded-lg border border-white/5">
                                                     <span className="text-[10px] font-black text-yellow-500">
@@ -784,7 +784,7 @@ const AuctionRoom = () => {
                                      <div className="text-center">
                                         <h5 className="text-[10px] md:text-xs font-black truncate mb-0.5">{p.name}</h5>
                                         <div className="flex items-center justify-center gap-2 mb-2">
-                                           <span className="text-[8px] md:text-[9px] font-bold text-gray-500 uppercase italic">{p.role}</span>
+                                           <span className="text-[8px] md:text-[9px] font-bold text-gray-500 uppercase ">{p.role}</span>
                                         </div>
                                         <div className="bg-black/40 px-3 py-1 rounded-lg border border-white/5">
                                            <span className="text-[10px] font-black text-yellow-500">
@@ -815,7 +815,7 @@ const AuctionRoom = () => {
                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="fixed top-20 right-6 z-[100] bg-[#181818] border border-white/10 p-6 rounded-[2rem] shadow-2xl w-80 backdrop-blur-3xl">
                   <div className="flex items-center justify-between mb-6"><h3 className="text-sm font-black text-gray-400 uppercase tracking-widest">Auction Settings</h3><button onClick={() => setShowSettings(false)} className="hover:text-white transition-colors"><X size={16} /></button></div>
                   <div className="space-y-6">
-                     <div><label className="block text-[10px] font-black text-blue-500 uppercase tracking-widest mb-3">Player Bid Countdown</label><div className="flex items-center gap-4"><input type="range" min="5" max="60" value={newTimerValue} onChange={(e) => setNewTimerValue(parseInt(e.target.value))} className="flex-1 accent-blue-500" /><span className="text-2xl font-black italic w-12 text-center">{newTimerValue}s</span></div></div>
+                     <div><label className="block text-[10px] font-black text-blue-500 uppercase tracking-widest mb-3">Player Bid Countdown</label><div className="flex items-center gap-4"><input type="range" min="5" max="60" value={newTimerValue} onChange={(e) => setNewTimerValue(parseInt(e.target.value))} className="flex-1 accent-blue-500" /><span className="text-2xl font-black  w-12 text-center">{newTimerValue}s</span></div></div>
                      <button onClick={async () => { await updateRoomSettings(id, { ...currentAuction.settings, bidTimer: newTimerValue }); setShowSettings(false); }} className="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20">Update Settings</button>
                   </div>
                </motion.div>

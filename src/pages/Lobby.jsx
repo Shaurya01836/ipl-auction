@@ -140,7 +140,7 @@ const Lobby = () => {
           <div className="h-10 w-px bg-white/10" />
           <div className="flex flex-col">
             <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none mb-1">Room ID</span>
-            <span className="text-xl font-black text-white italic tracking-tighter">{id}</span>
+            <span className="text-xl font-black text-white  tracking-tighter">{id}</span>
           </div>
         </div>
 
@@ -376,7 +376,7 @@ const Lobby = () => {
                             <h4 className="text-sm font-black text-white uppercase tracking-widest leading-none mb-2">Auction Bid Cycle</h4>
                             <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">Duration of bidding window per player</p>
                          </div>
-                         <div className="text-2xl font-black text-yellow-500 italic">
+                         <div className="text-2xl font-black text-yellow-500 ">
                             {currentAuction?.settings?.bidTimer || 10}<span className="text-xs ml-1 font-bold not-italic text-gray-600">S</span>
                          </div>
                       </div>

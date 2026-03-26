@@ -1,6 +1,5 @@
 # IPL Mega Auction 2026 | SaaS Simulation Platform
 
-![IPL Branding](https://upload.wikimedia.org/wikipedia/en/thumb/5/5c/This_is_the_logo_for_Rajasthan_Royals%2C_a_cricket_team_playing_in_the_Indian_Premier_League_%28IPL%29.svg/960px-This_is_the_logo_for_Rajasthan_Royals%2C_a_cricket_team_playing_in_the_Indian_Premier_League_%28IPL%29.svg.png)
 
 ## 🚀 Elevate Your Auction Experience
 The **IPL Mega Auction 2026 Simulation Platform** is a high-performance, real-time SaaS solution designed to replicate the intensity and professional aesthetic of the official IPL auction. Built with a broadcast-first philosophy, it combines low-latency bidding technology with advanced AI-driven analytics.

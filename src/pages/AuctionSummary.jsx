@@ -195,7 +195,7 @@ const AuctionSummary = () => {
                 <span className="text-orange-500 font-extrabold tracking-widest text-sm">{id}</span>
               </div>
             </div>
-            <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter uppercase leading-none drop-shadow-2xl">
+            <h1 className="text-5xl md:text-7xl font-black  tracking-tighter uppercase leading-none drop-shadow-2xl">
               Auction <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff5500] to-[#ff8c00]">Complete</span>
             </h1>
           </div>
@@ -251,7 +251,7 @@ const AuctionSummary = () => {
                     <Trophy size={24} />
                 </div>
                 <div>
-                  <h2 className="text-3xl font-black uppercase italic tracking-tighter">Leaderboard</h2>
+                  <h2 className="text-3xl font-black uppercase  tracking-tighter">Leaderboard</h2>
                   <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em]">The Most Expensive Signings</p>
                 </div>
               </div>
@@ -266,7 +266,7 @@ const AuctionSummary = () => {
                     className="group relative bg-white/[0.03] border border-white/5 p-6 rounded-[2rem] transition-all hover:bg-white/5 hover:border-orange-500/30 flex items-center justify-between"
                   >
                     <div className="flex items-center gap-8">
-                      <span className="text-5xl font-black italic text-white/5 group-hover:text-orange-500/10 transition-colors">#{idx + 1}</span>
+                      <span className="text-5xl font-black  text-white/5 group-hover:text-orange-500/10 transition-colors">#{idx + 1}</span>
                       <div className="w-20 h-20 bg-black/40 border border-white/10 rounded-2xl overflow-hidden group-hover:scale-105 transition-transform duration-500 p-2">
                         <img src={player.image} className="w-full h-full object-cover filter drop-shadow-2xl" />
                       </div>
@@ -286,7 +286,7 @@ const AuctionSummary = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-4xl font-black italic text-[#ff5500] tracking-tighter mb-1">
+                      <div className="text-4xl font-black text-[#ff5500] tracking-tighter mb-1">
                         ₹{player.bidVal.toFixed(2)}<span className="text-xs ml-1 font-bold not-italic">Cr</span>
                       </div>
                       <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest">Winning Bid</p>
@@ -313,7 +313,7 @@ const AuctionSummary = () => {
                     <Zap size={32} />
                   </div>
                   <div>
-                    <h2 className="text-3xl font-black uppercase italic tracking-tighter">Draft Power Rankings</h2>
+                    <h2 className="text-3xl font-black uppercase  tracking-tighter">Draft Power Rankings</h2>
                     <p className="text-[10px] font-bold text-blue-400 uppercase tracking-[0.3em] flex items-center gap-2">
                       
                        Gemini AI Engine • Evaluation Complete
@@ -342,7 +342,7 @@ const AuctionSummary = () => {
                         className="w-full text-left p-6 relative z-10"
                       >
                          {/* Rank Number */}
-                         <div className="absolute -left-4 -top-6 text-9xl font-black italic text-white/[0.02] pointer-events-none group-hover:text-blue-500/[0.03] transition-colors">
+                         <div className="absolute -left-4 -top-6 text-9xl italic font-black text-white/10 pointer-events-none group-hover:text-blue-500/[0.03] transition-colors">
                            #{idx + 1}
                          </div>
 
@@ -353,7 +353,7 @@ const AuctionSummary = () => {
                                  <img src={team.logo} alt="" className="w-full h-full object-contain" />
                               </div>
                               <div>
-                                <h3 className="text-2xl font-black uppercase italic tracking-tight">{team.name}</h3>
+                                <h3 className="text-2xl font-black uppercase  tracking-tight">{team.name}</h3>
                                 <div className="flex items-center gap-3 mt-1">
                                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-tight">Managed by {team.managerName}</p>
                                    {team.isDisqualified && (
@@ -372,7 +372,7 @@ const AuctionSummary = () => {
                                     <AlertTriangle className="text-red-500" size={24} />
                                   ) : (
                                     <div className="flex flex-col items-center">
-                                       <span className="text-3xl font-black italic text-blue-500 leading-none">{team.totalScore}</span>
+                                       <span className="text-3xl font-black text-blue-500 leading-none">{team.totalScore}</span>
                                        <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest mt-1">SCORE</span>
                                     </div>
                                   )}
@@ -411,7 +411,7 @@ const AuctionSummary = () => {
                                              </div>
                                              <span className="text-xs font-black text-gray-300 uppercase tracking-widest">{stat.label}</span>
                                           </div>
-                                          <span className={`text-sm font-black italic ${stat.color}`}>{stat.val}%</span>
+                                          <span className={`text-sm font-black ${stat.color}`}>{stat.val}%</span>
                                        </div>
                                        <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden">
                                           <motion.div 
@@ -438,7 +438,7 @@ const AuctionSummary = () => {
                                             {team.isDisqualified ? 'Security Audit Failed' : 'Elite Appraisal Status'}
                                          </span>
                                       </div>
-                                      <p className="text-xl font-black italic leading-tight text-white/90">
+                                      <p className="text-xl font-black  leading-tight text-white/90">
                                          &ldquo;{team.insight}&rdquo;
                                       </p>
                                    </div>
@@ -446,11 +446,11 @@ const AuctionSummary = () => {
                                    <div className="flex gap-4">
                                       <div className="flex-1 bg-white/5 border border-white/5 p-4 rounded-2xl">
                                          <span className="block text-[8px] font-black text-gray-500 uppercase mb-1">Squad Size</span>
-                                         <span className={`text-lg font-black italic ${team.playerCount < 16 ? 'text-red-500' : 'text-white'}`}>{team.playerCount}/25</span>
+                                         <span className={`text-lg font-black  ${team.playerCount < 16 ? 'text-red-500' : 'text-white'}`}>{team.playerCount}/25</span>
                                       </div>
                                       <div className="flex-1 bg-white/5 border border-white/5 p-4 rounded-2xl">
                                          <span className="block text-[8px] font-black text-gray-500 uppercase mb-1">Status</span>
-                                         <span className={`text-lg font-black italic ${team.isDisqualified ? 'text-red-500' : 'text-green-500'}`}>
+                                         <span className={`text-lg font-black  ${team.isDisqualified ? 'text-red-500' : 'text-green-500'}`}>
                                             {team.isDisqualified ? 'Disqualified' : 'Qualified'}
                                          </span>
                                       </div>
@@ -509,7 +509,7 @@ const AuctionSummary = () => {
                            <img src={t.logo} alt="" className="w-full h-full object-contain" />
                         </div>
                         <div className="text-left">
-                          <h3 className="text-2xl font-black uppercase italic tracking-tighter group-hover:text-orange-500 transition-colors uppercase">{t.name}</h3>
+                          <h3 className="text-2xl font-black uppercase  tracking-tighter group-hover:text-orange-500 transition-colors uppercase">{t.name}</h3>
                           <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em] leading-none mt-1">Managed by {manager?.name || 'N/A'}</p>
                         </div>
                       </div>
@@ -519,15 +519,15 @@ const AuctionSummary = () => {
                         <div className="hidden md:flex gap-12 text-right border-r border-white/5 pr-12 h-10 items-center">
                           <div>
                             <span className="block text-[8px] font-black text-blue-500 uppercase tracking-widest mb-0.5">Players</span>
-                            <span className="text-lg font-black italic">{squad.length}</span>
+                            <span className="text-lg font-black ">{squad.length}</span>
                           </div>
                           <div>
                             <span className="block text-[8px] font-black text-purple-500 uppercase tracking-widest mb-0.5">Overseas</span>
-                            <span className="text-lg font-black italic">{osCount}</span>
+                            <span className="text-lg font-black ">{osCount}</span>
                           </div>
                           <div>
                             <span className="block text-[8px] font-black text-orange-500 uppercase tracking-widest mb-0.5">Spent</span>
-                            <span className="text-lg font-black italic">₹{totalSpent.toFixed(1)}Cr</span>
+                            <span className="text-lg font-black ">₹{totalSpent.toFixed(1)}Cr</span>
                           </div>
                         </div>
 
@@ -556,7 +556,7 @@ const AuctionSummary = () => {
                                   <div className="flex items-center gap-4">
                                     <h4 className="text-[10px] font-black text-orange-500 uppercase tracking-[0.4em]">{role}s</h4>
                                     <div className="flex-1 h-px bg-orange-500/20" />
-                                    <span className="text-[10px] font-black text-gray-700 italic">{rolePlayers.length} Members</span>
+                                    <span className="text-[10px] font-black text-gray-700 ">{rolePlayers.length} Members</span>
                                   </div>
                                   
                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -581,7 +581,7 @@ const AuctionSummary = () => {
                                           </div>
                                         </div>
                                         <div className="text-right">
-                                          <div className="text-[14px] font-black italic text-green-500">₹{p.bid.toFixed(2)}Cr</div>
+                                          <div className="text-[14px] font-black  text-green-500">₹{p.bid.toFixed(2)}Cr</div>
                                         </div>
                                       </motion.div>
                                     ))}
