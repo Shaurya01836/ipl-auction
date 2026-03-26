@@ -2,16 +2,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
-:root {
-  --ipl-blue: #0b0e1e;
-  --ipl-gold: #d4af37;
-  --ipl-dark: #0b0e1e;
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system;
+  --color-ipl-blue: #0b0e1e;
+  --color-ipl-gold: #d4af37;
+  --color-ipl-dark: #0b0e1e;
 }
 
 body {
   margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: var(--ipl-dark);
+  font-family: var(--font-sans);
+  background-color: var(--color-ipl-dark);
   color: white;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

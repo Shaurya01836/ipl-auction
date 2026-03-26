@@ -5,6 +5,7 @@ import { useAuction } from '../contexts/AuctionContext';
 import { db } from '../lib/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { IPL_PLAYERS } from '../data/players';
+import { TEAMS } from '../data/teams';
 import { 
   Zap, 
   Gavel, 
@@ -22,18 +23,35 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const TEAMS = [
-  { id: 'MI', name: 'Mumbai Indians', color: 'bg-blue-600', textColor: 'text-white' },
-  { id: 'CSK', name: 'Chennai Super Kings', color: 'bg-yellow-400', textColor: 'text-black' },
-  { id: 'RCB', name: 'Royal Challengers Bengaluru', color: 'bg-red-600', textColor: 'text-white' },
-  { id: 'KKR', name: 'Kolkata Knight Riders', color: 'bg-purple-800', textColor: 'text-white' },
-  { id: 'DC', name: 'Delhi Capitals', color: 'bg-blue-500', textColor: 'text-white' },
-  { id: 'PBKS', name: 'Punjab Kings', color: 'bg-red-500', textColor: 'text-white' },
-  { id: 'RR', name: 'Rajasthan Royals', color: 'bg-pink-600', textColor: 'text-white' },
-  { id: 'SRH', name: 'Sunrisers Hyderabad', color: 'bg-orange-500', textColor: 'text-white' },
-  { id: 'GT', name: 'Gujarat Titans', color: 'bg-slate-700', textColor: 'text-white' },
-  { id: 'LSG', name: 'Lucknow Super Giants', color: 'bg-pink-800', textColor: 'text-white' },
-];
+const LogoMarquee = () => {
+  const marqueeTeams = [...TEAMS, ...TEAMS]; // Double for seamless loop
+  return (
+    <div className="relative overflow-hidden w-full py-12 select-none">
+      <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#050505] to-transparent z-10" />
+      <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#050505] to-transparent z-10" />
+      
+      <motion.div 
+        className="flex gap-12 items-center"
+        animate={{ x: [0, -1920] }}
+        transition={{ 
+          duration: 40, 
+          repeat: Infinity, 
+          ease: "linear" 
+        }}
+      >
+        {marqueeTeams.map((t, idx) => (
+          <div key={`${t.id}-${idx}`} className="flex-shrink-0 group">
+            <img 
+              src={t.logo} 
+              alt={t.name} 
+              className="h-12 md:h-16 w-auto object-contain transition-all duration-500 opacity-40 group-hover:opacity-100 group-hover:scale-110 grayscale group-hover:grayscale-0 filter drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]"
+            />
+          </div>
+        ))}
+      </motion.div>
+    </div>
+  );
+};
 
 const LandingPage = () => {
   const [selectedTeam, setSelectedTeam] = useState('MI');
@@ -93,12 +111,16 @@ const LandingPage = () => {
               }),
               status: auctionData?.status || 'unknown',
               playerCount: auctionData?.players?.length || 0,
+              createdAt: teamData.createdAt || null
             };
           })
         );
         
-        // Sort by squad size (most recent/biggest first)
-        sessions.sort((a, b) => b.squad.length - a.squad.length);
+        // Sort by timestamp (latest first), then fallback to squad size
+        sessions.sort((a, b) => {
+          if (a.createdAt && b.createdAt) return b.createdAt.seconds - a.createdAt.seconds;
+          return b.squad.length - a.squad.length;
+        });
         setHistoryData(sessions);
       } catch (err) {
         console.error('Failed to fetch history:', err);
@@ -230,6 +252,20 @@ const LandingPage = () => {
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4 text-xs text-red-500 font-bold">{error}</motion.p>
             )}
           </div>
+        </motion.div>
+        
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="w-full max-w-6xl mt-12 mb-4"
+        >
+          <div className="flex items-center justify-center gap-4 mb-4">
+             <div className="h-px w-12 bg-white/10" />
+             <span className="text-[10px] font-black text-gray-600 uppercase tracking-[0.4em]">Official Franchises</span>
+             <div className="h-px w-12 bg-white/10" />
+          </div>
+          <LogoMarquee />
         </motion.div>
 
         <footer className="mt-12 mb-8 flex flex-col items-center gap-4 z-10 w-full px-4">
@@ -389,8 +425,8 @@ const LandingPage = () => {
                             <CheckCircle2 size={10} className="text-black" />
                           </motion.div>
                         )}
-                        <div className={`w-10 h-10 rounded-full ${t.color} flex items-center justify-center ${t.textColor} font-black text-[11px] mb-2 transition-transform duration-300 ${selectedTeam === t.id ? 'scale-110 shadow-lg' : 'group-hover/team:scale-105 opacity-60 group-hover/team:opacity-100'}`}>
-                          {t.id}
+                        <div className={`w-12 h-12 rounded-2xl bg-white/5 border border-white/5 p-1.5 flex items-center justify-center mb-2 transition-all duration-300 ${selectedTeam === t.id ? 'scale-110 border-yellow-400/50 shadow-lg' : 'group-hover/team:scale-105 opacity-60 group-hover/team:opacity-100'}`}>
+                          <img src={t.logo} alt="" className="w-full h-full object-contain filter" />
                         </div>
                         <span className={`text-[8px] font-black uppercase text-center tracking-tighter truncate w-full ${selectedTeam === t.id ? 'text-yellow-400' : 'text-gray-500'}`}>
                           {t.name.split(' ').slice(0, 1)}
@@ -490,8 +526,8 @@ const LandingPage = () => {
                               }`}
                             >
                               <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs ${teamMeta?.color || 'bg-gray-700'} ${teamMeta?.textColor || 'text-white'}`}>
-                                  {session.teamId}
+                                <div className={`w-12 h-12 rounded-2xl bg-white/5 border border-white/10 p-1.5 flex items-center justify-center shadow-2xl relative`}>
+                                   <img src={teamMeta?.logo} alt="" className="w-full h-full object-contain" />
                                 </div>
                                 <div>
                                   <h5 className="text-sm font-black uppercase tracking-tight">{teamMeta?.name || session.teamName}</h5>

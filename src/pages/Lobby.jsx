@@ -24,18 +24,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const TEAMS = [
-  { id: 'MI', name: 'Mumbai Indians', color: 'bg-blue-600', textColor: 'text-white' },
-  { id: 'CSK', name: 'Chennai Super Kings', color: 'bg-yellow-400', textColor: 'text-black' },
-  { id: 'RCB', name: 'Royal Challengers Bengaluru', color: 'bg-red-600', textColor: 'text-white' },
-  { id: 'KKR', name: 'Kolkata Knight Riders', color: 'bg-purple-800', textColor: 'text-white' },
-  { id: 'DC', name: 'Delhi Capitals', color: 'bg-blue-500', textColor: 'text-white' },
-  { id: 'PBKS', name: 'Punjab Kings', color: 'bg-red-500', textColor: 'text-white' },
-  { id: 'RR', name: 'Rajasthan Royals', color: 'bg-pink-600', textColor: 'text-white' },
-  { id: 'SRH', name: 'Sunrisers Hyderabad', color: 'bg-orange-500', textColor: 'text-white' },
-  { id: 'GT', name: 'Gujarat Titans', color: 'bg-slate-700', textColor: 'text-white' },
-  { id: 'LSG', name: 'Lucknow Super Giants', color: 'bg-pink-800', textColor: 'text-white' },
-];
+import { TEAMS } from '../data/teams';
 
 const Lobby = () => {
   const { id } = useParams();
@@ -254,8 +243,8 @@ const Lobby = () => {
                       </motion.div>
                     )}
 
-                    <div className={`w-10 h-10 rounded-full ${team.color} ${team.textColor} flex items-center justify-center font-black text-[10px] mb-2 transition-transform duration-300 ${isMine ? 'scale-110 shadow-lg' : 'group-hover/team:scale-110'}`}>
-                      {isSelectingTeam === team.id ? <Loader2 size={14} className="animate-spin" /> : team.id}
+                    <div className={`w-12 h-12 rounded-2xl bg-white/5 border border-white/5 p-1.5 flex items-center justify-center mb-2 transition-all duration-300 ${isMine ? 'scale-110 border-yellow-400 shadow-lg' : 'group-hover/team:scale-110'}`}>
+                      {isSelectingTeam === team.id ? <Loader2 size={14} className="animate-spin text-yellow-500" /> : <img src={team.logo} alt="" className="w-full h-full object-contain" />}
                     </div>
                     
                     <span className={`text-[8px] font-black uppercase text-center tracking-tighter truncate w-full ${isMine ? 'text-yellow-400' : isTaken ? 'text-gray-600' : 'text-gray-500'}`}>
@@ -317,9 +306,13 @@ const Lobby = () => {
                           className="flex items-center justify-between bg-white/[0.01] border border-white/5 p-4 rounded-2xl group transition-all hover:bg-white/[0.03] hover:border-white/10"
                         >
                           <div className="flex items-center gap-4">
-                            <div className={`w-12 h-12 rounded-2xl border border-white/10 flex items-center justify-center font-black shadow-2xl relative overflow-hidden ${playerTeam?.color || 'bg-gray-800'}`}>
-                              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none" />
-                              <span className={`${playerTeam?.textColor || 'text-gray-500'} relative z-10 text-xs`}>{player.team || '?'}</span>
+                            <div className={`w-12 h-12 rounded-2xl border border-white/10 flex items-center justify-center shadow-2xl relative overflow-hidden bg-white/5 p-1.5`}>
+                              <div className="absolute inset-x-0 bottom-0 top-1/2 bg-black/5 pointer-events-none" />
+                              {playerTeam ? (
+                                <img src={playerTeam.logo} alt="" className="w-full h-full object-contain relative z-10" />
+                              ) : (
+                                <span className="text-gray-500 relative z-10 text-xs">?</span>
+                              )}
                             </div>
                             <div>
                               <div className="flex items-center gap-2">

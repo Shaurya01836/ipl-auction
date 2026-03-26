@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuction } from '../contexts/AuctionContext';
 import { useAuth } from '../contexts/AuthContext';
 import { IPL_PLAYERS } from '../data/players';
+import { TEAMS } from '../data/teams';
 import {
   Trophy,
   Users,
@@ -25,19 +26,6 @@ import {
   Coins
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-const TEAMS = [
-  { id: 'MI', name: 'Mumbai Indians', color: 'bg-blue-600', textColor: 'text-white' },
-  { id: 'CSK', name: 'Chennai Super Kings', color: 'bg-yellow-400', textColor: 'text-black' },
-  { id: 'RCB', name: 'Royal Challengers Bengaluru', color: 'bg-red-600', textColor: 'text-white' },
-  { id: 'KKR', name: 'Kolkata Knight Riders', color: 'bg-purple-800', textColor: 'text-white' },
-  { id: 'DC', name: 'Delhi Capitals', color: 'bg-blue-500', textColor: 'text-white' },
-  { id: 'PBKS', name: 'Punjab Kings', color: 'bg-red-500', textColor: 'text-white' },
-  { id: 'RR', name: 'Rajasthan Royals', color: 'bg-pink-600', textColor: 'text-white' },
-  { id: 'SRH', name: 'Sunrisers Hyderabad', color: 'bg-orange-500', textColor: 'text-white' },
-  { id: 'GT', name: 'Gujarat Titans', color: 'bg-slate-700', textColor: 'text-white' },
-  { id: 'LSG', name: 'Lucknow Super Giants', color: 'bg-pink-800', textColor: 'text-white' },
-];
 
 const AuctionSummary = () => {
   const { id } = useParams();
@@ -97,7 +85,7 @@ const AuctionSummary = () => {
           totalScore: 0, 
           isDisqualified: true, 
           playerCount: 0,
-          insight: "Disqualified: Failed to meet the minimum requirement of 16 players.",
+          insight: "Disqualified: Failed to meet the minimum requirement of 18 players.",
           stats: { batting: 0, bowling: 0, balance: 0, value: 0 } 
         };
       }
@@ -134,11 +122,11 @@ const AuctionSummary = () => {
 
       const totalScore = (battingScore * 0.45) + (bowlingScore * 0.4) + balanceBonus + valueScore;
       const playerCount = squad.length;
-      const isDisqualified = playerCount < 16;
+      const isDisqualified = playerCount < 18;
 
       // AI Insights
       let insight = "Balanced squad with good potential.";
-      if (isDisqualified) insight = "Disqualified: Failed to meet the minimum requirement of 16 players.";
+      if (isDisqualified) insight = "Disqualified: Failed to meet the minimum requirement of 18 players.";
       else {
         if (battingScore > bowlingScore + 20) insight = "Explosive batting lineup! Capable of chasing any target.";
         if (bowlingScore > battingScore + 20) insight = "Powerhouse bowling units. Defending low totals is their specialty.";
@@ -361,9 +349,8 @@ const AuctionSummary = () => {
                          <div className="flex items-center justify-between gap-8 relative z-10">
                             {/* Team Info */}
                             <div className="flex items-center gap-6">
-                              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center font-black text-2xl shadow-2xl relative ${team.color} ${team.textColor}`}>
-                                 <div className="absolute inset-x-0 bottom-0 top-1/2 bg-black/10 rounded-b-2xl" />
-                                 <span className="relative z-10">{team.id.substring(0, 2)}</span>
+                              <div className={`w-16 h-16 rounded-2xl bg-white/5 border border-white/10 p-2 flex items-center justify-center shadow-2xl relative`}>
+                                 <img src={team.logo} alt="" className="w-full h-full object-contain" />
                               </div>
                               <div>
                                 <h3 className="text-2xl font-black uppercase italic tracking-tight">{team.name}</h3>
@@ -459,7 +446,7 @@ const AuctionSummary = () => {
                                    <div className="flex gap-4">
                                       <div className="flex-1 bg-white/5 border border-white/5 p-4 rounded-2xl">
                                          <span className="block text-[8px] font-black text-gray-500 uppercase mb-1">Squad Size</span>
-                                         <span className={`text-lg font-black italic ${team.playerCount < 16 ? 'text-red-500' : 'text-white'}`}>{team.playerCount}/16+</span>
+                                         <span className={`text-lg font-black italic ${team.playerCount < 16 ? 'text-red-500' : 'text-white'}`}>{team.playerCount}/25</span>
                                       </div>
                                       <div className="flex-1 bg-white/5 border border-white/5 p-4 rounded-2xl">
                                          <span className="block text-[8px] font-black text-gray-500 uppercase mb-1">Status</span>
@@ -508,13 +495,18 @@ const AuctionSummary = () => {
                     {/* Team Bar */}
                     <button
                       onClick={() => setExpandedTeam(isExpanded ? null : t.id)}
-                      className={`w-full flex items-center justify-between p-6 rounded-[2.5rem] bg-white/[0.03] border transition-all duration-500 ${
-                        isExpanded ? 'border-orange-500/50 bg-white/5' : 'border-white/5 hover:border-white/10'
+                      className={`w-full flex items-center justify-between p-6 rounded-[2.5rem] bg-[#0c0c0c] border transition-all duration-500 relative overflow-hidden group ${
+                        isExpanded ? 'border-orange-500/50 bg-white/5 shadow-2xl' : 'border-white/5 hover:border-white/10'
                       }`}
                     >
-                      <div className="flex items-center gap-6">
-                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center font-black text-2xl shadow-2xl ${t.color} ${t.textColor} border-4 border-black/10`}>
-                          {t.id.substring(0, 2)}
+                      {/* Massive Background Logo for Style */}
+                      <div className="absolute -right-12 -bottom-12 w-64 h-64 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity pointer-events-none grayscale">
+                         <img src={t.logo} alt="" className="w-full h-full object-contain" />
+                      </div>
+
+                      <div className="flex items-center gap-6 relative z-10">
+                        <div className={`w-16 h-16 rounded-2xl bg-white/5 border border-white/10 p-2 flex items-center justify-center shadow-2xl relative`}>
+                           <img src={t.logo} alt="" className="w-full h-full object-contain" />
                         </div>
                         <div className="text-left">
                           <h3 className="text-2xl font-black uppercase italic tracking-tighter group-hover:text-orange-500 transition-colors uppercase">{t.name}</h3>
