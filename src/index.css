@@ -12,7 +12,7 @@
 body {
   margin: 0;
   font-family: var(--font-sans);
-  background-color: var(--color-ipl-dark);
+  background-color: black;
   color: white;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
