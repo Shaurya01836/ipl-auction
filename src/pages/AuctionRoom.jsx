@@ -84,6 +84,7 @@ const AuctionRoom = () => {
    const celebrationAudioRef = useRef(null);
 
    const [optimisticState, setOptimisticState] = useState(null);
+   const [joiningTeam, setJoiningTeam] = useState(null);
 
    // Clear optimistic state when DB catches up
    useEffect(() => {
@@ -434,7 +435,6 @@ const AuctionRoom = () => {
    }
 
    // Manual team selection for late joiners
-   const [joiningTeam, setJoiningTeam] = useState(null);
 
    const handleQuickJoin = async (selectedTeam) => {
       if (joiningTeam) return;
