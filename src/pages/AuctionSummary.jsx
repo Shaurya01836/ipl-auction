@@ -11,11 +11,18 @@ import {
   TrendingUp,
   Share2,
   Download,
-  CheckCircle2,
-  Clock,
   Wifi,
   History,
-  LayoutGrid
+  LayoutGrid,
+  Zap,
+  BarChart3,
+  CheckCircle2 as CheckIcon,
+  Verified,
+  AlertTriangle,
+  Sword,
+  Shield,
+  Activity,
+  Coins
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -40,6 +47,7 @@ const AuctionSummary = () => {
   
   const [activeTab, setActiveTab] = useState('squads');
   const [expandedTeam, setExpandedTeam] = useState(null);
+  const [expandedPointsTeam, setExpandedPointsTeam] = useState(null);
 
   useEffect(() => {
     if (id && user?.uid) {
@@ -69,6 +77,98 @@ const AuctionSummary = () => {
   }, [roomTeams]);
 
   const topPlayers = allSoldPlayers.slice(0, 5);
+
+  // AI Evaluation Logic (Gemini Engine Inspired)
+  const teamRankings = useMemo(() => {
+    return TEAMS.map(t => {
+      const teamDoc = roomTeams.find(doc => doc.teamId === t.id);
+      const manager = currentAuction?.players?.find(p => p.team === t.id);
+      
+      const squad = (teamDoc?.squad || []).map(s => {
+        const pid = typeof s === 'string' ? s : s.id;
+        const bid = typeof s === 'string' ? 0 : s.bid;
+        return { ...IPL_PLAYERS.find(p => p.id === pid), bid };
+      });
+
+      if (squad.length === 0) {
+        return { 
+          ...t, 
+          managerName: manager?.name || 'Manager',
+          totalScore: 0, 
+          isDisqualified: true, 
+          playerCount: 0,
+          insight: "Disqualified: Failed to meet the minimum requirement of 16 players.",
+          stats: { batting: 0, bowling: 0, balance: 0, value: 0 } 
+        };
+      }
+
+      // 1. Batting Score (Average of top 4 batters)
+      const batters = squad.filter(p => p.role === 'Batsman' || p.role === 'Wicket-Keeper' || p.role === 'All-Rounder')
+        .sort((a, b) => (b.stats?.sr || 0) - (a.stats?.sr || 0));
+      const battingScore = (batters.slice(0, 4).reduce((acc, p) => {
+        const srVal = p.stats?.sr || 120;
+        const avgVal = p.stats?.avg || 25;
+        return acc + (srVal / 1.5) + (avgVal * 0.8);
+      }, 0) / 4) || 30;
+
+      // 2. Bowling Score (Average of top 4 bowlers)
+      const bowlers = squad.filter(p => p.role === 'Bowler' || p.role === 'All-Rounder')
+        .sort((a, b) => (b.stats?.wickets || 0) - (a.stats?.wickets || 0));
+      const bowlingScore = (bowlers.slice(0, 4).reduce((acc, p) => {
+        const econVal = p.stats?.econ || 8.5;
+        const wktRate = (p.stats?.wickets / (p.stats?.matches || 50)) || 1;
+        return acc + (100 / econVal) * 5 + (wktRate * 20);
+      }, 0) / 4) || 30;
+
+      // 3. Squad Balance (Bonus for covering all bases)
+      const hasWK = squad.some(p => p.role === 'Wicket-Keeper');
+      const hasAR = squad.some(p => p.role === 'All-Rounder');
+      const roleCount = new Set(squad.map(p => p.role)).size;
+      const overseasCount = squad.filter(p => p.country !== 'IND').length;
+      const balanceBonus = (hasWK ? 15 : 0) + (hasAR ? 10 : 0) + (roleCount * 5) + (overseasCount >= 3 ? 10 : 0);
+
+      // 4. Value/Efficiency (Base vs Bid)
+      const totalBid = squad.reduce((acc, p) => acc + (p.bid || 0), 0);
+      const totalBase = squad.reduce((acc, p) => acc + (p.basePrice || 0), 0);
+      const valueScore = Math.max(0, 30 - (totalBid - totalBase));
+
+      const totalScore = (battingScore * 0.45) + (bowlingScore * 0.4) + balanceBonus + valueScore;
+      const playerCount = squad.length;
+      const isDisqualified = playerCount < 16;
+
+      // AI Insights
+      let insight = "Balanced squad with good potential.";
+      if (isDisqualified) insight = "Disqualified: Failed to meet the minimum requirement of 16 players.";
+      else {
+        if (battingScore > bowlingScore + 20) insight = "Explosive batting lineup! Capable of chasing any target.";
+        if (bowlingScore > battingScore + 20) insight = "Powerhouse bowling units. Defending low totals is their specialty.";
+        if (balanceBonus > 45) insight = "Clinical squad building. Masterclass in role-specific recruitment.";
+        if (valueScore > 25) insight = "Masters of the auction. Found incredible value in every signing.";
+        if (overseasCount > 4) insight = "Heavy reliance on international stars. High-risk, high-reward.";
+      }
+
+      return {
+        ...t,
+        managerName: manager?.name || 'Manager',
+        totalScore: isDisqualified ? 0 : Math.round(totalScore),
+        isDisqualified,
+        playerCount,
+        insight,
+        stats: {
+          batting: Math.min(100, Math.round(battingScore)),
+          bowling: Math.min(100, Math.round(bowlingScore)),
+          balance: Math.min(100, Math.round(balanceBonus * 2)),
+          value: Math.min(100, Math.round(valueScore * 3.3))
+        }
+      };
+    }).sort((a, b) => {
+      // Sort disqualified teams to the bottom
+      if (a.isDisqualified && !b.isDisqualified) return 1;
+      if (!a.isDisqualified && b.isDisqualified) return -1;
+      // Then sort by total score
+      return b.totalScore - a.totalScore;
+    });
+  }, [roomTeams, currentAuction]);
 
   if (loading || !currentAuction) {
     return (
@@ -131,11 +231,12 @@ const AuctionSummary = () => {
             {[
               { id: 'squads', label: 'Team Squads', icon: Users },
               { id: 'leaderboard', label: 'Top Expensive', icon: Trophy },
+              { id: 'points', label: 'Points Table', icon: BarChart3 },
             ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-10 py-4 rounded-[1.5rem] font-black uppercase text-[10px] tracking-[0.2em] transition-all flex items-center gap-3 ${
+                className={`px-6 md:px-10 py-4 rounded-[1.5rem] font-black uppercase text-[10px] tracking-[0.2em] transition-all flex items-center gap-3 ${
                   activeTab === tab.id 
                     ? 'bg-[#ff5500] text-white shadow-2xl' 
                     : 'text-gray-500 hover:text-white hover:bg-white/5'
@@ -204,6 +305,178 @@ const AuctionSummary = () => {
                     </div>
                   </motion.div>
                 ))}
+              </div>
+            </motion.section>
+          ) : activeTab === 'points' ? (
+            <motion.section
+              key="points"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.05 }}
+              className="max-w-5xl mx-auto space-y-8"
+            >
+              {/* AI Badge */}
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-10 bg-blue-600/5 border border-blue-500/10 p-8 rounded-[2.5rem] relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <Zap size={120} className="text-blue-500" />
+                </div>
+                <div className="flex items-center gap-6 relative z-10">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-400 rounded-3xl flex items-center justify-center text-white shadow-[0_0_30px_rgba(59,130,246,0.5)]">
+                    <Zap size={32} />
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-black uppercase italic tracking-tighter">Draft Power Rankings</h2>
+                    <p className="text-[10px] font-bold text-blue-400 uppercase tracking-[0.3em] flex items-center gap-2">
+                      
+                       Gemini AI Engine • Evaluation Complete
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                {teamRankings.map((team, idx) => {
+                  if (team.playerCount === 0 && !team.isDisqualified) return null;
+                  const isEx = expandedPointsTeam === team.id;
+                  
+                  return (
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                      key={team.id}
+                      className={`group relative bg-[#0c0c0c] border p-1 rounded-[2.5rem] transition-all overflow-hidden ${
+                        team.isDisqualified ? 'border-red-500/20 opacity-90' : 'border-white/5 hover:border-blue-500/30'
+                      }`}
+                    >
+                      <button
+                        onClick={() => setExpandedPointsTeam(isEx ? null : team.id)}
+                        className="w-full text-left p-6 relative z-10"
+                      >
+                         {/* Rank Number */}
+                         <div className="absolute -left-4 -top-6 text-9xl font-black italic text-white/[0.02] pointer-events-none group-hover:text-blue-500/[0.03] transition-colors">
+                           #{idx + 1}
+                         </div>
+
+                         <div className="flex items-center justify-between gap-8 relative z-10">
+                            {/* Team Info */}
+                            <div className="flex items-center gap-6">
+                              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center font-black text-2xl shadow-2xl relative ${team.color} ${team.textColor}`}>
+                                 <div className="absolute inset-x-0 bottom-0 top-1/2 bg-black/10 rounded-b-2xl" />
+                                 <span className="relative z-10">{team.id.substring(0, 2)}</span>
+                              </div>
+                              <div>
+                                <h3 className="text-2xl font-black uppercase italic tracking-tight">{team.name}</h3>
+                                <div className="flex items-center gap-3 mt-1">
+                                   <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-tight">Managed by {team.managerName}</p>
+                                   {team.isDisqualified && (
+                                     <span className="px-2 py-0.5 bg-red-500/10 text-red-500 text-[8px] font-black uppercase rounded border border-red-500/20">
+                                       Disqualified
+                                     </span>
+                                   )}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-8">
+                               {/* Draft Score Indicator */}
+                               <div className="text-right border-r border-white/5 pr-8">
+                                  {team.isDisqualified ? (
+                                    <AlertTriangle className="text-red-500" size={24} />
+                                  ) : (
+                                    <div className="flex flex-col items-center">
+                                       <span className="text-3xl font-black italic text-blue-500 leading-none">{team.totalScore}</span>
+                                       <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest mt-1">SCORE</span>
+                                    </div>
+                                  )}
+                               </div>
+
+                               <div className={`w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center transition-all duration-500 ${isEx ? 'rotate-180 bg-blue-600 text-white shadow-lg' : 'text-gray-500 group-hover:text-white'}`}>
+                                  <ChevronDown size={20} />
+                               </div>
+                            </div>
+                         </div>
+                      </button>
+
+                      <AnimatePresence>
+                        {isEx && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden border-t border-white/5 bg-white/[0.01]"
+                          >
+                            <div className="p-8 space-y-8">
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                                {/* Analysis Metrics */}
+                                <div className="grid grid-cols-2 gap-4">
+                                   {[
+                                     { label: 'Batting', icon: Sword, val: team.stats.batting, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+                                     { label: 'Bowling', icon: Shield, val: team.stats.bowling, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+                                     { label: 'Balance', icon: Activity, val: team.stats.balance, color: 'text-purple-400', bg: 'bg-purple-400/10' },
+                                     { label: 'Value', icon: Coins, val: team.stats.value, color: 'text-green-500', bg: 'bg-green-500/10' }
+                                   ].map(stat => (
+                                     <div key={stat.label} className={`${stat.bg} p-4 rounded-3xl border border-white/5`}>
+                                       <div className="flex items-center justify-between mb-3">
+                                          <div className="flex items-center gap-3">
+                                             <div className={`p-1.5 rounded-lg bg-black/40`}>
+                                                <stat.icon size={14} className={stat.color} />
+                                             </div>
+                                             <span className="text-xs font-black text-gray-300 uppercase tracking-widest">{stat.label}</span>
+                                          </div>
+                                          <span className={`text-sm font-black italic ${stat.color}`}>{stat.val}%</span>
+                                       </div>
+                                       <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden">
+                                          <motion.div 
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${stat.val}%` }}
+                                            transition={{ duration: 1 }}
+                                            className={`h-full ${stat.color.replace('text-', 'bg-')}`}
+                                          />
+                                       </div>
+                                     </div>
+                                   ))}
+                                </div>
+
+                                {/* AI Context */}
+                                <div className="flex flex-col justify-center gap-6">
+                                   <div className="space-y-2">
+                                      <div className="flex items-center gap-2">
+                                         {team.isDisqualified ? (
+                                           <AlertTriangle className="text-red-500" size={16} />
+                                         ) : (
+                                           <Verified className="text-green-500" size={16} />
+                                         )}
+                                         <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${team.isDisqualified ? 'text-red-500' : 'text-green-500'}`}>
+                                            {team.isDisqualified ? 'Security Audit Failed' : 'Elite Appraisal Status'}
+                                         </span>
+                                      </div>
+                                      <p className="text-xl font-black italic leading-tight text-white/90">
+                                         &ldquo;{team.insight}&rdquo;
+                                      </p>
+                                   </div>
+
+                                   <div className="flex gap-4">
+                                      <div className="flex-1 bg-white/5 border border-white/5 p-4 rounded-2xl">
+                                         <span className="block text-[8px] font-black text-gray-500 uppercase mb-1">Squad Size</span>
+                                         <span className={`text-lg font-black italic ${team.playerCount < 16 ? 'text-red-500' : 'text-white'}`}>{team.playerCount}/16+</span>
+                                      </div>
+                                      <div className="flex-1 bg-white/5 border border-white/5 p-4 rounded-2xl">
+                                         <span className="block text-[8px] font-black text-gray-500 uppercase mb-1">Status</span>
+                                         <span className={`text-lg font-black italic ${team.isDisqualified ? 'text-red-500' : 'text-green-500'}`}>
+                                            {team.isDisqualified ? 'Disqualified' : 'Qualified'}
+                                         </span>
+                                      </div>
+                                   </div>
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  );
+                })}
               </div>
             </motion.section>
           ) : (

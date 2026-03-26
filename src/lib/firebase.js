@@ -7,7 +7,7 @@ import { getDatabase, ref, onValue } from "firebase/database";
 const firebaseConfig = {
   apiKey: "SCRUBBED_KEY",
   authDomain: "ipl-auction-1cdbc.firebaseapp.com",
-  databaseURL: "https://ipl-auction-1cdbc-default-rtdb.firebaseio.com",
+  databaseURL: "https://ipl-auction-1cdbc-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "ipl-auction-1cdbc",
   storageBucket: "ipl-auction-1cdbc.firebasestorage.app",
   messagingSenderId: "100121242357",
