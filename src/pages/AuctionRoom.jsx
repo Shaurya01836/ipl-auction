@@ -1,4 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { toPng } from 'html-to-image';
+import { TEAM_SLOGANS } from '../data/slogans';
+import confetti from 'canvas-confetti';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuction } from '../contexts/AuctionContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -25,17 +28,18 @@ import {
    Heart,
    Wifi,
    List,
+   Download,
+   Gavel,
+   X,
    CheckCircle2,
    PlayCircle,
    Filter,
    Search,
    ChevronDown,
    Play,
-   Gavel,
    ShieldAlert,
    Trophy,
    Clock,
-   X,
    LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -237,6 +241,50 @@ const AuctionRoom = () => {
       const status = displayAuctionState?.status;
       if (status === 'sold') {
          const teamId = displayAuctionState?.highBidderTeamId;
+
+         // Trigger Celebration Ribbons
+         const team = TEAMS.find(t => t.id === teamId);
+         const colorMap = {
+            'MI': ['#004BA0', '#FFFFFF', '#0080FF'],
+            'CSK': ['#FFFF00', '#0000FF', '#FDB913'],
+            'RCB': ['#EC1C24', '#2c30a7ff', '#FFD700'],
+            'KKR': ['#3A225D', '#B38B2D', '#D1AB3E'],
+            'DC': ['#000080', '#FF0000', '#0000CD'],
+            'PBKS': ['#ED1B24', '#FFFFFF', '#D71921'],
+            'RR': ['#EA1A85', '#004B8D', '#254AA5'],
+            'SRH': ['#FF8228', '#000000', '#F26522'],
+            'GT': ['#1B2133', '#C1AA77', '#0B132B'],
+            'LSG': ['#0057E7', '#D11D55', '#01153E']
+         };
+         const colors = teamId && colorMap[teamId] ? colorMap[teamId] : ['#FFD700', '#FFA500', '#FF4500'];
+
+         const end = Date.now() + 3 * 1000;
+         const frame = () => {
+            confetti({
+               particleCount: 2,
+               angle: 60,
+               spread: 55,
+               origin: { x: 0, y: 0.6 },
+               colors: colors,
+               scalar: 1.2,
+               ticks: 200
+            });
+            confetti({
+               particleCount: 2,
+               angle: 120,
+               spread: 55,
+               origin: { x: 1, y: 0.6 },
+               colors: colors,
+               scalar: 1.2,
+               ticks: 200
+            });
+
+            if (Date.now() < end) {
+               requestAnimationFrame(frame);
+            }
+         };
+         frame();
+
          if (teamId && TEAM_SONGS[teamId.toLowerCase()]) {
             const audio = celebrationAudioRef.current;
             if (audio) {
@@ -708,13 +756,16 @@ const AuctionRoom = () => {
             <aside className={`${mobileTab === 'activity' ? 'flex' : 'hidden'} md:flex w-full md:w-96 bg-black/40 border-l border-white/5 flex-col h-full md:max-h-[calc(100vh-3.5rem)]`}>
                <div className="p-6 border-b border-white/5 flex items-center justify-between"><h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Live Activity</h4><div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" /></div>
                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-4">
-                  {messages.filter(m => m.type === 'log').filter(m => !m.text.includes('New bid:')).map((msg, index) => (
-                     <div key={`log-${msg.id || index}`} className="flex gap-3 items-start group">
-                        <div className="mt-1 bg-white/5 p-1.5 rounded flex items-center justify-center text-gray-400"><MessageSquare size={14} /></div>
-                        <div className="flex-1"><p className="text-[12px] font-medium leading-relaxed text-gray-400">{msg.text}</p></div>
-                     </div>
-                  ))}
-               </div>
+                   {messages.filter(m => m.type === 'log' || m.type === 'sold_card').filter(m => !m.text.includes('New bid:')).map((msg, index) => {
+                      if (msg.type === 'sold_card') return <SoldCard key={msg.id || index} msg={msg} />;
+                      return (
+                         <div key={`log-${msg.id || index}`} className="flex gap-3 items-start group">
+                            <div className="mt-1 bg-white/5 p-1.5 rounded flex items-center justify-center text-gray-400"><MessageSquare size={14} /></div>
+                            <div className="flex-1"><p className="text-[12px] font-medium leading-relaxed text-gray-400">{msg.text}</p></div>
+                         </div>
+                      );
+                   })}
+                </div>
             </aside>
          </div>
 
@@ -852,6 +903,74 @@ const AuctionRoom = () => {
                </motion.div>
             )}
          </AnimatePresence>
+      </div>
+   );
+};
+
+const SoldCard = ({ msg }) => {
+   const cardRef = useRef(null);
+   const player = IPL_PLAYERS.find(p => p.id === msg.metadata.playerId);
+   const team = TEAMS.find(t => t.id === msg.metadata.teamId);
+   const slogan = TEAM_SLOGANS[msg.metadata.teamId] || { slogan: 'IPL 2025!', hashtag: '#IPL' };
+
+   const handleSave = async () => {
+      if (cardRef.current === null) return;
+      try {
+         const dataUrl = await toPng(cardRef.current, { cacheBust: true, pixelRatio: 2 });
+         const link = document.createElement('a');
+         link.download = `${player.name}_Sold.png`;
+         link.href = dataUrl;
+         link.click();
+      } catch (err) {
+         console.error('Error saving image:', err);
+      }
+   };
+
+   return (
+      <div className="space-y-2 mb-6">
+         <div ref={cardRef} className="relative w-full h-[480px] aspect-[4/5] rounded-[2rem] overflow-hidden bg-[#0A0A0B] border border-white/10 shadow-2xl">
+            <div className={`absolute inset-0 opacity-20 bg-gradient-to-br ${team?.color.replace('bg-', 'from-')} to-black`} />
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
+
+            <div className="relative h-full flex flex-col p-6 z-10">
+               <div className="flex justify-between items-start mb-4">
+                  <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/10">
+                     <img src={team?.logo} alt="" className="w-full h-full object-contain " />
+                  </div>
+                  <div className="text-right uppercase tracking-[0.2em]">
+                     <p className="text-[8px] font-black text-blue-500 mb-0.5">IPL Auction</p>
+                     <p className="text-[10px] font-bold text-white/50 leading-none">Sold to</p>
+                     <p className="text-[12px] font-black text-white">{msg.metadata.buyerName}</p>
+                  </div>
+               </div>
+
+               <div className="flex-1 flex flex-col justify-center items-center py-4">
+                  <div className="relative w-40 h-40 group">
+                     <div className={`absolute inset-0 rounded-full blur-3xl opacity-30 ${team?.color}`} />
+                     <img src={player?.image} className="relative w-full h-full object-contain z-10 drop-shadow-[0_0_20px_rgba(0,0,0,0.5)]" alt="" />
+                  </div>
+                  <div className="text-center mt-4">
+                     <h2 className="text-2xl font-black uppercase tracking-tight text-white leading-tight">{player?.name}</h2>
+                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em]">{player?.role} • {player?.country}</p>
+                  </div>
+               </div>
+
+               <div className="space-y-4">
+                  <div className="text-center">
+                     <p className="text-[16px] font-black italic uppercase tracking-wider text-yellow-500 drop-shadow-lg">{slogan.slogan}</p>
+                     <p className="text-[10px] font-bold text-gray-500">{slogan.hashtag}</p>
+                  </div>
+                  
+                  <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-3xl text-center">
+              
+                     <p className="text-2xl font-black text-white">₹{msg.metadata.bid.toFixed(2)} Cr</p>
+                  </div>
+               </div>
+            </div>
+         </div>
+         <button onClick={handleSave} className="w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5 hover:border-white/10 text-gray-400 hover:text-white">
+            <Download size={14} /> Save Player Card
+         </button>
       </div>
    );
 };

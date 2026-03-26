@@ -205,7 +205,14 @@ export const AuctionProvider = ({ children }) => {
         userId: 'system',
         userName: 'System',
         text: result.logText,
-        type: 'log',
+        type: result.isSold ? 'sold_card' : 'log',
+        metadata: result.isSold ? {
+          playerId: result.currentAuction.playerId,
+          teamId: result.currentAuction.highBidderTeamId,
+          bid: result.currentAuction.currentBid,
+          buyerId: result.currentAuction.highBidderId,
+          buyerName: result.currentAuction.highBidderName
+        } : null,
         timestamp: serverTimestamp()
       });
 
@@ -215,7 +222,7 @@ export const AuctionProvider = ({ children }) => {
         const checkSnap = await getDoc(roomRef);
         if (!checkSnap.exists() || checkSnap.data().status !== 'active') return;
 
-        const { currentAuction, playerOrder, settings } = checkSnap.data();
+        const { playerOrder, settings } = checkSnap.data();
         const currentPlayerId = result.currentAuction.playerId;
         const order = playerOrder || Array.from({ length: IPL_PLAYERS.length }, (_, i) => i);
         const currentPlayerIndexInOrder = order.findIndex(idx => IPL_PLAYERS[idx] && IPL_PLAYERS[idx].id === currentPlayerId);
@@ -241,7 +248,7 @@ export const AuctionProvider = ({ children }) => {
       console.error("Error in endPlayerAuction:", err);
     }
   }, [getSyncedTime]);
-  // Join an existing room in DB
+
   const joinRoomDb = useCallback(async (roomId, userId, playerDetails) => {
     const roomRef = doc(db, 'auctions', roomId);
     const teamDetails = TEAMS.find(t => t.id === playerDetails.team);
