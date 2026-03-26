@@ -56,6 +56,7 @@ const AuctionRoom = () => {
       loading,
       placeBid,
       joinAuction,
+      joinRoomDb,
       endPlayerAuction,
       pauseAuction,
       resumeAuction,
@@ -148,7 +149,7 @@ const AuctionRoom = () => {
 
    const isAdmin = currentAuction?.hostId === user?.uid;
    const currentBid = displayAuctionState?.currentBid || 0;
-   const increment = currentBid < 2 ? 0.1 : currentBid < 5 ? 0.25 : 0.5;
+   const increment = currentBid < 5 ? 0.20 : 0.25;
    const nextBidAmount = currentBid === 0 ? (currentPlayer?.basePrice || 0) : currentBid + increment;
    const playerCategories = useMemo(() => {
       const soldIds = new Set();
@@ -432,35 +433,89 @@ const AuctionRoom = () => {
       );
    }
 
-   // Team Selection Guard
+   // Manual team selection for late joiners
+   const [joiningTeam, setJoiningTeam] = useState(null);
+
+   const handleQuickJoin = async (selectedTeam) => {
+      if (joiningTeam) return;
+      setJoiningTeam(selectedTeam.id);
+      try {
+         await joinRoomDb(id, user.uid, {
+            name: user.displayName || 'Manager',
+            team: selectedTeam.id
+         });
+      } catch (err) {
+         console.error('Join failed:', err);
+         setJoiningTeam(null);
+      }
+   };
+
+   // Team Selection Guard — show team picker or "room full" error
    if (!team && !loading && user) {
+      const takenTeamIds = new Set(roomTeams.map(t => t.teamId));
+      (currentAuction?.players || []).forEach(p => { if (p.team) takenTeamIds.add(p.team); });
+      const availableTeams = TEAMS.filter(t => !takenTeamIds.has(t.id));
+
       return (
          <div className="h-screen bg-[#050505] text-white flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
-            {/* Decorative Background Elements */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-500/10 blur-[120px] rounded-full" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-500/10 blur-[120px] rounded-full" />
+            <div className="relative z-10 flex flex-col items-center w-full max-w-2xl">
+               {availableTeams.length > 0 ? (
+                  <>
+                     <div className="w-20 h-20 bg-yellow-500/10 border border-yellow-500/20 rounded-3xl flex items-center justify-center text-yellow-500 mb-6 shadow-2xl">
+                        <Gavel size={40} strokeWidth={2.5} />
+                     </div>
+                     <h2 className="text-3xl md:text-4xl font-black tracking-tighter uppercase mb-2">Claim Your Franchise</h2>
+                     <p className="text-gray-400 text-sm font-medium leading-relaxed mb-8">The auction is live! Pick a team to jump straight in.</p>
 
-            <div className="relative z-10 flex flex-col items-center max-w-lg">
-               <div className="w-24 h-24 bg-red-500/20 border border-red-500/30 rounded-3xl flex items-center justify-center text-red-500 mb-8 shadow-2xl">
-                  <ShieldAlert size={48} strokeWidth={2.5} />
-               </div>
-               <h2 className="text-4xl md:text-5xl font-black  tracking-tighter uppercase mb-4">No Franchise Selected</h2>
-               <p className="text-gray-400 text-lg font-medium mb-10 leading-relaxed">
-                  You must be assigned to an IPL franchise to participate in the bidding. Please return to the lobby to select your team.
-               </p>
-               <div className="flex flex-col sm:flex-row gap-4 w-full">
-                  <button
-                     onClick={() => navigate(`/lobby/${id}`)}
-                     className="flex-1 px-8 py-4 bg-[#ff8c00] text-white font-black rounded-2xl hover:bg-[#ff5500] transition-all active:scale-95 uppercase tracking-widest cursor-pointer shadow-[0_0_30px_rgba(255,140,0,0.3)] flex items-center justify-center gap-2"
-                  >
-                     <Users size={20} /> Go to Lobby
-                  </button>
-                  <button
-                     onClick={() => navigate('/')}
-                     className="flex-1 px-8 py-4 bg-white/5 border border-white/10 text-gray-400 font-black rounded-2xl hover:bg-white/10 transition-all active:scale-95 uppercase tracking-widest cursor-pointer"
-                  >
-                     Home
-                  </button>
-               </div>
+                     <div className="grid grid-cols-5 gap-3 md:gap-4 w-full max-w-xl">
+                        {TEAMS.map((t) => {
+                           const isTaken = takenTeamIds.has(t.id);
+                           const isJoining = joiningTeam === t.id;
+
+                           return (
+                              <button
+                                 key={t.id}
+                                 onClick={() => !isTaken && handleQuickJoin(t)}
+                                 disabled={isTaken || !!joiningTeam}
+                                 className={`relative group flex flex-col items-center justify-center p-3 md:p-4 rounded-2xl transition-all duration-300 border cursor-pointer ${
+                                    isJoining
+                                       ? 'border-yellow-400 bg-yellow-400/10 shadow-[0_0_25px_rgba(250,204,21,0.2)] scale-105'
+                                       : isTaken
+                                          ? 'border-white/5 opacity-25 grayscale cursor-not-allowed'
+                                          : 'border-white/10 hover:border-yellow-500/30 hover:bg-white/5 hover:scale-105 active:scale-95'
+                                 }`}
+                              >
+                                 <div className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/5 border border-white/10 p-1.5 flex items-center justify-center mb-2 transition-all ${isJoining ? 'animate-pulse' : ''}`}>
+                                    <img src={t.logo} alt="" className="w-full h-full object-contain" />
+                                 </div>
+                                 <span className={`text-[9px] md:text-[10px] font-black uppercase tracking-tight ${isJoining ? 'text-yellow-400' : isTaken ? 'text-gray-600' : 'text-gray-400 group-hover:text-white'}`}>
+                                    {isJoining ? 'Joining...' : isTaken ? 'Taken' : t.id}
+                                 </span>
+                              </button>
+                           );
+                        })}
+                     </div>
+
+                     <p className="mt-6 text-[10px] text-gray-600 font-bold uppercase tracking-widest">{availableTeams.length} franchise{availableTeams.length !== 1 ? 's' : ''} available</p>
+                  </>
+               ) : (
+                  <>
+                     <div className="w-24 h-24 bg-red-500/20 border border-red-500/30 rounded-3xl flex items-center justify-center text-red-500 mb-8 shadow-2xl">
+                        <ShieldAlert size={48} strokeWidth={2.5} />
+                     </div>
+                     <h2 className="text-4xl md:text-5xl font-black tracking-tighter uppercase mb-4">Room Full</h2>
+                     <p className="text-gray-400 text-lg font-medium mb-10 leading-relaxed">
+                        All 10 IPL franchises have been claimed. No teams are available to join.
+                     </p>
+                     <button
+                        onClick={() => navigate('/')}
+                        className="px-8 py-4 bg-white/5 border border-white/10 text-gray-400 font-black rounded-2xl hover:bg-white/10 transition-all active:scale-95 uppercase tracking-widest cursor-pointer"
+                     >
+                        Home
+                     </button>
+                  </>
+               )}
             </div>
          </div>
       );
@@ -731,6 +786,14 @@ const AuctionRoom = () => {
                                           <span className="text-[8px] md:text-[10px] font-black text-blue-500 uppercase tracking-widest block mb-0.5 md:mb-1">Current Bid</span>
                                           <div className="flex items-center gap-3">
                                              <span className="text-xl md:text-3xl font-black text-white leading-none">₹{(displayAuctionState?.currentBid || 0).toFixed(2)} Cr</span>
+                                             {displayAuctionState?.highBidderTeamId && (
+                                                <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-2 py-1 rounded-xl">
+                                                   <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-white/5 border border-white/10 p-0.5 flex items-center justify-center">
+                                                      <img src={TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.logo} alt="" className="w-full h-full object-contain" />
+                                                   </div>
+                                                   <span className="text-[9px] md:text-[11px] font-black text-gray-300 uppercase tracking-widest">{displayAuctionState.highBidderTeamId}</span>
+                                                </div>
+                                             )}
                                           </div>
                                        </div>
                                        <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl md:rounded-3xl flex flex-col items-center justify-center text-black border-4 border-black/10 shadow-2xl transition-all ${displayAuctionState?.status === 'sold' || displayAuctionState?.status === 'unsold' ? (displayAuctionState.status === 'sold' ? 'bg-green-500 scale-110' : 'bg-red-500 scale-110') : 'bg-yellow-500'}`}>
@@ -754,17 +817,80 @@ const AuctionRoom = () => {
             </main>
 
             <aside className={`${mobileTab === 'activity' ? 'flex' : 'hidden'} md:flex w-full md:w-96 bg-black/40 border-l border-white/5 flex-col h-full md:max-h-[calc(100vh-3.5rem)]`}>
-               <div className="p-6 border-b border-white/5 flex items-center justify-between"><h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Live Activity</h4><div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" /></div>
-               <div className="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-4">
-                   {messages.filter(m => m.type === 'log' || m.type === 'sold_card').filter(m => !m.text.includes('New bid:')).map((msg, index) => {
+               <div className="p-6 border-b border-white/5 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                     <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Live Activity</h4>
+                     <span className="text-[8px] font-black text-gray-600 bg-white/5 px-1.5 py-0.5 rounded">{messages.filter(m => m.type === 'log' || m.type === 'sold_card').filter(m => !m.text.includes('New bid:')).length}</span>
+                  </div>
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+               </div>
+               <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar space-y-3">
+                   {[...messages.filter(m => m.type === 'log' || m.type === 'sold_card').filter(m => !m.text.includes('New bid:'))].reverse().map((msg, index) => {
                       if (msg.type === 'sold_card') return <SoldCard key={msg.id || index} msg={msg} />;
+
+                      // Determine icon and color based on message content
+                      const text = msg.text || '';
+                      let icon = <MessageSquare size={14} />;
+                      let borderColor = 'border-white/5';
+                      let iconBg = 'bg-white/5 text-gray-500';
+
+                      if (text.includes('SOLD')) {
+                         icon = <Gavel size={14} />;
+                         borderColor = 'border-green-500/20';
+                         iconBg = 'bg-green-500/10 text-green-500';
+                      } else if (text.includes('UNSOLD')) {
+                         icon = <XCircle size={14} />;
+                         borderColor = 'border-red-500/20';
+                         iconBg = 'bg-red-500/10 text-red-500';
+                      } else if (text.includes('PAUSED')) {
+                         icon = <Pause size={14} />;
+                         borderColor = 'border-yellow-500/20';
+                         iconBg = 'bg-yellow-500/10 text-yellow-500';
+                      } else if (text.includes('RESUMED')) {
+                         icon = <Play size={14} />;
+                         borderColor = 'border-blue-500/20';
+                         iconBg = 'bg-blue-500/10 text-blue-500';
+                      } else if (text.includes('started') || text.includes('COMPLETED')) {
+                         icon = <Rocket size={14} />;
+                         borderColor = 'border-orange-500/20';
+                         iconBg = 'bg-orange-500/10 text-orange-500';
+                      } else if (text.includes('removed')) {
+                         icon = <LogOut size={14} />;
+                         borderColor = 'border-red-500/20';
+                         iconBg = 'bg-red-500/10 text-red-400';
+                      }
+
+                      // Relative timestamp
+                      let timeAgo = '';
+                      if (msg.timestamp?.toDate) {
+                         const diffMs = Date.now() - msg.timestamp.toDate().getTime();
+                         const diffSec = Math.floor(diffMs / 1000);
+                         if (diffSec < 60) timeAgo = `${diffSec}s ago`;
+                         else if (diffSec < 3600) timeAgo = `${Math.floor(diffSec / 60)}m ago`;
+                         else timeAgo = `${Math.floor(diffSec / 3600)}h ago`;
+                      }
+
                       return (
-                         <div key={`log-${msg.id || index}`} className="flex gap-3 items-start group">
-                            <div className="mt-1 bg-white/5 p-1.5 rounded flex items-center justify-center text-gray-400"><MessageSquare size={14} /></div>
-                            <div className="flex-1"><p className="text-[12px] font-medium leading-relaxed text-gray-400">{msg.text}</p></div>
-                         </div>
+                         <motion.div
+                            key={`log-${msg.id || index}`}
+                            initial={index === 0 ? { opacity: 0, y: -10 } : false}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={`flex gap-3 items-start p-3 rounded-xl border ${borderColor} bg-white/[0.02] hover:bg-white/[0.04] transition-all`}
+                         >
+                            <div className={`mt-0.5 p-1.5 rounded-lg flex items-center justify-center shrink-0 ${iconBg}`}>{icon}</div>
+                            <div className="flex-1 min-w-0">
+                               <p className="text-[11px] md:text-[12px] font-semibold leading-relaxed text-gray-300">{msg.text}</p>
+                               {timeAgo && <span className="text-[8px] font-bold text-gray-600 uppercase tracking-widest mt-1 block">{timeAgo}</span>}
+                            </div>
+                         </motion.div>
                       );
                    })}
+                   {messages.filter(m => m.type === 'log' || m.type === 'sold_card').filter(m => !m.text.includes('New bid:')).length === 0 && (
+                      <div className="h-full flex flex-col items-center justify-center py-20 opacity-30">
+                         <History size={32} className="text-gray-700 mb-4" />
+                         <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">No activity yet</p>
+                      </div>
+                   )}
                 </div>
             </aside>
          </div>

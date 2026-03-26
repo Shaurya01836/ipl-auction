@@ -416,7 +416,7 @@ export const AuctionProvider = ({ children }) => {
       if (data.currentAuction?.highBidderId === user.uid) throw new Error("You are already the highest bidder!");
       
       const currentBid = data.currentAuction?.currentBid || 0;
-      const increment = currentBid < 2 ? 0.1 : currentBid < 5 ? 0.25 : 0.5;
+      const increment = currentBid < 5 ? 0.20 : 0.25;
       const nextAmount = currentBid === 0 ? IPL_PLAYERS.find(p => p.id === data.currentAuction.playerId)?.basePrice || 0 : currentBid + increment;
       
       if (team.budgetRemaining < nextAmount) {
@@ -477,7 +477,11 @@ export const AuctionProvider = ({ children }) => {
   }, []);
 
   const pauseAuction = useCallback(async (roomId) => {
+    if (!user) return;
     const roomRef = doc(db, 'auctions', roomId);
+    const roomSnap = await getDoc(roomRef);
+    if (!roomSnap.exists() || roomSnap.data().hostId !== user.uid) return;
+
     await updateDoc(roomRef, { 
       'currentAuction.status': 'paused',
       logs: arrayUnion(`Auction PAUSED by Admin`)
@@ -492,12 +496,13 @@ export const AuctionProvider = ({ children }) => {
       type: 'log',
       timestamp: serverTimestamp()
     });
-  }, []);
+  }, [user]);
 
   const resumeAuction = useCallback(async (roomId) => {
+    if (!user) return;
     const roomRef = doc(db, 'auctions', roomId);
     const roomSnap = await getDoc(roomRef);
-    if (!roomSnap.exists()) return;
+    if (!roomSnap.exists() || roomSnap.data().hostId !== user.uid) return;
     const data = roomSnap.data();
     
     await updateDoc(roomRef, { 
@@ -515,10 +520,14 @@ export const AuctionProvider = ({ children }) => {
       type: 'log',
       timestamp: serverTimestamp()
     });
-  }, [getSyncedTime]);
+  }, [getSyncedTime, user]);
 
   const endAuction = useCallback(async (roomId) => {
+    if (!user) return;
     const roomRef = doc(db, 'auctions', roomId);
+    const roomSnap = await getDoc(roomRef);
+    if (!roomSnap.exists() || roomSnap.data().hostId !== user.uid) return;
+
     await updateDoc(roomRef, { 
       status: 'completed',
       logs: arrayUnion(`Auction COMPLETED by Admin`)
@@ -533,7 +542,7 @@ export const AuctionProvider = ({ children }) => {
       type: 'log',
       timestamp: serverTimestamp()
     });
-  }, []);
+  }, [user]);
 
   const value = {
     currentAuction,
