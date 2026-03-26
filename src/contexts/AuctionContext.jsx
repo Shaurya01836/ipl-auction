@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { db } from '../lib/firebase';
+import { db, getServerTime } from '../lib/firebase';
 import { IPL_PLAYERS } from '../data/players';
 import { 
   doc, 
@@ -53,32 +53,12 @@ export const AuctionProvider = ({ children }) => {
   const [roomTeams, setRoomTeams] = useState([]);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [timeOffset, setTimeOffset] = useState(0);
 
-  React.useEffect(() => {
-    const syncTime = async () => {
-      try {
-        const start = Date.now();
-        const response = await fetch(window.location.origin, { method: 'HEAD', cache: 'no-cache' });
-        const dateHeader = response.headers.get('Date');
-        const end = Date.now();
-        if (dateHeader) {
-          const serverTime = new Date(dateHeader).getTime() + (end - start) / 2;
-          const localTime = Date.now();
-          setTimeOffset(serverTime - localTime);
-        }
-      } catch (e) {
-        console.warn('Time sync failed, using local time');
-      }
-    };
-    syncTime();
-    const interval = setInterval(syncTime, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
-
+  // Server-authoritative time using Firebase RTDB offset.
+  // getServerTime() returns Date.now() + serverOffset, synced across all clients.
   const getSyncedTime = useCallback(() => {
-    return Date.now() + timeOffset;
-  }, [timeOffset]);
+    return getServerTime();
+  }, []);
 
   // Create a new room in DB
   const createRoom = useCallback(async (roomId, userId, playerDetails) => {
@@ -151,7 +131,7 @@ export const AuctionProvider = ({ children }) => {
       type: 'log',
       timestamp: serverTimestamp()
     });
-  }, []);
+  }, [getSyncedTime]);
 
   const endPlayerAuction = useCallback(async (roomId) => {
     try {
@@ -260,7 +240,7 @@ export const AuctionProvider = ({ children }) => {
     } catch (err) {
       console.error("Error in endPlayerAuction:", err);
     }
-  }, []);
+  }, [getSyncedTime]);
   // Join an existing room in DB
   const joinRoomDb = useCallback(async (roomId, userId, playerDetails) => {
     const roomRef = doc(db, 'auctions', roomId);
@@ -515,7 +495,7 @@ export const AuctionProvider = ({ children }) => {
     
     await updateDoc(roomRef, { 
       'currentAuction.status': 'bidding',
-      'currentAuction.timerEndsAt': Date.now() + (data.settings?.bidTimer || 10) * 1000,
+      'currentAuction.timerEndsAt': getSyncedTime() + (data.settings?.bidTimer || 10) * 1000,
       logs: arrayUnion(`Auction RESUMED by Admin`)
     });
 
@@ -528,7 +508,7 @@ export const AuctionProvider = ({ children }) => {
       type: 'log',
       timestamp: serverTimestamp()
     });
-  }, []);
+  }, [getSyncedTime]);
 
   const endAuction = useCallback(async (roomId) => {
     const roomRef = doc(db, 'auctions', roomId);

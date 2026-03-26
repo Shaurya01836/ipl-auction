@@ -35,7 +35,8 @@ import {
    ShieldAlert,
    Trophy,
    Clock,
-   X
+   X,
+   LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -72,7 +73,7 @@ const AuctionRoom = () => {
       kickPlayer,
       getSyncedTime
    } = useAuction();
-   const { user } = useAuth();
+   const { user, logout } = useAuth();
    const [timeLeft, setTimeLeft] = useState(15);
    const [error, setError] = useState('');
    const [copied, setCopied] = useState(false);
@@ -271,13 +272,25 @@ const AuctionRoom = () => {
 
 
 
+   const lastBeepedSecRef = useRef(-1);
+
    useEffect(() => {
-      if (currentAuction?.status !== 'active' || !displayAuctionState?.timerEndsAt || displayAuctionState?.status !== 'bidding') return;
+      if (currentAuction?.status !== 'active' || !displayAuctionState?.timerEndsAt || displayAuctionState?.status !== 'bidding') {
+         return;
+      }
+
+      // Reset beep tracking when timer resets (new bid / new player)
+      lastBeepedSecRef.current = -1;
 
       const interval = setInterval(() => {
-         const diff = Math.max(0, Math.floor((displayAuctionState.timerEndsAt - getSyncedTime()) / 1000));
+         const rawMs = displayAuctionState.timerEndsAt - getSyncedTime();
+         // Use Math.ceil so the display shows "7" until it truly crosses below 7.000s.
+         // This prevents the 7→6→7 flicker that Math.floor causes near boundaries.
+         const diff = Math.max(0, Math.ceil(rawMs / 1000));
 
-         if (diff !== timeLeft && diff <= 5 && diff > 0) {
+         // Beep only once per second crossing (prevents double-beep on re-renders)
+         if (diff <= 5 && diff > 0 && diff !== lastBeepedSecRef.current) {
+            lastBeepedSecRef.current = diff;
             playBeep(diff === 1 ? 880 : 440, 0.1);
          }
 
@@ -288,10 +301,10 @@ const AuctionRoom = () => {
                endPlayerAuction(id);
             }
          }
-      }, 100);
+      }, 200);
 
       return () => clearInterval(interval);
-   }, [displayAuctionState?.timerEndsAt, displayAuctionState?.status, timeLeft, currentAuction?.status, isAdmin, id, endPlayerAuction]);
+   }, [displayAuctionState?.timerEndsAt, displayAuctionState?.status, currentAuction?.status, isAdmin, id, endPlayerAuction, getSyncedTime]);
 
    const handleBid = async () => {
       if (displayAuctionState?.highBidderId === user?.uid) return;
@@ -465,6 +478,7 @@ const AuctionRoom = () => {
                <div className="flex items-center gap-1.5 border-l border-white/10 pl-6 h-6">
                   <button className="p-1.5 hover:bg-white/5 rounded-lg text-gray-400 cursor-pointer"><Volume2 size={16} /></button>
                   <button onClick={() => navigate('/')} className="p-1.5 hover:bg-white/5 rounded-lg text-gray-400 cursor-pointer"><Home size={16} /></button>
+                  <button onClick={logout} className="p-1.5 hover:bg-red-500/20 rounded-lg text-gray-400 hover:text-red-400 cursor-pointer transition-colors" title="Logout"><LogOut size={16} /></button>
                </div>
             </div>
          </header>

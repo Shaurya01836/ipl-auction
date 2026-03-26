@@ -2,12 +2,13 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { auth } from '../lib/firebase';
 import { 
   onAuthStateChanged, 
-  signInAnonymously, 
-  signOut, 
-  updateProfile 
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut 
 } from 'firebase/auth';
 
 const AuthContext = createContext();
+const googleProvider = new GoogleAuthProvider();
 
 export const useAuth = () => useContext(AuthContext);
 
@@ -24,12 +25,9 @@ export const AuthProvider = ({ children }) => {
     return unsubscribe;
   }, []);
 
-  const loginAnonymously = async (displayName) => {
-    const { user } = await signInAnonymously(auth);
-    if (displayName) {
-      await updateProfile(user, { displayName });
-    }
-    return user;
+  const loginWithGoogle = async () => {
+    const result = await signInWithPopup(auth, googleProvider);
+    return result.user;
   };
 
   const logout = () => signOut(auth);
@@ -37,7 +35,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     loading,
-    loginAnonymously,
+    loginWithGoogle,
     logout
   };
 

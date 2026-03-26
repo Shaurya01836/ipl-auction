@@ -7,6 +7,7 @@ import {
   Users,
   Crown,
   UserMinus,
+  LogOut,
   Home,
   Gavel,
   ShieldAlert,
@@ -38,7 +39,7 @@ const TEAMS = [
 
 const Lobby = () => {
   const { id } = useParams();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { joinAuction, currentAuction, kickPlayer, updatePlayerTeam, updateRoomSettings, startAuction } = useAuction();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('players');
@@ -139,6 +140,13 @@ const Lobby = () => {
           >
             <Home size={20} className="group-hover:scale-110 transition-transform" />
             <span className="text-[10px] font-black uppercase tracking-widest hidden sm:block">Exit Hub</span>
+          </button>
+          <button 
+            onClick={logout}
+            className="p-3 bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 rounded-2xl transition-all group flex items-center gap-2 text-gray-400 hover:text-red-400"
+          >
+            <LogOut size={20} className="group-hover:scale-110 transition-transform" />
+            <span className="text-[10px] font-black uppercase tracking-widest hidden sm:block">Logout</span>
           </button>
           <div className="h-10 w-px bg-white/10" />
           <div className="flex flex-col">
