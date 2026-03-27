@@ -75,6 +75,7 @@ export const AuctionProvider = ({ children }) => {
         teamName: teamDetails?.name || 'Unknown',
         isHost: true
       }],
+      bannedPlayers: [],
       currentAuction: null,
       logs: [],
       settings: {
@@ -255,9 +256,14 @@ export const AuctionProvider = ({ children }) => {
     
     // Fetch current players to prevent duplicates and preserve host status
     const roomSnap = await getDoc(roomRef);
-    if (!roomSnap.exists()) return;
+    if (!roomSnap.exists()) throw new Error("Room not found!");
     
     const data = roomSnap.data();
+
+    if (data.bannedPlayers && data.bannedPlayers.includes(userId)) {
+      throw new Error("You have been kicked from this room and cannot rejoin.");
+    }
+
     const existingPlayers = data.players || [];
     const playerExists = existingPlayers.find(p => p.id === userId);
     
@@ -298,6 +304,7 @@ export const AuctionProvider = ({ children }) => {
       // 1. Remove from players array in room
       await updateDoc(roomRef, {
         players: arrayRemove(playerObj),
+        bannedPlayers: arrayUnion(playerObj.id),
         logs: arrayUnion(`${playerObj.name} has been removed from the session by Admin.`)
       });
 

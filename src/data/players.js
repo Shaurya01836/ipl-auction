@@ -12,7 +12,9 @@ export const IPL_PLAYERS = [
       "matches": 138,
       "runs": 4425,
       "sr": 131.51,
-      "avg": 30.3
+      "avg": 30.3,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -27,7 +29,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 141,
       "wickets": 164,
-      "econ": 8.36
+      "econ": 8.36,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -60,7 +65,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 215,
       "wickets": 156,
-      "econ": 7.58
+      "econ": 7.58,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -94,7 +102,9 @@ export const IPL_PLAYERS = [
       "matches": 225,
       "runs": 6291,
       "sr": 137.1,
-      "avg": 29.73
+      "avg": 29.73,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -110,7 +120,9 @@ export const IPL_PLAYERS = [
       "matches": 237,
       "runs": 5267,
       "sr": 149.72,
-      "avg": 32.3
+      "avg": 32.3,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -125,7 +137,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 148,
       "wickets": 160,
-      "econ": 7.94
+      "econ": 7.94,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -141,7 +156,9 @@ export const IPL_PLAYERS = [
       "matches": 107,
       "runs": 5795,
       "sr": 141.31,
-      "avg": 29.49
+      "avg": 29.49,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -156,7 +173,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 238,
       "wickets": 154,
-      "econ": 7.89
+      "econ": 7.89,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -171,7 +191,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 191,
       "wickets": 116,
-      "econ": 8.22
+      "econ": 8.22,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -187,7 +210,9 @@ export const IPL_PLAYERS = [
       "matches": 155,
       "runs": 5881,
       "sr": 148.37,
-      "avg": 43.88
+      "avg": 43.88,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -202,7 +227,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 130,
       "wickets": 185,
-      "econ": 7.4
+      "econ": 7.4,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -217,7 +245,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 204,
       "wickets": 188,
-      "econ": 7.66
+      "econ": 7.66,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -286,7 +317,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 185,
       "wickets": 131,
-      "econ": 7.4
+      "econ": 7.4,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -301,7 +335,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 124,
       "wickets": 172,
-      "econ": 8.05
+      "econ": 8.05,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -316,7 +353,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 198,
       "wickets": 200,
-      "econ": 7.44
+      "econ": 7.44,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -332,7 +372,9 @@ export const IPL_PLAYERS = [
       "matches": 216,
       "runs": 3707,
       "sr": 130.45,
-      "avg": 28.51
+      "avg": 28.51,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -348,7 +390,9 @@ export const IPL_PLAYERS = [
       "matches": 130,
       "runs": 5020,
       "sr": 154.03,
-      "avg": 41.07
+      "avg": 41.07,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -363,7 +407,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 168,
       "wickets": 145,
-      "econ": 7.38
+      "econ": 7.38,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -378,7 +425,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 221,
       "wickets": 193,
-      "econ": 8.19
+      "econ": 8.19,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -394,7 +444,9 @@ export const IPL_PLAYERS = [
       "matches": 169,
       "runs": 4776,
       "sr": 130.86,
-      "avg": 39.76
+      "avg": 39.76,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -409,7 +461,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 182,
       "wickets": 197,
-      "econ": 8.34
+      "econ": 8.34,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -443,7 +498,9 @@ export const IPL_PLAYERS = [
       "matches": 226,
       "runs": 4722,
       "sr": 145.22,
-      "avg": 36.65
+      "avg": 36.65,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -459,7 +516,9 @@ export const IPL_PLAYERS = [
       "matches": 223,
       "runs": 6887,
       "sr": 136.13,
-      "avg": 36.22
+      "avg": 36.22,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -475,7 +534,9 @@ export const IPL_PLAYERS = [
       "matches": 234,
       "runs": 4021,
       "sr": 145.03,
-      "avg": 39.62
+      "avg": 39.62,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -491,7 +552,9 @@ export const IPL_PLAYERS = [
       "matches": 156,
       "runs": 4233,
       "sr": 137.88,
-      "avg": 37.26
+      "avg": 37.26,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -525,7 +588,9 @@ export const IPL_PLAYERS = [
       "matches": 187,
       "runs": 3888,
       "sr": 142.74,
-      "avg": 39.8
+      "avg": 39.8,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -541,7 +606,9 @@ export const IPL_PLAYERS = [
       "matches": 168,
       "runs": 6345,
       "sr": 144.98,
-      "avg": 38.72
+      "avg": 38.72,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -575,7 +642,9 @@ export const IPL_PLAYERS = [
       "matches": 167,
       "runs": 4301,
       "sr": 133.89,
-      "avg": 37.67
+      "avg": 37.67,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -591,7 +660,9 @@ export const IPL_PLAYERS = [
       "matches": 101,
       "runs": 5842,
       "sr": 145.27,
-      "avg": 30.65
+      "avg": 30.65,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -625,7 +696,9 @@ export const IPL_PLAYERS = [
       "matches": 229,
       "runs": 4468,
       "sr": 140,
-      "avg": 40.55
+      "avg": 40.55,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -641,7 +714,9 @@ export const IPL_PLAYERS = [
       "matches": 222,
       "runs": 3214,
       "sr": 154.96,
-      "avg": 41.01
+      "avg": 41.01,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -656,7 +731,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 183,
       "wickets": 142,
-      "econ": 8.25
+      "econ": 8.25,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -671,7 +749,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 161,
       "wickets": 191,
-      "econ": 7.56
+      "econ": 7.56,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -687,7 +768,9 @@ export const IPL_PLAYERS = [
       "matches": 153,
       "runs": 6887,
       "sr": 142.5,
-      "avg": 42.92
+      "avg": 42.92,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -721,7 +804,9 @@ export const IPL_PLAYERS = [
       "matches": 141,
       "runs": 4597,
       "sr": 133.87,
-      "avg": 39.12
+      "avg": 39.12,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -736,7 +821,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 249,
       "wickets": 193,
-      "econ": 8.37
+      "econ": 8.37,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -769,7 +857,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 71,
       "wickets": 106,
-      "econ": 7.3
+      "econ": 7.3,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -802,7 +893,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 80,
       "wickets": 69,
-      "econ": 7.41
+      "econ": 7.41,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -818,7 +912,9 @@ export const IPL_PLAYERS = [
       "matches": 78,
       "runs": 1522,
       "sr": 137.11,
-      "avg": 39.8
+      "avg": 39.8,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -834,7 +930,9 @@ export const IPL_PLAYERS = [
       "matches": 120,
       "runs": 1050,
       "sr": 135.26,
-      "avg": 43.97
+      "avg": 43.97,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -849,7 +947,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 51,
       "wickets": 57,
-      "econ": 8.33
+      "econ": 8.33,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -864,7 +965,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 58,
       "wickets": 84,
-      "econ": 8.05
+      "econ": 8.05,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -897,7 +1001,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 101,
       "wickets": 53,
-      "econ": 7.72
+      "econ": 7.72,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -930,7 +1037,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 75,
       "wickets": 67,
-      "econ": 7.22
+      "econ": 7.22,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -946,7 +1056,9 @@ export const IPL_PLAYERS = [
       "matches": 62,
       "runs": 1908,
       "sr": 131.21,
-      "avg": 29.57
+      "avg": 29.57,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -998,7 +1110,9 @@ export const IPL_PLAYERS = [
       "matches": 97,
       "runs": 2577,
       "sr": 147.79,
-      "avg": 43.27
+      "avg": 43.27,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -1014,7 +1128,9 @@ export const IPL_PLAYERS = [
       "matches": 61,
       "runs": 1419,
       "sr": 132.49,
-      "avg": 31.45
+      "avg": 31.45,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -1048,7 +1164,9 @@ export const IPL_PLAYERS = [
       "matches": 139,
       "runs": 2703,
       "sr": 133.03,
-      "avg": 33.01
+      "avg": 33.01,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -1063,7 +1181,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 109,
       "wickets": 95,
-      "econ": 8.46
+      "econ": 8.46,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -1079,7 +1200,9 @@ export const IPL_PLAYERS = [
       "matches": 81,
       "runs": 1366,
       "sr": 150.73,
-      "avg": 32.25
+      "avg": 32.25,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -1095,7 +1218,9 @@ export const IPL_PLAYERS = [
       "matches": 50,
       "runs": 1915,
       "sr": 138.22,
-      "avg": 44.59
+      "avg": 44.59,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -1128,7 +1253,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 51,
       "wickets": 49,
-      "econ": 7.46
+      "econ": 7.46,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -1180,7 +1308,9 @@ export const IPL_PLAYERS = [
       "matches": 39,
       "runs": 717,
       "sr": 139.21,
-      "avg": 30.72
+      "avg": 30.72,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -1195,7 +1325,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 16,
       "wickets": 25,
-      "econ": 8.46
+      "econ": 8.46,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -1246,7 +1379,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 53,
       "wickets": 29,
-      "econ": 7.86
+      "econ": 7.86,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -1280,7 +1416,9 @@ export const IPL_PLAYERS = [
       "matches": 61,
       "runs": 315,
       "sr": 147.75,
-      "avg": 31.67
+      "avg": 31.67,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -1296,7 +1434,9 @@ export const IPL_PLAYERS = [
       "matches": 79,
       "runs": 946,
       "sr": 145.24,
-      "avg": 41.12
+      "avg": 41.12,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -1311,7 +1451,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 51,
       "wickets": 16,
-      "econ": 8.43
+      "econ": 8.43,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -1326,7 +1469,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 42,
       "wickets": 34,
-      "econ": 7.55
+      "econ": 7.55,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -1341,7 +1487,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 54,
       "wickets": 25,
-      "econ": 8.12
+      "econ": 8.12,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -1357,7 +1506,9 @@ export const IPL_PLAYERS = [
       "matches": 55,
       "runs": 663,
       "sr": 142.51,
-      "avg": 39.48
+      "avg": 39.48,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -1372,7 +1523,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 43,
       "wickets": 32,
-      "econ": 8.44
+      "econ": 8.44,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -1406,7 +1560,9 @@ export const IPL_PLAYERS = [
       "matches": 70,
       "runs": 403,
       "sr": 152.26,
-      "avg": 40.59
+      "avg": 40.59,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -1421,7 +1577,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 78,
       "wickets": 11,
-      "econ": 7.28
+      "econ": 7.28,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -1437,7 +1596,9 @@ export const IPL_PLAYERS = [
       "matches": 58,
       "runs": 102,
       "sr": 147.93,
-      "avg": 34.17
+      "avg": 34.17,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -1453,7 +1614,9 @@ export const IPL_PLAYERS = [
       "matches": 54,
       "runs": 884,
       "sr": 146.33,
-      "avg": 33.2
+      "avg": 33.2,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -1468,7 +1631,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 63,
       "wickets": 43,
-      "econ": 8.18
+      "econ": 8.18,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -1483,7 +1649,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 75,
       "wickets": 56,
-      "econ": 7.85
+      "econ": 7.85,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -1517,7 +1686,9 @@ export const IPL_PLAYERS = [
       "matches": 27,
       "runs": 348,
       "sr": 150.28,
-      "avg": 44.71
+      "avg": 44.71,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -1533,7 +1704,9 @@ export const IPL_PLAYERS = [
       "matches": 78,
       "runs": 219,
       "sr": 145.1,
-      "avg": 32.29
+      "avg": 32.29,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -1549,7 +1722,9 @@ export const IPL_PLAYERS = [
       "matches": 70,
       "runs": 888,
       "sr": 143.93,
-      "avg": 35.3
+      "avg": 35.3,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -1582,7 +1757,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 80,
       "wickets": 51,
-      "econ": 7.41
+      "econ": 7.41,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -1597,7 +1775,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 34,
       "wickets": 28,
-      "econ": 7.28
+      "econ": 7.28,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -1631,7 +1812,9 @@ export const IPL_PLAYERS = [
       "matches": 19,
       "runs": 389,
       "sr": 131.15,
-      "avg": 35.25
+      "avg": 35.25,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -1646,7 +1829,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 23,
       "wickets": 28,
-      "econ": 7.1
+      "econ": 7.1,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -1661,7 +1847,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 12,
       "wickets": 60,
-      "econ": 7.32
+      "econ": 7.32,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -1676,7 +1865,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 74,
       "wickets": 8,
-      "econ": 7.99
+      "econ": 7.99,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -1709,7 +1901,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 78,
       "wickets": 24,
-      "econ": 7.67
+      "econ": 7.67,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -1725,7 +1920,9 @@ export const IPL_PLAYERS = [
       "matches": 51,
       "runs": 356,
       "sr": 141.71,
-      "avg": 30.77
+      "avg": 30.77,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -1758,7 +1955,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 61,
       "wickets": 56,
-      "econ": 7.78
+      "econ": 7.78,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -1774,7 +1974,9 @@ export const IPL_PLAYERS = [
       "matches": 12,
       "runs": 341,
       "sr": 133.26,
-      "avg": 35.92
+      "avg": 35.92,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -1790,7 +1992,9 @@ export const IPL_PLAYERS = [
       "matches": 43,
       "runs": 575,
       "sr": 131.25,
-      "avg": 34.93
+      "avg": 34.93,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -1805,7 +2009,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 57,
       "wickets": 51,
-      "econ": 7.94
+      "econ": 7.94,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -1821,7 +2028,9 @@ export const IPL_PLAYERS = [
       "matches": 61,
       "runs": 463,
       "sr": 149.93,
-      "avg": 28.38
+      "avg": 28.38,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -1908,7 +2117,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 76,
       "wickets": 54,
-      "econ": 7.23
+      "econ": 7.23,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -1924,7 +2136,9 @@ export const IPL_PLAYERS = [
       "matches": 52,
       "runs": 368,
       "sr": 133.86,
-      "avg": 44.62
+      "avg": 44.62,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -1940,7 +2154,9 @@ export const IPL_PLAYERS = [
       "matches": 33,
       "runs": 499,
       "sr": 137.67,
-      "avg": 29.5
+      "avg": 29.5,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -1955,7 +2171,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 62,
       "wickets": 16,
-      "econ": 8.42
+      "econ": 8.42,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -1988,7 +2207,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 49,
       "wickets": 24,
-      "econ": 7.53
+      "econ": 7.53,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -2003,7 +2225,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 16,
       "wickets": 5,
-      "econ": 8.11
+      "econ": 8.11,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -2018,7 +2243,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 61,
       "wickets": 57,
-      "econ": 7.95
+      "econ": 7.95,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -2034,7 +2262,9 @@ export const IPL_PLAYERS = [
       "matches": 69,
       "runs": 825,
       "sr": 151.19,
-      "avg": 39.25
+      "avg": 39.25,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -2067,7 +2297,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 47,
       "wickets": 39,
-      "econ": 7.56
+      "econ": 7.56,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -2083,7 +2316,9 @@ export const IPL_PLAYERS = [
       "matches": 37,
       "runs": 410,
       "sr": 152.75,
-      "avg": 32.9
+      "avg": 32.9,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -2099,7 +2334,9 @@ export const IPL_PLAYERS = [
       "matches": 76,
       "runs": 386,
       "sr": 133.1,
-      "avg": 37.49
+      "avg": 37.49,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -2114,7 +2351,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 50,
       "wickets": 28,
-      "econ": 7.18
+      "econ": 7.18,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -2147,7 +2387,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 60,
       "wickets": 27,
-      "econ": 8.27
+      "econ": 8.27,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -2163,7 +2406,9 @@ export const IPL_PLAYERS = [
       "matches": 56,
       "runs": 744,
       "sr": 139.28,
-      "avg": 29.28
+      "avg": 29.28,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -2178,7 +2423,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 11,
       "wickets": 39,
-      "econ": 8
+      "econ": 8,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -2193,7 +2441,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 77,
       "wickets": 56,
-      "econ": 7.27
+      "econ": 7.27,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -2208,7 +2459,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 16,
       "wickets": 13,
-      "econ": 8.06
+      "econ": 8.06,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -2223,7 +2477,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 59,
       "wickets": 56,
-      "econ": 7.34
+      "econ": 7.34,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -2238,7 +2495,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 54,
       "wickets": 52,
-      "econ": 8.45
+      "econ": 8.45,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -2272,7 +2532,9 @@ export const IPL_PLAYERS = [
       "matches": 66,
       "runs": 698,
       "sr": 149.2,
-      "avg": 44.01
+      "avg": 44.01,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -2288,7 +2550,9 @@ export const IPL_PLAYERS = [
       "matches": 40,
       "runs": 324,
       "sr": 149.95,
-      "avg": 31.57
+      "avg": 31.57,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -2322,7 +2586,9 @@ export const IPL_PLAYERS = [
       "matches": 76,
       "runs": 990,
       "sr": 143.77,
-      "avg": 38.86
+      "avg": 38.86,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -2337,7 +2603,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 42,
       "wickets": 22,
-      "econ": 7.62
+      "econ": 7.62,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -2353,7 +2622,9 @@ export const IPL_PLAYERS = [
       "matches": 66,
       "runs": 802,
       "sr": 137.01,
-      "avg": 36.48
+      "avg": 36.48,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -2369,7 +2640,9 @@ export const IPL_PLAYERS = [
       "matches": 36,
       "runs": 104,
       "sr": 147.77,
-      "avg": 35.97
+      "avg": 35.97,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -2384,7 +2657,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 56,
       "wickets": 34,
-      "econ": 7.68
+      "econ": 7.68,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -2418,7 +2694,9 @@ export const IPL_PLAYERS = [
       "matches": 66,
       "runs": 787,
       "sr": 137.85,
-      "avg": 42.7
+      "avg": 42.7,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -2451,7 +2729,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 62,
       "wickets": 17,
-      "econ": 8.29
+      "econ": 8.29,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -2467,7 +2748,9 @@ export const IPL_PLAYERS = [
       "matches": 42,
       "runs": 417,
       "sr": 140.38,
-      "avg": 37.4
+      "avg": 37.4,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -2518,7 +2801,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 10,
       "wickets": 55,
-      "econ": 8.35
+      "econ": 8.35,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -2534,7 +2820,9 @@ export const IPL_PLAYERS = [
       "matches": 45,
       "runs": 499,
       "sr": 147.72,
-      "avg": 44.99
+      "avg": 44.99,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -2550,7 +2838,9 @@ export const IPL_PLAYERS = [
       "matches": 64,
       "runs": 873,
       "sr": 143.99,
-      "avg": 39.96
+      "avg": 39.96,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -2583,7 +2873,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 58,
       "wickets": 60,
-      "econ": 8.08
+      "econ": 8.08,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -2617,7 +2910,9 @@ export const IPL_PLAYERS = [
       "matches": 21,
       "runs": 703,
       "sr": 138.44,
-      "avg": 35.92
+      "avg": 35.92,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -2633,7 +2928,9 @@ export const IPL_PLAYERS = [
       "matches": 76,
       "runs": 912,
       "sr": 135.08,
-      "avg": 38.45
+      "avg": 38.45,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -2648,7 +2945,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 47,
       "wickets": 40,
-      "econ": 7.97
+      "econ": 7.97,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -2664,7 +2964,9 @@ export const IPL_PLAYERS = [
       "matches": 67,
       "runs": 869,
       "sr": 141.37,
-      "avg": 31.34
+      "avg": 31.34,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -2698,7 +3000,9 @@ export const IPL_PLAYERS = [
       "matches": 34,
       "runs": 806,
       "sr": 130.21,
-      "avg": 36.72
+      "avg": 36.72,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -2713,7 +3017,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 31,
       "wickets": 16,
-      "econ": 7.77
+      "econ": 7.77,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -2728,7 +3035,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 57,
       "wickets": 16,
-      "econ": 7.29
+      "econ": 7.29,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -2761,7 +3071,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 66,
       "wickets": 56,
-      "econ": 7.2
+      "econ": 7.2,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -2777,7 +3090,9 @@ export const IPL_PLAYERS = [
       "matches": 236,
       "runs": 3387,
       "sr": 144.24,
-      "avg": 28.88
+      "avg": 28.88,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -2793,7 +3108,9 @@ export const IPL_PLAYERS = [
       "matches": 133,
       "runs": 5474,
       "sr": 134.19,
-      "avg": 43.17
+      "avg": 43.17,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -2809,7 +3126,9 @@ export const IPL_PLAYERS = [
       "matches": 217,
       "runs": 5319,
       "sr": 140.95,
-      "avg": 29.07
+      "avg": 29.07,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -2825,7 +3144,9 @@ export const IPL_PLAYERS = [
       "matches": 167,
       "runs": 3517,
       "sr": 137.17,
-      "avg": 28.74
+      "avg": 28.74,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -2841,7 +3162,9 @@ export const IPL_PLAYERS = [
       "matches": 53,
       "runs": 860,
       "sr": 153.19,
-      "avg": 31.75
+      "avg": 31.75,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -2857,7 +3180,9 @@ export const IPL_PLAYERS = [
       "matches": 51,
       "runs": 427,
       "sr": 140.12,
-      "avg": 33.27
+      "avg": 33.27,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -2999,7 +3324,9 @@ export const IPL_PLAYERS = [
       "matches": 210,
       "runs": 4028,
       "sr": 150.43,
-      "avg": 36.19
+      "avg": 36.19,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3015,7 +3342,9 @@ export const IPL_PLAYERS = [
       "matches": 135,
       "runs": 4642,
       "sr": 144.92,
-      "avg": 29.58
+      "avg": 29.58,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3031,7 +3360,9 @@ export const IPL_PLAYERS = [
       "matches": 175,
       "runs": 4211,
       "sr": 137.4,
-      "avg": 30.81
+      "avg": 30.81,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3047,7 +3378,9 @@ export const IPL_PLAYERS = [
       "matches": 65,
       "runs": 2273,
       "sr": 142.52,
-      "avg": 32.01
+      "avg": 32.01,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3063,7 +3396,9 @@ export const IPL_PLAYERS = [
       "matches": 32,
       "runs": 632,
       "sr": 139.74,
-      "avg": 38.78
+      "avg": 38.78,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3079,7 +3414,9 @@ export const IPL_PLAYERS = [
       "matches": 137,
       "runs": 1412,
       "sr": 150.09,
-      "avg": 29.61
+      "avg": 29.61,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3095,7 +3432,9 @@ export const IPL_PLAYERS = [
       "matches": 55,
       "runs": 2036,
       "sr": 145.89,
-      "avg": 35.84
+      "avg": 35.84,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3110,7 +3449,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 94,
       "wickets": 80,
-      "econ": 8.49
+      "econ": 8.49,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3125,7 +3467,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 179,
       "wickets": 128,
-      "econ": 8.02
+      "econ": 8.02,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3140,7 +3485,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 121,
       "wickets": 120,
-      "econ": 8.36
+      "econ": 8.36,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3155,7 +3503,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 130,
       "wickets": 138,
-      "econ": 7.52
+      "econ": 7.52,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3170,7 +3521,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 238,
       "wickets": 172,
-      "econ": 8.09
+      "econ": 8.09,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3185,7 +3539,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 244,
       "wickets": 188,
-      "econ": 8.38
+      "econ": 8.38,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3200,7 +3557,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 235,
       "wickets": 105,
-      "econ": 7.73
+      "econ": 7.73,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3215,7 +3575,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 79,
       "wickets": 33,
-      "econ": 8.43
+      "econ": 8.43,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3230,7 +3593,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 63,
       "wickets": 68,
-      "econ": 7.37
+      "econ": 7.37,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3245,7 +3611,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 244,
       "wickets": 103,
-      "econ": 7.29
+      "econ": 7.29,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3260,7 +3629,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 248,
       "wickets": 172,
-      "econ": 8.44
+      "econ": 8.44,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3275,7 +3647,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 115,
       "wickets": 132,
-      "econ": 7.83
+      "econ": 7.83,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3290,7 +3665,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 101,
       "wickets": 51,
-      "econ": 7.14
+      "econ": 7.14,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3305,7 +3683,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 200,
       "wickets": 181,
-      "econ": 7.96
+      "econ": 7.96,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3321,7 +3702,9 @@ export const IPL_PLAYERS = [
       "matches": 70,
       "runs": 800,
       "sr": 148.92,
-      "avg": 34.16
+      "avg": 34.16,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3337,7 +3720,9 @@ export const IPL_PLAYERS = [
       "matches": 77,
       "runs": 422,
       "sr": 147.99,
-      "avg": 28.79
+      "avg": 28.79,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3353,7 +3738,9 @@ export const IPL_PLAYERS = [
       "matches": 51,
       "runs": 759,
       "sr": 140.58,
-      "avg": 32.21
+      "avg": 32.21,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3369,7 +3756,9 @@ export const IPL_PLAYERS = [
       "matches": 76,
       "runs": 977,
       "sr": 133.57,
-      "avg": 29.38
+      "avg": 29.38,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3385,7 +3774,9 @@ export const IPL_PLAYERS = [
       "matches": 25,
       "runs": 649,
       "sr": 149.48,
-      "avg": 29.68
+      "avg": 29.68,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3401,7 +3792,9 @@ export const IPL_PLAYERS = [
       "matches": 79,
       "runs": 924,
       "sr": 142.44,
-      "avg": 44.97
+      "avg": 44.97,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3597,7 +3990,9 @@ export const IPL_PLAYERS = [
       "matches": 40,
       "runs": 830,
       "sr": 139.31,
-      "avg": 39.51
+      "avg": 39.51,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3613,7 +4008,9 @@ export const IPL_PLAYERS = [
       "matches": 76,
       "runs": 960,
       "sr": 143.52,
-      "avg": 42.43
+      "avg": 42.43,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3629,7 +4026,9 @@ export const IPL_PLAYERS = [
       "matches": 60,
       "runs": 535,
       "sr": 142.1,
-      "avg": 43.94
+      "avg": 43.94,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3645,7 +4044,9 @@ export const IPL_PLAYERS = [
       "matches": 64,
       "runs": 187,
       "sr": 146.9,
-      "avg": 44.22
+      "avg": 44.22,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3661,7 +4062,9 @@ export const IPL_PLAYERS = [
       "matches": 71,
       "runs": 193,
       "sr": 139.59,
-      "avg": 32.28
+      "avg": 32.28,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3677,7 +4080,9 @@ export const IPL_PLAYERS = [
       "matches": 19,
       "runs": 987,
       "sr": 152.99,
-      "avg": 36.32
+      "avg": 36.32,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3692,7 +4097,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 58,
       "wickets": 11,
-      "econ": 8.45
+      "econ": 8.45,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3707,7 +4115,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 75,
       "wickets": 7,
-      "econ": 7.31
+      "econ": 7.31,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3722,7 +4133,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 22,
       "wickets": 38,
-      "econ": 7.44
+      "econ": 7.44,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3737,7 +4151,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 79,
       "wickets": 9,
-      "econ": 8.49
+      "econ": 8.49,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3752,7 +4169,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 75,
       "wickets": 31,
-      "econ": 7.99
+      "econ": 7.99,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3767,7 +4187,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 60,
       "wickets": 6,
-      "econ": 7.8
+      "econ": 7.8,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3782,7 +4205,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 78,
       "wickets": 19,
-      "econ": 8.2
+      "econ": 8.2,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3797,7 +4223,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 43,
       "wickets": 8,
-      "econ": 7.16
+      "econ": 7.16,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3812,7 +4241,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 23,
       "wickets": 31,
-      "econ": 7.6
+      "econ": 7.6,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3827,7 +4259,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 52,
       "wickets": 41,
-      "econ": 7.23
+      "econ": 7.23,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3842,7 +4277,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 63,
       "wickets": 38,
-      "econ": 8.07
+      "econ": 8.07,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3857,7 +4295,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 71,
       "wickets": 31,
-      "econ": 7.85
+      "econ": 7.85,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3872,7 +4313,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 20,
       "wickets": 41,
-      "econ": 7.47
+      "econ": 7.47,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3887,7 +4331,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 31,
       "wickets": 41,
-      "econ": 7.91
+      "econ": 7.91,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -3903,7 +4350,9 @@ export const IPL_PLAYERS = [
       "matches": 78,
       "runs": 398,
       "sr": 152.23,
-      "avg": 41.23
+      "avg": 41.23,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3919,7 +4368,9 @@ export const IPL_PLAYERS = [
       "matches": 50,
       "runs": 144,
       "sr": 154.21,
-      "avg": 38.97
+      "avg": 38.97,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3935,7 +4386,9 @@ export const IPL_PLAYERS = [
       "matches": 28,
       "runs": 997,
       "sr": 137.47,
-      "avg": 41.46
+      "avg": 41.46,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3951,7 +4404,9 @@ export const IPL_PLAYERS = [
       "matches": 55,
       "runs": 237,
       "sr": 145.78,
-      "avg": 42.08
+      "avg": 42.08,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3967,7 +4422,9 @@ export const IPL_PLAYERS = [
       "matches": 63,
       "runs": 1411,
       "sr": 141.4,
-      "avg": 28.65
+      "avg": 28.65,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3983,7 +4440,9 @@ export const IPL_PLAYERS = [
       "matches": 50,
       "runs": 917,
       "sr": 136.07,
-      "avg": 44.76
+      "avg": 44.76,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -3999,7 +4458,9 @@ export const IPL_PLAYERS = [
       "matches": 247,
       "runs": 4540,
       "sr": 139.43,
-      "avg": 44.47
+      "avg": 44.47,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4015,7 +4476,9 @@ export const IPL_PLAYERS = [
       "matches": 38,
       "runs": 690,
       "sr": 145.48,
-      "avg": 31.98
+      "avg": 31.98,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4193,7 +4656,9 @@ export const IPL_PLAYERS = [
       "matches": 70,
       "runs": 242,
       "sr": 146.67,
-      "avg": 35.91
+      "avg": 35.91,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4209,7 +4674,9 @@ export const IPL_PLAYERS = [
       "matches": 19,
       "runs": 100,
       "sr": 148.33,
-      "avg": 33.07
+      "avg": 33.07,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4225,7 +4692,9 @@ export const IPL_PLAYERS = [
       "matches": 215,
       "runs": 5048,
       "sr": 148.28,
-      "avg": 33.58
+      "avg": 33.58,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4241,7 +4710,9 @@ export const IPL_PLAYERS = [
       "matches": 35,
       "runs": 176,
       "sr": 147.48,
-      "avg": 36.19
+      "avg": 36.19,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4257,7 +4728,9 @@ export const IPL_PLAYERS = [
       "matches": 92,
       "runs": 2205,
       "sr": 153.03,
-      "avg": 35.77
+      "avg": 35.77,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4273,7 +4746,9 @@ export const IPL_PLAYERS = [
       "matches": 158,
       "runs": 3346,
       "sr": 150.55,
-      "avg": 30.35
+      "avg": 30.35,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4289,7 +4764,9 @@ export const IPL_PLAYERS = [
       "matches": 120,
       "runs": 2223,
       "sr": 146.58,
-      "avg": 41.76
+      "avg": 41.76,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4305,7 +4782,9 @@ export const IPL_PLAYERS = [
       "matches": 243,
       "runs": 3981,
       "sr": 142.06,
-      "avg": 41.08
+      "avg": 41.08,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4320,7 +4799,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 183,
       "wickets": 182,
-      "econ": 8.14
+      "econ": 8.14,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -4335,7 +4817,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 26,
       "wickets": 49,
-      "econ": 8.12
+      "econ": 8.12,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -4350,7 +4835,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 48,
       "wickets": 46,
-      "econ": 7.48
+      "econ": 7.48,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -4365,7 +4853,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 109,
       "wickets": 155,
-      "econ": 7.64
+      "econ": 7.64,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -4380,7 +4871,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 126,
       "wickets": 104,
-      "econ": 7.91
+      "econ": 7.91,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -4395,7 +4889,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 180,
       "wickets": 144,
-      "econ": 7.95
+      "econ": 7.95,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -4410,7 +4907,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 51,
       "wickets": 66,
-      "econ": 7.87
+      "econ": 7.87,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -4425,7 +4925,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 123,
       "wickets": 73,
-      "econ": 7.88
+      "econ": 7.88,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -4440,7 +4943,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 161,
       "wickets": 196,
-      "econ": 8.27
+      "econ": 8.27,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -4455,7 +4961,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 73,
       "wickets": 81,
-      "econ": 8.42
+      "econ": 8.42,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -4470,7 +4979,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 40,
       "wickets": 29,
-      "econ": 7.62
+      "econ": 7.62,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -4485,7 +4997,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 34,
       "wickets": 42,
-      "econ": 8.44
+      "econ": 8.44,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -4500,7 +5015,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 23,
       "wickets": 34,
-      "econ": 8.03
+      "econ": 8.03,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -4516,7 +5034,9 @@ export const IPL_PLAYERS = [
       "matches": 54,
       "runs": 978,
       "sr": 132.86,
-      "avg": 32.34
+      "avg": 32.34,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4532,7 +5052,9 @@ export const IPL_PLAYERS = [
       "matches": 46,
       "runs": 463,
       "sr": 141.85,
-      "avg": 33.06
+      "avg": 33.06,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4548,7 +5070,9 @@ export const IPL_PLAYERS = [
       "matches": 30,
       "runs": 556,
       "sr": 153.82,
-      "avg": 41.86
+      "avg": 41.86,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4564,7 +5088,9 @@ export const IPL_PLAYERS = [
       "matches": 35,
       "runs": 711,
       "sr": 152.97,
-      "avg": 40.76
+      "avg": 40.76,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4580,7 +5106,9 @@ export const IPL_PLAYERS = [
       "matches": 78,
       "runs": 387,
       "sr": 154.02,
-      "avg": 43.08
+      "avg": 43.08,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4596,7 +5124,9 @@ export const IPL_PLAYERS = [
       "matches": 12,
       "runs": 246,
       "sr": 136.22,
-      "avg": 32.49
+      "avg": 32.49,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4612,7 +5142,9 @@ export const IPL_PLAYERS = [
       "matches": 57,
       "runs": 275,
       "sr": 146.81,
-      "avg": 40.44
+      "avg": 40.44,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4628,7 +5160,9 @@ export const IPL_PLAYERS = [
       "matches": 59,
       "runs": 737,
       "sr": 136.23,
-      "avg": 44.14
+      "avg": 44.14,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4824,7 +5358,9 @@ export const IPL_PLAYERS = [
       "matches": 51,
       "runs": 518,
       "sr": 154.71,
-      "avg": 34.81
+      "avg": 34.81,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4840,7 +5376,9 @@ export const IPL_PLAYERS = [
       "matches": 30,
       "runs": 716,
       "sr": 134.92,
-      "avg": 30.94
+      "avg": 30.94,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4856,7 +5394,9 @@ export const IPL_PLAYERS = [
       "matches": 75,
       "runs": 662,
       "sr": 151.19,
-      "avg": 36.54
+      "avg": 36.54,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4872,7 +5412,9 @@ export const IPL_PLAYERS = [
       "matches": 54,
       "runs": 845,
       "sr": 140.16,
-      "avg": 32.61
+      "avg": 32.61,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4888,7 +5430,9 @@ export const IPL_PLAYERS = [
       "matches": 47,
       "runs": 223,
       "sr": 146.6,
-      "avg": 34.28
+      "avg": 34.28,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4904,7 +5448,9 @@ export const IPL_PLAYERS = [
       "matches": 44,
       "runs": 961,
       "sr": 133.18,
-      "avg": 43.52
+      "avg": 43.52,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4920,7 +5466,9 @@ export const IPL_PLAYERS = [
       "matches": 26,
       "runs": 891,
       "sr": 152.89,
-      "avg": 33.88
+      "avg": 33.88,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4936,7 +5484,9 @@ export const IPL_PLAYERS = [
       "matches": 73,
       "runs": 624,
       "sr": 131.06,
-      "avg": 37.57
+      "avg": 37.57,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -4951,7 +5501,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 18,
       "wickets": 42,
-      "econ": 7.82
+      "econ": 7.82,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -4966,7 +5519,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 13,
       "wickets": 52,
-      "econ": 7.43
+      "econ": 7.43,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -4981,7 +5537,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 51,
       "wickets": 32,
-      "econ": 7.75
+      "econ": 7.75,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -4996,7 +5555,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 45,
       "wickets": 14,
-      "econ": 7.9
+      "econ": 7.9,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5011,7 +5573,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 71,
       "wickets": 57,
-      "econ": 7.19
+      "econ": 7.19,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5026,7 +5591,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 54,
       "wickets": 6,
-      "econ": 8.34
+      "econ": 8.34,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5041,7 +5609,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 79,
       "wickets": 30,
-      "econ": 7.1
+      "econ": 7.1,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5056,7 +5627,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 70,
       "wickets": 41,
-      "econ": 7.17
+      "econ": 7.17,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5071,7 +5645,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 48,
       "wickets": 9,
-      "econ": 8.14
+      "econ": 8.14,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5086,7 +5663,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 14,
       "wickets": 5,
-      "econ": 7.63
+      "econ": 7.63,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5101,7 +5681,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 73,
       "wickets": 36,
-      "econ": 8.29
+      "econ": 8.29,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5116,7 +5699,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 28,
       "wickets": 59,
-      "econ": 7.42
+      "econ": 7.42,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5131,7 +5717,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 39,
       "wickets": 41,
-      "econ": 7.2
+      "econ": 7.2,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5146,7 +5735,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 13,
       "wickets": 54,
-      "econ": 8.43
+      "econ": 8.43,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5161,7 +5753,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 70,
       "wickets": 57,
-      "econ": 8.21
+      "econ": 8.21,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5176,7 +5771,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 59,
       "wickets": 59,
-      "econ": 7.92
+      "econ": 7.92,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5191,7 +5789,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 62,
       "wickets": 59,
-      "econ": 8.2
+      "econ": 8.2,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5206,7 +5807,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 26,
       "wickets": 29,
-      "econ": 7.88
+      "econ": 7.88,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5383,7 +5987,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 205,
       "wickets": 140,
-      "econ": 7.67
+      "econ": 7.67,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5398,7 +6005,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 94,
       "wickets": 72,
-      "econ": 7.53
+      "econ": 7.53,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5413,7 +6023,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 59,
       "wickets": 36,
-      "econ": 7.16
+      "econ": 7.16,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5428,7 +6041,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 18,
       "wickets": 10,
-      "econ": 8.43
+      "econ": 8.43,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5443,7 +6059,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 235,
       "wickets": 119,
-      "econ": 7.83
+      "econ": 7.83,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5458,7 +6077,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 18,
       "wickets": 55,
-      "econ": 7.17
+      "econ": 7.17,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5473,7 +6095,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 92,
       "wickets": 114,
-      "econ": 7.78
+      "econ": 7.78,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5488,7 +6113,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 12,
       "wickets": 42,
-      "econ": 8.21
+      "econ": 8.21,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5503,7 +6131,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 67,
       "wickets": 41,
-      "econ": 7.71
+      "econ": 7.71,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5519,7 +6150,9 @@ export const IPL_PLAYERS = [
       "matches": 42,
       "runs": 557,
       "sr": 145.46,
-      "avg": 41.26
+      "avg": 41.26,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -5535,7 +6168,9 @@ export const IPL_PLAYERS = [
       "matches": 16,
       "runs": 231,
       "sr": 146.7,
-      "avg": 36.74
+      "avg": 36.74,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -5551,7 +6186,9 @@ export const IPL_PLAYERS = [
       "matches": 36,
       "runs": 275,
       "sr": 151.52,
-      "avg": 35.5
+      "avg": 35.5,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -5567,7 +6204,9 @@ export const IPL_PLAYERS = [
       "matches": 68,
       "runs": 281,
       "sr": 149.53,
-      "avg": 37.52
+      "avg": 37.52,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -5583,7 +6222,9 @@ export const IPL_PLAYERS = [
       "matches": 77,
       "runs": 136,
       "sr": 148.4,
-      "avg": 36.61
+      "avg": 36.61,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -5599,7 +6240,9 @@ export const IPL_PLAYERS = [
       "matches": 65,
       "runs": 194,
       "sr": 142.28,
-      "avg": 28.19
+      "avg": 28.19,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -5615,7 +6258,9 @@ export const IPL_PLAYERS = [
       "matches": 76,
       "runs": 421,
       "sr": 145.82,
-      "avg": 39.7
+      "avg": 39.7,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -5631,7 +6276,9 @@ export const IPL_PLAYERS = [
       "matches": 22,
       "runs": 304,
       "sr": 136.41,
-      "avg": 31.11
+      "avg": 31.11,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -5827,7 +6474,9 @@ export const IPL_PLAYERS = [
       "matches": 65,
       "runs": 821,
       "sr": 152.49,
-      "avg": 38.87
+      "avg": 38.87,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -5843,7 +6492,9 @@ export const IPL_PLAYERS = [
       "matches": 71,
       "runs": 821,
       "sr": 146.6,
-      "avg": 31.55
+      "avg": 31.55,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -5859,7 +6510,9 @@ export const IPL_PLAYERS = [
       "matches": 72,
       "runs": 589,
       "sr": 144.69,
-      "avg": 43.11
+      "avg": 43.11,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -5875,7 +6528,9 @@ export const IPL_PLAYERS = [
       "matches": 34,
       "runs": 863,
       "sr": 134.57,
-      "avg": 28.49
+      "avg": 28.49,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -5891,7 +6546,9 @@ export const IPL_PLAYERS = [
       "matches": 53,
       "runs": 987,
       "sr": 136.82,
-      "avg": 40.43
+      "avg": 40.43,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -5907,7 +6564,9 @@ export const IPL_PLAYERS = [
       "matches": 73,
       "runs": 670,
       "sr": 135.75,
-      "avg": 30.87
+      "avg": 30.87,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -5923,7 +6582,9 @@ export const IPL_PLAYERS = [
       "matches": 73,
       "runs": 455,
       "sr": 146.35,
-      "avg": 34.75
+      "avg": 34.75,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -5939,7 +6600,9 @@ export const IPL_PLAYERS = [
       "matches": 10,
       "runs": 801,
       "sr": 153.47,
-      "avg": 42.81
+      "avg": 42.81,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -5954,7 +6617,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 74,
       "wickets": 59,
-      "econ": 8.12
+      "econ": 8.12,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5969,7 +6635,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 18,
       "wickets": 50,
-      "econ": 7.45
+      "econ": 7.45,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5984,7 +6653,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 15,
       "wickets": 7,
-      "econ": 7.95
+      "econ": 7.95,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -5999,7 +6671,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 33,
       "wickets": 35,
-      "econ": 7.43
+      "econ": 7.43,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6014,7 +6689,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 63,
       "wickets": 45,
-      "econ": 8.12
+      "econ": 8.12,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6029,7 +6707,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 51,
       "wickets": 19,
-      "econ": 8.07
+      "econ": 8.07,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6044,7 +6725,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 42,
       "wickets": 26,
-      "econ": 7.71
+      "econ": 7.71,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6059,7 +6743,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 66,
       "wickets": 45,
-      "econ": 7.4
+      "econ": 7.4,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6074,7 +6761,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 18,
       "wickets": 40,
-      "econ": 7.81
+      "econ": 7.81,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6089,7 +6779,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 63,
       "wickets": 16,
-      "econ": 7.97
+      "econ": 7.97,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6104,7 +6797,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 16,
       "wickets": 21,
-      "econ": 8.47
+      "econ": 8.47,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6119,7 +6815,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 51,
       "wickets": 16,
-      "econ": 7.35
+      "econ": 7.35,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6134,7 +6833,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 66,
       "wickets": 53,
-      "econ": 7.61
+      "econ": 7.61,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6149,7 +6851,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 78,
       "wickets": 46,
-      "econ": 8.48
+      "econ": 8.48,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6164,7 +6869,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 30,
       "wickets": 48,
-      "econ": 7.11
+      "econ": 7.11,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6179,7 +6887,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 68,
       "wickets": 52,
-      "econ": 7.41
+      "econ": 7.41,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6194,7 +6905,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 78,
       "wickets": 60,
-      "econ": 8.21
+      "econ": 8.21,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6209,7 +6923,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 29,
       "wickets": 54,
-      "econ": 7.69
+      "econ": 7.69,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6386,7 +7103,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 59,
       "wickets": 95,
-      "econ": 8.14
+      "econ": 8.14,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6401,7 +7121,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 102,
       "wickets": 100,
-      "econ": 7.61
+      "econ": 7.61,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6416,7 +7139,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 28,
       "wickets": 51,
-      "econ": 7.22
+      "econ": 7.22,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6431,7 +7157,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 65,
       "wickets": 53,
-      "econ": 8.43
+      "econ": 8.43,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6446,7 +7175,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 122,
       "wickets": 63,
-      "econ": 8.11
+      "econ": 8.11,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6461,7 +7193,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 65,
       "wickets": 21,
-      "econ": 7.71
+      "econ": 7.71,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6476,7 +7211,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 56,
       "wickets": 14,
-      "econ": 7.37
+      "econ": 7.37,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6492,7 +7230,9 @@ export const IPL_PLAYERS = [
       "matches": 70,
       "runs": 806,
       "sr": 137.71,
-      "avg": 31.14
+      "avg": 31.14,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -6508,7 +7248,9 @@ export const IPL_PLAYERS = [
       "matches": 61,
       "runs": 116,
       "sr": 154.84,
-      "avg": 37.68
+      "avg": 37.68,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -6524,7 +7266,9 @@ export const IPL_PLAYERS = [
       "matches": 10,
       "runs": 277,
       "sr": 136.35,
-      "avg": 31.54
+      "avg": 31.54,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -6540,7 +7284,9 @@ export const IPL_PLAYERS = [
       "matches": 24,
       "runs": 394,
       "sr": 151.45,
-      "avg": 30.2
+      "avg": 30.2,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -6556,7 +7302,9 @@ export const IPL_PLAYERS = [
       "matches": 32,
       "runs": 528,
       "sr": 139.72,
-      "avg": 31.84
+      "avg": 31.84,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -6572,7 +7320,9 @@ export const IPL_PLAYERS = [
       "matches": 51,
       "runs": 923,
       "sr": 151.8,
-      "avg": 29.05
+      "avg": 29.05,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -6588,7 +7338,9 @@ export const IPL_PLAYERS = [
       "matches": 48,
       "runs": 943,
       "sr": 132.59,
-      "avg": 37.8
+      "avg": 37.8,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -6604,7 +7356,9 @@ export const IPL_PLAYERS = [
       "matches": 43,
       "runs": 853,
       "sr": 139.2,
-      "avg": 31.09
+      "avg": 31.09,
+      "wickets": "-",
+      "econ": "-"
     }
   },
   {
@@ -6799,7 +7553,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 29,
       "wickets": 58,
-      "econ": 8.27
+      "econ": 8.27,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6814,7 +7571,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 12,
       "wickets": 35,
-      "econ": 7.26
+      "econ": 7.26,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6829,7 +7589,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 10,
       "wickets": 13,
-      "econ": 7.64
+      "econ": 7.64,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6844,7 +7607,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 45,
       "wickets": 7,
-      "econ": 7.33
+      "econ": 7.33,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6859,7 +7625,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 74,
       "wickets": 38,
-      "econ": 7.95
+      "econ": 7.95,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6874,7 +7643,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 37,
       "wickets": 12,
-      "econ": 7.94
+      "econ": 7.94,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6889,7 +7661,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 24,
       "wickets": 12,
-      "econ": 8.15
+      "econ": 8.15,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6904,7 +7679,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 45,
       "wickets": 49,
-      "econ": 7.29
+      "econ": 7.29,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6919,7 +7697,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 75,
       "wickets": 57,
-      "econ": 7.88
+      "econ": 7.88,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6934,7 +7715,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 30,
       "wickets": 54,
-      "econ": 8.27
+      "econ": 8.27,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6949,7 +7733,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 36,
       "wickets": 19,
-      "econ": 8.29
+      "econ": 8.29,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6964,7 +7751,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 62,
       "wickets": 30,
-      "econ": 7.44
+      "econ": 7.44,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6979,7 +7769,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 74,
       "wickets": 11,
-      "econ": 8.09
+      "econ": 8.09,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -6994,7 +7787,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 48,
       "wickets": 7,
-      "econ": 7.69
+      "econ": 7.69,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7009,7 +7805,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 17,
       "wickets": 56,
-      "econ": 7.56
+      "econ": 7.56,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7024,7 +7823,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 16,
       "wickets": 44,
-      "econ": 7.75
+      "econ": 7.75,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7039,7 +7841,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 23,
       "wickets": 28,
-      "econ": 7.17
+      "econ": 7.17,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7054,7 +7859,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 80,
       "wickets": 55,
-      "econ": 8.47
+      "econ": 8.47,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7069,7 +7877,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 80,
       "wickets": 49,
-      "econ": 7.77
+      "econ": 7.77,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7084,7 +7895,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 79,
       "wickets": 23,
-      "econ": 8.14
+      "econ": 8.14,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7099,7 +7913,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 40,
       "wickets": 30,
-      "econ": 7.3
+      "econ": 7.3,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7114,7 +7931,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 22,
       "wickets": 53,
-      "econ": 7.88
+      "econ": 7.88,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7129,7 +7949,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 22,
       "wickets": 29,
-      "econ": 8.36
+      "econ": 8.36,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7144,7 +7967,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 40,
       "wickets": 21,
-      "econ": 8.47
+      "econ": 8.47,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7339,7 +8165,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 41,
       "wickets": 20,
-      "econ": 7.76
+      "econ": 7.76,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7354,7 +8183,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 70,
       "wickets": 26,
-      "econ": 8.31
+      "econ": 8.31,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7369,7 +8201,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 28,
       "wickets": 35,
-      "econ": 7.4
+      "econ": 7.4,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7384,7 +8219,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 72,
       "wickets": 13,
-      "econ": 8.34
+      "econ": 8.34,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7399,7 +8237,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 70,
       "wickets": 14,
-      "econ": 7.42
+      "econ": 7.42,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7414,7 +8255,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 40,
       "wickets": 54,
-      "econ": 8.21
+      "econ": 8.21,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7429,7 +8273,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 42,
       "wickets": 42,
-      "econ": 7.39
+      "econ": 7.39,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7444,7 +8291,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 50,
       "wickets": 14,
-      "econ": 7.33
+      "econ": 7.33,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7459,7 +8309,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 46,
       "wickets": 52,
-      "econ": 7.2
+      "econ": 7.2,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7654,7 +8507,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 76,
       "wickets": 15,
-      "econ": 7.56
+      "econ": 7.56,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7669,7 +8525,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 38,
       "wickets": 11,
-      "econ": 7.6
+      "econ": 7.6,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7684,7 +8543,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 52,
       "wickets": 40,
-      "econ": 7.67
+      "econ": 7.67,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7699,7 +8561,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 70,
       "wickets": 41,
-      "econ": 7.85
+      "econ": 7.85,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7714,7 +8579,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 59,
       "wickets": 50,
-      "econ": 8.08
+      "econ": 8.08,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7729,7 +8597,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 28,
       "wickets": 26,
-      "econ": 7.55
+      "econ": 7.55,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7744,7 +8615,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 64,
       "wickets": 17,
-      "econ": 7.93
+      "econ": 7.93,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7759,7 +8633,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 42,
       "wickets": 27,
-      "econ": 7.66
+      "econ": 7.66,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {
@@ -7774,7 +8651,10 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 78,
       "wickets": 23,
-      "econ": 7.26
+      "econ": 7.26,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
     }
   },
   {

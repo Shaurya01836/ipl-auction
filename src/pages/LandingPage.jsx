@@ -177,7 +177,7 @@ const LandingPage = () => {
       }
     } catch (error) {
       console.error("Action failed:", error.code, error.message);
-      setError('Failed to create/join room. Please try again.');
+      setError(error.message || 'Failed to create/join room. Please try again.');
       setTimeout(() => setError(''), 3000);
       setIsSubmitting(false);
     }
