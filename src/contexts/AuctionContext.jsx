@@ -264,6 +264,10 @@ export const AuctionProvider = ({ children }) => {
       throw new Error("You have been kicked from this room and cannot rejoin.");
     }
 
+    if (data.status === 'completed') {
+      throw new Error("This auction has already ended.");
+    }
+
     const existingPlayers = data.players || [];
     const playerExists = existingPlayers.find(p => p.id === userId);
     

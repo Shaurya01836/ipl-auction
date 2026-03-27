@@ -55,9 +55,13 @@ const Lobby = () => {
 
   useEffect(() => {
     if (currentAuction?.status === 'active') {
-      navigate(`/auction/${id}`);
+      navigate(`/auction/${id}`, { replace: true });
+    } else if (currentAuction?.status === 'completed') {
+      navigate(`/summary/${id}`, { replace: true });
     }
   }, [currentAuction?.status, id, navigate]);
+
+  if (currentAuction?.status === 'completed' || currentAuction?.status === 'active') return null;
 
   const handleStartAuction = async () => {
     if (isAdmin) {

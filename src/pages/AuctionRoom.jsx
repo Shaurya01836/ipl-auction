@@ -122,7 +122,7 @@ const AuctionRoom = () => {
    // Sync completion status
    useEffect(() => {
       if (currentAuction?.status === 'completed') {
-         navigate(`/summary/${id}`);
+         navigate(`/summary/${id}`, { replace: true });
       }
    }, [currentAuction?.status, id, navigate]);
 
@@ -418,6 +418,8 @@ const AuctionRoom = () => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
    };
+
+   if (currentAuction?.status === 'completed') return null;
 
    if (loading) {
       return (
