@@ -12,16 +12,16 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <AuctionProvider>
-          <div className="min-h-screen bg-ipl-dark text-white">
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/lobby/:id" element={<Lobby />} />
-              <Route path="/auction/:id" element={<AuctionRoom />} />
-              <Route path="/summary/:id" element={<AuctionSummary />} />
-            </Routes>
-          </div>
-        </AuctionProvider>
+          <AuctionProvider>
+            <div className="min-h-screen bg-ipl-dark text-white">
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/lobby/:id" element={<Lobby />} />
+                <Route path="/auction/:id" element={<AuctionRoom />} />
+                <Route path="/summary/:id" element={<AuctionSummary />} />
+              </Routes>
+            </div>
+          </AuctionProvider>
       </AuthProvider>
     </Router>
   )

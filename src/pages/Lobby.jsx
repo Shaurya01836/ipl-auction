@@ -20,11 +20,16 @@ import {
   AlertCircle,
   TrendingUp,
   Zap,
-  Star
+  Star,
+  Mic,
+  MicOff,
+  PhoneOff,
+  Phone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { TEAMS } from '../data/teams';
+import VoiceChat from '../components/VoiceChat';
 
 const Lobby = () => {
   const { id } = useParams();
@@ -356,13 +361,9 @@ const Lobby = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="h-full flex flex-col items-center justify-center py-20 text-center"
+                    className="flex flex-col h-full bg-[#111] rounded-3xl overflow-hidden"
                   >
-                    <div className="w-20 h-20 rounded-[2rem] bg-white/[0.02] border border-dashed border-white/10 flex items-center justify-center mb-6">
-                       <MessageSquare size={32} className="text-gray-700" />
-                    </div>
-                    <h4 className="text-sm font-black text-gray-500 uppercase tracking-widest mb-2">Comms Offline</h4>
-                    <p className="text-[10px] text-gray-700 font-bold uppercase tracking-widest">Chat engine deployment in next patch</p>
+                    <VoiceChat channel={id} />
                   </motion.div>
                 )}
 

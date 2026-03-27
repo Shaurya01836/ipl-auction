@@ -20,6 +20,7 @@ import {
    Settings as SettingsIcon,
    Home,
    Volume2,
+   VolumeX,
    Pause,
    XCircle,
    Rocket,
@@ -40,11 +41,15 @@ import {
    ShieldAlert,
    Trophy,
    Clock,
-   LogOut
+   LogOut,
+   Mic,
+   MicOff,
+   PhoneOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { TEAMS } from '../data/teams';
+import VoiceChat from '../components/VoiceChat';
 
 const AuctionRoom = () => {
    const { id } = useParams();
@@ -80,6 +85,8 @@ const AuctionRoom = () => {
    const [summaryTab, setSummaryTab] = useState('squads'); // squads, leaderboard
    const [newTimerValue, setNewTimerValue] = useState(currentAuction?.settings?.bidTimer || 10);
    const [showParticipantsOverlay, setShowParticipantsOverlay] = useState(false);
+   const [showVoiceChat, setShowVoiceChat] = useState(false);
+   const [isDeafened, setIsDeafened] = useState(false);
    const audioRef = useRef(null);
    const celebrationAudioRef = useRef(null);
 
@@ -118,6 +125,7 @@ const AuctionRoom = () => {
          window.removeEventListener('touchstart', unlockAudio);
       };
    }, []);
+
 
    // Sync completion status
    useEffect(() => {
@@ -488,7 +496,7 @@ const AuctionRoom = () => {
                                           : 'border-white/10 hover:border-yellow-500/30 hover:bg-white/5 hover:scale-105 active:scale-95'
                                  }`}
                               >
-                                 <div className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/5 border border-white/10 p-1.5 flex items-center justify-center mb-2 transition-all ${isJoining ? 'animate-pulse' : ''}`}>
+                                 <div className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/5 border border-white/10 p-1.5 flex items-center justify-center ${isJoining ? 'animate-pulse' : ''}`}>
                                     <img src={t.logo} alt="" className="w-full h-full object-contain" />
                                  </div>
                                  <span className={`text-[9px] md:text-[10px] font-black uppercase tracking-tight ${isJoining ? 'text-yellow-400' : isTaken ? 'text-gray-600' : 'text-gray-400 group-hover:text-white'}`}>
@@ -525,6 +533,14 @@ const AuctionRoom = () => {
 
    return (
       <div className="h-screen bg-[#050505] text-white font-sans flex flex-col items-center overflow-hidden">
+         {/* Voice Chat Component (Always-On Background Logic) */}
+         <VoiceChat 
+            channel={id} 
+            isVisible={showVoiceChat} 
+            onClose={() => setShowVoiceChat(false)} 
+            isDeafened={isDeafened}
+         />
+
          <header className="w-full h-14 bg-black/40 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-6 z-50">
             <div className="flex items-center gap-6">
                <div className="flex items-center gap-3">
@@ -581,7 +597,23 @@ const AuctionRoom = () => {
                   </div>
                )}
                <div className="flex items-center gap-1.5 border-l border-white/10 pl-6 h-6">
-                  <button className="p-1.5 hover:bg-white/5 rounded-lg text-gray-400 cursor-pointer"><Volume2 size={16} /></button>
+                    <button 
+                      onClick={() => setShowVoiceChat(!showVoiceChat)}
+                      className={`relative p-1.5 rounded-lg border transition-all cursor-pointer ${showVoiceChat ? 'bg-orange-500/20 border-orange-500/30 text-orange-500' : 'bg-orange-500/10 border-orange-500/20 text-orange-400 hover:bg-orange-500/20'}`}
+                      title="Voice Chat"
+                    >
+                      <Mic size={16} />
+                      {!showVoiceChat && (
+                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-[#050505] animate-pulse shadow-[0_0_8px_#22c55e]" />
+                      )}
+                    </button>
+                  <button 
+                    onClick={() => setIsDeafened(!isDeafened)}
+                    className={`p-1.5 rounded-lg border transition-all cursor-pointer ${isDeafened ? 'bg-red-500/20 border-red-500/30 text-red-500' : 'hover:bg-white/5 text-gray-400 border-transparent'}`}
+                    title={isDeafened ? "Unmute Others" : "Mute Others"}
+                  >
+                    {isDeafened ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                  </button>
                   <button onClick={() => navigate('/')} className="p-1.5 hover:bg-white/5 rounded-lg text-gray-400 cursor-pointer"><Home size={16} /></button>
                   <button onClick={logout} className="p-1.5 hover:bg-red-500/20 rounded-lg text-gray-400 hover:text-red-400 cursor-pointer transition-colors" title="Logout"><LogOut size={16} /></button>
                </div>
