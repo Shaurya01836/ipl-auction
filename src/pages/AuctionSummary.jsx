@@ -207,9 +207,7 @@ const AuctionSummary = () => {
             >
               <Home size={18} /> Menu
             </button>
-            <button className="px-8 py-4 bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] shadow-[0_10px_40px_rgba(255,85,0,0.3)] hover:scale-105 transition-all active:scale-95 flex items-center gap-3">
-              <Download size={18} /> Export Results
-            </button>
+          
           </div>
         </motion.header>
 

@@ -753,7 +753,7 @@ const AuctionRoom = () => {
                            {/* Confetti deleted for brevity during recovery */}
                            <div className="flex flex-col items-center text-center z-10 px-8 py-10 w-full bg-gradient-to-b from-white/10 to-transparent">
                               <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="relative mb-6">
-                                 <img src={currentPlayer.image} alt={currentPlayer.name} className="w-32 h-32 md:w-44 md:h-44 object-cover rounded-3xl border-4 border-white/30 shadow-2xl relative z-10" />
+                                 <img src={currentPlayer.image} alt={currentPlayer.name} className="w-32 h-32 md:w-36 md:h-40 object-cover rounded-3xl border-4 border-white/30 shadow-2xl relative z-10" />
                               </motion.div>
                               <motion.h2 initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter mb-1 drop-shadow-md">
                                  {currentPlayer.name}
@@ -798,8 +798,8 @@ const AuctionRoom = () => {
                                  <motion.div initial={{ width: "100%" }} animate={{ width: `${(timeLeft / (currentAuction?.settings?.bidTimer || 10)) * 100}%` }} className={`h-full transition-colors duration-1000 ${timeLeft < 5 ? 'bg-red-500' : 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]'}`} />
                               </div>
                               <div className="p-4 md:p-8 flex flex-col md:flex-row items-center gap-4 md:gap-8">
-                                 <div className="w-32 h-32 md:w-48 md:h-48 bg-gradient-to-b from-white/10 to-transparent rounded-2xl md:rounded-[2rem] overflow-hidden border border-white/10 relative z-10">
-                                    <img src={currentPlayer.image} alt={currentPlayer.name} className="w-full h-full object-cover transform hover:scale-105 transition-transform" />
+                                 <div className="w-32 h-32 md:w-60 md:h-80 bg-gradient-to-b from-white/10 to-transparent rounded-2xl md:rounded-[2rem] overflow-hidden border border-white/5 relative z-10">
+                                    <img src={currentPlayer.image} alt={currentPlayer.name} className="w-full h-full object-cover" />
                                  </div>
                                  <div className="flex-1 flex flex-col gap-4 md:gap-6 w-full text-center md:text-left">
                                     <div>
@@ -1117,8 +1117,8 @@ const SoldCard = ({ msg }) => {
 
                <div className="space-y-4">
                   <div className="text-center">
-                     <p className="text-[16px] font-black italic uppercase tracking-wider text-yellow-500 drop-shadow-lg">{slogan.slogan}</p>
-                     <p className="text-[10px] font-bold text-gray-500">{slogan.hashtag}</p>
+                     <p className="text-[16px] font-black italic uppercase tracking-wider text-yellow-500 drop-shadow-lg">#{slogan.slogan}</p>
+   
                   </div>
                   
                   <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-3xl text-center">
