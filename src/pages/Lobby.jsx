@@ -130,8 +130,8 @@ const Lobby = () => {
       </div>
 
       {/* Top Navigation */}
-      <div className="w-full max-w-6xl flex items-center justify-between mb-10 z-20 px-4">
-        <div className="flex items-center gap-4">
+      <div className="w-full max-w-6xl flex flex-col md:flex-row items-center justify-between gap-8 md:gap-0 mb-10 z-20 px-4">
+        <div className="flex flex-wrap justify-center md:justify-start items-center gap-3 sm:gap-4">
           <button 
             onClick={() => navigate('/')}
             className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all group flex items-center gap-2"
@@ -153,7 +153,7 @@ const Lobby = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-center md:justify-end gap-4 w-full md:w-auto">
           <div className="flex flex-col items-end mr-4">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-black text-green-500 bg-green-500/10 px-2 py-0.5 rounded leading-none uppercase">Live Engine</span>
@@ -228,7 +228,7 @@ const Lobby = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
               {TEAMS.map((team) => {
                 const isTaken = teamAssignments[team.id];
                 const isMine = currentUserPlayer?.team === team.id;

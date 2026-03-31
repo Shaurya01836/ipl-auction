@@ -85,7 +85,7 @@ const AuctionRoom = () => {
    const [summaryTab, setSummaryTab] = useState('squads'); // squads, leaderboard
    const [newTimerValue, setNewTimerValue] = useState(currentAuction?.settings?.bidTimer || 10);
    const [showParticipantsOverlay, setShowParticipantsOverlay] = useState(false);
-   const [showVoiceChat, setShowVoiceChat] = useState(false);
+   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
    const [isDeafened, setIsDeafened] = useState(false);
    const audioRef = useRef(null);
    const celebrationAudioRef = useRef(null);
@@ -488,13 +488,12 @@ const AuctionRoom = () => {
                                  key={t.id}
                                  onClick={() => !isTaken && handleQuickJoin(t)}
                                  disabled={isTaken || !!joiningTeam}
-                                 className={`relative group flex flex-col items-center justify-center p-3 md:p-4 rounded-2xl transition-all duration-300 border cursor-pointer ${
-                                    isJoining
+                                 className={`relative group flex flex-col items-center justify-center p-3 md:p-4 rounded-2xl transition-all duration-300 border cursor-pointer ${isJoining
                                        ? 'border-yellow-400 bg-yellow-400/10 shadow-[0_0_25px_rgba(250,204,21,0.2)] scale-105'
                                        : isTaken
                                           ? 'border-white/5 opacity-25 grayscale cursor-not-allowed'
                                           : 'border-white/10 hover:border-yellow-500/30 hover:bg-white/5 hover:scale-105 active:scale-95'
-                                 }`}
+                                    }`}
                               >
                                  <div className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/5 border border-white/10 p-1.5 flex items-center justify-center ${isJoining ? 'animate-pulse' : ''}`}>
                                     <img src={t.logo} alt="" className="w-full h-full object-contain" />
@@ -533,25 +532,26 @@ const AuctionRoom = () => {
 
    return (
       <div className="h-screen bg-[#050505] text-white font-sans flex flex-col items-center overflow-hidden">
-         {/* Voice Chat Component (Always-On Background Logic) */}
-         <VoiceChat 
-            channel={id} 
-            isVisible={showVoiceChat} 
-            onClose={() => setShowVoiceChat(false)} 
-            isDeafened={isDeafened}
-         />
+         {/* Voice Chat Component (Background Logic) */}
+         {isVoiceEnabled && (
+            <VoiceChat
+               channel={id}
+               isModal={false}
+               isDeafened={isDeafened}
+            />
+         )}
 
-         <header className="w-full h-14 bg-black/40 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-6 z-50">
-            <div className="flex items-center gap-6">
-               <div className="flex items-center gap-3">
-                  <span className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Room:</span>
-                  <span className="text-yellow-500 font-black tracking-widest">{id}</span>
+         <header className="w-full min-h-14 h-auto md:h-14 bg-black/40 backdrop-blur-md border-b border-white/5 flex flex-col md:flex-row items-center justify-between px-4 md:px-6 py-3 md:py-0 z-50 gap-4 md:gap-0">
+            <div className="flex items-center gap-3 md:gap-6">
+               <div className="flex items-center gap-1.5 sm:gap-3">
+                  <span className="text-gray-500 text-[9px] sm:text-[10px] font-black uppercase tracking-widest">ID:</span>
+                  <span className="text-yellow-500 font-black tracking-widest text-[11px] sm:text-sm">{id}</span>
                </div>
                <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full">
                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
                   <span className="text-[10px] font-black text-green-500">{currentAuction?.players?.length || 1}/10</span>
                </div>
-               <div className="flex items-center gap-2 border-l border-white/10 pl-6 h-6">
+               <div className="flex items-center gap-2 border-l border-white/10 pl-4 sm:pl-6 h-6">
                   <button onClick={copyRoomId} className="p-1.5 bg-white/5 text-gray-400 rounded-lg hover:bg-white/10 transition-colors cursor-pointer">
                      {copied ? <CheckCircle2 size={14} className="text-green-500" /> : <Copy size={14} />}
                   </button>
@@ -564,29 +564,29 @@ const AuctionRoom = () => {
                      {displayAuctionState?.status === 'paused' ? (
                         <button
                            onClick={() => resumeAuction(id)}
-                           className="flex items-center gap-2 bg-green-500/10 border border-green-500/20 px-3 py-1.5 rounded-lg text-green-500 text-[10px] font-black uppercase tracking-widest hover:bg-green-500/20 transition-all cursor-pointer"
+                           className="flex items-center gap-1.5 sm:gap-2 bg-green-500/10 border border-green-500/20 px-2 sm:px-3 py-1.5 rounded-lg text-green-500 text-[10px] font-black uppercase tracking-widest hover:bg-green-500/20 transition-all cursor-pointer"
                         >
-                           <PlayCircle size={12} fill="currentColor" /> Resume
+                           <PlayCircle size={12} fill="currentColor" /> <span className="hidden sm:inline">Resume</span>
                         </button>
                      ) : (
                         <button
                            onClick={() => pauseAuction(id)}
-                           className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 px-3 py-1.5 rounded-lg text-yellow-500 text-[10px] font-black uppercase tracking-widest hover:bg-yellow-500/20 transition-all cursor-pointer"
+                           className="flex items-center gap-1.5 sm:gap-2 bg-yellow-500/10 border border-yellow-500/20 px-2 sm:px-3 py-1.5 rounded-lg text-yellow-500 text-[10px] font-black uppercase tracking-widest hover:bg-yellow-500/20 transition-all cursor-pointer"
                         >
-                           <Pause size={12} fill="currentColor" /> Pause
+                           <Pause size={12} fill="currentColor" /> <span className="hidden sm:inline">Pause</span>
                         </button>
                      )}
                      <button
                         onClick={() => endAuction(id)}
-                        className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 px-3 py-1.5 rounded-lg text-red-500 text-[10px] font-black uppercase tracking-widest hover:bg-red-500/20 transition-all cursor-pointer"
+                        className="flex items-center gap-1.5 sm:gap-2 bg-red-500/10 border border-red-500/20 px-2 sm:px-3 py-1.5 rounded-lg text-red-500 text-[10px] font-black uppercase tracking-widest hover:bg-red-500/20 transition-all cursor-pointer"
                      >
-                        <XCircle size={12} fill="currentColor" /> End
+                        <XCircle size={12} fill="currentColor" /> <span className="hidden sm:inline">End</span>
                      </button>
                      <button
                         onClick={() => setShowParticipantsOverlay(true)}
-                        className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-lg text-blue-500 text-[10px] font-black uppercase tracking-widest hover:bg-blue-500/20 transition-all cursor-pointer"
+                        className="flex items-center gap-1.5 sm:gap-2 bg-blue-500/10 border border-blue-500/20 px-2 sm:px-3 py-1.5 rounded-lg text-blue-500 text-[10px] font-black uppercase tracking-widest hover:bg-blue-500/20 transition-all cursor-pointer"
                      >
-                        <Users size={12} fill="currentColor" /> Participants
+                        <Users size={12} fill="currentColor" /> <span className="hidden sm:inline">Participants</span>
                      </button>
                      <button
                         onClick={() => setShowSettings(true)}
@@ -597,22 +597,22 @@ const AuctionRoom = () => {
                   </div>
                )}
                <div className="flex items-center gap-1.5 border-l border-white/10 pl-6 h-6">
-                    <button 
-                      onClick={() => setShowVoiceChat(!showVoiceChat)}
-                      className={`relative p-1.5 rounded-lg border transition-all cursor-pointer ${showVoiceChat ? 'bg-orange-500/20 border-orange-500/30 text-orange-500' : 'bg-orange-500/10 border-orange-500/20 text-orange-400 hover:bg-orange-500/20'}`}
-                      title="Voice Chat"
-                    >
-                      <Mic size={16} />
-                      {!showVoiceChat && (
-                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-[#050505] animate-pulse shadow-[0_0_8px_#22c55e]" />
-                      )}
-                    </button>
-                  <button 
-                    onClick={() => setIsDeafened(!isDeafened)}
-                    className={`p-1.5 rounded-lg border transition-all cursor-pointer ${isDeafened ? 'bg-red-500/20 border-red-500/30 text-red-500' : 'hover:bg-white/5 text-gray-400 border-transparent'}`}
-                    title={isDeafened ? "Unmute Others" : "Mute Others"}
+                  <button
+                     onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
+                     className={`relative p-1.5 rounded-lg border transition-all cursor-pointer ${isVoiceEnabled ? 'bg-orange-500/20 border-orange-500/30 text-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.2)]' : 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20'}`}
+                     title={isVoiceEnabled ? "Disable Voice Chat" : "Enable Voice Chat"}
                   >
-                    {isDeafened ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                     {isVoiceEnabled ? <Mic size={16} /> : <MicOff size={16} />}
+                     {isVoiceEnabled && (
+                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-[#050505] animate-pulse shadow-[0_0_8px_#22c55e]" />
+                     )}
+                  </button>
+                  <button
+                     onClick={() => setIsDeafened(!isDeafened)}
+                     className={`p-1.5 rounded-lg border transition-all cursor-pointer ${isDeafened ? 'bg-red-500/20 border-red-500/30 text-red-500' : 'hover:bg-white/5 text-gray-400 border-transparent'}`}
+                     title={isDeafened ? "Unmute Others" : "Mute Others"}
+                  >
+                     {isDeafened ? <VolumeX size={16} /> : <Volume2 size={16} />}
                   </button>
                   <button onClick={() => navigate('/')} className="p-1.5 hover:bg-white/5 rounded-lg text-gray-400 cursor-pointer"><Home size={16} /></button>
                   <button onClick={logout} className="p-1.5 hover:bg-red-500/20 rounded-lg text-gray-400 hover:text-red-400 cursor-pointer transition-colors" title="Logout"><LogOut size={16} /></button>
@@ -755,22 +755,22 @@ const AuctionRoom = () => {
                               <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="relative mb-6">
                                  <img src={currentPlayer.image} alt={currentPlayer.name} className="w-32 h-32 md:w-36 md:h-40 object-cover rounded-3xl border-4 border-white/30 shadow-2xl relative z-10" />
                               </motion.div>
-                              <motion.h2 initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter mb-1 drop-shadow-md">
+                              <motion.h2 initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="text-xl sm:text-2xl md:text-3xl font-black text-white uppercase tracking-tighter mb-1 drop-shadow-md">
                                  {currentPlayer.name}
                               </motion.h2>
-                              <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.4, type: 'spring' }} className="text-6xl md:text-8xl font-black  tracking-tighter text-white drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)] mb-6">
+                              <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.4, type: 'spring' }} className="text-4xl sm:text-6xl md:text-8xl font-black  tracking-tighter text-white drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)] mb-6">
                                  {displayAuctionState.status === 'sold' ? 'SOLD' : 'UNSOLD'}
                               </motion.div>
                               {displayAuctionState.status === 'sold' && (
                                  <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }} className="flex flex-col items-center gap-4 w-full">
-                                    <div className="bg-black/40 backdrop-blur-xl px-10 py-3 rounded-full border border-yellow-500/50 shadow-[0_0_30px_rgba(234,179,8,0.3)]">
-                                       <span className="text-4xl md:text-5xl font-black text-yellow-500 tracking-tight">₹{(displayAuctionState.currentBid || 0).toFixed(2)} Cr</span>
+                                    <div className="bg-black/40 backdrop-blur-xl px-6 sm:px-10 py-3 rounded-full border border-yellow-500/50 shadow-[0_0_30px_rgba(234,179,8,0.3)]">
+                                       <span className="text-2xl sm:text-4xl md:text-5xl font-black text-yellow-500 tracking-tight">₹{(displayAuctionState.currentBid || 0).toFixed(2)} Cr</span>
                                     </div>
                                     <div className="bg-white/10 backdrop-blur-md px-8 py-3 rounded-2xl border border-white/20 flex items-center gap-3">
                                        <div className={`w-10 h-10 rounded-xl bg-white/5 border border-white/10 p-1.5 flex items-center justify-center`}>
                                           <img src={TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.logo} alt="" className="w-full h-full object-contain" />
                                        </div>
-                                       <span className="text-lg md:text-xl font-black uppercase text-white tracking-widest">{TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.name || 'Franchise'}</span>
+                                       <span className="text-base sm:text-lg md:text-xl font-black uppercase text-white tracking-widest">{TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.name || 'Franchise'}</span>
                                     </div>
                                  </motion.div>
                               )}
@@ -859,73 +859,73 @@ const AuctionRoom = () => {
                   <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                </div>
                <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar space-y-3">
-                   {[...messages.filter(m => m.type === 'log' || m.type === 'sold_card').filter(m => !m.text.includes('New bid:'))].reverse().map((msg, index) => {
-                      if (msg.type === 'sold_card') return <SoldCard key={msg.id || index} msg={msg} />;
+                  {[...messages.filter(m => m.type === 'log' || m.type === 'sold_card').filter(m => !m.text.includes('New bid:'))].reverse().map((msg, index) => {
+                     if (msg.type === 'sold_card') return <SoldCard key={msg.id || index} msg={msg} />;
 
-                      // Determine icon and color based on message content
-                      const text = msg.text || '';
-                      let icon = <MessageSquare size={14} />;
-                      let borderColor = 'border-white/5';
-                      let iconBg = 'bg-white/5 text-gray-500';
+                     // Determine icon and color based on message content
+                     const text = msg.text || '';
+                     let icon = <MessageSquare size={14} />;
+                     let borderColor = 'border-white/5';
+                     let iconBg = 'bg-white/5 text-gray-500';
 
-                      if (text.includes('SOLD')) {
-                         icon = <Gavel size={14} />;
-                         borderColor = 'border-green-500/20';
-                         iconBg = 'bg-green-500/10 text-green-500';
-                      } else if (text.includes('UNSOLD')) {
-                         icon = <XCircle size={14} />;
-                         borderColor = 'border-red-500/20';
-                         iconBg = 'bg-red-500/10 text-red-500';
-                      } else if (text.includes('PAUSED')) {
-                         icon = <Pause size={14} />;
-                         borderColor = 'border-yellow-500/20';
-                         iconBg = 'bg-yellow-500/10 text-yellow-500';
-                      } else if (text.includes('RESUMED')) {
-                         icon = <Play size={14} />;
-                         borderColor = 'border-blue-500/20';
-                         iconBg = 'bg-blue-500/10 text-blue-500';
-                      } else if (text.includes('started') || text.includes('COMPLETED')) {
-                         icon = <Rocket size={14} />;
-                         borderColor = 'border-orange-500/20';
-                         iconBg = 'bg-orange-500/10 text-orange-500';
-                      } else if (text.includes('removed')) {
-                         icon = <LogOut size={14} />;
-                         borderColor = 'border-red-500/20';
-                         iconBg = 'bg-red-500/10 text-red-400';
-                      }
+                     if (text.includes('SOLD')) {
+                        icon = <Gavel size={14} />;
+                        borderColor = 'border-green-500/20';
+                        iconBg = 'bg-green-500/10 text-green-500';
+                     } else if (text.includes('UNSOLD')) {
+                        icon = <XCircle size={14} />;
+                        borderColor = 'border-red-500/20';
+                        iconBg = 'bg-red-500/10 text-red-500';
+                     } else if (text.includes('PAUSED')) {
+                        icon = <Pause size={14} />;
+                        borderColor = 'border-yellow-500/20';
+                        iconBg = 'bg-yellow-500/10 text-yellow-500';
+                     } else if (text.includes('RESUMED')) {
+                        icon = <Play size={14} />;
+                        borderColor = 'border-blue-500/20';
+                        iconBg = 'bg-blue-500/10 text-blue-500';
+                     } else if (text.includes('started') || text.includes('COMPLETED')) {
+                        icon = <Rocket size={14} />;
+                        borderColor = 'border-orange-500/20';
+                        iconBg = 'bg-orange-500/10 text-orange-500';
+                     } else if (text.includes('removed')) {
+                        icon = <LogOut size={14} />;
+                        borderColor = 'border-red-500/20';
+                        iconBg = 'bg-red-500/10 text-red-400';
+                     }
 
-                      // Relative timestamp
-                      let timeAgo = '';
-                      if (msg.timestamp?.toDate) {
-                         const diffMs = Date.now() - msg.timestamp.toDate().getTime();
-                         const diffSec = Math.floor(diffMs / 1000);
-                         if (diffSec < 60) timeAgo = `${diffSec}s ago`;
-                         else if (diffSec < 3600) timeAgo = `${Math.floor(diffSec / 60)}m ago`;
-                         else timeAgo = `${Math.floor(diffSec / 3600)}h ago`;
-                      }
+                     // Relative timestamp
+                     let timeAgo = '';
+                     if (msg.timestamp?.toDate) {
+                        const diffMs = Date.now() - msg.timestamp.toDate().getTime();
+                        const diffSec = Math.floor(diffMs / 1000);
+                        if (diffSec < 60) timeAgo = `${diffSec}s ago`;
+                        else if (diffSec < 3600) timeAgo = `${Math.floor(diffSec / 60)}m ago`;
+                        else timeAgo = `${Math.floor(diffSec / 3600)}h ago`;
+                     }
 
-                      return (
-                         <motion.div
-                            key={`log-${msg.id || index}`}
-                            initial={index === 0 ? { opacity: 0, y: -10 } : false}
-                            animate={{ opacity: 1, y: 0 }}
-                            className={`flex gap-3 items-start p-3 rounded-xl border ${borderColor} bg-white/[0.02] hover:bg-white/[0.04] transition-all`}
-                         >
-                            <div className={`mt-0.5 p-1.5 rounded-lg flex items-center justify-center shrink-0 ${iconBg}`}>{icon}</div>
-                            <div className="flex-1 min-w-0">
-                               <p className="text-[11px] md:text-[12px] font-semibold leading-relaxed text-gray-300">{msg.text}</p>
-                               {timeAgo && <span className="text-[8px] font-bold text-gray-600 uppercase tracking-widest mt-1 block">{timeAgo}</span>}
-                            </div>
-                         </motion.div>
-                      );
-                   })}
-                   {messages.filter(m => m.type === 'log' || m.type === 'sold_card').filter(m => !m.text.includes('New bid:')).length === 0 && (
-                      <div className="h-full flex flex-col items-center justify-center py-20 opacity-30">
-                         <History size={32} className="text-gray-700 mb-4" />
-                         <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">No activity yet</p>
-                      </div>
-                   )}
-                </div>
+                     return (
+                        <motion.div
+                           key={`log-${msg.id || index}`}
+                           initial={index === 0 ? { opacity: 0, y: -10 } : false}
+                           animate={{ opacity: 1, y: 0 }}
+                           className={`flex gap-3 items-start p-3 rounded-xl border ${borderColor} bg-white/[0.02] hover:bg-white/[0.04] transition-all`}
+                        >
+                           <div className={`mt-0.5 p-1.5 rounded-lg flex items-center justify-center shrink-0 ${iconBg}`}>{icon}</div>
+                           <div className="flex-1 min-w-0">
+                              <p className="text-[11px] md:text-[12px] font-semibold leading-relaxed text-gray-300">{msg.text}</p>
+                              {timeAgo && <span className="text-[8px] font-bold text-gray-600 uppercase tracking-widest mt-1 block">{timeAgo}</span>}
+                           </div>
+                        </motion.div>
+                     );
+                  })}
+                  {messages.filter(m => m.type === 'log' || m.type === 'sold_card').filter(m => !m.text.includes('New bid:')).length === 0 && (
+                     <div className="h-full flex flex-col items-center justify-center py-20 opacity-30">
+                        <History size={32} className="text-gray-700 mb-4" />
+                        <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">No activity yet</p>
+                     </div>
+                  )}
+               </div>
             </aside>
          </div>
 
@@ -950,64 +950,64 @@ const AuctionRoom = () => {
                            <button key={tab} onClick={() => setActiveOverlayTab(tab)} className={`px-6 py-4 rounded-2xl transition-all uppercase text-sm font-black ${activeOverlayTab === tab ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300'}`}>{tab}</button>
                         ))}
                      </div>
-                      <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-12">
-                         {activeOverlayTab === 'upcoming' ? (
-                            <div className="space-y-12">
-                               {Object.entries(groupedUpcomingPlayers || {}).map(([setName, players]) => (
-                                  <div key={setName} className="space-y-6">
-                                     <div className="flex items-center gap-6">
-                                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-yellow-500/20 to-transparent" />
-                                        <h3 className="text-sm font-black text-yellow-500 uppercase tracking-[0.3em] bg-yellow-500/5 px-6 py-2 rounded-full border border-yellow-500/10 ">
-                                           {setName}
-                                        </h3>
-                                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-yellow-500/20 to-transparent" />
-                                     </div>
-                                     <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3 md:gap-4">
-                                        {players.map(p => (
-                                           <div key={p.id} className="bg-white/5 border border-white/5 p-3 rounded-2xl hover:bg-white/10 transition-all group">
-                                              <div className="w-16 h-16 md:w-20 md:h-20 bg-white/10 rounded-2xl overflow-hidden mb-3 border border-white/10 group-hover:scale-105 transition-transform mx-auto">
-                                                 <img src={p.image} className="w-full h-full object-contain" alt={p.name} />
-                                              </div>
-                                              <div className="text-center">
-                                                 <h5 className="text-[10px] md:text-xs font-black truncate mb-0.5">{p.name}</h5>
-                                                 <div className="flex items-center justify-center gap-2 mb-2">
-                                                    <span className="text-[8px] md:text-[9px] font-bold text-gray-500 uppercase ">{p.role}</span>
-                                                 </div>
-                                                 <div className="bg-black/40 px-3 py-1 rounded-lg border border-white/5">
-                                                    <span className="text-[10px] font-black text-yellow-500">
-                                                       ₹{p.basePrice.toFixed(2)} Cr
-                                                    </span>
-                                                 </div>
-                                              </div>
-                                           </div>
-                                        ))}
-                                     </div>
-                                  </div>
-                               ))}
-                            </div>
-                         ) : (
-                            <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3 md:gap-4">
-                               {filteredPlayers.map(p => (
-                                  <div key={p.id} className="bg-white/5 border border-white/5 p-3 rounded-2xl hover:bg-white/10 transition-all group">
-                                     <div className="w-16 h-16 md:w-20 md:h-20 bg-white/10 rounded-2xl overflow-hidden mb-3 border border-white/10 group-hover:scale-105 transition-transform mx-auto">
-                                        <img src={p.image} className="w-full h-full object-contain" alt={p.name} />
-                                     </div>
-                                     <div className="text-center">
-                                        <h5 className="text-[10px] md:text-xs font-black truncate mb-0.5">{p.name}</h5>
-                                        <div className="flex items-center justify-center gap-2 mb-2">
-                                           <span className="text-[8px] md:text-[9px] font-bold text-gray-500 uppercase ">{p.role}</span>
-                                        </div>
-                                        <div className="bg-black/40 px-3 py-1 rounded-lg border border-white/5">
-                                           <span className="text-[10px] font-black text-yellow-500">
-                                              ₹{(activeOverlayTab === 'sold' || activeOverlayTab === 'leaderboard' ? p.bid : p.basePrice).toFixed(2)} Cr
-                                           </span>
-                                        </div>
-                                     </div>
-                                  </div>
-                               ))}
-                            </div>
-                         )}
-                      </div>
+                     <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-12">
+                        {activeOverlayTab === 'upcoming' ? (
+                           <div className="space-y-12">
+                              {Object.entries(groupedUpcomingPlayers || {}).map(([setName, players]) => (
+                                 <div key={setName} className="space-y-6">
+                                    <div className="flex items-center gap-6">
+                                       <div className="h-px flex-1 bg-gradient-to-r from-transparent via-yellow-500/20 to-transparent" />
+                                       <h3 className="text-sm font-black text-yellow-500 uppercase tracking-[0.3em] bg-yellow-500/5 px-6 py-2 rounded-full border border-yellow-500/10 ">
+                                          {setName}
+                                       </h3>
+                                       <div className="h-px flex-1 bg-gradient-to-r from-transparent via-yellow-500/20 to-transparent" />
+                                    </div>
+                                    <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3 md:gap-4">
+                                       {players.map(p => (
+                                          <div key={p.id} className="bg-white/5 border border-white/5 p-3 rounded-2xl hover:bg-white/10 transition-all group">
+                                             <div className="w-16 h-16 md:w-20 md:h-20 bg-white/10 rounded-2xl overflow-hidden mb-3 border border-white/10 group-hover:scale-105 transition-transform mx-auto">
+                                                <img src={p.image} className="w-full h-full object-contain" alt={p.name} />
+                                             </div>
+                                             <div className="text-center">
+                                                <h5 className="text-[10px] md:text-xs font-black truncate mb-0.5">{p.name}</h5>
+                                                <div className="flex items-center justify-center gap-2 mb-2">
+                                                   <span className="text-[8px] md:text-[9px] font-bold text-gray-500 uppercase ">{p.role}</span>
+                                                </div>
+                                                <div className="bg-black/40 px-3 py-1 rounded-lg border border-white/5">
+                                                   <span className="text-[10px] font-black text-yellow-500">
+                                                      ₹{p.basePrice.toFixed(2)} Cr
+                                                   </span>
+                                                </div>
+                                             </div>
+                                          </div>
+                                       ))}
+                                    </div>
+                                 </div>
+                              ))}
+                           </div>
+                        ) : (
+                           <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3 md:gap-4">
+                              {filteredPlayers.map(p => (
+                                 <div key={p.id} className="bg-white/5 border border-white/5 p-3 rounded-2xl hover:bg-white/10 transition-all group">
+                                    <div className="w-16 h-16 md:w-20 md:h-20 bg-white/10 rounded-2xl overflow-hidden mb-3 border border-white/10 group-hover:scale-105 transition-transform mx-auto">
+                                       <img src={p.image} className="w-full h-full object-contain" alt={p.name} />
+                                    </div>
+                                    <div className="text-center">
+                                       <h5 className="text-[10px] md:text-xs font-black truncate mb-0.5">{p.name}</h5>
+                                       <div className="flex items-center justify-center gap-2 mb-2">
+                                          <span className="text-[8px] md:text-[9px] font-bold text-gray-500 uppercase ">{p.role}</span>
+                                       </div>
+                                       <div className="bg-black/40 px-3 py-1 rounded-lg border border-white/5">
+                                          <span className="text-[10px] font-black text-yellow-500">
+                                             ₹{(activeOverlayTab === 'sold' || activeOverlayTab === 'leaderboard' ? p.bid : p.basePrice).toFixed(2)} Cr
+                                          </span>
+                                       </div>
+                                    </div>
+                                 </div>
+                              ))}
+                           </div>
+                        )}
+                     </div>
                   </div>
                </motion.div>
             )}
@@ -1118,11 +1118,11 @@ const SoldCard = ({ msg }) => {
                <div className="space-y-4">
                   <div className="text-center">
                      <p className="text-[16px] font-black italic uppercase tracking-wider text-yellow-500 drop-shadow-lg">#{slogan.slogan}</p>
-   
+
                   </div>
-                  
+
                   <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-3xl text-center">
-              
+
                      <p className="text-2xl font-black text-white">₹{msg.metadata.bid.toFixed(2)} Cr</p>
                   </div>
                </div>

@@ -208,10 +208,10 @@ const LandingPage = () => {
           animate={{ opacity: 1, scale: 1 }}
           className="text-center mb-10 z-10 relative"
         >
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter mb-1 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50 leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter mb-1 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50 leading-tight">
             BUILD YOUR
           </h1>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter text-[#ff5500] italic leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter text-[#ff5500] italic leading-tight">
             DREAM TEAM
           </h1>
           <div className="mt-2 flex items-center justify-center gap-4 text-gray-500 font-bold text-[10px] uppercase tracking-[0.2em]">
@@ -308,10 +308,10 @@ const LandingPage = () => {
         animate={{ opacity: 1, scale: 1 }}
         className="text-center mb-8 z-10 relative"
       >
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter mb-1 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50 leading-tight">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter mb-1 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50 leading-tight">
           BUILD YOUR
         </h1>
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter text-[#ff5500] italic leading-tight">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter text-[#ff5500] italic leading-tight">
           DREAM TEAM
         </h1>
         <div className="mt-2 flex items-center justify-center gap-4 text-gray-500 font-bold text-[10px] uppercase tracking-[0.2em]">
@@ -405,7 +405,7 @@ const LandingPage = () => {
                     </span>
                   </div>
                   
-                  <div className="grid grid-cols-5 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                     {TEAMS.map((t) => (
                       <button
                         key={t.id}
@@ -544,9 +544,9 @@ const LandingPage = () => {
                                 </div>
                               </div>
                               <div className="flex items-center gap-4">
-                                <div className="text-right hidden sm:block">
-                                  <span className="text-xs font-black italic text-yellow-500">₹{session.spent.toFixed(1)} Cr</span>
-                                  <span className="block text-[8px] font-bold text-gray-600">{session.squad.length} players</span>
+                                <div className="text-right">
+                                  <span className="text-[10px] sm:text-xs font-black italic text-yellow-500">₹{session.spent.toFixed(1)} Cr</span>
+                                  <span className="block text-[7px] sm:text-[8px] font-bold text-gray-600">{session.squad.length} players</span>
                                 </div>
                                 <ChevronDown size={16} className={`text-gray-600 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                               </div>

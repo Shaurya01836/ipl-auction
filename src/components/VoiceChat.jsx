@@ -6,7 +6,7 @@ import { Mic, MicOff, PhoneOff, Users, Play, Radio, X } from 'lucide-react';
 // Initialize the Agora Client
 const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
 
-const VoiceChat = ({ channel, onEndCall, isVisible, onClose, isDeafened }) => {
+const VoiceChat = ({ channel, onEndCall, isModal = true, isVisible, onClose, isDeafened }) => {
   const [localAudioTrack, setLocalAudioTrack] = useState(null);
   const [isMuted, setIsMuted] = useState(false);
   const [remoteUsers, setRemoteUsers] = useState([]);
@@ -110,7 +110,49 @@ const VoiceChat = ({ channel, onEndCall, isVisible, onClose, isDeafened }) => {
 
   const isUserSpeaking = (uid) => {
     // Agora volume level is typically 0-100
-    return (volumeLevels[uid] || 0) > 5;
+    return (volumeLevels[uid] || 0) > 10;
+  };
+
+  const renderMinimalUI = () => {
+    const activeSpeakers = remoteUsers.filter(u => isUserSpeaking(u.uid));
+    const amISpeaking = !isMuted && isUserSpeaking(0);
+
+    if (activeSpeakers.length === 0 && !amISpeaking) return null;
+
+    return (
+      <div className="fixed bottom-20 right-6 z-50 flex flex-col gap-2 pointer-events-none">
+        <AnimatePresence>
+          {amISpeaking && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="bg-orange-500/90 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/20 flex items-center gap-3 shadow-2xl"
+            >
+              <div className="flex gap-0.5 items-center h-3">
+                {[1, 2, 3].map(i => <motion.div key={i} animate={{ height: [4, 12, 4] }} transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }} className="w-0.5 bg-white" />)}
+              </div>
+              <span className="text-[10px] font-black uppercase text-white tracking-widest">You are speaking</span>
+            </motion.div>
+          )}
+
+          {activeSpeakers.map((user, idx) => (
+            <motion.div
+              key={user.uid}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="bg-black/60 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 flex items-center gap-3 shadow-xl"
+            >
+              <div className="flex gap-0.5 items-center h-3">
+                {[1, 2, 3].map(i => <motion.div key={i} animate={{ height: [4, 12, 4] }} transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }} className="w-0.5 bg-blue-400" />)}
+              </div>
+              <span className="text-[10px] font-black uppercase text-blue-400 tracking-widest">Manager {(user.uid + "").slice(-4)} is speaking</span>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+    );
   };
 
   const renderInnerUI = () => {
@@ -279,28 +321,31 @@ const VoiceChat = ({ channel, onEndCall, isVisible, onClose, isDeafened }) => {
     );
   };
 
-  // If isVisible is provided, render as a persistent fixed overlay
-  if (isVisible !== undefined) {
-    return (
-      <AnimatePresence>
-        {isVisible && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-12 bg-black/80 backdrop-blur-sm"
-          >
-            <div className="w-full max-w-4xl h-[600px] shadow-[0_0_50px_rgba(0,0,0,0.5)]">
-              {renderInnerUI()}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    );
+  // If isModal is true (Lobby tab or old behavior), render with modal wrapper if isVisible is true
+  if (isModal) {
+    if (isVisible !== undefined) {
+      return (
+        <AnimatePresence>
+          {isVisible && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-12 bg-black/80 backdrop-blur-sm"
+            >
+              <div className="w-full max-w-4xl h-[600px] shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                {renderInnerUI()}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      );
+    }
+    return renderInnerUI();
   }
 
-  // Otherwise, render as a standard component (for Lobby tab)
-  return renderInnerUI();
+  // Headless/Minimal mode (for direct toggle in Auction Room)
+  return renderMinimalUI();
 };
 
 export default VoiceChat;

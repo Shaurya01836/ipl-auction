@@ -195,7 +195,7 @@ const AuctionSummary = () => {
                 <span className="text-orange-500 font-extrabold tracking-widest text-sm">{id}</span>
               </div>
             </div>
-            <h1 className="text-5xl md:text-7xl font-black  tracking-tighter uppercase leading-none drop-shadow-2xl">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black  tracking-tighter uppercase leading-none drop-shadow-2xl">
               Auction <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff5500] to-[#ff8c00]">Complete</span>
             </h1>
           </div>
@@ -212,8 +212,8 @@ const AuctionSummary = () => {
         </motion.header>
 
         {/* Tab Navigation */}
-        <div className="flex justify-center mb-12">
-          <div className="bg-white/5 backdrop-blur-3xl p-1.5 rounded-[2rem] border border-white/10 flex gap-2">
+        <div className="flex justify-center mb-12 overflow-x-auto custom-scrollbar pb-2">
+          <div className="bg-white/5 backdrop-blur-3xl p-1.5 rounded-[2rem] border border-white/10 flex gap-2 min-w-max">
             {[
               { id: 'squads', label: 'Team Squads', icon: Users },
               { id: 'leaderboard', label: 'Top Expensive', icon: Trophy },
@@ -222,7 +222,7 @@ const AuctionSummary = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 md:px-10 py-4 rounded-[1.5rem] font-black uppercase text-[10px] tracking-[0.2em] transition-all flex items-center gap-3 ${
+                className={`px-4 sm:px-6 md:px-10 py-3 md:py-4 rounded-[1.5rem] font-black uppercase text-[9px] md:text-[10px] tracking-wider md:tracking-[0.2em] transition-all flex items-center gap-2 md:gap-3 ${
                   activeTab === tab.id 
                     ? 'bg-[#ff5500] text-white shadow-2xl' 
                     : 'text-gray-500 hover:text-white hover:bg-white/5'
@@ -261,31 +261,31 @@ const AuctionSummary = () => {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.1 }}
                     key={player.id}
-                    className="group relative bg-white/[0.03] border border-white/5 p-6 rounded-[2rem] transition-all hover:bg-white/5 hover:border-orange-500/30 flex items-center justify-between"
+                    className="group relative bg-white/[0.03] border border-white/5 p-4 sm:p-6 rounded-[2rem] transition-all hover:bg-white/5 hover:border-orange-500/30 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-6"
                   >
-                    <div className="flex items-center gap-8">
-                      <span className="text-5xl font-black  text-white/5 group-hover:text-orange-500/10 transition-colors">#{idx + 1}</span>
-                      <div className="w-20 h-20 bg-black/40 border border-white/10 rounded-2xl overflow-hidden group-hover:scale-105 transition-transform duration-500 p-2">
+                    <div className="flex items-center gap-4 sm:gap-8">
+                      <span className="text-3xl sm:text-5xl font-black  text-white/5 group-hover:text-orange-500/10 transition-colors">#{idx + 1}</span>
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-black/40 border border-white/10 rounded-2xl overflow-hidden group-hover:scale-105 transition-transform duration-500 p-2 shrink-0">
                         <img src={player.image} className="w-full h-full object-cover filter drop-shadow-2xl" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <div className="flex items-center gap-3 mb-1">
-                          <h3 className="text-2xl font-black uppercase tracking-tight italic leading-none">{player.name}</h3>
-                          {player.country !== 'IND' && <Wifi size={14} className="text-purple-400 rotate-90" />}
+                          <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight italic leading-none truncate">{player.name}</h3>
+                          {player.country !== 'IND' && <Wifi size={14} className="text-purple-400 rotate-90 shrink-0" />}
                         </div>
                         <div className="flex items-center gap-3">
-                          <div className={`px-2 py-0.5 rounded text-[8px] font-black uppercase ${player.teamColor} ${player.teamTextColor}`}>
+                          <div className={`px-2 py-0.5 rounded text-[8px] font-black uppercase shrink-0 ${player.teamColor} ${player.teamTextColor}`}>
                             {player.teamId}
                           </div>
-                          <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                          <p className="text-[9px] sm:text-[10px] font-black text-gray-500 uppercase tracking-widest truncate">
                             {player.role} • {player.teamName}
                           </p>
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-4xl font-black text-[#ff5500] tracking-tighter mb-1">
-                        ₹{player.bidVal.toFixed(2)}<span className="text-xs ml-1 font-bold not-italic">Cr</span>
+                    <div className="text-left sm:text-right">
+                      <div className="text-3xl sm:text-4xl font-black text-[#ff5500] tracking-tighter mb-1">
+                        ₹{player.bidVal.toFixed(2)}<span className="text-xs ml-1 font-bold not-italic text-gray-500">Cr</span>
                       </div>
                       <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest">Winning Bid</p>
                     </div>
@@ -394,7 +394,7 @@ const AuctionSummary = () => {
                             <div className="p-8 space-y-8">
                               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                                 {/* Analysis Metrics */}
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                    {[
                                      { label: 'Batting', icon: Sword, val: team.stats.batting, color: 'text-orange-500', bg: 'bg-orange-500/10' },
                                      { label: 'Bowling', icon: Shield, val: team.stats.bowling, color: 'text-blue-400', bg: 'bg-blue-400/10' },
@@ -514,18 +514,18 @@ const AuctionSummary = () => {
 
                       <div className="flex items-center gap-8">
                         {/* Summary Stats */}
-                        <div className="hidden md:flex gap-12 text-right border-r border-white/5 pr-12 h-10 items-center">
+                        <div className="flex flex-wrap md:flex-nowrap gap-4 sm:gap-6 md:gap-12 text-right md:border-r border-white/5 md:pr-12 h-auto md:h-10 items-center justify-end md:justify-start">
                           <div>
                             <span className="block text-[8px] font-black text-blue-500 uppercase tracking-widest mb-0.5">Players</span>
-                            <span className="text-lg font-black ">{squad.length}</span>
+                            <span className="text-sm md:text-lg font-black ">{squad.length}</span>
                           </div>
                           <div>
                             <span className="block text-[8px] font-black text-purple-500 uppercase tracking-widest mb-0.5">Overseas</span>
-                            <span className="text-lg font-black ">{osCount}</span>
+                            <span className="text-sm md:text-lg font-black ">{osCount}</span>
                           </div>
                           <div>
                             <span className="block text-[8px] font-black text-orange-500 uppercase tracking-widest mb-0.5">Spent</span>
-                            <span className="text-lg font-black ">₹{totalSpent.toFixed(1)}Cr</span>
+                            <span className="text-sm md:text-lg font-black ">₹{totalSpent.toFixed(1)}Cr</span>
                           </div>
                         </div>
 
@@ -557,7 +557,7 @@ const AuctionSummary = () => {
                                     <span className="text-[10px] font-black text-gray-700 ">{rolePlayers.length} Members</span>
                                   </div>
                                   
-                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {rolePlayers.map((p, pidx) => (
                                       <motion.div 
                                         initial={{ opacity: 0, y: 10 }}
