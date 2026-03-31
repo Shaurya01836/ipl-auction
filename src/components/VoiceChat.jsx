@@ -29,8 +29,8 @@ const VoiceChat = ({ channel, onEndCall, isModal = true, isVisible, onClose, isD
     let isMounted = true;
 
     const startVoiceChat = async () => {
-      const appId = 'SCRUBBED_ID'; 
-      
+      const appId = import.meta.env.VITE_AGORA_APP_ID; 
+
       try {
         setIsConnecting(true);
         // Enable volume indicators
