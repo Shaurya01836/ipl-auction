@@ -26,6 +26,8 @@ import {
   Coins
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { db } from '../lib/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 
 const AuctionSummary = () => {
   const { id } = useParams();
@@ -36,6 +38,92 @@ const AuctionSummary = () => {
   const [activeTab, setActiveTab] = useState('squads');
   const [expandedTeam, setExpandedTeam] = useState(null);
   const [expandedPointsTeam, setExpandedPointsTeam] = useState(null);
+  
+  // AI State
+  const [generatingTeams, setGeneratingTeams] = useState(new Set());
+
+  const generateAIAnalysis = async (teamDocId, teamName, squad) => {
+    if (generatingTeams.has(teamDocId)) return;
+    
+    setGeneratingTeams(prev => new Set(prev).add(teamDocId));
+    
+    const squadText = squad.map(p => `${p.name} (${p.role}, ₹${p.bid}Cr)`).join(', ');
+    const prompt = `Act as an elite IPL Cricket Strategist and Analyst. 
+    Analyze the following squad for the team "${teamName}" for the upcoming 2026 Season.
+    
+    Squad: ${squadText}
+    
+    CRITICAL: You MUST return the response in the following JSON format ONLY:
+    {
+      "analysis": "A detailed professional evaluation.",
+      "batting": 85,
+      "bowling": 80,
+      "allRounder": 75,
+      "value": 90,
+      "score": 85,
+      "verdict": "A punchy final summary."
+    }
+    
+    The 'score' is the overall Champion Factor. All scores are 0-100.
+    Only return the JSON. No other text.`;
+
+    try {
+      if (!window.puter) throw new Error("Puter.js not initialized");
+
+      const response = await window.puter.ai.chat(prompt, {
+        model: 'openrouter:anthropic/claude-3.5-sonnet',
+        stream: false
+      });
+
+      let rawText = "";
+      if (typeof response === 'string') rawText = response;
+      else if (response?.text) rawText = response.text;
+      else if (response?.message?.content) rawText = response.message.content;
+      else if (response?.result) rawText = typeof response.result === 'string' ? response.result : response.result?.text || JSON.stringify(response.result);
+      else if (Array.isArray(response?.choices)) rawText = response.choices[0]?.message?.content || "";
+
+      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+      const cleanedData = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+
+      if (cleanedData && typeof cleanedData.score === 'number') {
+        // Persist to Global Database for all users
+        const teamRef = doc(db, 'teams', teamDocId);
+        await updateDoc(teamRef, {
+          aiAnalysis: cleanedData
+        });
+      } else {
+        throw new Error("Invalid format from AI");
+      }
+
+    } catch (error) {
+      console.error(`AI Analysis Error (${teamName}):`, error);
+    } finally {
+      setGeneratingTeams(prev => {
+        const next = new Set(prev);
+        next.delete(teamDocId);
+        return next;
+      });
+    }
+  };
+
+  // Automatic Batch Analysis Trigger
+  useEffect(() => {
+    if (activeTab === 'points' && roomTeams.length > 0) {
+      roomTeams.forEach(teamDoc => {
+        if (!teamDoc.aiAnalysis && !generatingTeams.has(teamDoc.id)) {
+          const tInfo = TEAMS.find(t => t.id === teamDoc.teamId);
+          const squad = (teamDoc?.squad || []).map(s => {
+            const pid = typeof s === 'string' ? s : s.id;
+            const bid = typeof s === 'string' ? 0 : s.bid;
+            return { ...IPL_PLAYERS.find(p => p.id === pid), bid };
+          });
+          if (squad.length > 0) {
+            generateAIAnalysis(teamDoc.id, tInfo?.name, squad);
+          }
+        }
+      });
+    }
+  }, [activeTab, roomTeams, generatingTeams]);
 
   useEffect(() => {
     if (id && user?.uid) {
@@ -66,97 +154,38 @@ const AuctionSummary = () => {
 
   const topPlayers = allSoldPlayers.slice(0, 5);
 
-  // AI Evaluation Logic (Gemini Engine Inspired)
+  // AI-Driven Ranking Logic
   const teamRankings = useMemo(() => {
     return TEAMS.map(t => {
       const teamDoc = roomTeams.find(doc => doc.teamId === t.id);
       const manager = currentAuction?.players?.find(p => p.team === t.id);
+      const aiReport = teamDoc?.aiAnalysis;
       
-      const squad = (teamDoc?.squad || []).map(s => {
-        const pid = typeof s === 'string' ? s : s.id;
-        const bid = typeof s === 'string' ? 0 : s.bid;
-        return { ...IPL_PLAYERS.find(p => p.id === pid), bid };
-      });
-
-      if (squad.length === 0) {
-        return { 
-          ...t, 
-          managerName: manager?.name || 'Manager',
-          totalScore: 0, 
-          isDisqualified: true, 
-          playerCount: 0,
-          insight: "Disqualified: Failed to meet the minimum requirement of 18 players.",
-          stats: { batting: 0, bowling: 0, balance: 0, value: 0 } 
-        };
-      }
-
-      // 1. Batting Score (Average of top 4 batters)
-      const batters = squad.filter(p => p.role === 'Batsman' || p.role === 'Wicket-Keeper' || p.role === 'All-Rounder')
-        .sort((a, b) => (b.stats?.sr || 0) - (a.stats?.sr || 0));
-      const battingScore = (batters.slice(0, 4).reduce((acc, p) => {
-        const srVal = p.stats?.sr || 120;
-        const avgVal = p.stats?.avg || 25;
-        return acc + (srVal / 1.5) + (avgVal * 0.8);
-      }, 0) / 4) || 30;
-
-      // 2. Bowling Score (Average of top 4 bowlers)
-      const bowlers = squad.filter(p => p.role === 'Bowler' || p.role === 'All-Rounder')
-        .sort((a, b) => (b.stats?.wickets || 0) - (a.stats?.wickets || 0));
-      const bowlingScore = (bowlers.slice(0, 4).reduce((acc, p) => {
-        const econVal = p.stats?.econ || 8.5;
-        const wktRate = (p.stats?.wickets / (p.stats?.matches || 50)) || 1;
-        return acc + (100 / econVal) * 5 + (wktRate * 20);
-      }, 0) / 4) || 30;
-
-      // 3. Squad Balance (Bonus for covering all bases)
-      const hasWK = squad.some(p => p.role === 'Wicket-Keeper');
-      const hasAR = squad.some(p => p.role === 'All-Rounder');
-      const roleCount = new Set(squad.map(p => p.role)).size;
-      const overseasCount = squad.filter(p => p.country !== 'IND').length;
-      const balanceBonus = (hasWK ? 15 : 0) + (hasAR ? 10 : 0) + (roleCount * 5) + (overseasCount >= 3 ? 10 : 0);
-
-      // 4. Value/Efficiency (Base vs Bid)
-      const totalBid = squad.reduce((acc, p) => acc + (p.bid || 0), 0);
-      const totalBase = squad.reduce((acc, p) => acc + (p.basePrice || 0), 0);
-      const valueScore = Math.max(0, 30 - (totalBid - totalBase));
-
-      const totalScore = (battingScore * 0.45) + (bowlingScore * 0.4) + balanceBonus + valueScore;
-      const playerCount = squad.length;
+      const playerCount = (teamDoc?.squad || []).length;
       const isDisqualified = playerCount < 18;
-
-      // AI Insights
-      let insight = "Balanced squad with good potential.";
-      if (isDisqualified) insight = "Disqualified: Failed to meet the minimum requirement of 18 players.";
-      else {
-        if (battingScore > bowlingScore + 20) insight = "Explosive batting lineup! Capable of chasing any target.";
-        if (bowlingScore > battingScore + 20) insight = "Powerhouse bowling units. Defending low totals is their specialty.";
-        if (balanceBonus > 45) insight = "Clinical squad building. Masterclass in role-specific recruitment.";
-        if (valueScore > 25) insight = "Masters of the auction. Found incredible value in every signing.";
-        if (overseasCount > 4) insight = "Heavy reliance on international stars. High-risk, high-reward.";
-      }
 
       return {
         ...t,
         managerName: manager?.name || 'Manager',
-        totalScore: isDisqualified ? 0 : Math.round(totalScore),
+        totalScore: isDisqualified ? 0 : (aiReport?.score || 0),
         isDisqualified,
         playerCount,
-        insight,
-        stats: {
-          batting: Math.min(100, Math.round(battingScore)),
-          bowling: Math.min(100, Math.round(bowlingScore)),
-          balance: Math.min(100, Math.round(balanceBonus * 2)),
-          value: Math.min(100, Math.round(valueScore * 3.3))
+        insight: aiReport?.verdict || (generatingTeams.has(teamDoc?.id) ? "Strategic audit in progress..." : "Waiting for analysis..."),
+        analysis: aiReport?.analysis || "",
+        isGenerating: generatingTeams.has(teamDoc?.id),
+        aiStats: {
+          batting: aiReport?.batting || 0,
+          bowling: aiReport?.bowling || 0,
+          allRounder: aiReport?.allRounder || 0,
+          value: aiReport?.value || 0
         }
       };
     }).sort((a, b) => {
-      // Sort disqualified teams to the bottom
       if (a.isDisqualified && !b.isDisqualified) return 1;
       if (!a.isDisqualified && b.isDisqualified) return -1;
-      // Then sort by total score
       return b.totalScore - a.totalScore;
     });
-  }, [roomTeams, currentAuction]);
+  }, [roomTeams, currentAuction, generatingTeams]);
 
   if (loading || !currentAuction) {
     return (
@@ -311,10 +340,9 @@ const AuctionSummary = () => {
                     <Zap size={32} />
                   </div>
                   <div>
-                    <h2 className="text-3xl font-black uppercase  tracking-tighter">Draft Power Rankings</h2>
+                    <h2 className="text-3xl font-black uppercase ">AI Strategist Rankings</h2>
                     <p className="text-[10px] font-bold text-blue-400 uppercase tracking-[0.3em] flex items-center gap-2">
-                      
-                       Gemini AI Engine • Evaluation Complete
+                       Powered by OpenRouter • Tactical Audit System
                     </p>
                   </div>
                 </div>
@@ -351,7 +379,7 @@ const AuctionSummary = () => {
                                  <img src={team.logo} alt="" className="w-full h-full object-contain" />
                               </div>
                               <div>
-                                <h3 className="text-2xl font-black uppercase  tracking-tight">{team.name}</h3>
+                                <h3 className="text-2xl font-black uppercase tracking-tight">{team.name}</h3>
                                 <div className="flex items-center gap-3 mt-1">
                                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-tight">Managed by {team.managerName}</p>
                                    {team.isDisqualified && (
@@ -393,21 +421,21 @@ const AuctionSummary = () => {
                           >
                             <div className="p-8 space-y-8">
                               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                                {/* Analysis Metrics */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {/* Analysis Metrics Dash */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 content-start">
                                    {[
-                                     { label: 'Batting', icon: Sword, val: team.stats.batting, color: 'text-orange-500', bg: 'bg-orange-500/10' },
-                                     { label: 'Bowling', icon: Shield, val: team.stats.bowling, color: 'text-blue-400', bg: 'bg-blue-400/10' },
-                                     { label: 'Balance', icon: Activity, val: team.stats.balance, color: 'text-purple-400', bg: 'bg-purple-400/10' },
-                                     { label: 'Value', icon: Coins, val: team.stats.value, color: 'text-green-500', bg: 'bg-green-500/10' }
+                                      { label: 'Batting', icon: Sword, val: team.aiStats.batting, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+                                      { label: 'Bowling', icon: Shield, val: team.aiStats.bowling, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+                                      { label: 'All-Rounders', icon: Activity, val: team.aiStats.allRounder, color: 'text-purple-400', bg: 'bg-purple-400/10' },
+                                      { label: 'Market Value', icon: Coins, val: team.aiStats.value, color: 'text-green-500', bg: 'bg-green-500/10' }
                                    ].map(stat => (
-                                     <div key={stat.label} className={`${stat.bg} p-4 rounded-3xl border border-white/5`}>
-                                       <div className="flex items-center justify-between mb-3">
+                                     <div key={stat.label} className={`${stat.bg} p-6 rounded-3xl border border-white/5 flex flex-col justify-between`}>
+                                       <div className="flex items-center justify-between mb-4">
                                           <div className="flex items-center gap-3">
-                                             <div className={`p-1.5 rounded-lg bg-black/40`}>
-                                                <stat.icon size={14} className={stat.color} />
+                                             <div className={`p-2 rounded-xl bg-black/40`}>
+                                                <stat.icon size={16} className={stat.color} />
                                              </div>
-                                             <span className="text-xs font-black text-gray-300 uppercase tracking-widest">{stat.label}</span>
+                                             <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">{stat.label}</span>
                                           </div>
                                           <span className={`text-sm font-black ${stat.color}`}>{stat.val}%</span>
                                        </div>
@@ -421,36 +449,63 @@ const AuctionSummary = () => {
                                        </div>
                                      </div>
                                    ))}
-                                </div>
 
-                                {/* AI Context */}
-                                <div className="flex flex-col justify-center gap-6">
-                                   <div className="space-y-2">
-                                      <div className="flex items-center gap-2">
-                                         {team.isDisqualified ? (
-                                           <AlertTriangle className="text-red-500" size={16} />
-                                         ) : (
-                                           <Verified className="text-green-500" size={16} />
-                                         )}
-                                         <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${team.isDisqualified ? 'text-red-500' : 'text-green-500'}`}>
-                                            {team.isDisqualified ? 'Security Audit Failed' : 'Elite Appraisal Status'}
-                                         </span>
+                                   {/* Squad Health Metrics */}
+                                   <div className="bg-white/5 p-6 rounded-3xl border border-white/5 flex flex-col justify-between group-hover:border-blue-500/10 transition-all">
+                                      <div className="flex items-center gap-2 mb-2">
+                                         <Users size={14} className="text-gray-500" />
+                                         <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Squad Size</span>
                                       </div>
-                                      <p className="text-xl font-black  leading-tight text-white/90">
-                                         &ldquo;{team.insight}&rdquo;
-                                      </p>
+                                      <div className={`text-2xl font-black ${team.playerCount < 18 ? 'text-red-500' : 'text-white'}`}>
+                                         {team.playerCount}<span className="text-xs text-gray-700 ml-1">/ 25 Players</span>
+                                      </div>
                                    </div>
 
-                                   <div className="flex gap-4">
-                                      <div className="flex-1 bg-white/5 border border-white/5 p-4 rounded-2xl">
-                                         <span className="block text-[8px] font-black text-gray-500 uppercase mb-1">Squad Size</span>
-                                         <span className={`text-lg font-black  ${team.playerCount < 16 ? 'text-red-500' : 'text-white'}`}>{team.playerCount}/25</span>
+                                   <div className="bg-white/5 p-6 rounded-3xl border border-white/5 flex flex-col justify-between group-hover:border-blue-500/10 transition-all">
+                                      <div className="flex items-center gap-2 mb-2">
+                                         <Activity size={14} className="text-gray-500" />
+                                         <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Draft Status</span>
                                       </div>
-                                      <div className="flex-1 bg-white/5 border border-white/5 p-4 rounded-2xl">
-                                         <span className="block text-[8px] font-black text-gray-500 uppercase mb-1">Status</span>
-                                         <span className={`text-lg font-black  ${team.isDisqualified ? 'text-red-500' : 'text-green-500'}`}>
-                                            {team.isDisqualified ? 'Disqualified' : 'Qualified'}
-                                         </span>
+                                      <div className={`text-2xl font-black ${team.isDisqualified ? 'text-red-500' : 'text-green-500'}`}>
+                                         {team.isDisqualified ? 'Disqualified' : 'Qualified'}
+                                      </div>
+                                   </div>
+                                </div>
+
+                                {/* Analysis Context */}
+                                <div className="flex flex-col justify-center gap-6">
+                                   <div className="space-y-4">
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                          <Verified className="text-blue-500" size={16} />
+                                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500">
+                                            Strategist Report v3.0
+                                          </span>
+                                        </div>
+                                      </div>
+
+                                      <div className="relative min-h-[100px] max-h-[250px] overflow-y-auto bg-black/20 rounded-2xl p-6 border border-white/5 group-hover:border-blue-500/20 transition-all custom-scrollbar">
+                                        {team.isGenerating ? (
+                                          <div className="flex flex-col items-center justify-center h-full gap-4 py-8">
+                                            <div className="w-8 h-8 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+                                            <span className="text-[9px] font-black text-blue-500 uppercase tracking-[0.3em] animate-pulse">Running Tactical Sim...</span>
+                                          </div>
+                                        ) : team.analysis ? (
+                                          <div className="prose prose-invert max-w-none pr-2">
+                                            <p className="text-sm sm:text-base text-gray-300 leading-relaxed font-medium whitespace-pre-wrap italic">
+                                              &ldquo;{team.analysis}&rdquo;
+                                            </p>
+                                            <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
+                                               <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Final Verdict</span>
+                                               <span className="text-[12px] font-black text-blue-400 uppercase tracking-tight">{team.insight}</span>
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <div className="flex flex-col items-center justify-center h-full py-8 text-center opacity-30">
+                                            <Activity size={32} className="text-gray-500 mb-4" />
+                                            <p className="text-[10px] font-black uppercase tracking-widest">Waiting for Draft Audit...</p>
+                                          </div>
+                                        )}
                                       </div>
                                    </div>
                                 </div>

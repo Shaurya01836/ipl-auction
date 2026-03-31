@@ -4,7 +4,9 @@ import {
   onAuthStateChanged, 
   signInWithPopup,
   GoogleAuthProvider,
-  signOut 
+  signOut,
+  signInAnonymously,
+  updateProfile
 } from 'firebase/auth';
 
 const AuthContext = createContext();
@@ -29,6 +31,13 @@ export const AuthProvider = ({ children }) => {
     const result = await signInWithPopup(auth, googleProvider);
     return result.user;
   };
+  
+  const loginAsGuest = async (displayName) => {
+    const result = await signInAnonymously(auth);
+    await updateProfile(result.user, { displayName });
+    setUser({ ...result.user, displayName });
+    return result.user;
+  };
 
   const logout = () => signOut(auth);
 
@@ -36,6 +45,7 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     loginWithGoogle,
+    loginAsGuest,
     logout
   };
 
