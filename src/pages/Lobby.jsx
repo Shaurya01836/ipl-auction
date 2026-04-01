@@ -427,9 +427,11 @@ const Lobby = () => {
       <footer className="mt-auto py-12 flex flex-col items-center gap-6 z-10 ">
         <div className="h-px w-20 bg-gradient-to-r from-transparent via-gray-600 to-transparent mb-2" />
         <div className="flex gap-10 text-[9px] font-black uppercase tracking-[0.4em] text-gray-700">
-           <span className="hover:text-yellow-500 transition-colors">Fair Play</span>
-           <span className="hover:text-orange-500 transition-colors">Stadium Engine</span>
-           <span className="hover:text-blue-500 transition-colors">v2026.4</span>
+           <span className="hover:text-yellow-500 transition-colors">Designed &</span>
+           <span className="hover:text-orange-500 transition-colors">Developed By</span>
+           <a   href="https://shaurya-upadhyay.me"
+              target="_blank"> <span className="hover:text-blue-500 transition-colors">Shaurya Upadhyay</span></a>
+          
         </div>
       </footer>
     </div>

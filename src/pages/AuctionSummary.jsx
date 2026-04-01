@@ -49,7 +49,7 @@ const AuctionSummary = () => {
     
     const squadText = squad.map(p => `${p.name} (${p.role}, ₹${p.bid}Cr)`).join(', ');
     const prompt = `Act as an elite IPL Cricket Strategist and Analyst. 
-    Analyze the following squad for the team "${teamName}" for the upcoming 2026 Season.
+    Analyze the following squad for the team "${teamName}" for the upcoming Season.
     
     Squad: ${squadText}
     
@@ -217,7 +217,7 @@ const AuctionSummary = () => {
           <div className="text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start gap-4 mb-2">
               <div className="bg-orange-600 text-white px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(255,85,0,0.4)]">
-                2026 Season
+                Upcoming Season
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-gray-500 text-[10px] font-black uppercase tracking-widest leading-none">ID:</span>

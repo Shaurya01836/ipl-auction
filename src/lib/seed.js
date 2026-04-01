@@ -18,7 +18,7 @@ export const seedPlayers = async () => {
 export const createInitialAuction = async (auctionId) => {
   try {
     await setDoc(doc(db, 'auctions', auctionId), {
-      name: "Mega Auction 2026",
+      name: "Mega Auction",
       status: "active",
       hostId: "system",
       currentAuction: {

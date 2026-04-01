@@ -19,7 +19,10 @@ import {
   History,
   Trophy,
   Wallet,
-  Wifi
+  Wifi,
+ 
+  Globe,
+  GitBranchPlusIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -43,7 +46,7 @@ const LogoMarquee = () => {
           <div key={`${t.id}-${idx}`} className="flex-shrink-0 group">
             <img 
               src={t.logo} 
-              alt={t.name} 
+              alt={`${t.name} IPL Logo`} 
               className="h-12 md:h-16 w-auto object-contain transition-all duration-500 opacity-40 group-hover:opacity-100 group-hover:scale-110 grayscale group-hover:grayscale-0 filter drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]"
             />
           </div>
@@ -220,7 +223,7 @@ const LandingPage = () => {
           className="relative z-10 flex items-center gap-2 border border-yellow-500/30 bg-yellow-500/5 text-yellow-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest backdrop-blur-md mb-8 shadow-[0_0_20px_rgba(234,179,8,0.1)]"
         >
           <div className="w-1 h-1 bg-yellow-500 rounded-full animate-ping" />
-          <Gavel size={12} strokeWidth={3} /> IPL 2026 Auction Live
+          <Gavel size={12} strokeWidth={3} /> IPL Auction Live
         </motion.div>
 
         <motion.div 
@@ -228,12 +231,13 @@ const LandingPage = () => {
           animate={{ opacity: 1, scale: 1 }}
           className="text-center mb-10 z-10 relative"
         >
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter mb-1 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50 leading-tight">
+          <h1 className="sr-only">IPL Mega Auction Simulation Game</h1>
+          <div className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter mb-1 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50 leading-tight">
             BUILD YOUR
-          </h1>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter text-[#ff5500] italic leading-tight">
-            DREAM TEAM
-          </h1>
+          </div>
+          <div className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter text-[#ff5500] italic leading-tight uppercase">
+            Dream Team
+          </div>
           <div className="mt-2 flex items-center justify-center gap-4 text-gray-500 font-bold text-[10px] uppercase tracking-[0.2em]">
             <span className="flex items-center gap-1.5"><Users size={12} /> Multiplayer</span>
             <span className="w-0.5 h-0.5 bg-gray-700 rounded-full" />
@@ -341,16 +345,62 @@ const LandingPage = () => {
           <LogoMarquee />
         </motion.div>
 
-        <footer className="mt-12 mb-8 flex flex-col items-center gap-4 z-10 w-full px-4">
-          <div className="flex gap-6 text-[8px] font-black uppercase tracking-[0.4em] text-gray-700">
-            <span className="hover:text-gray-400 transition-colors cursor-pointer">Terms</span>
-            <span className="hover:text-gray-400 transition-colors cursor-pointer text-orange-500/50">Fair Play</span>
-            <span className="hover:text-gray-400 transition-colors cursor-pointer text-blue-500/50">Discord</span>
-          </div>
-          <p className="text-[8px] font-black uppercase tracking-[0.4em] text-gray-800">
-            © 2026 STADIUM ENGINE • ALL RIGHTS RESERVED
-          </p>
-        </footer>
+        <footer className="mt-32 mb-16 flex flex-col items-center z-10 w-full px-4 border-t border-white/5 pt-16">
+        <div className="relative z-10 w-full max-w-xl">
+          {/* Minimal Developer Showcase */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="flex flex-col items-center text-center gap-8"
+          >
+            <div className="space-y-3">
+              <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.5em] leading-none mb-1">Developed & Designed by</p>
+              <a 
+                href="https://shaurya-upadhyay.me" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="block hover:scale-[1.02] transition-transform duration-500"
+              >
+                <h3 className="text-2xl md:text-3xl font-black font-black text-gray-600 ">
+                  SHAURYA UPADHYAY
+                </h3>
+              </a>
+            </div>
+
+            <div className="flex gap-4">
+              {[
+                { icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>, href: "https://github.com/Shaurya01836", label: "GitHub" },
+                { icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>, href: "https://shaurya-upadhyay.me", label: "Portfolio" },
+                { icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>, href: "https://www.linkedin.com/in/this-is-shaurya-upadhyay/", label: "LinkedIn" }
+              ].map((social) => (
+                <motion.a
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ y: -5, scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.05)" }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-12 h-12 rounded-2xl glass flex items-center justify-center text-gray-500 hover:text-white transition-all duration-300"
+                  title={social.label}
+                >
+                  {social.icon}
+                </motion.a>
+              ))}
+            </div>
+
+            <motion.a
+              href="https://shaurya-upadhyay.me"
+              target="_blank"
+              rel="noopener noreferrer"
+              whileHover={{ opacity: 0.7 }}
+              className="text-[9px] font-black text-gray-700 uppercase tracking-[0.4em] mt-2 block"
+            >
+              Building the Future of Auction Simulation
+            </motion.a>
+          </motion.div>
+        </div>
+      </footer>
       </div>
     );
   }
@@ -372,7 +422,7 @@ const LandingPage = () => {
         className="relative z-10 flex items-center gap-2 border border-yellow-500/30 bg-yellow-500/5 text-yellow-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest backdrop-blur-md mb-8 shadow-[0_0_20px_rgba(234,179,8,0.1)]"
       >
         <div className="w-1 h-1 bg-yellow-500 rounded-full animate-ping" />
-        <Gavel size={12} strokeWidth={3} /> IPL 2026 Auction Live
+        <Gavel size={12} strokeWidth={3} /> IPL Auction Live
       </motion.div>
 
       {/* Hero */}
@@ -401,7 +451,7 @@ const LandingPage = () => {
         className="z-10 flex items-center gap-3 bg-white/5 border border-white/10 rounded-full px-4 py-2 mb-6 backdrop-blur-md"
       >
         {user.photoURL && (
-          <img src={user.photoURL} alt="" className="w-7 h-7 rounded-full border border-white/20" />
+          <img src={user.photoURL} alt={user.displayName} className="w-7 h-7 rounded-full border border-white/20" />
         )}
         <span className="text-sm font-black text-white">{user.displayName}</span>
         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
@@ -499,7 +549,7 @@ const LandingPage = () => {
                           </motion.div>
                         )}
                         <div className={`w-12 h-12 rounded-2xl bg-white/5 border border-white/5 p-1.5 flex items-center justify-center mb-2 transition-all duration-300 ${selectedTeam === t.id ? 'scale-110 border-yellow-400/50 shadow-lg' : 'group-hover/team:scale-105 opacity-60 group-hover/team:opacity-100'}`}>
-                          <img src={t.logo} alt="" className="w-full h-full object-contain filter" />
+                          <img src={t.logo} alt={`${t.name} Logo`} className="w-full h-full object-contain filter" />
                         </div>
                         <span className={`text-[8px] font-black uppercase text-center tracking-tighter truncate w-full ${selectedTeam === t.id ? 'text-yellow-400' : 'text-gray-500'}`}>
                           {t.name.split(' ').slice(0, 1)}
@@ -600,7 +650,7 @@ const LandingPage = () => {
                             >
                               <div className="flex items-center gap-3">
                                 <div className={`w-12 h-12 rounded-2xl bg-white/5 border border-white/10 p-1.5 flex items-center justify-center shadow-2xl relative`}>
-                                   <img src={teamMeta?.logo} alt="" className="w-full h-full object-contain" />
+                                   <img src={teamMeta?.logo} alt={`${teamMeta?.name || 'Team'} Logo`} className="w-full h-full object-contain" />
                                 </div>
                                 <div>
                                   <h5 className="text-sm font-black uppercase tracking-tight">{teamMeta?.name || session.teamName}</h5>
@@ -658,7 +708,7 @@ const LandingPage = () => {
                                             {rolePlayers.map((p, idx) => (
                                               <div key={idx} className="flex items-center justify-between bg-white/[0.03] hover:bg-white/5 transition-all p-2.5 rounded-xl">
                                                 <div className="flex items-center gap-2.5">
-                                                  <img src={p?.image} alt="" className="w-7 h-7 object-contain rounded-md bg-white/5" />
+                                                  <img src={p?.image} alt={p?.name} className="w-7 h-7 object-contain rounded-md bg-white/5" />
                                                   <div>
                                                     <h6 className="text-[10px] font-black leading-tight">{p?.name}</h6>
                                                     <div className="flex items-center gap-1.5">
@@ -708,15 +758,60 @@ const LandingPage = () => {
         </div>
       </motion.div>
 
-      <footer className="mt-12 mb-8 flex flex-col items-center gap-4 z-10 w-full px-4">
-        <div className="flex gap-6 text-[8px] font-black uppercase tracking-[0.4em] text-gray-700">
-          <span className="hover:text-gray-400 transition-colors cursor-pointer">Terms</span>
-          <span className="hover:text-gray-400 transition-colors cursor-pointer text-orange-500/50">Fair Play</span>
-          <span className="hover:text-gray-400 transition-colors cursor-pointer text-blue-500/50">Discord</span>
+      <footer className="mt-32 mb-16 flex flex-col items-center z-10 w-full px-4 border-t border-white/5 pt-16">
+        <div className="relative z-10 w-full max-w-xl">
+          {/* Minimal Developer Showcase */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="flex flex-col items-center text-center gap-8"
+          >
+            <div className="space-y-3">
+              <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.5em] leading-none mb-1">Developed & Designed by</p>
+              <a 
+                href="https://shaurya-upadhyay.me" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="block hover:scale-[1.02] transition-transform duration-500"
+              >
+                <h3 className="text-2xl md:text-3xl font-black font-black text-gray-600 ">
+                  SHAURYA UPADHYAY
+                </h3>
+              </a>
+            </div>
+
+            <div className="flex gap-4">
+              {[
+                { icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>, href: "https://github.com/Shaurya01836", label: "GitHub" },
+                { icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>, href: "https://shaurya-upadhyay.me", label: "Portfolio" },
+                { icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>, href: "https://www.linkedin.com/in/this-is-shaurya-upadhyay/", label: "LinkedIn" }
+              ].map((social) => (
+                <motion.a
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.05)" }}
+                  className="w-12 h-12 rounded-full flex items-center justify-center text-gray-500 hover:text-white transition-all duration-300"
+                  title={social.label}
+                >
+                  {social.icon}
+                </motion.a>
+              ))}
+            </div>
+
+            <motion.a
+              href="https://shaurya-upadhyay.me"
+              target="_blank"
+              rel="noopener noreferrer"
+              whileHover={{ opacity: 0.7 }}
+              className="text-[9px] font-black text-gray-700 uppercase tracking-[0.4em] mt-2 block"
+            >
+              Building the Future of Auction Simulation
+            </motion.a>
+          </motion.div>
         </div>
-        <p className="text-[8px] font-black uppercase tracking-[0.4em] text-gray-800">
-          © 2026 STADIUM ENGINE • ALL RIGHTS RESERVED
-        </p>
       </footer>
     </div>
   );

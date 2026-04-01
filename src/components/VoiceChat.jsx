@@ -6,6 +6,9 @@ import { Mic, MicOff, PhoneOff, Users, Play, Radio, X } from 'lucide-react';
 // Initialize the Agora Client
 const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
 
+// Set log level to 'error' for production
+AgoraRTC.setLogLevel(3);
+
 const VoiceChat = ({ channel, onEndCall, isModal = true, isVisible, onClose, isDeafened }) => {
   const [localAudioTrack, setLocalAudioTrack] = useState(null);
   const [isMuted, setIsMuted] = useState(false);
