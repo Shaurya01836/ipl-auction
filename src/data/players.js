@@ -18,6 +18,25 @@ export const IPL_PLAYERS = [
     }
   },
   {
+    "id": "p_621",
+    "name": "Jasprit Bumrah",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 2,
+    "set": "Marquee Set 1",
+    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/9.png",
+    "stats": {
+      "matches": 133,
+      "wickets": 165,
+      "econ": 7.30,
+      "runs": "-",
+      "sr": "-",
+      "avg": "-"
+    }
+  },
+
+  {
     "id": "p_101",
     "name": "Arshdeep Singh",
     "role": "Bowler",
@@ -9376,5 +9395,6 @@ export const IPL_PLAYERS = [
       "wickets": 24,
       "econ": 7.98
     }
-  }
+  },
+  
 ];
