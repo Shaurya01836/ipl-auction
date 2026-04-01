@@ -1,6 +1,14 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { db, getServerTime } from '../lib/firebase';
+import { db, getServerTime, rtdb } from '../lib/firebase';
 import { IPL_PLAYERS } from '../data/players';
+import { 
+  ref, 
+  set, 
+  get, 
+  update as updateRtdb, 
+  onValue, 
+  runTransaction as runTransactionRtdb 
+} from 'firebase/database';
 import { 
   doc, 
   onSnapshot, 
@@ -96,6 +104,9 @@ export const AuctionProvider = ({ children }) => {
         squad: []
       });
     }
+
+    const liveRef = ref(rtdb, `auctions/${roomId}/live`);
+    await set(liveRef, { status: 'waiting' });
   }, []);
   
   const startAuction = useCallback(async (roomId) => {
@@ -112,15 +123,17 @@ export const AuctionProvider = ({ children }) => {
     await updateDoc(roomRef, { 
       status: 'active',
       playerOrder: randomizedIndices,
-      currentAuction: {
-        playerId: IPL_PLAYERS[randomizedIndices[0]].id,
-        currentBid: 0,
-        highBidderId: '',
-        highBidderName: 'No Bids',
-        timerEndsAt: getSyncedTime() + 15000,
-        status: 'bidding'
-      },
       logs: arrayUnion(`Auction has started!`)
+    });
+
+    const liveRef = ref(rtdb, `auctions/${roomId}/live`);
+    await set(liveRef, {
+      playerId: IPL_PLAYERS[randomizedIndices[0]].id,
+      currentBid: 0,
+      highBidderId: '',
+      highBidderName: 'No Bids',
+      timerEndsAt: getSyncedTime() + 15000,
+      status: 'bidding'
     });
     
     // Add to messages collection for chronological sorting
@@ -137,30 +150,36 @@ export const AuctionProvider = ({ children }) => {
   const endPlayerAuction = useCallback(async (roomId) => {
     try {
       const roomRef = doc(db, 'auctions', roomId);
+      const liveRef = ref(rtdb, `auctions/${roomId}/live`);
       
+      const liveSnap = await get(liveRef);
+      if (!liveSnap.exists()) return;
+      const currentAuction = liveSnap.val();
+      
+      // Race condition guard
+      if (currentAuction.status === 'sold' || currentAuction.status === 'unsold') {
+        return; 
+      }
+
+      const isSold = !!currentAuction.highBidderId;
+      const status = isSold ? 'sold' : 'unsold';
+      await updateRtdb(liveRef, { status });
+
       const result = await runTransaction(db, async (transaction) => {
         const roomSnap = await transaction.get(roomRef);
         if (!roomSnap.exists()) return null;
         
         const data = roomSnap.data();
-        const { currentAuction, playerOrder } = data;
-        
-        // Race condition guard
-        if (currentAuction.status === 'sold' || currentAuction.status === 'unsold') {
-          return null; 
-        }
+        const { playerOrder } = data;
 
-        const isSold = !!currentAuction.highBidderId;
         const player = IPL_PLAYERS.find(p => p.id === currentAuction.playerId);
         const teamDetails = TEAMS.find(t => t.id === currentAuction.highBidderTeamId);
 
-        const status = isSold ? 'sold' : 'unsold';
         const logText = `${player.name} ${isSold ? `SOLD to ${teamDetails?.name || currentAuction.highBidderName} for ₹${currentAuction.currentBid} Cr` : 'UNSOLD'}`;
 
         // Prepare updates
         const nextData = {
           ...data,
-          'currentAuction.status': status,
           logs: [...(data.logs || []), logText]
         };
 
@@ -190,7 +209,6 @@ export const AuctionProvider = ({ children }) => {
         }
 
         transaction.update(roomRef, {
-          'currentAuction.status': status,
           logs: nextData.logs,
           players: nextData.players || data.players
         });
@@ -231,15 +249,13 @@ export const AuctionProvider = ({ children }) => {
         
         if (nextIndexInOrder !== undefined) {
           const nextPlayer = IPL_PLAYERS[nextIndexInOrder];
-          await updateDoc(roomRef, {
-            currentAuction: {
-              playerId: nextPlayer.id,
-              currentBid: 0,
-              highBidderId: '',
-              highBidderName: 'No Bids',
-              timerEndsAt: getSyncedTime() + (settings?.bidTimer || 10) * 1000,
-              status: 'bidding'
-            }
+          await set(liveRef, {
+            playerId: nextPlayer.id,
+            currentBid: 0,
+            highBidderId: '',
+            highBidderName: 'No Bids',
+            timerEndsAt: getSyncedTime() + (settings?.bidTimer || 10) * 1000,
+            status: 'bidding'
           });
         } else {
           await updateDoc(roomRef, { status: 'completed' });
@@ -347,15 +363,34 @@ export const AuctionProvider = ({ children }) => {
       if (loading) setLoading(false);
     }, 5000);
 
+    let currentFirestoreData = null;
+    let currentRtdbData = null;
+
+    const checkAndSet = () => {
+      if (currentFirestoreData) {
+        setCurrentAuction({ 
+          id: auctionId, 
+          ...currentFirestoreData,
+          currentAuction: currentRtdbData || currentFirestoreData.currentAuction
+        });
+      }
+    };
+
     const unsubAuction = onSnapshot(doc(db, 'auctions', auctionId), (snapshot) => {
       auctionLoaded = true;
       if (snapshot.exists()) {
-        setCurrentAuction({ id: snapshot.id, ...snapshot.data() });
+        currentFirestoreData = snapshot.data();
+        checkAndSet();
       }
       checkLoaded();
     }, (error) => {
       console.error("Auction snapshot error:", error);
       setLoading(false);
+    });
+
+    const unsubLive = onValue(ref(rtdb, `auctions/${auctionId}/live`), (snapshot) => {
+      currentRtdbData = snapshot.val();
+      checkAndSet();
     });
 
     const teamsQuery = query(collection(db, 'teams'), where('auctionId', '==', auctionId));
@@ -387,6 +422,7 @@ export const AuctionProvider = ({ children }) => {
     return () => {
       clearTimeout(loadTimeout);
       unsubAuction();
+      unsubLive();
       unsubTeams();
       unsubMessages();
       setCurrentAuction(null);
@@ -417,33 +453,31 @@ export const AuctionProvider = ({ children }) => {
     
     const auctionDoc = doc(db, 'auctions', currentAuction.id);
     let finalAmount = amount;
-    
-    await runTransaction(db, async (transaction) => {
-      const snap = await transaction.get(auctionDoc);
-      if (!snap.exists()) throw new Error("Auction not found!");
-      const data = snap.data();
-      
-      if (data.currentAuction?.status !== 'bidding') throw new Error("Auction is not accepting bids right now.");
-      if (data.currentAuction?.highBidderId === user.uid) throw new Error("You are already the highest bidder!");
-      
-      const currentBid = data.currentAuction?.currentBid || 0;
-      const increment = currentBid < 5 ? 0.20 : 0.25;
-      const nextAmount = currentBid === 0 ? IPL_PLAYERS.find(p => p.id === data.currentAuction.playerId)?.basePrice || 0 : currentBid + increment;
-      
-      if (team.budgetRemaining < nextAmount) {
-         throw new Error(`Insufficient budget! You need ₹${nextAmount.toFixed(2)} Cr but only have ₹${team.budgetRemaining.toFixed(2)} Cr remaining.`);
-      }
 
-      finalAmount = nextAmount;
+    const liveRef = ref(rtdb, `auctions/${currentAuction.id}/live`);
+    await runTransactionRtdb(liveRef, (currentData) => {
+      if (!currentData) return currentData;
+      if (currentData.status !== 'bidding') return; // abort
+      if (currentData.highBidderId === user.uid) return; // abort
+      
+      const cBid = currentData.currentBid || 0;
+      const inc = cBid < 5 ? 0.20 : 0.25;
+      const nAmount = cBid === 0 ? IPL_PLAYERS.find(p => p.id === currentData.playerId)?.basePrice || 0 : cBid + inc;
+      
+      if (team.budgetRemaining < nAmount) return; // abort
 
-      transaction.update(auctionDoc, {
-        'currentAuction.currentBid': nextAmount,
-        'currentAuction.highBidderId': user.uid,
-        'currentAuction.highBidderName': user.displayName || 'Manager',
-        'currentAuction.highBidderTeamId': team.teamId,
-        'currentAuction.timerEndsAt': getSyncedTime() + (data.settings?.bidTimer || 10) * 1000,
-        logs: arrayUnion(`New bid: ₹${nextAmount.toFixed(2)} Cr by ${user.displayName || 'Manager'}`)
-      });
+      finalAmount = nAmount;
+      currentData.currentBid = nAmount;
+      currentData.highBidderId = user.uid;
+      currentData.highBidderName = user.displayName || 'Manager';
+      currentData.highBidderTeamId = team.teamId;
+      currentData.timerEndsAt = getSyncedTime() + (currentAuction.settings?.bidTimer || 10) * 1000;
+      
+      return currentData;
+    });
+
+    await updateDoc(auctionDoc, {
+        logs: arrayUnion(`New bid: ₹${finalAmount.toFixed(2)} Cr by ${user.displayName || 'Manager'}`)
     });
 
     // Add to messages collection for chronological sorting
@@ -493,8 +527,10 @@ export const AuctionProvider = ({ children }) => {
     const roomSnap = await getDoc(roomRef);
     if (!roomSnap.exists() || roomSnap.data().hostId !== user.uid) return;
 
+    const liveRef = ref(rtdb, `auctions/${roomId}/live`);
+    await updateRtdb(liveRef, { status: 'paused' });
+
     await updateDoc(roomRef, { 
-      'currentAuction.status': 'paused',
       logs: arrayUnion(`Auction PAUSED by Admin`)
     });
     
@@ -516,9 +552,13 @@ export const AuctionProvider = ({ children }) => {
     if (!roomSnap.exists() || roomSnap.data().hostId !== user.uid) return;
     const data = roomSnap.data();
     
+    const liveRef = ref(rtdb, `auctions/${roomId}/live`);
+    await updateRtdb(liveRef, { 
+      status: 'bidding',
+      timerEndsAt: getSyncedTime() + (data.settings?.bidTimer || 10) * 1000
+    });
+
     await updateDoc(roomRef, { 
-      'currentAuction.status': 'bidding',
-      'currentAuction.timerEndsAt': getSyncedTime() + (data.settings?.bidTimer || 10) * 1000,
       logs: arrayUnion(`Auction RESUMED by Admin`)
     });
 

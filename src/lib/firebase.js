@@ -28,8 +28,9 @@ export const analytics = getAnalytics(app);
 // All clients will agree on the same absolute time (±50ms).
 let _serverTimeOffset = 0;
 
+export const rtdb = getDatabase(app);
+
 try {
-  const rtdb = getDatabase(app);
   const offsetRef = ref(rtdb, '.info/serverTimeOffset');
   onValue(offsetRef, (snap) => {
     _serverTimeOffset = snap.val() || 0;
