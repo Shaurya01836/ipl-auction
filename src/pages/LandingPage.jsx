@@ -729,13 +729,20 @@ const LandingPage = () => {
                                       <p className="text-center text-[10px] text-gray-600 font-bold py-4 uppercase">No players acquired in this session</p>
                                     )}
 
-                                    {/* View Full Summary Button */}
-                                    {session.status === 'completed' && (
+                                    {/* View Full Summary / Resume Auction Button */}
+                                    {session.status === 'completed' ? (
                                       <button
                                         onClick={() => navigate(`/summary/${session.roomId}`)}
                                         className="w-full mt-2 py-3 bg-blue-600/10 border border-blue-500/20 rounded-xl text-blue-500 text-[10px] font-black uppercase tracking-widest hover:bg-blue-600/20 transition-all cursor-pointer flex items-center justify-center gap-2"
                                       >
                                         <Trophy size={12} /> View Full Summary
+                                      </button>
+                                    ) : (
+                                      <button
+                                        onClick={() => navigate(`/lobby/${session.roomId}`)}
+                                        className="w-full mt-2 py-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-yellow-500 text-[10px] font-black uppercase tracking-widest hover:bg-yellow-500/20 transition-all cursor-pointer flex items-center justify-center gap-2"
+                                      >
+                                        <Zap size={12} /> Resume / Join Auction
                                       </button>
                                     )}
                                   </div>
