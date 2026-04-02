@@ -86,7 +86,7 @@ const AuctionRoom = () => {
    const [newTimerValue, setNewTimerValue] = useState(currentAuction?.settings?.bidTimer || 10);
    const [showParticipantsOverlay, setShowParticipantsOverlay] = useState(false);
    const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
-   const [isDeafened, setIsDeafened] = useState(false);
+   const [isMicMuted, setIsMicMuted] = useState(false);
    const audioRef = useRef(null);
    const celebrationAudioRef = useRef(null);
 
@@ -537,7 +537,7 @@ const AuctionRoom = () => {
             <VoiceChat
                channel={id}
                isModal={false}
-               isDeafened={isDeafened}
+               externalIsMicMuted={isMicMuted}
             />
          )}
 
@@ -599,20 +599,21 @@ const AuctionRoom = () => {
                <div className="flex items-center gap-1.5 border-l border-white/10 pl-6 h-6">
                   <button
                      onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
-                     className={`relative p-1.5 rounded-lg border transition-all cursor-pointer ${isVoiceEnabled ? 'bg-orange-500/20 border-orange-500/30 text-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.2)]' : 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20'}`}
-                     title={isVoiceEnabled ? "Disable Voice Chat" : "Enable Voice Chat"}
+                     className={`relative p-1.5 rounded-lg border transition-all cursor-pointer ${isVoiceEnabled ? 'bg-green-500/20 border-green-500/30 text-green-500 shadow-[0_0_10px_rgba(34,197,94,0.2)]' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}
+                     title={isVoiceEnabled ? "Leave Voice Channel" : "Join Voice Channel"}
                   >
-                     {isVoiceEnabled ? <Mic size={16} /> : <MicOff size={16} />}
+                     {isVoiceEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
                      {isVoiceEnabled && (
                         <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-[#050505] animate-pulse shadow-[0_0_8px_#22c55e]" />
                      )}
                   </button>
                   <button
-                     onClick={() => setIsDeafened(!isDeafened)}
-                     className={`p-1.5 rounded-lg border transition-all cursor-pointer ${isDeafened ? 'bg-red-500/20 border-red-500/30 text-red-500' : 'hover:bg-white/5 text-gray-400 border-transparent'}`}
-                     title={isDeafened ? "Unmute Others" : "Mute Others"}
+                     onClick={() => setIsMicMuted(!isMicMuted)}
+                     disabled={!isVoiceEnabled}
+                     className={`p-1.5 rounded-lg border transition-all ${!isVoiceEnabled ? 'opacity-30 grayscale cursor-not-allowed hidden md:block' : isMicMuted ? 'bg-red-500/20 border-red-500/30 text-red-500 cursor-pointer' : 'bg-orange-500/20 border-orange-500/30 text-orange-500 hover:bg-orange-500/30 cursor-pointer shadow-[0_0_10px_rgba(249,115,22,0.2)]'}`}
+                     title={isMicMuted ? "Unmute Microphone" : "Mute Microphone"}
                   >
-                     {isDeafened ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                     {isMicMuted ? <MicOff size={16} /> : <Mic size={16} />}
                   </button>
                   <button onClick={() => navigate('/')} className="p-1.5 hover:bg-white/5 rounded-lg text-gray-400 cursor-pointer"><Home size={16} /></button>
                   <button onClick={logout} className="p-1.5 hover:bg-red-500/20 rounded-lg text-gray-400 hover:text-red-400 cursor-pointer transition-colors" title="Logout"><LogOut size={16} /></button>
@@ -896,8 +897,13 @@ const AuctionRoom = () => {
 
                      // Relative timestamp
                      let timeAgo = '';
-                     if (msg.timestamp?.toDate) {
-                        const diffMs = Date.now() - msg.timestamp.toDate().getTime();
+                     if (msg.timestamp) {
+                        const tsValue = typeof msg.timestamp === 'number' ? msg.timestamp : (msg.timestamp?.toDate ? msg.timestamp.toDate().getTime() : Date.now());
+                        
+                        // Prevent negative time due to clock drift
+                        let diffMs = Date.now() - tsValue;
+                        if (diffMs < 0) diffMs = 0;
+                        
                         const diffSec = Math.floor(diffMs / 1000);
                         if (diffSec < 60) timeAgo = `${diffSec}s ago`;
                         else if (diffSec < 3600) timeAgo = `${Math.floor(diffSec / 60)}m ago`;
@@ -929,10 +935,30 @@ const AuctionRoom = () => {
             </aside>
          </div>
 
-         <div className="fixed bottom-0 inset-x-0 h-16 bg-[#111] border-t border-white/10 flex md:hidden z-50">
-            <button onClick={() => setMobileTab('squad')} className={`flex-1 flex flex-col items-center justify-center gap-1 ${mobileTab === 'squad' ? 'text-blue-500' : 'text-gray-500'}`}><Users size={18} /><span className="text-[9px] font-black uppercase tracking-widest">Squads</span></button>
-            <button onClick={() => setMobileTab('arena')} className={`flex-1 flex flex-col items-center justify-center gap-1 ${mobileTab === 'arena' ? 'text-yellow-500' : 'text-gray-500'}`}><div className={`p-2 rounded-full -mt-8 ${mobileTab === 'arena' ? 'bg-yellow-500 text-black shadow-[0_0_20px_rgba(234,179,8,0.5)]' : 'bg-[#222] text-gray-500'}`}><Gavel size={24} /></div><span className="text-[9px] font-black uppercase tracking-widest mt-1">Arena</span></button>
-            <button onClick={() => setMobileTab('activity')} className={`flex-1 flex flex-col items-center justify-center gap-1 ${mobileTab === 'activity' ? 'text-green-500' : 'text-gray-500'}`}><History size={18} /><span className="text-[9px] font-black uppercase tracking-widest">Logs</span></button>
+         <div className="w-full shrink-0 bg-black/90 backdrop-blur-2xl border-t border-white/5 flex md:hidden z-50 pb-[env(safe-area-inset-bottom)] relative before:absolute before:inset-x-0 before:top-0 before:-mt-5 before:h-5 before:bg-gradient-to-t before:from-[#050505]/80 before:to-transparent before:pointer-events-none">
+            <div className="flex w-full h-12 items-center justify-around px-4">
+               <button onClick={() => setMobileTab('squad')} className={`flex flex-col items-center justify-center w-16 gap-0.5 transition-all duration-300 ${mobileTab === 'squad' ? 'text-blue-500 translate-y-0' : 'text-gray-500 hover:text-gray-400 translate-y-0.5'}`}>
+                  <div className={`p-1 rounded-lg transition-colors duration-300 ${mobileTab === 'squad' ? 'bg-blue-500/10' : 'bg-transparent'}`}>
+                     <Users size={16} strokeWidth={mobileTab === 'squad' ? 2.5 : 2} />
+                  </div>
+                  <span className={`text-[7px] font-black uppercase tracking-widest ${mobileTab === 'squad' ? 'opacity-100' : 'opacity-70'}`}>Squads</span>
+               </button>
+
+               <button onClick={() => setMobileTab('arena')} className="flex flex-col items-center justify-center w-20 relative -mt-3 group z-10 transition-transform active:scale-95">
+                  <div className={`p-2.5 rounded-xl transition-all duration-500 border relative overflow-hidden ${mobileTab === 'arena' ? 'bg-yellow-500 text-black border-yellow-400 shadow-[0_6px_15px_rgba(234,179,8,0.4)] scale-105' : 'bg-[#151515] border-white/10 text-gray-400 shadow-lg'}`}>
+                     {mobileTab === 'arena' && <div className="absolute inset-0 bg-white/20 blur-md pointer-events-none" />}
+                     <Gavel size={18} strokeWidth={2.5} className="relative z-10" />
+                  </div>
+                  <span className={`text-[8px] font-black uppercase tracking-[0.2em] transition-all mt-1 ${mobileTab === 'arena' ? 'text-yellow-500' : 'text-gray-500'}`}>Arena</span>
+               </button>
+
+               <button onClick={() => setMobileTab('activity')} className={`flex flex-col items-center justify-center w-16 gap-0.5 transition-all duration-300 ${mobileTab === 'activity' ? 'text-green-500 translate-y-0' : 'text-gray-500 hover:text-gray-400 translate-y-0.5'}`}>
+                  <div className={`p-1 rounded-lg transition-colors duration-300 ${mobileTab === 'activity' ? 'bg-green-500/10' : 'bg-transparent'}`}>
+                     <History size={16} strokeWidth={mobileTab === 'activity' ? 2.5 : 2} />
+                  </div>
+                  <span className={`text-[7px] font-black uppercase tracking-widest ${mobileTab === 'activity' ? 'opacity-100' : 'opacity-70'}`}>Logs</span>
+               </button>
+            </div>
          </div>
 
          <AnimatePresence>

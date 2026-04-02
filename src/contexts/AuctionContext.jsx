@@ -7,7 +7,9 @@ import {
   get, 
   update as updateRtdb, 
   onValue, 
-  runTransaction as runTransactionRtdb 
+  runTransaction as runTransactionRtdb,
+  push,
+  serverTimestamp as serverTimestampRtdb
 } from 'firebase/database';
 import { 
   doc, 
@@ -122,8 +124,7 @@ export const AuctionProvider = ({ children }) => {
 
     await updateDoc(roomRef, { 
       status: 'active',
-      playerOrder: randomizedIndices,
-      logs: arrayUnion(`Auction has started!`)
+      playerOrder: randomizedIndices
     });
 
     const liveRef = ref(rtdb, `auctions/${roomId}/live`);
@@ -137,13 +138,13 @@ export const AuctionProvider = ({ children }) => {
     });
     
     // Add to messages collection for chronological sorting
-    const msgRef = collection(db, 'auctions', roomId, 'messages');
-    await addDoc(msgRef, {
+    const msgRef = ref(rtdb, `auctions/${roomId}/messages`);
+    await push(msgRef, {
       userId: 'system',
       userName: 'System',
       text: `Auction has started!`,
       type: 'log',
-      timestamp: serverTimestamp()
+      timestamp: serverTimestampRtdb()
     });
   }, [getSyncedTime]);
 
@@ -179,8 +180,7 @@ export const AuctionProvider = ({ children }) => {
 
         // Prepare updates
         const nextData = {
-          ...data,
-          logs: [...(data.logs || []), logText]
+          ...data
         };
 
         if (isSold) {
@@ -209,7 +209,6 @@ export const AuctionProvider = ({ children }) => {
         }
 
         transaction.update(roomRef, {
-          logs: nextData.logs,
           players: nextData.players || data.players
         });
 
@@ -219,8 +218,8 @@ export const AuctionProvider = ({ children }) => {
       if (!result) return;
 
       // System Log Message
-      const msgRef = collection(db, 'auctions', roomId, 'messages');
-      await addDoc(msgRef, {
+      const msgRef = ref(rtdb, `auctions/${roomId}/messages`);
+      await push(msgRef, {
         userId: 'system',
         userName: 'System',
         text: result.logText,
@@ -232,7 +231,7 @@ export const AuctionProvider = ({ children }) => {
           buyerId: result.currentAuction.highBidderId,
           buyerName: result.currentAuction.highBidderName
         } : null,
-        timestamp: serverTimestamp()
+        timestamp: serverTimestampRtdb()
       });
 
       const waitTime = result.isSold ? 5000 : 2000;
@@ -324,18 +323,17 @@ export const AuctionProvider = ({ children }) => {
       // 1. Remove from players array in room
       await updateDoc(roomRef, {
         players: arrayRemove(playerObj),
-        bannedPlayers: arrayUnion(playerObj.id),
-        logs: arrayUnion(`${playerObj.name} has been removed from the session by Admin.`)
+        bannedPlayers: arrayUnion(playerObj.id)
       });
 
       // 2. Add to messages collection
-      const msgRef = collection(db, 'auctions', roomId, 'messages');
-      await addDoc(msgRef, {
+      const msgRef = ref(rtdb, `auctions/${roomId}/messages`);
+      await push(msgRef, {
         userId: 'system',
         userName: 'System',
         text: `${playerObj.name} has been removed from the session.`,
         type: 'log',
-        timestamp: serverTimestamp()
+        timestamp: serverTimestampRtdb()
       });
 
       // 3. Delete their team document to free up the franchise
@@ -410,9 +408,17 @@ export const AuctionProvider = ({ children }) => {
       setLoading(false);
     });
 
-    const unsubMessages = onSnapshot(query(collection(db, 'auctions', auctionId, 'messages'), orderBy('timestamp', 'asc')), (snapshot) => {
+    const unsubMessages = onValue(ref(rtdb, `auctions/${auctionId}/messages`), (snapshot) => {
       messagesLoaded = true;
-      setMessages(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      if (snapshot.exists()) {
+        const msgs = [];
+        snapshot.forEach(child => {
+          msgs.push({ id: child.key, ...child.val() });
+        });
+        setMessages(msgs);
+      } else {
+        setMessages([]);
+      }
       checkLoaded();
     }, (error) => {
       console.error("Messages snapshot error:", error);
@@ -434,13 +440,13 @@ export const AuctionProvider = ({ children }) => {
 
   const sendMessage = useCallback(async (roomId, text, type = 'text') => {
     if (!user) return;
-    const msgRef = collection(db, 'auctions', roomId, 'messages');
-    await addDoc(msgRef, {
+    const msgRef = ref(rtdb, `auctions/${roomId}/messages`);
+    await push(msgRef, {
       userId: user.uid,
       userName: user.displayName || 'Manager',
       text,
       type,
-      timestamp: serverTimestamp()
+      timestamp: serverTimestampRtdb()
     });
   }, [user]);
 
@@ -476,18 +482,14 @@ export const AuctionProvider = ({ children }) => {
       return currentData;
     });
 
-    await updateDoc(auctionDoc, {
-        logs: arrayUnion(`New bid: ₹${finalAmount.toFixed(2)} Cr by ${user.displayName || 'Manager'}`)
-    });
-
     // Add to messages collection for chronological sorting
-    const msgRef = collection(db, 'auctions', currentAuction.id, 'messages');
-    await addDoc(msgRef, {
+    const msgRef = ref(rtdb, `auctions/${currentAuction.id}/messages`);
+    await push(msgRef, {
       userId: 'system',
       userName: 'System',
       text: `New bid: ₹${finalAmount.toFixed(2)} Cr by ${user.displayName || 'Manager'} (${team.teamId})`,
       type: 'log',
-      timestamp: serverTimestamp()
+      timestamp: serverTimestampRtdb()
     });
   }, [currentAuction, user, team]);
 
@@ -529,19 +531,15 @@ export const AuctionProvider = ({ children }) => {
 
     const liveRef = ref(rtdb, `auctions/${roomId}/live`);
     await updateRtdb(liveRef, { status: 'paused' });
-
-    await updateDoc(roomRef, { 
-      logs: arrayUnion(`Auction PAUSED by Admin`)
-    });
     
     // Add to messages collection for chronological sorting
-    const msgRef = collection(db, 'auctions', roomId, 'messages');
-    await addDoc(msgRef, {
+    const msgRef = ref(rtdb, `auctions/${roomId}/messages`);
+    await push(msgRef, {
       userId: 'system',
       userName: 'System',
       text: `Auction PAUSED by Admin`,
       type: 'log',
-      timestamp: serverTimestamp()
+      timestamp: serverTimestampRtdb()
     });
   }, [user]);
 
@@ -558,18 +556,14 @@ export const AuctionProvider = ({ children }) => {
       timerEndsAt: getSyncedTime() + (data.settings?.bidTimer || 10) * 1000
     });
 
-    await updateDoc(roomRef, { 
-      logs: arrayUnion(`Auction RESUMED by Admin`)
-    });
-
     // Add to messages collection for chronological sorting
-    const msgRef = collection(db, 'auctions', roomId, 'messages');
-    await addDoc(msgRef, {
+    const msgRef = ref(rtdb, `auctions/${roomId}/messages`);
+    await push(msgRef, {
       userId: 'system',
       userName: 'System',
       text: `Auction RESUMED by Admin`,
       type: 'log',
-      timestamp: serverTimestamp()
+      timestamp: serverTimestampRtdb()
     });
   }, [getSyncedTime, user]);
 
@@ -580,18 +574,17 @@ export const AuctionProvider = ({ children }) => {
     if (!roomSnap.exists() || roomSnap.data().hostId !== user.uid) return;
 
     await updateDoc(roomRef, { 
-      status: 'completed',
-      logs: arrayUnion(`Auction COMPLETED by Admin`)
+      status: 'completed'
     });
 
     // Add to messages collection for chronological sorting
-    const msgRef = collection(db, 'auctions', roomId, 'messages');
-    await addDoc(msgRef, {
+    const msgRef = ref(rtdb, `auctions/${roomId}/messages`);
+    await push(msgRef, {
       userId: 'system',
       userName: 'System',
       text: `Auction COMPLETED by Admin`,
       type: 'log',
-      timestamp: serverTimestamp()
+      timestamp: serverTimestampRtdb()
     });
   }, [user]);
 

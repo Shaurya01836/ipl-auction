@@ -48,30 +48,35 @@ const AuctionSummary = () => {
     setGeneratingTeams(prev => new Set(prev).add(teamDocId));
     
     const squadText = squad.map(p => `${p.name} (${p.role}, ₹${p.bid}Cr)`).join(', ');
-    const prompt = `Act as an elite IPL Cricket Strategist and Analyst. 
+    const prompt = `Act as a harsh, fiercely critical elite IPL Cricket Strategist and Analyst. 
     Analyze the following squad for the team "${teamName}" for the upcoming Season.
     
     Squad: ${squadText}
     
+    SCORING GUIDELINES:
+    - Be EXTREMELY STRICT with your 0-100 ratings. An average or flawed team MUST receive scores in the 50s, 60s, or 70s maximum.
+    - True balance and depth is absolutely required for a score of 80+.
+    - Only legendary, flawless squads deserve 90+. Do not inflate scores. Give 85+ ONLY if the team is genuinely stacked.
+    - Penalize heavily for a lack of recognized all-rounders, a weak domestic bowling core, or severely overspending on a handful of superstars.
+    
     CRITICAL: You MUST return the response in the following JSON format ONLY:
     {
-      "analysis": "A detailed professional evaluation.",
-      "batting": 85,
-      "bowling": 80,
-      "allRounder": 75,
-      "value": 90,
-      "score": 85,
+      "analysis": "A brutally honest professional evaluation.",
+      "batting": 72,
+      "bowling": 65,
+      "allRounder": 50,
+      "value": 68,
+      "score": 65,
       "verdict": "A punchy final summary."
     }
     
-    The 'score' is the overall Champion Factor. All scores are 0-100.
+    The 'score' is the overall Champion Factor. All scores are strictly 0-100.
     Only return the JSON. No other text.`;
 
     try {
       if (!window.puter) throw new Error("Puter.js not initialized");
 
       const response = await window.puter.ai.chat(prompt, {
-        model: 'openrouter:anthropic/claude-3.5-sonnet',
         stream: false
       });
 

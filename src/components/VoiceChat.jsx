@@ -9,23 +9,14 @@ const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
 // Set log level to 'error' for production
 AgoraRTC.setLogLevel(3);
 
-const VoiceChat = ({ channel, onEndCall, isModal = true, isVisible, onClose, isDeafened }) => {
+const VoiceChat = ({ channel, onEndCall, isModal = true, isVisible, onClose, externalIsMicMuted = false }) => {
   const [localAudioTrack, setLocalAudioTrack] = useState(null);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(externalIsMicMuted);
   const [remoteUsers, setRemoteUsers] = useState([]);
   const [volumeLevels, setVolumeLevels] = useState({}); // { uid: volume }
   const [isConnecting, setIsConnecting] = useState(true);
 
-  // Handle Deafen State (Local Audio Mute for Others)
-  useEffect(() => {
-    remoteUsers.forEach(user => {
-      if (isDeafened) {
-        user.audioTrack?.stop();
-      } else {
-        user.audioTrack?.play();
-      }
-    });
-  }, [isDeafened, remoteUsers]);
+  // Deafening feature removed in favor of external mute control natively
 
   useEffect(() => {
     let audioTrack;
@@ -43,20 +34,23 @@ const VoiceChat = ({ channel, onEndCall, isModal = true, isVisible, onClose, isD
 
         if (!isMounted) return; 
 
-        audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
-        setLocalAudioTrack(audioTrack);
+        let track = null;
+        try {
+          track = await AgoraRTC.createMicrophoneAudioTrack();
+          setLocalAudioTrack(track);
+          await track.setEnabled(!externalIsMicMuted);
+          await client.publish([track]);
+        } catch (micError) {
+          console.warn("Microphone setup failed (can still listen):", micError);
+        }
         
-        await client.publish([audioTrack]);
         setIsConnecting(false);
 
         // Listen for remote users
         client.on("user-published", async (user, mediaType) => {
           await client.subscribe(user, mediaType);
           if (mediaType === "audio") {
-            // Only play if not deafened
-            if (!isDeafened) {
-              user.audioTrack.play();
-            }
+            user.audioTrack.play();
             
             setRemoteUsers(prev => {
               if (prev.find(u => u.uid === user.uid)) return prev;
@@ -102,6 +96,14 @@ const VoiceChat = ({ channel, onEndCall, isModal = true, isVisible, onClose, isD
       client.leave();
     };
   }, [channel]);
+
+  // Sync external mute state (from headless UI) with actual audio track
+  useEffect(() => {
+    if (localAudioTrack && !isModal) {
+      localAudioTrack.setEnabled(!externalIsMicMuted).catch(console.error);
+      setIsMuted(externalIsMicMuted);
+    }
+  }, [externalIsMicMuted, localAudioTrack, isModal]);
 
   const toggleMute = async () => {
     if (localAudioTrack) {
@@ -199,12 +201,6 @@ const VoiceChat = ({ channel, onEndCall, isModal = true, isVisible, onClose, isD
             </div>
             
             <div className="flex items-center gap-3">
-               {isDeafened && (
-                 <div className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/20 px-3 py-1.5 rounded-full">
-                    <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-                    <span className="text-[9px] font-black text-red-500 uppercase tracking-widest">Deafened</span>
-                 </div>
-               )}
                <div className="bg-white/5 border border-white/10 rounded-full px-4 py-1.5 flex items-center gap-2 backdrop-blur-xl">
                  <Users size={12} className="text-gray-400" />
                  <span className="text-[10px] font-black text-white">{remoteUsers.length + 1} Online</span>
