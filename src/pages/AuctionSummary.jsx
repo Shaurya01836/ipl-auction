@@ -26,9 +26,9 @@ import {
   Coins
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { db } from '../lib/firebase';
+import { db, rtdb } from '../lib/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { ref, update as updateRtdb } from 'firebase/database';
 
 const AuctionSummary = () => {
   const { id } = useParams();
@@ -54,11 +54,7 @@ const AuctionSummary = () => {
     setIsBulkGenerating(true);
     setAiError(null);
 
-    if (!window.puter) {
-      setAiError("Puter.js not loaded. Please refresh the page.");
-      setIsBulkGenerating(false);
-      return;
-    }
+
 
     for (const team of pendingTeamsData) {
       setGeneratingTeams(new Set([team.id]));
@@ -105,18 +101,66 @@ const AuctionSummary = () => {
       Only return valid JSON. No other text.`;
 
       try {
-        const result = await window.puter.ai.chat(prompt);
-        const rawText = result?.toString() || "";
-        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15-second max wait
         
-        if (jsonMatch) {
-          const analysis = JSON.parse(jsonMatch[0]);
+        const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+        if (!apiKey) throw new Error("OpenRouter API key not found in environment");
+
+        const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+            'HTTP-Referer': 'https://ipl-auction.vercel.app',
+            'X-Title': 'IPL Auction AI Strategist'
+          },
+          body: JSON.stringify({
+            model: 'qwen/qwen3.6-plus:free',
+            messages: [{ role: 'user', content: prompt }]
+          }),
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          throw new Error(`OpenRouter HTTP ${res.status}: ${errBody?.error?.message || res.statusText}`);
+        }
+
+        const data = await res.json();
+        let rawText = data?.choices?.[0]?.message?.content || '';
+        
+        rawText = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        const firstBrace = rawText.indexOf('{');
+        const lastBrace = rawText.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace !== -1) {
+          rawText = rawText.slice(firstBrace, lastBrace + 1);
+        }
+        
+        const cleanedData = JSON.parse(rawText);
+
+        // Aggressively coerce ALL fields
+        if (cleanedData) {
+           cleanedData.score = Number(cleanedData.score || 0);
+           cleanedData.batting = Number(cleanedData.batting || 0);
+           cleanedData.bowling = Number(cleanedData.bowling || 0);
+           cleanedData.allRounder = Number(cleanedData.allRounder || 0);
+           cleanedData.value = Number(cleanedData.value || 0);
+        }
+
+        if (cleanedData && !isNaN(cleanedData.score)) {
           const teamRef = doc(db, 'teams', team.id);
-          await updateDoc(teamRef, { aiAnalysis: analysis });
+          await updateDoc(teamRef, { aiAnalysis: cleanedData });
+          
+          const rtdbTeamRef = ref(rtdb, `auctions/${id}/teams/${team.id}`);
+          await updateRtdb(rtdbTeamRef, { aiAnalysis: cleanedData });
+        } else {
+          throw new Error("Invalid format from AI");
         }
       } catch (error) {
-        console.error(`AI Analysis Error (${team.name}):`, error);
-        if (error.status === 429) {
+        if ((error.message || "").includes('429')) {
           setAiError("AI Rate Limit Reached. Waiting...");
           await sleep(10000); 
         } else {
@@ -126,9 +170,8 @@ const AuctionSummary = () => {
         setGeneratingTeams(new Set());
       }
       
-      // Safe 5-second gap between teams for reliability
       setAiError("Syncing next evaluation...");
-      await sleep(5000);
+      await sleep(8000);
     }
     
     setIsBulkGenerating(false);
