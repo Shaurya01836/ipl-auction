@@ -64,6 +64,7 @@ export const AuctionProvider = ({ children }) => {
   const [roomTeams, setRoomTeams] = useState([]);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const endingPlayerRef = React.useRef(false);
 
   // Server-authoritative time using Firebase RTDB offset.
   // getServerTime() returns Date.now() + serverOffset, synced across all clients.
@@ -72,13 +73,24 @@ export const AuctionProvider = ({ children }) => {
   }, []);
 
   // Create a new room in DB
-  const createRoom = useCallback(async (roomId, userId, playerDetails) => {
+  const createRoom = useCallback(async (roomId, userId, playerDetails, auctionType = 'mega') => {
     const roomRef = doc(db, 'auctions', roomId);
     const teamDetails = TEAMS.find(t => t.id === playerDetails.team);
+    
+    // Mode-specific configurations
+    const isSprint5 = auctionType === 'sprint5';
+    const isSprint11 = auctionType === 'sprint11';
+    
+    const budget = isSprint5 ? 60.0 : isSprint11 ? 90.0 : 120.0;
+    const squadLimit = isSprint5 ? 5 : isSprint11 ? 11 : 25;
+    const overseasLimit = isSprint5 ? 2 : isSprint11 ? 4 : 8;
     
     await setDoc(roomRef, {
       hostId: userId,
       status: 'waiting',
+      auctionType,
+      squadLimit,
+      overseasLimit,
       players: [{
         id: userId,
         name: playerDetails.name,
@@ -90,7 +102,8 @@ export const AuctionProvider = ({ children }) => {
       currentAuction: null,
       logs: [],
       settings: {
-        bidTimer: 10 // Default 10s
+        bidTimer: 10, // Default 10s
+        budget
       }
     });
 
@@ -102,7 +115,7 @@ export const AuctionProvider = ({ children }) => {
         userId: userId,
         teamId: playerDetails.team,
         teamName: teamDetails?.name || 'Unknown',
-        budgetRemaining: 120.0,
+        budgetRemaining: budget,
         spent: 0,
         squad: []
       });
@@ -116,6 +129,9 @@ export const AuctionProvider = ({ children }) => {
     await set(rtdbRoomRef, {
       hostId: userId,
       status: 'waiting',
+      auctionType,
+      squadLimit,
+      overseasLimit,
       players: [{
         id: userId,
         name: playerDetails.name,
@@ -125,7 +141,8 @@ export const AuctionProvider = ({ children }) => {
       }],
       bannedPlayers: [],
       settings: {
-        bidTimer: 10
+        bidTimer: 10,
+        budget
       }
     });
 
@@ -136,7 +153,7 @@ export const AuctionProvider = ({ children }) => {
         userId: userId,
         teamId: playerDetails.team,
         teamName: teamDetails?.name || 'Unknown',
-        budgetRemaining: 120.0,
+        budgetRemaining: budget,
         spent: 0,
         squad: []
       });
@@ -187,23 +204,35 @@ export const AuctionProvider = ({ children }) => {
   }, [getSyncedTime]);
 
   const endPlayerAuction = useCallback(async (roomId) => {
+    // Prevent duplicate calls from the timer interval
+    if (endingPlayerRef.current) return;
+    endingPlayerRef.current = true;
+
     try {
-      const roomRef = doc(db, 'auctions', roomId);
       const liveRef = ref(rtdb, `auctions/${roomId}/live`);
       
-      const liveSnap = await get(liveRef);
-      if (!liveSnap.exists()) return;
-      const currentAuction = liveSnap.val();
-      
-      // Race condition guard
-      if (currentAuction.status === 'sold' || currentAuction.status === 'unsold') {
-        return; 
+      // Use RTDB transaction to atomically claim the "end" action
+      const txResult = await runTransactionRtdb(liveRef, (currentData) => {
+        if (!currentData) return currentData;
+        // Only proceed if still in bidding state
+        if (currentData.status !== 'bidding') return; // abort
+        
+        const isSold = !!currentData.highBidderId;
+        currentData.status = isSold ? 'sold' : 'unsold';
+        return currentData;
+      });
+
+      // If transaction was aborted (already sold/unsold), bail out
+      if (!txResult.committed) {
+        endingPlayerRef.current = false;
+        return;
       }
 
-      const isSold = !!currentAuction.highBidderId;
-      const status = isSold ? 'sold' : 'unsold';
-      await updateRtdb(liveRef, { status });
+      const auctionState = txResult.snapshot.val();
+      const isSold = auctionState.status === 'sold';
 
+      // Firestore transaction for squad/budget updates
+      const roomRef = doc(db, 'auctions', roomId);
       const result = await runTransaction(db, async (transaction) => {
         const roomSnap = await transaction.get(roomRef);
         if (!roomSnap.exists()) return null;
@@ -211,37 +240,31 @@ export const AuctionProvider = ({ children }) => {
         const data = roomSnap.data();
         const { playerOrder } = data;
 
-        const player = IPL_PLAYERS.find(p => p.id === currentAuction.playerId);
-        const teamDetails = TEAMS.find(t => t.id === currentAuction.highBidderTeamId);
+        const player = IPL_PLAYERS.find(p => p.id === auctionState.playerId);
+        const teamDetails = TEAMS.find(t => t.id === auctionState.highBidderTeamId);
 
-        const logText = `${player.name} ${isSold ? `SOLD to ${teamDetails?.name || currentAuction.highBidderName} for ₹${currentAuction.currentBid} Cr` : 'UNSOLD'}`;
+        const logText = `${player.name} ${isSold ? `SOLD to ${teamDetails?.name || auctionState.highBidderName} for ₹${auctionState.currentBid} Cr` : 'UNSOLD'}`;
 
-        // Prepare updates
-        const nextData = {
-          ...data
-        };
-
+        const nextData = { ...data };
         let newTeamData = null;
 
         if (isSold) {
-          const teamRef = doc(db, 'teams', `${roomId}_${currentAuction.highBidderId}`);
+          const teamRef = doc(db, 'teams', `${roomId}_${auctionState.highBidderId}`);
           const teamSnap = await transaction.get(teamRef);
           
           if (teamSnap.exists()) {
             const teamData = teamSnap.data();
             newTeamData = {
-              budgetRemaining: teamData.budgetRemaining - currentAuction.currentBid,
-              squad: [...(teamData.squad || []), { id: currentAuction.playerId, bid: currentAuction.currentBid }]
+              budgetRemaining: teamData.budgetRemaining - auctionState.currentBid,
+              squad: [...(teamData.squad || []), { id: auctionState.playerId, bid: auctionState.currentBid }]
             };
-
             transaction.update(teamRef, newTeamData);
 
-            // Also update the players array in the room
             nextData.players = data.players.map(p => {
-              if (p.id === currentAuction.highBidderId) {
+              if (p.id === auctionState.highBidderId) {
                 return { 
                   ...p, 
-                  spent: (p.spent || 0) + currentAuction.currentBid, 
+                  spent: (p.spent || 0) + auctionState.currentBid, 
                   squadCount: (p.squadCount || 0) + 1 
                 };
               }
@@ -257,51 +280,51 @@ export const AuctionProvider = ({ children }) => {
         return { 
           isSold, 
           logText, 
-          currentAuction, 
+          auctionState, 
           playerOrder, 
           settings: data.settings,
+          roomStatus: data.status,
           players: nextData.players || data.players,
-          teamDocId: isSold ? `${roomId}_${currentAuction.highBidderId}` : null,
+          teamDocId: isSold ? `${roomId}_${auctionState.highBidderId}` : null,
           newTeamData
         };
       });
 
-      if (!result) return;
-
-      // Sync the completed transaction data to RTDB
-      const rtdbRoomRef = ref(rtdb, `auctions/${roomId}/room`);
-      await updateRtdb(rtdbRoomRef, { players: result.players });
-
-      if (result.isSold && result.teamDocId && result.newTeamData) {
-        const rtdbTeamRef = ref(rtdb, `auctions/${roomId}/teams/${result.teamDocId}`);
-        await updateRtdb(rtdbTeamRef, result.newTeamData);
+      if (!result) {
+        endingPlayerRef.current = false;
+        return;
       }
 
-      // System Log Message
-      const msgRef = ref(rtdb, `auctions/${roomId}/messages`);
-      await push(msgRef, {
+      // Sync to RTDB in parallel for speed
+      const syncPromises = [];
+      syncPromises.push(updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { players: result.players }));
+      if (result.isSold && result.teamDocId && result.newTeamData) {
+        syncPromises.push(updateRtdb(ref(rtdb, `auctions/${roomId}/teams/${result.teamDocId}`), result.newTeamData));
+      }
+      syncPromises.push(push(ref(rtdb, `auctions/${roomId}/messages`), {
         userId: 'system',
         userName: 'System',
         text: result.logText,
         type: result.isSold ? 'sold_card' : 'log',
         metadata: result.isSold ? {
-          playerId: result.currentAuction.playerId,
-          teamId: result.currentAuction.highBidderTeamId,
-          bid: result.currentAuction.currentBid,
-          buyerId: result.currentAuction.highBidderId,
-          buyerName: result.currentAuction.highBidderName
+          playerId: result.auctionState.playerId,
+          teamId: result.auctionState.highBidderTeamId,
+          bid: result.auctionState.currentBid,
+          buyerId: result.auctionState.highBidderId,
+          buyerName: result.auctionState.highBidderName
         } : null,
         timestamp: serverTimestampRtdb()
-      });
+      }));
+      await Promise.all(syncPromises);
 
       const waitTime = result.isSold ? 5000 : 2000;
       
+      // Use cached playerOrder & settings from the transaction — no extra getDoc!
       setTimeout(async () => {
-        const checkSnap = await getDoc(roomRef);
-        if (!checkSnap.exists() || checkSnap.data().status !== 'active') return;
+        if (result.roomStatus !== 'active') return;
 
-        const { playerOrder, settings } = checkSnap.data();
-        const currentPlayerId = result.currentAuction.playerId;
+        const { playerOrder, settings } = result;
+        const currentPlayerId = result.auctionState.playerId;
         const order = playerOrder || Array.from({ length: IPL_PLAYERS.length }, (_, i) => i);
         const currentPlayerIndexInOrder = order.findIndex(idx => IPL_PLAYERS[idx] && IPL_PLAYERS[idx].id === currentPlayerId);
         const nextIndexInOrder = order[currentPlayerIndexInOrder + 1];
@@ -317,12 +340,15 @@ export const AuctionProvider = ({ children }) => {
             status: 'bidding'
           });
         } else {
-          await updateDoc(roomRef, { status: 'completed' });
+          const roomRef2 = doc(db, 'auctions', roomId);
+          await updateDoc(roomRef2, { status: 'completed' });
           await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { status: 'completed' });
         }
+        endingPlayerRef.current = false;
       }, waitTime);
     } catch (err) {
       console.error("Error in endPlayerAuction:", err);
+      endingPlayerRef.current = false;
     }
   }, [getSyncedTime]);
 
@@ -369,7 +395,7 @@ export const AuctionProvider = ({ children }) => {
         userId: userId,
         teamId: playerDetails.team,
         teamName: teamDetails?.name || 'Unknown',
-        budgetRemaining: 120.0,
+        budgetRemaining: data.settings?.budget || 120.0,
         spent: 0,
         squad: []
       };
@@ -578,6 +604,28 @@ export const AuctionProvider = ({ children }) => {
     if (currentAuction.currentAuction?.status !== 'bidding') throw new Error("Auction is not accepting bids right now.");
     if (currentAuction.currentAuction?.highBidderId === user.uid) throw new Error("You are already the highest bidder!");
     
+    // Squad limit check
+    const squadLimit = currentAuction.squadLimit || 25;
+    if (team.squad && team.squad.length >= squadLimit) {
+      throw new Error(`You have reached the squad limit of ${squadLimit} players!`);
+    }
+
+    // Overseas limit check
+    const player = IPL_PLAYERS.find(p => p.id === currentAuction.currentAuction?.playerId);
+    const isOverseas = player && player.country !== 'IND';
+    const overseasLimit = currentAuction.overseasLimit || 8;
+    
+    if (isOverseas && team.squad) {
+      const currentOverseasCount = team.squad.reduce((count, s) => {
+        const pInfo = IPL_PLAYERS.find(p => p.id === (typeof s === 'string' ? s : s.id));
+        return pInfo && pInfo.country !== 'IND' ? count + 1 : count;
+      }, 0);
+      
+      if (currentOverseasCount >= overseasLimit) {
+        throw new Error(`You have reached the overseas quota of ${overseasLimit} players for this mode!`);
+      }
+    }
+
     const auctionDoc = doc(db, 'auctions', currentAuction.id);
     let finalAmount = amount;
 
@@ -633,7 +681,7 @@ export const AuctionProvider = ({ children }) => {
         userId: userId,
         teamId: newTeamId,
         teamName: teamDetails?.name || 'Unknown',
-        budgetRemaining: 120.0,
+        budgetRemaining: roomSnap.data().settings?.budget || 120.0,
         spent: 0,
         squad: []
       };
@@ -649,70 +697,64 @@ export const AuctionProvider = ({ children }) => {
   }, []);
 
   const pauseAuction = useCallback(async (roomId) => {
-    if (!user) return;
-    const roomRef = doc(db, 'auctions', roomId);
-    const roomSnap = await getDoc(roomRef);
-    if (!roomSnap.exists() || roomSnap.data().hostId !== user.uid) return;
+    if (!user || !currentAuction || currentAuction.hostId !== user.uid) return;
 
     const liveRef = ref(rtdb, `auctions/${roomId}/live`);
-    await updateRtdb(liveRef, { status: 'paused' });
-    
-    // Add to messages collection for chronological sorting
     const msgRef = ref(rtdb, `auctions/${roomId}/messages`);
-    await push(msgRef, {
-      userId: 'system',
-      userName: 'System',
-      text: `Auction PAUSED by Admin`,
-      type: 'log',
-      timestamp: serverTimestampRtdb()
-    });
-  }, [user]);
+    
+    // Fire both writes in parallel — no Firestore read needed
+    await Promise.all([
+      updateRtdb(liveRef, { status: 'paused' }),
+      push(msgRef, {
+        userId: 'system',
+        userName: 'System',
+        text: `Auction PAUSED by Admin`,
+        type: 'log',
+        timestamp: serverTimestampRtdb()
+      })
+    ]);
+  }, [user, currentAuction]);
 
   const resumeAuction = useCallback(async (roomId) => {
-    if (!user) return;
-    const roomRef = doc(db, 'auctions', roomId);
-    const roomSnap = await getDoc(roomRef);
-    if (!roomSnap.exists() || roomSnap.data().hostId !== user.uid) return;
-    const data = roomSnap.data();
+    if (!user || !currentAuction || currentAuction.hostId !== user.uid) return;
     
     const liveRef = ref(rtdb, `auctions/${roomId}/live`);
-    await updateRtdb(liveRef, { 
-      status: 'bidding',
-      timerEndsAt: getSyncedTime() + (data.settings?.bidTimer || 10) * 1000
-    });
-
-    // Add to messages collection for chronological sorting
     const msgRef = ref(rtdb, `auctions/${roomId}/messages`);
-    await push(msgRef, {
-      userId: 'system',
-      userName: 'System',
-      text: `Auction RESUMED by Admin`,
-      type: 'log',
-      timestamp: serverTimestampRtdb()
-    });
-  }, [getSyncedTime, user]);
+    
+    // Use cached settings — no Firestore read needed
+    await Promise.all([
+      updateRtdb(liveRef, { 
+        status: 'bidding',
+        timerEndsAt: getSyncedTime() + (currentAuction.settings?.bidTimer || 10) * 1000
+      }),
+      push(msgRef, {
+        userId: 'system',
+        userName: 'System',
+        text: `Auction RESUMED by Admin`,
+        type: 'log',
+        timestamp: serverTimestampRtdb()
+      })
+    ]);
+  }, [getSyncedTime, user, currentAuction]);
 
   const endAuction = useCallback(async (roomId) => {
-    if (!user) return;
+    if (!user || !currentAuction || currentAuction.hostId !== user.uid) return;
+
     const roomRef = doc(db, 'auctions', roomId);
-    const roomSnap = await getDoc(roomRef);
-    if (!roomSnap.exists() || roomSnap.data().hostId !== user.uid) return;
-
-    await updateDoc(roomRef, { 
-      status: 'completed'
-    });
-    await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { status: 'completed' });
-
-    // Add to messages collection for chronological sorting
-    const msgRef = ref(rtdb, `auctions/${roomId}/messages`);
-    await push(msgRef, {
-      userId: 'system',
-      userName: 'System',
-      text: `Auction COMPLETED by Admin`,
-      type: 'log',
-      timestamp: serverTimestampRtdb()
-    });
-  }, [user]);
+    
+    // Fire all three writes in parallel
+    await Promise.all([
+      updateDoc(roomRef, { status: 'completed' }),
+      updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { status: 'completed' }),
+      push(ref(rtdb, `auctions/${roomId}/messages`), {
+        userId: 'system',
+        userName: 'System',
+        text: `Auction COMPLETED by Admin`,
+        type: 'log',
+        timestamp: serverTimestampRtdb()
+      })
+    ]);
+  }, [user, currentAuction]);
 
   const value = {
     currentAuction,

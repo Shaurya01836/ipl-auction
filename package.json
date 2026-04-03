@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@tailwindcss/vite": "^4.2.2",
     "agora-react-uikit": "^1.2.0",
     "agora-rtc-sdk-ng": "^4.24.3",

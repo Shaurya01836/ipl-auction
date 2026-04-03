@@ -331,6 +331,12 @@ const AuctionRoom = () => {
 
 
    const lastBeepedSecRef = useRef(-1);
+   const endTriggeredRef = useRef(false);
+
+   // Reset the end-trigger lock whenever a new player starts
+   useEffect(() => {
+      endTriggeredRef.current = false;
+   }, [displayAuctionState?.playerId]);
 
    useEffect(() => {
       if (currentAuction?.status !== 'active' || !displayAuctionState?.timerEndsAt || displayAuctionState?.status !== 'bidding') {
@@ -342,11 +348,8 @@ const AuctionRoom = () => {
 
       const interval = setInterval(() => {
          const rawMs = displayAuctionState.timerEndsAt - getSyncedTime();
-         // Use Math.ceil so the display shows "7" until it truly crosses below 7.000s.
-         // This prevents the 7→6→7 flicker that Math.floor causes near boundaries.
          const diff = Math.max(0, Math.ceil(rawMs / 1000));
 
-         // Beep only once per second crossing (prevents double-beep on re-renders)
          if (diff <= 5 && diff > 0 && diff !== lastBeepedSecRef.current) {
             lastBeepedSecRef.current = diff;
             playBeep(diff === 1 ? 880 : 440, 0.1);
@@ -355,7 +358,8 @@ const AuctionRoom = () => {
          setTimeLeft(diff);
          if (diff === 0) {
             clearInterval(interval);
-            if (isAdmin && displayAuctionState.status === 'bidding') {
+            if (isAdmin && displayAuctionState.status === 'bidding' && !endTriggeredRef.current) {
+               endTriggeredRef.current = true;
                endPlayerAuction(id);
             }
          }
@@ -375,16 +379,18 @@ const AuctionRoom = () => {
          return;
       }
 
-      // Squad Size Guard (Max 25)
-      if ((team?.squad?.length || 0) >= 25) {
-         setError('Squad Full (Max 25 Players)');
+      // Squad Size Guard
+      const squadLimit = currentAuction?.squadLimit || 25;
+      if ((team?.squad?.length || 0) >= squadLimit) {
+         setError(`Squad Full (Max ${squadLimit} Players)`);
          playBeep(220, 0.3);
          setTimeout(() => setError(''), 3000);
          return;
       }
 
-      // Overseas Limit Check (Max 8)
+      // Overseas Limit Check
       const isOverseas = currentPlayer?.country !== 'IND';
+      const overseasLimit = currentAuction?.overseasLimit || 8;
       if (isOverseas) {
          const overseasCount = team?.squad?.filter(s => {
             const pid = typeof s === 'string' ? s : s.id;
@@ -392,8 +398,8 @@ const AuctionRoom = () => {
             return p?.country !== 'IND';
          }).length || 0;
 
-         if (overseasCount >= 8) {
-            setError('Overseas Player Limit Reached (Max 8)');
+         if (overseasCount >= overseasLimit) {
+            setError(`Overseas Player Limit Reached (Max ${overseasLimit})`);
             playBeep(220, 0.3); // Low error beep
             setTimeout(() => setError(''), 3000);
             return;
@@ -660,9 +666,9 @@ const AuctionRoom = () => {
                               <div className="flex items-center gap-4">
                                  <div className="text-right">
                                     <span className={`text-[10px] font-black block leading-none ${manager ? 'text-green-500' : 'text-gray-700'}`}>
-                                       ₹{(teamDoc?.budgetRemaining || 120.0).toFixed(1)} Cr
+                                       ₹{(teamDoc?.budgetRemaining || (currentAuction?.settings?.budget || 120.0)).toFixed(1)} Cr
                                     </span>
-                                    <span className="text-[8px] font-bold text-gray-600 uppercase tracking-widest">{teamDoc?.squad?.length || 0}/25</span>
+                                    <span className="text-[8px] font-bold text-gray-600 uppercase tracking-widest">{teamDoc?.squad?.length || 0}/{currentAuction?.squadLimit || 25}</span>
                                  </div>
                                  <ChevronDown size={14} className={`text-gray-600 transition-transform duration-300 ${isSelected ? 'rotate-180' : ''}`} />
                               </div>
@@ -682,8 +688,8 @@ const AuctionRoom = () => {
                                              <span className="text-gray-500">OS: <span className="text-white">{(teamDoc?.squad?.filter(s => {
                                                 const pid = typeof s === 'string' ? s : s.id;
                                                 return IPL_PLAYERS.find(pl => pl.id === pid)?.country !== 'IND';
-                                             }).length || 0)}</span></span>
-                                             <span className="text-gray-500">Spent: <span className="text-yellow-500">{(120 - (teamDoc?.budgetRemaining || 120)).toFixed(2)} Cr</span></span>
+                                             }).length || 0)}/{currentAuction?.overseasLimit || 8}</span></span>
+                                             <span className="text-gray-500">Spent: <span className="text-yellow-500">{((currentAuction?.settings?.budget || 120) - (teamDoc?.budgetRemaining || (currentAuction?.settings?.budget || 120))).toFixed(2)} Cr</span></span>
                                           </div>
                                        </div>
 

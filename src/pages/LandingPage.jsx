@@ -59,6 +59,7 @@ const LogoMarquee = () => {
 const LandingPage = () => {
   const [selectedTeam, setSelectedTeam] = useState('MI');
   const [activeTab, setActiveTab] = useState('new');
+  const [auctionType, setAuctionType] = useState('mega'); // 'mega' or 'sprint5'
   const [roomCode, setRoomCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -187,7 +188,7 @@ const LandingPage = () => {
       
       if (activeTab === 'new') {
         const newRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
-        await createRoom(newRoomId, user.uid, { name: displayName, team: selectedTeam });
+        await createRoom(newRoomId, user.uid, { name: displayName, team: selectedTeam }, auctionType);
         navigate(`/lobby/${newRoomId}`);
       } else if (activeTab === 'join') {
         if (!roomCode) {
@@ -556,6 +557,71 @@ const LandingPage = () => {
                         </span>
                       </button>
                     ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-4 ml-1">
+                    <label className="block text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">Auction Mode</label>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setAuctionType('mega')}
+                      className={`flex-1 p-4 rounded-2xl border transition-all duration-300 text-left relative overflow-hidden group/mode ${
+                        auctionType === 'mega' 
+                          ? 'border-orange-500 bg-orange-500/5' 
+                          : 'border-white/5 hover:border-white/10'
+                      }`}
+                    >
+                      {auctionType === 'mega' && (
+                        <div className="absolute top-0 right-0 p-2"><CheckCircle2 size={12} className="text-orange-500" /></div>
+                      )}
+                      <div className="flex items-center gap-2 mb-1">
+                        <Trophy size={14} className={auctionType === 'mega' ? 'text-orange-500' : 'text-gray-600'} />
+                        <span className={`text-[10px] font-black uppercase tracking-tight ${auctionType === 'mega' ? 'text-white' : 'text-gray-500'}`}>Mega Auction</span>
+                      </div>
+                      <p className="text-[8px] font-bold text-gray-600 uppercase leading-tight">25 Players • Max 8 Overseas • 120 Cr Budget</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setAuctionType('sprint11')}
+                      className={`flex-1 p-4 rounded-2xl border transition-all duration-300 text-left relative overflow-hidden group/mode ${
+                        auctionType === 'sprint11' 
+                          ? 'border-yellow-500 bg-yellow-500/5' 
+                          : 'border-white/5 hover:border-white/10'
+                      }`}
+                    >
+                      {auctionType === 'sprint11' && (
+                        <div className="absolute top-0 right-0 p-2"><CheckCircle2 size={12} className="text-yellow-500" /></div>
+                      )}
+                      <div className="flex items-center gap-2 mb-1">
+                        <Star size={14} className={auctionType === 'sprint11' ? 'text-yellow-500' : 'text-gray-600'} />
+                        <span className={`text-[10px] font-black uppercase tracking-tight ${auctionType === 'sprint11' ? 'text-white' : 'text-gray-500'}`}>11-Player Classic</span>
+                      </div>
+                      <p className="text-[8px] font-bold text-gray-600 uppercase leading-tight">11 Players • Max 4 Overseas • 90 Cr Budget</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setAuctionType('sprint5')}
+                      className={`flex-1 p-4 rounded-2xl border transition-all duration-300 text-left relative overflow-hidden group/mode ${
+                        auctionType === 'sprint5' 
+                          ? 'border-blue-500 bg-blue-500/5' 
+                          : 'border-white/5 hover:border-white/10'
+                      }`}
+                    >
+                      {auctionType === 'sprint5' && (
+                        <div className="absolute top-0 right-0 p-2"><CheckCircle2 size={12} className="text-blue-500" /></div>
+                      )}
+                      <div className="flex items-center gap-2 mb-1">
+                        <Zap size={14} className={auctionType === 'sprint5' ? 'text-blue-500' : 'text-gray-600'} fill={auctionType === 'sprint5' ? 'currentColor' : 'none'} />
+                        <span className={`text-[10px] font-black uppercase tracking-tight ${auctionType === 'sprint5' ? 'text-white' : 'text-gray-500'}`}>5-Player Sprint</span>
+                      </div>
+                      <p className="text-[8px] font-bold text-gray-600 uppercase leading-tight">5 Players • Max 2 Overseas • 60 Cr Budget</p>
+                    </button>
                   </div>
                 </div>
 

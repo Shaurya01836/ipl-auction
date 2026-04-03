@@ -28,6 +28,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '../lib/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const AuctionSummary = () => {
   const { id } = useParams();
@@ -40,95 +41,131 @@ const AuctionSummary = () => {
   const [expandedPointsTeam, setExpandedPointsTeam] = useState(null);
   
   // AI State
+  const [isBulkGenerating, setIsBulkGenerating] = useState(false);
   const [generatingTeams, setGeneratingTeams] = useState(new Set());
+  const [failedTeams, setFailedTeams] = useState(new Set());
+  const [aiError, setAiError] = useState(null);
 
-  const generateAIAnalysis = async (teamDocId, teamName, squad) => {
-    if (generatingTeams.has(teamDocId)) return;
+  const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const generateSequentialAIAnalysis = async (pendingTeamsData) => {
+    if (isBulkGenerating || pendingTeamsData.length === 0) return;
     
-    setGeneratingTeams(prev => new Set(prev).add(teamDocId));
-    
-    const squadText = squad.map(p => `${p.name} (${p.role}, ₹${p.bid}Cr)`).join(', ');
-    const prompt = `Act as a harsh, fiercely critical elite IPL Cricket Strategist and Analyst. 
-    Analyze the following squad for the team "${teamName}" for the upcoming Season.
-    
-    Squad: ${squadText}
-    
-    SCORING GUIDELINES:
-    - Be EXTREMELY STRICT with your 0-100 ratings. An average or flawed team MUST receive scores in the 50s, 60s, or 70s maximum.
-    - True balance and depth is absolutely required for a score of 80+.
-    - Only legendary, flawless squads deserve 90+. Do not inflate scores. Give 85+ ONLY if the team is genuinely stacked.
-    - Penalize heavily for a lack of recognized all-rounders, a weak domestic bowling core, or severely overspending on a handful of superstars.
-    
-    CRITICAL: You MUST return the response in the following JSON format ONLY:
-    {
-      "analysis": "A brutally honest professional evaluation.",
-      "batting": 72,
-      "bowling": 65,
-      "allRounder": 50,
-      "value": 68,
-      "score": 65,
-      "verdict": "A punchy final summary."
+    setIsBulkGenerating(true);
+    setAiError(null);
+
+    if (!window.puter) {
+      setAiError("Puter.js not loaded. Please refresh the page.");
+      setIsBulkGenerating(false);
+      return;
     }
-    
-    The 'score' is the overall Champion Factor. All scores are strictly 0-100.
-    Only return the JSON. No other text.`;
 
-    try {
-      if (!window.puter) throw new Error("Puter.js not initialized");
+    for (const team of pendingTeamsData) {
+      setGeneratingTeams(new Set([team.id]));
+      
+      const isSprint5 = currentAuction?.auctionType === 'sprint5';
+      const isSprint11 = currentAuction?.auctionType === 'sprint11';
+      
+      const matchFormat = isSprint5 ? "5-OVER SPRINT MATCH" : "STANDARD T20 MATCH (20 Overs)";
+      const squadRules = isSprint5 
+        ? "Rules: STRICT 5 PLAYER LIMIT per team. Only 3 players can bat. Bowling: 2 bowlers bowl 2 overs each, 1 bowler bowls the remaining 1 over."
+        : isSprint11 
+          ? "Rules: 11 PLAYER CLASSIC. No bench. 4 Overseas max. Analyze as a Starting XI."
+          : "Rules: Standard T20 squad building (max 25 players).";
 
-      const response = await window.puter.ai.chat(prompt, {
-        stream: false
-      });
-
-      let rawText = "";
-      if (typeof response === 'string') rawText = response;
-      else if (response?.text) rawText = response.text;
-      else if (response?.message?.content) rawText = response.message.content;
-      else if (response?.result) rawText = typeof response.result === 'string' ? response.result : response.result?.text || JSON.stringify(response.result);
-      else if (Array.isArray(response?.choices)) rawText = response.choices[0]?.message?.content || "";
-
-      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-      const cleanedData = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
-
-      if (cleanedData && typeof cleanedData.score === 'number') {
-        // Persist to Global Database for all users
-        const teamRef = doc(db, 'teams', teamDocId);
-        await updateDoc(teamRef, {
-          aiAnalysis: cleanedData
-        });
-      } else {
-        throw new Error("Invalid format from AI");
+      const squadText = team.squadData.map(p => `${p.name} (${p.role}, ₹${p.bid}Cr)`).join(', ');
+      const prompt = `Act as a harsh, fiercely critical elite IPL Cricket Strategist and Analyst. 
+      Analyze the following squad for the team "${team.name}" for a ${matchFormat}.
+      
+      Squad: ${squadText}
+      ${squadRules}
+      
+      SCORING GUIDELINES:
+      - Be EXTREMELY STRICT with your 0-100 ratings. An average or flawed team MUST receive scores in the 50s, 60s, or 70s maximum.
+      ${isSprint5 
+        ? "- Focus on POWER HITTING (batting) and MULTI-OVER BOWLERS who can handle 2 overs in a short sprint." 
+        : isSprint11 
+          ? "- Focus on the BALANCE of the Starting XI. Lack of bench depth is expected, so the 11 must be flawless." 
+          : "- True balance and depth is absolutely required for a score of 80+."
       }
+      - Only legendary, flawless squads deserve 90+. Do not inflate scores. Give 85+ ONLY if the team is genuinely stacked.
+      - Penalize heavily for a lack of recognized all-rounders, a weak domestic bowling core, or severely overspending on a handful of superstars.
+      
+      CRITICAL: You MUST return the response in the following JSON format ONLY:
+      {
+        "analysis": "A brutally honest professional evaluation focusing on the ${isSprint5 ? '5-over sprint' : '20-over'} format${isSprint11 ? ' with a 11-player limit' : ''}.",
+        "batting": 70,
+        "bowling": 65,
+        "allRounder": 50,
+        "value": 60,
+        "score": 62,
+        "verdict": "A punchy final summary."
+      }
+      
+      Only return valid JSON. No other text.`;
 
-    } catch (error) {
-      console.error(`AI Analysis Error (${teamName}):`, error);
-    } finally {
-      setGeneratingTeams(prev => {
-        const next = new Set(prev);
-        next.delete(teamDocId);
-        return next;
-      });
+      try {
+        const result = await window.puter.ai.chat(prompt);
+        const rawText = result?.toString() || "";
+        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+        
+        if (jsonMatch) {
+          const analysis = JSON.parse(jsonMatch[0]);
+          const teamRef = doc(db, 'teams', team.id);
+          await updateDoc(teamRef, { aiAnalysis: analysis });
+        }
+      } catch (error) {
+        console.error(`AI Analysis Error (${team.name}):`, error);
+        if (error.status === 429) {
+          setAiError("AI Rate Limit Reached. Waiting...");
+          await sleep(10000); 
+        } else {
+          setFailedTeams(prev => new Set(prev).add(team.id));
+        }
+      } finally {
+        setGeneratingTeams(new Set());
+      }
+      
+      // Safe 5-second gap between teams for reliability
+      setAiError("Syncing next evaluation...");
+      await sleep(5000);
     }
+    
+    setIsBulkGenerating(false);
+  };
+
+  const retryAnalysis = () => {
+    setFailedTeams(new Set());
+    setAiError(null);
   };
 
   // Automatic Batch Analysis Trigger
   useEffect(() => {
-    if (activeTab === 'points' && roomTeams.length > 0) {
-      roomTeams.forEach(teamDoc => {
-        if (!teamDoc.aiAnalysis && !generatingTeams.has(teamDoc.id)) {
+    if (roomTeams.length > 0 && !isBulkGenerating) {
+      // Find all teams that need analysis and haven't failed
+      const pendingTeamsData = roomTeams
+        .filter(doc => !doc.aiAnalysis && !failedTeams.has(doc.id))
+        .map(teamDoc => {
           const tInfo = TEAMS.find(t => t.id === teamDoc.teamId);
-          const squad = (teamDoc?.squad || []).map(s => {
+          const squadData = (teamDoc?.squad || []).map(s => {
             const pid = typeof s === 'string' ? s : s.id;
             const bid = typeof s === 'string' ? 0 : s.bid;
             return { ...IPL_PLAYERS.find(p => p.id === pid), bid };
           });
-          if (squad.length > 0) {
-            generateAIAnalysis(teamDoc.id, tInfo?.name, squad);
-          }
-        }
-      });
+          
+          // Check disqualification
+          const squadLimit = currentAuction?.squadLimit || 5;
+          const isDisqualified = squadData.length < squadLimit;
+          
+          return { id: teamDoc.id, name: tInfo?.name, squadData, isDisqualified };
+        })
+        .filter(team => team.squadData.length > 0 && !team.isDisqualified);
+
+      if (pendingTeamsData.length > 0 && !aiError?.includes('API Key')) {
+        generateSequentialAIAnalysis(pendingTeamsData);
+      }
     }
-  }, [activeTab, roomTeams, generatingTeams]);
+  }, [roomTeams, isBulkGenerating, failedTeams, aiError]);
 
   useEffect(() => {
     if (id && user?.uid) {
@@ -167,7 +204,11 @@ const AuctionSummary = () => {
       const aiReport = teamDoc?.aiAnalysis;
       
       const playerCount = (teamDoc?.squad || []).length;
-      const isDisqualified = playerCount < 18;
+      const squadLimit = currentAuction?.squadLimit || 18;
+      const isDisqualified = playerCount < squadLimit;
+
+      const isGenerating = generatingTeams.has(teamDoc?.id) || isBulkGenerating;
+      const isFailed = failedTeams.has(teamDoc?.id);
 
       return {
         ...t,
@@ -175,9 +216,9 @@ const AuctionSummary = () => {
         totalScore: isDisqualified ? 0 : (aiReport?.score || 0),
         isDisqualified,
         playerCount,
-        insight: aiReport?.verdict || (generatingTeams.has(teamDoc?.id) ? "Strategic audit in progress..." : "Waiting for analysis..."),
-        analysis: aiReport?.analysis || "",
-        isGenerating: generatingTeams.has(teamDoc?.id),
+        insight: isDisqualified ? "INCOMPLETE SQUAD - Audit skipped due to disqualification." : (aiReport?.verdict || (isGenerating ? "Strategic audit in progress..." : isFailed ? (aiError || "Analysis failed. Rate limit exceeded.") : "Waiting for analysis...")),
+        analysis: isDisqualified ? "This franchise failed to secure the minimum required players for this auction format. As per IPL governing rules, the squad is deemed incomplete and disqualified from competition." : (aiReport?.analysis || (isFailed ? (aiError || "The AI analysis system encountered an error.") : "")),
+        isGenerating,
         aiStats: {
           batting: aiReport?.batting || 0,
           bowling: aiReport?.bowling || 0,
@@ -190,7 +231,7 @@ const AuctionSummary = () => {
       if (!a.isDisqualified && b.isDisqualified) return -1;
       return b.totalScore - a.totalScore;
     });
-  }, [roomTeams, currentAuction, generatingTeams]);
+  }, [roomTeams, currentAuction, generatingTeams, isBulkGenerating, failedTeams, aiError]);
 
   if (loading || !currentAuction) {
     return (
@@ -347,10 +388,19 @@ const AuctionSummary = () => {
                   <div>
                     <h2 className="text-3xl font-black uppercase ">AI Strategist Rankings</h2>
                     <p className="text-[10px] font-bold text-blue-400 uppercase tracking-[0.3em] flex items-center gap-2">
-                       Powered by OpenRouter • Tactical Audit System
+                       Powered by Puter AI • Tactical Audit System
                     </p>
                   </div>
                 </div>
+
+                {failedTeams.size > 0 && !isBulkGenerating && (
+                  <button
+                    onClick={retryAnalysis}
+                    className="relative z-10 px-6 py-3 bg-blue-600/20 border border-blue-500/30 rounded-2xl text-blue-400 font-black uppercase text-[10px] tracking-widest hover:bg-blue-600 hover:text-white transition-all flex items-center gap-3 shadow-lg active:scale-95"
+                  >
+                    <Activity size={16} /> Retry Strategic Audit
+                  </button>
+                )}
               </div>
 
               <div className="grid grid-cols-1 gap-4">
@@ -461,8 +511,8 @@ const AuctionSummary = () => {
                                          <Users size={14} className="text-gray-500" />
                                          <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Squad Size</span>
                                       </div>
-                                      <div className={`text-2xl font-black ${team.playerCount < 18 ? 'text-red-500' : 'text-white'}`}>
-                                         {team.playerCount}<span className="text-xs text-gray-700 ml-1">/ 25 Players</span>
+                                      <div className={`text-2xl font-black ${team.isDisqualified ? 'text-red-500' : 'text-white'}`}>
+                                         {team.playerCount}<span className="text-xs text-gray-700 ml-1">/ {currentAuction?.squadLimit || 25} Players</span>
                                       </div>
                                    </div>
 
@@ -546,7 +596,8 @@ const AuctionSummary = () => {
                 if (squad.length === 0) return null;
 
                 const osCount = squad.filter(p => p.country !== 'IND').length;
-                const totalSpent = 120 - (teamDoc?.budgetRemaining || 120);
+                const totalBudget = currentAuction?.settings?.budget || 120;
+                const totalSpent = totalBudget - (teamDoc?.budgetRemaining || totalBudget);
 
                 return (
                   <div key={t.id} className="group flex flex-col gap-2">

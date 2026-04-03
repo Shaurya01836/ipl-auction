@@ -211,6 +211,48 @@ const Lobby = () => {
             </div>
           </motion.section>
 
+          {/* Session Rules Card */}
+          <motion.section
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white/[0.03] border border-white/10 rounded-[2rem] p-6 backdrop-blur-3xl shadow-2xl relative overflow-hidden"
+          >
+            <div className="flex items-center gap-2 mb-6">
+               <ShieldAlert size={14} className="text-blue-500" />
+               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Battle Rules</h3>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-1">Auction Mode</span>
+                <span className="text-[11px] font-black text-white uppercase tracking-tight">
+                  {currentAuction?.auctionType === 'sprint5' ? '5-Player Sprint' : 
+                   currentAuction?.auctionType === 'sprint11' ? '11-Player Classic' : 
+                   'Mega Auction'}
+                </span>
+              </div>
+              <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-1">Initial Budget</span>
+                <span className="text-[11px] font-black text-yellow-500 uppercase tracking-tight">
+                  ₹{currentAuction?.settings?.budget || 120}.0 Cr
+                </span>
+              </div>
+              <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-1">Squad Capacity</span>
+                <span className="text-[11px] font-black text-blue-400 uppercase tracking-tight">
+                  {currentAuction?.squadLimit || 25} Players
+                </span>
+              </div>
+              <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-1">Overseas Quota</span>
+                <span className="text-[11px] font-black text-purple-400 uppercase tracking-tight">
+                  Max {currentAuction?.overseasLimit || 8}
+                </span>
+              </div>
+            </div>
+          </motion.section>
+
           {/* Franchise Selector */}
           <motion.section 
             initial={{ opacity: 0, x: -20 }}
