@@ -70,32 +70,32 @@ const AuctionSummary = () => {
           : "Rules: Standard T20 squad building (max 25 players).";
 
       const squadText = team.squadData.map(p => `${p.name} (${p.role}, ₹${p.bid}Cr)`).join(', ');
-      const prompt = `Act as a harsh, fiercely critical elite IPL Cricket Strategist and Analyst. 
-      Analyze the following squad for the team "${team.name}" for a ${matchFormat}.
+      const prompt = `You are a friendly IPL cricket expert. Analyze this squad for "${team.name}" in a ${matchFormat}.
       
       Squad: ${squadText}
       ${squadRules}
       
-      SCORING GUIDELINES:
-      - Be EXTREMELY STRICT with your 0-100 ratings. An average or flawed team MUST receive scores in the 50s, 60s, or 70s maximum.
+      SCORING (0-100):
+      - A decent team should get 65-75. A good team gets 75-85. An amazing team gets 85-95.
+      - Be fair and encouraging but honest. Don't be too harsh.
       ${isSprint5 
-        ? "- Focus on POWER HITTING (batting) and MULTI-OVER BOWLERS who can handle 2 overs in a short sprint." 
+        ? "- Check if they have good hitters and bowlers who can handle a short match." 
         : isSprint11 
-          ? "- Focus on the BALANCE of the Starting XI. Lack of bench depth is expected, so the 11 must be flawless." 
-          : "- True balance and depth is absolutely required for a score of 80+."
+          ? "- Check if the 11 players make a balanced playing XI with good batting, bowling and fielding options." 
+          : "- Check if the squad has enough depth, variety and balance for a full T20 season."
       }
-      - Only legendary, flawless squads deserve 90+. Do not inflate scores. Give 85+ ONLY if the team is genuinely stacked.
-      - Penalize heavily for a lack of recognized all-rounders, a weak domestic bowling core, or severely overspending on a handful of superstars.
+      - Point out strengths first, then mention any weak spots nicely.
+      - Keep your language simple and easy to understand. Write like you're explaining to a friend.
       
-      CRITICAL: You MUST return the response in the following JSON format ONLY:
+      IMPORTANT: Return ONLY this JSON format, nothing else:
       {
-        "analysis": "A brutally honest professional evaluation focusing on the ${isSprint5 ? '5-over sprint' : '20-over'} format${isSprint11 ? ' with a 11-player limit' : ''}.",
-        "batting": 70,
-        "bowling": 65,
-        "allRounder": 50,
-        "value": 60,
-        "score": 62,
-        "verdict": "A punchy final summary."
+        "analysis": "A short, friendly review of the squad in 2-3 simple sentences. ${isSprint5 ? 'Focus on the 5-over sprint format.' : isSprint11 ? 'Focus on the starting XI balance.' : 'Focus on overall squad depth.'}",
+        "batting": 75,
+        "bowling": 70,
+        "allRounder": 65,
+        "value": 70,
+        "score": 72,
+        "verdict": "One catchy line summing up the team."
       }
       
       Only return valid JSON. No other text.`;
