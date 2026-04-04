@@ -18,6 +18,24 @@ export const IPL_PLAYERS = [
     }
   },
   {
+    "id": "p_622",
+    "name": "Suryakumar Yadav",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 2,
+    "set": "Marquee Set 1",
+    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/108.png",
+    "stats": {
+      "matches": 165,
+      "runs": 4912,
+      "sr": 147.96,
+      "avg": 32.51,
+      "wickets": "-",
+      "econ": "-"
+    }
+  },
+  {
     "id": "p_101",
     "name": "Arshdeep Singh",
     "role": "Bowler",
@@ -1171,7 +1189,7 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_264",
-    "name": "Vaibhav Suryavanshi",
+    "name": "Vaibhav Sooryavanshi",
     "role": "Batsman",
     "type": "Indian",
     "country": "IND",
