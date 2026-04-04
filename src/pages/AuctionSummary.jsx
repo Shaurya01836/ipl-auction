@@ -29,6 +29,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { db, rtdb } from '../lib/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { ref, update as updateRtdb } from 'firebase/database';
+import FantasyDashboard from '../components/fantasy/FantasyDashboard';
 
 const AuctionSummary = () => {
   const { id } = useParams();
@@ -335,7 +336,8 @@ const AuctionSummary = () => {
             {[
               { id: 'squads', label: 'Team Squads', icon: Users },
               { id: 'leaderboard', label: 'Top Expensive', icon: Trophy },
-              { id: 'points', label: 'Points Table', icon: BarChart3 },
+              { id: 'fantasy', label: 'Fantasy League', icon: Zap },
+              { id: 'points', label: 'Strategic Audit', icon: BarChart3 },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -616,6 +618,21 @@ const AuctionSummary = () => {
                   );
                 })}
               </div>
+            </motion.section>
+          ) : activeTab === 'fantasy' ? (
+            <motion.section
+              key="fantasy"
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -30 }}
+              className="max-w-5xl mx-auto"
+            >
+              <FantasyDashboard 
+                auctionId={id} 
+                user={user} 
+                roomTeams={roomTeams}
+                currentAuction={currentAuction}
+              />
             </motion.section>
           ) : (
             <motion.section
