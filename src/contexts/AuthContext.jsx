@@ -8,11 +8,28 @@ import {
   signInAnonymously,
   updateProfile
 } from 'firebase/auth';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const AuthContext = createContext();
+import BrandLoader from '../components/BrandLoader';
+import PageLoader from '../components/PageLoader';
+
+const AuthContext = createContext({
+  user: null,
+  loading: true,
+  loginWithGoogle: async () => {},
+  loginAsGuest: async () => {},
+  logout: async () => {}
+});
+
 const googleProvider = new GoogleAuthProvider();
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    console.error('useAuth must be used within an AuthProvider');
+  }
+  return context || {};
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -21,7 +38,8 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
-      setLoading(false);
+      // Add a slight delay to make the transition feel more natural/premium
+      setTimeout(() => setLoading(false), 1500);
     });
 
     return unsubscribe;
@@ -51,7 +69,28 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      <AnimatePresence mode="wait">
+        {loading ? (
+          <motion.div
+            key="loader"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeIn" }}
+            className="fixed inset-0 z-[9999]"
+          >
+            {window.location.pathname === '/' ? <PageLoader /> : <BrandLoader />}
+          </motion.div>
+        ) : (
+          <motion.div
+            key="content"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AuthContext.Provider>
   );
 };

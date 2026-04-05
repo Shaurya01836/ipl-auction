@@ -7,6 +7,7 @@ import {
   get, 
   update as updateRtdb, 
   onValue, 
+  onDisconnect,
   runTransaction as runTransactionRtdb,
   push,
   serverTimestamp as serverTimestampRtdb
@@ -91,6 +92,7 @@ export const AuctionProvider = ({ children }) => {
       auctionType,
       squadLimit,
       overseasLimit,
+      createdAt: serverTimestamp(),
       players: [{
         id: userId,
         name: playerDetails.name,
@@ -117,7 +119,8 @@ export const AuctionProvider = ({ children }) => {
         teamName: teamDetails?.name || 'Unknown',
         budgetRemaining: budget,
         spent: 0,
-        squad: []
+        squad: [],
+        createdAt: serverTimestamp()
       });
     }
 
@@ -375,9 +378,9 @@ export const AuctionProvider = ({ children }) => {
     
     const updatedPlayer = {
       id: userId,
-      name: playerDetails.name,
-      team: playerDetails.team,
-      teamName: teamDetails?.name || 'Unknown',
+      name: playerDetails.name || (playerExists ? playerExists.name : 'Manager'),
+      team: playerDetails.team || (playerExists ? playerExists.team : ''),
+      teamName: teamDetails?.name || (playerExists ? playerExists.teamName : 'Unknown'),
       isHost: playerExists ? playerExists.isHost : false
     };
 
@@ -397,7 +400,8 @@ export const AuctionProvider = ({ children }) => {
         teamName: teamDetails?.name || 'Unknown',
         budgetRemaining: data.settings?.budget || 120.0,
         spent: 0,
-        squad: []
+        squad: [],
+        createdAt: serverTimestamp()
       };
       await setDoc(teamRef, teamDataToSet, { merge: true });
       await updateRtdb(ref(rtdb, `auctions/${roomId}/teams/${roomId}_${userId}`), teamDataToSet);
@@ -410,19 +414,30 @@ export const AuctionProvider = ({ children }) => {
       const roomRef = doc(db, 'auctions', roomId);
       const teamRef = doc(db, 'teams', `${roomId}_${playerObj.id}`);
       
-      // 1. Remove from players array in room
+      const roomSnap = await getDoc(roomRef);
+      if (!roomSnap.exists()) return;
+      const data = roomSnap.data();
+
+      // 1. Filter out the player and add to banned list
+      const updatedPlayers = (data.players || []).filter(p => p.id !== playerObj.id);
+      const updatedBanned = [...(data.bannedPlayers || []), playerObj.id];
+
       await updateDoc(roomRef, {
-        players: arrayRemove(playerObj),
-        bannedPlayers: arrayUnion(playerObj.id)
+        players: updatedPlayers,
+        bannedPlayers: updatedBanned
       });
-      // For RTDB we need to fetch the existing players and filter out the kicked one, or rely on client state
-      // We will perform a quick fetch for perfect sync
-      const snap = await getDoc(roomRef);
-      if (snap.exists()) {
-        await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { 
-          players: snap.data().players,
-          bannedPlayers: snap.data().bannedPlayers 
-        });
+
+      // 2. Update RTDB
+      await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { 
+        players: updatedPlayers,
+        bannedPlayers: updatedBanned 
+      });
+
+      // 3. Delete team document if exists
+      try {
+        await deleteDoc(teamRef);
+      } catch (err) {
+        console.warn("Could not delete team doc (might not exist):", err);
       }
 
       // 2. Add to messages collection
@@ -445,6 +460,8 @@ export const AuctionProvider = ({ children }) => {
 
   // Listen to current auction state live
   const joinAuction = useCallback((auctionId, userId) => {
+    if (!userId) return () => {};
+    
     setLoading(true);
     let auctionLoaded = false;
     let teamsLoaded = false;
@@ -461,25 +478,71 @@ export const AuctionProvider = ({ children }) => {
       if (loading) setLoading(false);
     }, 5000);
 
+    // ─── Real Presence Logic ───
+    // Track online status in RTDB
+    const myPresenceRef = ref(rtdb, `auctions/${auctionId}/presence/${userId}`);
+    const connectedRef = ref(rtdb, '.info/connected');
+    
+    // Set presence status on connect/disconnect
+    const unsubConnected = onValue(connectedRef, (snap) => {
+      if (snap.val() === true) {
+        // We're connected (or reconnected)! Do something and set onDisconnect
+        set(myPresenceRef, { 
+          online: true, 
+          lastSeen: serverTimestampRtdb() 
+        });
+        
+        // When I disconnect, update this to offline
+        onDisconnect(myPresenceRef).set({ 
+          online: false, 
+          lastSeen: serverTimestampRtdb() 
+        });
+      }
+    });
+
     let currentRoomData = null;
     let currentRtdbData = null;
+    let currentPresences = {};
 
     const checkAndSet = () => {
       if (currentRoomData) {
+        // Map presence data to players array
+        const playersWithPresence = (currentRoomData.players || []).map(p => ({
+          ...p,
+          isOnline: !!currentPresences[p.id]?.online,
+          lastSeen: currentPresences[p.id]?.lastSeen || null
+        }));
+
         setCurrentAuction({ 
           id: auctionId, 
           ...currentRoomData,
+          players: playersWithPresence,
           currentAuction: currentRtdbData || currentRoomData.currentAuction
         });
       }
     };
 
+    // Presence listener (all users' presence)
+    const presenceRef = ref(rtdb, `auctions/${auctionId}/presence`);
+    const unsubPresence = onValue(presenceRef, (snap) => {
+      currentPresences = snap.val() || {};
+      checkAndSet();
+    });
+
     let didFallbackFetch = false;
 
     const unsubAuction = onValue(ref(rtdb, `auctions/${auctionId}/room`), async (snapshot) => {
       if (snapshot.exists()) {
+        const data = snapshot.val();
+        
+        // PROACTIVE BAN CHECK: Kick user if they are banned
+        if (data.bannedPlayers && data.bannedPlayers.includes(userId)) {
+           window.location.href = '/?error=kicked';
+           return;
+        }
+
         auctionLoaded = true;
-        currentRoomData = snapshot.val();
+        currentRoomData = data;
         checkAndSet();
         checkLoaded();
       } else if (!didFallbackFetch) {
@@ -487,11 +550,16 @@ export const AuctionProvider = ({ children }) => {
         try {
           const fsDoc = await getDoc(doc(db, 'auctions', auctionId));
           if (fsDoc.exists()) {
+            const data = fsDoc.data();
+            if (data.bannedPlayers && data.bannedPlayers.includes(userId)) {
+               window.location.href = '/?error=kicked';
+               return;
+            }
             auctionLoaded = true;
-            currentRoomData = fsDoc.data();
+            currentRoomData = data;
             checkAndSet();
             checkLoaded();
-            await updateRtdb(ref(rtdb, `auctions/${auctionId}/room`), fsDoc.data());
+            await updateRtdb(ref(rtdb, `auctions/${auctionId}/room`), data);
           }
         } catch(e) { console.error("Fallback room fetch fail", e); }
       }
@@ -505,12 +573,11 @@ export const AuctionProvider = ({ children }) => {
       checkAndSet();
     });
 
-    let didTeamsFallback = false;
     const unsubTeams = onValue(ref(rtdb, `auctions/${auctionId}/teams`), async (snapshot) => {
       if (snapshot.exists()) {
         teamsLoaded = true;
         const teamsObj = snapshot.val();
-        const teamsArr = Object.keys(teamsObj).map(key => ({ id: key, ...teamsObj[key] }));
+        const teamsArr = Object.values(teamsObj).map(t => ({ id: `${auctionId}_${t.userId}`, ...t }));
         setRoomTeams(teamsArr);
         
         if (userId) {
@@ -574,16 +641,20 @@ export const AuctionProvider = ({ children }) => {
 
     return () => {
       clearTimeout(loadTimeout);
+      unsubConnected();
+      unsubPresence();
       unsubAuction();
       unsubLive();
       unsubTeams();
       unsubMessages();
+      // Set offline on component unmount
+      set(myPresenceRef, { online: false, lastSeen: serverTimestampRtdb() });
       setCurrentAuction(null);
       setTeam(null);
       setRoomTeams([]);
       setMessages([]);
     };
-  }, []);
+  }, [user]);
 
   const sendMessage = useCallback(async (roomId, text, type = 'text') => {
     if (!user) return;
@@ -601,6 +672,9 @@ export const AuctionProvider = ({ children }) => {
     if (!currentAuction) throw new Error("Auction not found!");
     if (!user) throw new Error("Please log in to bid!");
     if (!team) throw new Error("You must select a team in the lobby to participate!");
+    if (currentAuction.bannedPlayers && currentAuction.bannedPlayers.includes(user.uid)) {
+      throw new Error("You have been removed from this auction and cannot bid.");
+    }
     if (currentAuction.currentAuction?.status !== 'bidding') throw new Error("Auction is not accepting bids right now.");
     if (currentAuction.currentAuction?.highBidderId === user.uid) throw new Error("You are already the highest bidder!");
     

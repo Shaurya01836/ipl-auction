@@ -20,7 +20,6 @@ import {
   Trophy,
   Wallet,
   Wifi,
- 
   Globe,
   GitBranchPlusIcon
 } from 'lucide-react';
@@ -76,6 +75,16 @@ const LandingPage = () => {
   const { createRoom, joinRoomDb } = useAuction();
   const navigate = useNavigate();
 
+  // Check for URL errors (e.g., from being kicked)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('error') === 'kicked') {
+      setError('ACCESS DENIED: You have been removed from that hub by the host.');
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
   // Fetch auction history when user switches to history tab
   useEffect(() => {
     if (activeTab !== 'history' || !user?.uid) return;
@@ -92,6 +101,7 @@ const LandingPage = () => {
         const sessions = await Promise.all(
           snapshot.docs.map(async (teamDoc) => {
             const teamData = teamDoc.data();
+            
             // Fetch auction room metadata
             let auctionData = null;
             try {
@@ -102,6 +112,9 @@ const LandingPage = () => {
             } catch (e) {
               // Room may have been deleted
             }
+
+            const totalBudget = auctionData?.settings?.budget || 120;
+            const spent = totalBudget - (teamData.budgetRemaining || totalBudget);
             
             return {
               id: teamDoc.id,
@@ -109,7 +122,7 @@ const LandingPage = () => {
               teamId: teamData.teamId,
               teamName: teamData.teamName,
               budgetRemaining: teamData.budgetRemaining,
-              spent: 120 - (teamData.budgetRemaining || 120),
+              spent,
               squad: (teamData.squad || []).map(s => {
                 const pid = typeof s === 'string' ? s : s.id;
                 const bid = typeof s === 'string' ? 0 : s.bid;
@@ -117,16 +130,18 @@ const LandingPage = () => {
                 return { ...playerInfo, bid };
               }),
               status: auctionData?.status || 'unknown',
+              mode: auctionData?.auctionType || 'mega',
               playerCount: auctionData?.players?.length || 0,
-              createdAt: teamData.createdAt || null
+              createdAt: teamData.createdAt || auctionData?.createdAt || null
             };
           })
         );
         
-        // Sort by timestamp (latest first), then fallback to squad size
+        // Sorting: Strictly Time (latest first)
         sessions.sort((a, b) => {
-          if (a.createdAt && b.createdAt) return b.createdAt.seconds - a.createdAt.seconds;
-          return b.squad.length - a.squad.length;
+          const timeA = a.createdAt?.seconds || a.createdAt?._seconds || 0;
+          const timeB = b.createdAt?.seconds || b.createdAt?._seconds || 0;
+          return timeB - timeA;
         });
         setHistoryData(sessions);
       } catch (err) {
@@ -145,6 +160,7 @@ const LandingPage = () => {
     const totalAuctions = historyData.length;
     const totalPlayers = historyData.reduce((s, h) => s + h.squad.length, 0);
     const totalSpent = historyData.reduce((s, h) => s + h.spent, 0);
+
     const bestBuy = historyData
       .flatMap(h => h.squad)
       .sort((a, b) => (b.bid || 0) - (a.bid || 0))[0];
@@ -311,7 +327,7 @@ const LandingPage = () => {
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] transition-transform duration-500 group-hover/submit:scale-105" />
                   <div className="relative flex items-center justify-center gap-3 text-white font-black uppercase tracking-[0.2em] text-sm">
-                    {isSubmitting ? <Loader2 size={20} className="animate-spin" /> : <span>Start Auction Hub</span>}
+                    {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <span>Start Auction Hub</span>}
                     {!isSubmitting && <ChevronRight size={18} className="group-hover/submit:translate-x-1 transition-transform" />}
                   </div>
                 </button>
@@ -632,7 +648,7 @@ const LandingPage = () => {
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] transition-transform duration-500 group-hover/submit:scale-105" />
                   <div className="relative flex items-center justify-center gap-3 text-white font-black uppercase tracking-[0.2em] text-sm">
-                    {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Zap size={16} fill="white" /><span>Initialize Hub</span><ChevronRight size={18} className="group-hover/submit:translate-x-1 transition-transform" /></>}
+                    {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <><Zap size={16} fill="white" /><span>Initialize Hub</span><ChevronRight size={18} className="group-hover/submit:translate-x-1 transition-transform" /></>}
                   </div>
                 </button>
               </motion.form>
@@ -667,7 +683,7 @@ const LandingPage = () => {
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] transition-transform duration-500 group-hover/submit:scale-105" />
                   <div className="relative flex items-center justify-center gap-3 text-white font-black uppercase tracking-[0.2em] text-sm">
-                    {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><KeyRound size={16} /><span>Enter Portal</span><ChevronRight size={18} className="group-hover/submit:translate-x-1 transition-transform" /></>}
+                    {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <><KeyRound size={16} /><span>Enter Portal</span><ChevronRight size={18} className="group-hover/submit:translate-x-1 transition-transform" /></>}
                   </div>
                 </button>
               </motion.form>
@@ -685,7 +701,7 @@ const LandingPage = () => {
                 {historyLoading ? (
                   <div className="flex flex-col items-center justify-center py-16">
                     <Loader2 size={32} className="text-blue-500 animate-spin mb-4" />
-                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Loading Auction History...</p>
+                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mt-4">Syncing Database...</p>
                   </div>
                 ) : historyData.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -697,8 +713,6 @@ const LandingPage = () => {
                   </div>
                 ) : (
                   <>
-                   
-
                     {/* Session List */}
                     <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-1">
                       {historyData.map((session) => {
@@ -722,6 +736,13 @@ const LandingPage = () => {
                                   <h5 className="text-sm font-black uppercase tracking-tight">{teamMeta?.name || session.teamName}</h5>
                                   <div className="flex items-center gap-2 mt-0.5">
                                     <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest">Room: {session.roomId}</span>
+                                    <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded ${
+                                      session.mode === 'mega' ? 'bg-orange-500/10 text-orange-500' 
+                                      : session.mode === 'sprint11' ? 'bg-yellow-500/10 text-yellow-500' 
+                                      : 'bg-blue-500/10 text-blue-500'
+                                    }`}>
+                                      {session.mode}
+                                    </span>
                                     <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded ${
                                       session.status === 'completed' ? 'bg-green-500/10 text-green-500' 
                                       : session.status === 'active' ? 'bg-yellow-500/10 text-yellow-500' 
