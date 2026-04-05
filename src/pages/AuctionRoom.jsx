@@ -92,6 +92,7 @@ const AuctionRoom = () => {
 
    const [optimisticState, setOptimisticState] = useState(null);
    const [joiningTeam, setJoiningTeam] = useState(null);
+   const [banError, setBanError] = useState(null);
 
    // Clear optimistic state when DB catches up
    useEffect(() => {
@@ -219,11 +220,33 @@ const AuctionRoom = () => {
       return groups;
    }, [activeOverlayTab, filteredPlayers]);
 
-   useEffect(() => {
-      if (!id || !user?.uid) return;
-      const unsub = joinAuction(id, user.uid);
-      return () => unsub();
-   }, [id, user?.uid]);
+    useEffect(() => {
+       if (!id || !user?.uid) return;
+       const unsub = joinAuction(id, user.uid);
+       
+       const autoJoin = async () => {
+         try {
+           await joinRoomDb(id, user.uid, { name: user.displayName || 'Manager' });
+         } catch (e) {
+           console.error("Auto-join failed:", e);
+           if (e.message.includes("kicked")) {
+             setBanError(e.message);
+           }
+         }
+       };
+       autoJoin();
+
+       return () => unsub();
+    }, [id, user?.uid, user?.displayName, joinAuction, joinRoomDb]);
+
+    useEffect(() => {
+      if (currentAuction && user) {
+        const isUserBanned = currentAuction.bannedPlayers?.includes(user.uid);
+        if (isUserBanned) {
+          setBanError("You have been kicked from this room and cannot rejoin.");
+        }
+      }
+    }, [currentAuction, user]);
 
    const playBeep = (freq = 440, duration = 0.1) => {
       try {
@@ -435,7 +458,39 @@ const AuctionRoom = () => {
 
    if (currentAuction?.status === 'completed') return null;
 
-   if (loading) {
+   if (banError) {
+      return (
+         <div className="min-h-screen bg-[#050505] flex items-center justify-center p-6 font-primary text-white">
+            <motion.div 
+               initial={{ opacity: 0, scale: 0.9 }}
+               animate={{ opacity: 1, scale: 1 }}
+               className="max-w-md w-full bg-white/5 border border-white/10 p-12 rounded-[3.5rem] text-center backdrop-blur-3xl relative overflow-hidden"
+            >
+               <div className="absolute top-0 right-0 p-8 w-32 h-32 bg-red-500/10 rounded-full -mr-16 -mt-16 blur-3xl" />
+               <div className="absolute bottom-0 left-0 p-8 w-32 h-32 bg-red-500/10 rounded-full -ml-16 -mb-16 blur-3xl" />
+               
+               <div className="w-24 h-24 bg-red-500/10 border border-red-500/20 rounded-[2.5rem] flex items-center justify-center mx-auto mb-10 shadow-2xl shadow-red-500/20 relative group">
+                  <ShieldAlert size={48} className="text-red-500 group-hover:scale-110 transition-transform duration-500" />
+               </div>
+
+               <h1 className="text-4xl font-black mb-4 uppercase tracking-tighter text-red-500">BANNED FROM ROOM</h1>
+               <p className="text-gray-400 font-bold text-sm leading-relaxed uppercase tracking-widest mb-10 opacity-70">
+                  {banError}
+               </p>
+
+               <button 
+                  onClick={() => navigate('/')}
+                  className="w-full py-6 bg-white text-black font-black uppercase tracking-widest rounded-[2rem] hover:bg-gray-100 transition-all active:scale-95 flex items-center justify-center gap-3"
+               >
+                  <Home size={20} />
+                  BACK TO HOME
+               </button>
+            </motion.div>
+         </div>
+      );
+   }
+
+   if (loading || !user) {
       return (
          <div className="h-screen bg-[#050505] text-white flex flex-col items-center justify-center p-8 text-center">
             <div className="relative">
@@ -641,10 +696,10 @@ const AuctionRoom = () => {
 
                <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
                   {TEAMS.map((t, idx) => {
-                     const manager = currentAuction?.players?.find(p => p.team === t.id);
-                     const isMyTeam = manager?.id === user?.uid;
-                     const isSelected = selectedTeamId === manager?.id || (selectedTeamId === t.id && !manager);
                      const teamDoc = roomTeams.find(doc => doc.teamId === t.id);
+                     const manager = currentAuction?.players?.find(p => p.id === teamDoc?.userId);
+                     const isMyTeam = manager?.id === user?.uid;
+                     const isSelected = selectedTeamId === (manager?.id || t.id);
 
                      return (
                         <div key={idx} className="space-y-1">
@@ -657,9 +712,14 @@ const AuctionRoom = () => {
                                     <img src={t.logo} alt="" className="w-full h-full object-contain" />
                                  </div>
                                  <div className="overflow-hidden">
-                                    <h5 className="text-[11px] font-black truncate max-w-[120px]">{t.name}</h5>
-                                    <span className={`text-[8px] font-bold uppercase tracking-widest ${manager ? 'text-gray-400' : 'text-gray-600'}`}>
-                                       {manager ? `${manager.name} ${isMyTeam ? '(YOU)' : ''}` : 'Available'}
+                                    <div className="flex items-center gap-2">
+                                       <h5 className="text-[11px] font-black truncate max-w-[120px]">{t.name}</h5>
+                                       {manager && (
+                                          <div className={`w-1.5 h-1.5 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.5)] ${manager.isOnline ? 'bg-green-500 shadow-green-500/20 animate-pulse' : 'bg-gray-700'}`} />
+                                       )}
+                                    </div>
+                                    <span className={`text-[9px] font-black uppercase tracking-tight ${manager ? (manager.isOnline ? 'text-green-500' : 'text-gray-400') : 'text-gray-600'}`}>
+                                       {manager ? `Managed by: ${manager.name} ${isMyTeam ? '(YOU)' : ''}` : 'Franchise Available'}
                                     </span>
                                  </div>
                               </div>
