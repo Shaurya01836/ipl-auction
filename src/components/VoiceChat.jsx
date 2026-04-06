@@ -41,7 +41,7 @@ const VoiceChat = ({ channel, onEndCall, isModal = true, isVisible, onClose, ext
           await track.setEnabled(!externalIsMicMuted);
           await client.publish([track]);
         } catch (micError) {
-          console.warn("Microphone setup failed (can still listen):", micError);
+          // Microphone setup failed
         }
         
         setIsConnecting(false);
@@ -78,7 +78,7 @@ const VoiceChat = ({ channel, onEndCall, isModal = true, isVisible, onClose, ext
 
       } catch (error) {
         if (isMounted) {
-          console.error("Voice Chat Setup Failed:", error);
+          // Voice Chat Setup Failed
           setIsConnecting(false);
         }
       }
@@ -100,7 +100,7 @@ const VoiceChat = ({ channel, onEndCall, isModal = true, isVisible, onClose, ext
   // Sync external mute state (from headless UI) with actual audio track
   useEffect(() => {
     if (localAudioTrack && !isModal) {
-      localAudioTrack.setEnabled(!externalIsMicMuted).catch(console.error);
+      localAudioTrack.setEnabled(!externalIsMicMuted).catch(() => {});
       setIsMuted(externalIsMicMuted);
     }
   }, [externalIsMicMuted, localAudioTrack, isModal]);

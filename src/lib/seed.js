@@ -9,9 +9,9 @@ export const seedPlayers = async () => {
     for (const player of IPL_PLAYERS) {
       await setDoc(doc(playersRef, player.id), player);
     }
-    console.log("Players seeded successfully!");
+    // Players seeded successfully!
   } catch (error) {
-    console.error("Error seeding players:", error);
+    // Error seeding players
   }
 };
 
@@ -30,8 +30,8 @@ export const createInitialAuction = async (auctionId) => {
         status: "bidding"
       }
     });
-    console.log("Initial auction created!");
+    // Initial auction created!
   } catch (error) {
-    console.error("Error creating initial auction:", error);
+    // Error creating initial auction
   }
 };

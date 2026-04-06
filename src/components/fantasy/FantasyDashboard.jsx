@@ -129,7 +129,6 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
       }, { merge: true });
       setIsEditing(false);
     } catch (err) {
-      console.error(err);
       alert("Error saving squad.");
     } finally {
       setIsSaving(false);

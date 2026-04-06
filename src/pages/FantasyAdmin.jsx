@@ -86,7 +86,7 @@ const FantasyAdmin = () => {
 
       setTimeout(() => setMessage(null), 5000);
     } catch (err) {
-      console.error(err);
+      // Update failed
       setMessage({ type: 'error', text: 'Update failed. Check Firestore connection.' });
     } finally {
       setIsUpdating(false);

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAuction } from '../contexts/AuctionContext';
 import { db } from '../lib/firebase';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, documentId } from 'firebase/firestore';
 import { IPL_PLAYERS } from '../data/players';
 import { TEAMS } from '../data/teams';
 import { 
@@ -98,44 +98,49 @@ const LandingPage = () => {
         );
         const snapshot = await getDocs(teamsQuery);
         
-        const sessions = await Promise.all(
-          snapshot.docs.map(async (teamDoc) => {
-            const teamData = teamDoc.data();
-            
-            // Fetch auction room metadata
-            let auctionData = null;
-            try {
-              const auctionSnap = await getDoc(doc(db, 'auctions', teamData.auctionId));
-              if (auctionSnap.exists()) {
-                auctionData = auctionSnap.data();
-              }
-            } catch (e) {
-              // Room may have been deleted
-            }
+        // Extract unique auction IDs
+        const teamDocsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const auctionIds = [...new Set(teamDocsData.map(t => t.auctionId))].filter(Boolean);
 
-            const totalBudget = auctionData?.settings?.budget || 120;
-            const spent = totalBudget - (teamData.budgetRemaining || totalBudget);
-            
-            return {
-              id: teamDoc.id,
-              roomId: teamData.auctionId,
-              teamId: teamData.teamId,
-              teamName: teamData.teamName,
-              budgetRemaining: teamData.budgetRemaining,
-              spent,
-              squad: (teamData.squad || []).map(s => {
-                const pid = typeof s === 'string' ? s : s.id;
-                const bid = typeof s === 'string' ? 0 : s.bid;
-                const playerInfo = IPL_PLAYERS.find(p => p.id === pid);
-                return { ...playerInfo, bid };
-              }),
-              status: auctionData?.status || 'unknown',
-              mode: auctionData?.auctionType || 'mega',
-              playerCount: auctionData?.players?.length || 0,
-              createdAt: teamData.createdAt || auctionData?.createdAt || null
-            };
-          })
-        );
+        // Fetch auction room metadata in batches of 30
+        const auctionDataMap = {};
+        for (let i = 0; i < auctionIds.length; i += 30) {
+          const chunk = auctionIds.slice(i, i + 30);
+          const auctionsQuery = query(
+            collection(db, 'auctions'),
+            where(documentId(), 'in', chunk)
+          );
+          const auctionsSnap = await getDocs(auctionsQuery);
+          auctionsSnap.forEach(d => {
+            auctionDataMap[d.id] = d.data();
+          });
+        }
+
+        // Map team documents with pre-fetched auction metadata
+        const sessions = teamDocsData.map((teamData) => {
+          const auctionData = auctionDataMap[teamData.auctionId];
+          const totalBudget = auctionData?.settings?.budget || 120;
+          const spent = totalBudget - (teamData.budgetRemaining || totalBudget);
+          
+          return {
+            id: teamData.id,
+            roomId: teamData.auctionId,
+            teamId: teamData.teamId,
+            teamName: teamData.teamName,
+            budgetRemaining: teamData.budgetRemaining,
+            spent,
+            squad: (teamData.squad || []).map(s => {
+              const pid = typeof s === 'string' ? s : s.id;
+              const bid = typeof s === 'string' ? 0 : s.bid;
+              const playerInfo = IPL_PLAYERS.find(p => p.id === pid);
+              return { ...playerInfo, bid };
+            }),
+            status: auctionData?.status || 'unknown',
+            mode: auctionData?.auctionType || 'mega',
+            playerCount: auctionData?.players?.length || 0,
+            createdAt: teamData.createdAt || auctionData?.createdAt || null
+          };
+        });
         
         // Sorting: Strictly Time (latest first)
         sessions.sort((a, b) => {
@@ -144,9 +149,9 @@ const LandingPage = () => {
           return timeB - timeA;
         });
         setHistoryData(sessions);
-      } catch (err) {
-        console.error('Failed to fetch history:', err);
-      } finally {
+    } catch (err) {
+      // Failed to fetch history
+    } finally {
         setHistoryLoading(false);
       }
     };
@@ -171,7 +176,6 @@ const LandingPage = () => {
     try {
       await loginWithGoogle();
     } catch (err) {
-      console.error('Google sign-in failed:', err);
       setError('Sign-in failed. Please try again.');
       setTimeout(() => setError(''), 3000);
     }
@@ -187,7 +191,6 @@ const LandingPage = () => {
     try {
       await loginAsGuest(guestName.trim());
     } catch (err) {
-      console.error('Guest sign-in failed:', err);
       setError('Guest login failed. Ensure Anonymous Auth is enabled.');
       setTimeout(() => setError(''), 3000);
       setIsSubmitting(false);
@@ -216,7 +219,6 @@ const LandingPage = () => {
         navigate(`/lobby/${code}`);
       }
     } catch (error) {
-      console.error("Action failed:", error.code, error.message);
       setError(error.message || 'Failed to create/join room. Please try again.');
       setTimeout(() => setError(''), 3000);
       setIsSubmitting(false);
@@ -461,23 +463,28 @@ const LandingPage = () => {
         </div>
       </motion.div>
 
-      {/* Signed-in user badge */}
+      {/* Signed-in user badge with Test Crash */}
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="z-10 flex items-center gap-3 bg-white/5 border border-white/10 rounded-full px-4 py-2 mb-6 backdrop-blur-md"
+        className="z-10 flex flex-wrap items-center justify-center gap-3 bg-white/5 border border-white/10 rounded-3xl p-3 mb-6 backdrop-blur-md"
       >
-        {user.photoURL && (
-          <img src={user.photoURL} alt={user.displayName} className="w-7 h-7 rounded-full border border-white/20" />
-        )}
-        <span className="text-sm font-black text-white">{user.displayName}</span>
-        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-        <button 
-          onClick={logout}
-          className="ml-1 px-3 py-1 bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 rounded-lg text-[9px] font-black text-gray-400 hover:text-red-400 uppercase tracking-widest transition-all cursor-pointer"
-        >
-          Logout
-        </button>
+        <div className="flex items-center gap-3 px-2">
+          {user.photoURL && (
+            <img src={user.photoURL} alt={user.displayName} className="w-8 h-8 rounded-full border border-white/20" />
+          )}
+          <span className="text-sm font-black text-white">{user.displayName}</span>
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+        </div>
+        
+        <div className="flex gap-2">
+          <button 
+            onClick={logout}
+            className="px-4 py-2 bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 rounded-xl text-[9px] font-black text-gray-400 hover:text-red-400 uppercase tracking-widest transition-all cursor-pointer"
+          >
+            Logout
+          </button>
+        </div>
       </motion.div>
 
       {/* Main Action Card */}

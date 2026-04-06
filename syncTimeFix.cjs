@@ -20,7 +20,7 @@ const hookInsert = `  const [loading, setLoading] = useState(false);
           setTimeOffset(serverTime - localTime);
         }
       } catch (e) {
-        console.warn('Time sync failed, using local time');
+        // Time sync failed
       }
     };
     syncTime();
@@ -89,4 +89,4 @@ roomContent = roomContent.replace(
 
 fs.writeFileSync(roomFile, roomContent);
 
-console.log("Time Sync Updated");
+// Time Sync Updated
