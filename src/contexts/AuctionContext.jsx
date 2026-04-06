@@ -350,7 +350,7 @@ export const AuctionProvider = ({ children }) => {
         endingPlayerRef.current = false;
       }, waitTime);
     } catch (err) {
-      console.error("Error in endPlayerAuction:", err);
+      // Error in endPlayerAuction
       endingPlayerRef.current = false;
     }
   }, [getSyncedTime]);
@@ -437,7 +437,7 @@ export const AuctionProvider = ({ children }) => {
       try {
         await deleteDoc(teamRef);
       } catch (err) {
-        console.warn("Could not delete team doc (might not exist):", err);
+        // Could not delete team doc
       }
 
       // 2. Add to messages collection
@@ -454,7 +454,7 @@ export const AuctionProvider = ({ children }) => {
       await deleteDoc(teamRef);
       await set(ref(rtdb, `auctions/${roomId}/teams/${roomId}_${playerObj.id}`), null);
     } catch (err) {
-      console.error("Error kicking player:", err);
+      // Error kicking player
     }
   }, []);
 
@@ -561,10 +561,9 @@ export const AuctionProvider = ({ children }) => {
             checkLoaded();
             await updateRtdb(ref(rtdb, `auctions/${auctionId}/room`), data);
           }
-        } catch(e) { console.error("Fallback room fetch fail", e); }
+        } catch(e) { /* Fallback room fetch fail */ }
       }
     }, (error) => {
-      console.error("Auction RTDB error:", error);
       setLoading(false);
     });
 
@@ -615,10 +614,9 @@ export const AuctionProvider = ({ children }) => {
              setTeam(null);
              checkLoaded();
           }
-        } catch(e) { console.error("Fallback teams fetch fail", e); }
+        } catch(e) { /* Fallback teams fetch fail */ }
       }
     }, (error) => {
-      console.error("Teams RTDB error:", error);
       setLoading(false);
     });
 
@@ -635,7 +633,6 @@ export const AuctionProvider = ({ children }) => {
       }
       checkLoaded();
     }, (error) => {
-      console.error("Messages snapshot error:", error);
       setLoading(false);
     });
 

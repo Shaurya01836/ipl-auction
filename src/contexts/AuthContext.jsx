@@ -26,7 +26,7 @@ const googleProvider = new GoogleAuthProvider();
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    console.error('useAuth must be used within an AuthProvider');
+    // AuthProvider check failed
   }
   return context || {};
 };

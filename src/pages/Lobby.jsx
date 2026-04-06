@@ -61,7 +61,7 @@ const Lobby = () => {
         try {
           await joinRoomDb(id, user.uid, { name: user.displayName || 'Manager' });
         } catch (e) {
-          console.error("Auto-join failed:", e);
+          // Auto-join record if not present
           if (e.message.includes("kicked")) {
             setBanError(e.message);
           }
@@ -101,7 +101,6 @@ const Lobby = () => {
         navigate(`/auction/${id}`);
       } catch (error) {
         setIsStarting(false);
-        console.error("Failed to start auction:", error);
       }
     }
   };
@@ -125,7 +124,7 @@ const Lobby = () => {
     try {
       await loginWithGoogle();
     } catch (error) {
-      console.error("Login failed:", error);
+      // Login failed
     } finally {
       setIsUpdatingSettings(false);
     }
@@ -138,7 +137,7 @@ const Lobby = () => {
     try {
       await loginAsGuest(guestName);
     } catch (error) {
-       console.error("Guest login failed:", error);
+       // Guest login failed
     } finally {
       setIsUpdatingSettings(false);
     }

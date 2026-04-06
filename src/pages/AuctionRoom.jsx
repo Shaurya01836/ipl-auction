@@ -228,7 +228,7 @@ const AuctionRoom = () => {
          try {
            await joinRoomDb(id, user.uid, { name: user.displayName || 'Manager' });
          } catch (e) {
-           console.error("Auto-join failed:", e);
+           // Auto-join failed
            if (e.message.includes("kicked")) {
              setBanError(e.message);
            }
@@ -265,13 +265,15 @@ const AuctionRoom = () => {
          oscillator.start();
          oscillator.stop(audioCtx.currentTime + duration);
       } catch (e) {
-         console.warn('Audio context blocked or not supported');
+         // Audio context blocked or not supported
       }
    };
 
 
    useEffect(() => {
       const status = displayAuctionState?.status;
+      let rafId;
+
       if (status === 'sold') {
          const teamId = displayAuctionState?.highBidderTeamId;
 
@@ -313,7 +315,7 @@ const AuctionRoom = () => {
             });
 
             if (Date.now() < end) {
-               requestAnimationFrame(frame);
+               rafId = requestAnimationFrame(frame);
             }
          };
          frame();
@@ -324,7 +326,7 @@ const AuctionRoom = () => {
                audio.pause();
                audio.src = TEAM_SONGS[teamId.toLowerCase()];
                audio.volume = 0.4;
-               audio.play().catch(e => console.warn("Autoplay blocked", e));
+               audio.play().catch(e => {});
             }
          }
       } else if (status === 'unsold') {
@@ -340,7 +342,7 @@ const AuctionRoom = () => {
             audio.pause();
             audio.src = randomAudio;
             audio.volume = 0.5;
-            audio.play().catch(e => console.warn("Autoplay blocked", e));
+            audio.play().catch(e => {});
          }
       } else {
          const audio = celebrationAudioRef.current;
@@ -349,6 +351,15 @@ const AuctionRoom = () => {
             audio.currentTime = 0;
          }
       }
+
+      return () => {
+         if (rafId) cancelAnimationFrame(rafId);
+         const audio = celebrationAudioRef.current;
+         if (audio) {
+            audio.pause();
+            audio.currentTime = 0;
+         }
+      };
    }, [displayAuctionState?.status, displayAuctionState?.highBidderTeamId]);
 
 
@@ -516,7 +527,7 @@ const AuctionRoom = () => {
             team: selectedTeam.id
          });
       } catch (err) {
-         console.error('Join failed:', err);
+         // Join failed
          setJoiningTeam(null);
       }
    };
@@ -1174,7 +1185,7 @@ const SoldCard = ({ msg }) => {
          link.href = dataUrl;
          link.click();
       } catch (err) {
-         console.error('Error saving image:', err);
+         // Error saving image
       }
    };
 

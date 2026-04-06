@@ -34,14 +34,9 @@ try {
   const offsetRef = ref(rtdb, '.info/serverTimeOffset');
   onValue(offsetRef, (snap) => {
     _serverTimeOffset = snap.val() || 0;
-    console.log('[TimeSync] Firebase server offset:', _serverTimeOffset, 'ms');
-  }, (err) => {
-    console.warn('[TimeSync] RTDB offset listener error:', err.message);
-    console.warn('[TimeSync] ⚠️ Enable Realtime Database in Firebase Console for accurate timer sync.');
   });
 } catch (e) {
-  console.warn('[TimeSync] Could not init RTDB:', e.message);
-  console.warn('[TimeSync] ⚠️ Enable Realtime Database in Firebase Console for accurate timer sync.');
+  // RTDB sync skipped silently. We default to local machine clock.
 }
 
 /**
