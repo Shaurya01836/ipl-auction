@@ -18,6 +18,7 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
   const [userSquad, setUserSquad] = useState(null);
   const [allSquads, setAllSquads] = useState([]);
   const [playerPoints, setPlayerPoints] = useState({});
+  const [playerStats, setPlayerStats] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -44,18 +45,31 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
     return allSquads.map(squad => {
       const { userId, userName, teamId, players = [], captain, viceCaptain, impactPlayer } = squad;
 
-      // Calculate total fantasy points
+      // Calculate total fantasy points and total matches
       let totalPoints = 0;
+      let totalMatches = 0;
+
       players.forEach(pId => {
-        const pts = Number(playerPoints[pId]) || 0;
+        const stats = playerStats[pId] || { totalPoints: 0, matches: 0 };
+        const pts = stats.totalPoints || 0;
+        const matches = stats.matches || 0;
+        
         if (pId === captain) totalPoints += pts * 2;
         else if (pId === viceCaptain) totalPoints += pts * 1.5;
         else totalPoints += pts;
+
+        totalMatches += matches;
       });
-      // Impact player points (only if not already in the playing XI)
+
+      // Impact player points
       if (impactPlayer && !players.includes(impactPlayer)) {
-        totalPoints += Number(playerPoints[impactPlayer]) || 0;
+        const stats = playerStats[impactPlayer] || { totalPoints: 0, matches: 0 };
+        totalPoints += stats.totalPoints || 0;
+        totalMatches += stats.matches || 0;
       }
+
+      // Calculate average
+      const avgPoints = totalMatches > 0 ? (totalPoints / (players.length + (impactPlayer ? 1 : 0))) : 0;
 
       // Resolve manager name from multiple sources
       const auctionPlayer = auctionPlayers.find(p => p.uid === userId || p.team === teamId);
@@ -71,10 +85,11 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
         teamName: teamInfo?.name || teamId,
         teamLogo: teamInfo?.logo || null,
         totalPoints: Math.round(totalPoints),
+        avgPoints: Number(avgPoints.toFixed(1)),
         playerCount: players.length,
       };
-    }).sort((a, b) => b.totalPoints - a.totalPoints);
-  }, [allSquads, playerPoints, currentAuction, user]);
+    }).sort((a, b) => b.avgPoints - a.avgPoints);
+  }, [allSquads, playerStats, currentAuction, user]);
 
  
   useEffect(() => {
@@ -107,10 +122,19 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
       }
     });
 
+    // 4. Detailed player stats (totalPoints, matches)
+    const statsRef = doc(db, 'fantasyConfig', 'playerStats');
+    const unsubStats = onSnapshot(statsRef, (snap) => {
+      if (snap.exists()) {
+        setPlayerStats(snap.data());
+      }
+    });
+
     return () => {
       unsubMySquad();
       unsubAllSquads();
       unsubPP();
+      unsubStats();
     };
   }, [auctionId, user]);
 
@@ -175,12 +199,14 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
               <SquadSelector 
                 ownedPlayers={ownedPlayers} 
                 currentSquad={userSquad}
+                playerStats={playerStats}
                 onSave={handleSaveSquad}
               />
             ) : (
               <SquadPreview 
                 ownedPlayers={ownedPlayers}
                 currentSquad={userSquad}
+                playerStats={playerStats}
                 onEdit={() => setIsEditing(true)}
               />
             )}
@@ -258,35 +284,35 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
                           </div>
 
                           {/* Point Score Dash */}
-                          <div className="flex items-center gap-8">
-                             <div className="text-right border-r border-white/5 pr-8">
-                                <div className="flex flex-col items-center">
-                                   <span className={`text-4xl font-black leading-none ${
-                                     entry.totalPoints > 0 && idx < 3 ? 'text-[#ff5500] drop-shadow-[0_0_20px_rgba(255,85,0,0.3)]' : entry.totalPoints > 0 ? 'text-blue-500' : 'text-gray-700'
-                                   }`}>
-                                     {entry.totalPoints}
-                                   </span>
-                                   <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest mt-1">
-                                      {entry.totalPoints > 0 ? 'POINTS' : 'AWAITING'}
-                                   </span>
-                                </div>
-                             </div>
+                         <div className="flex items-center gap-8">
+                           <div className="text-right border-r border-white/5 pr-8">
+                              <div className="flex flex-col items-center">
+                                 <span className={`text-4xl font-black leading-none ${
+                                   entry.avgPoints > 0 && idx < 3 ? 'text-[#ff5500] drop-shadow-[0_0_20px_rgba(255,85,0,0.3)]' : entry.avgPoints > 0 ? 'text-blue-500' : 'text-gray-700'
+                                 }`}>
+                                   {entry.avgPoints}
+                                 </span>
+                                 <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest mt-1">
+                                    {entry.avgPoints > 0 ? 'AVG POINTS' : 'AWAITING'}
+                                 </span>
+                              </div>
+                           </div>
 
-                             {/* Rank Indicator Badge */}
-                             {idx < 3 && entry.totalPoints > 0 ? (
-                               <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg border ${
-                                 idx === 0 ? 'bg-yellow-500/20 border-yellow-500/30 text-yellow-500' :
-                                 idx === 1 ? 'bg-gray-400/20 border-gray-400/30 text-gray-300' :
-                                 'bg-orange-900/20 border-orange-800/30 text-orange-600'
-                               }`}>
-                                  <Trophy size={20} />
-                               </div>
-                             ) : (
-                               <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-gray-500 group-hover:text-white transition-colors">
-                                  <Trophy size={18} className="opacity-20" />
-                               </div>
-                             )}
-                          </div>
+                           {/* Rank Indicator Badge */}
+                           {idx < 3 && entry.avgPoints > 0 ? (
+                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg border ${
+                               idx === 0 ? 'bg-yellow-500/20 border-yellow-500/30 text-yellow-500' :
+                               idx === 1 ? 'bg-gray-400/20 border-gray-400/30 text-gray-300' :
+                               'bg-orange-900/20 border-orange-800/30 text-orange-600'
+                             }`}>
+                                <Trophy size={20} />
+                             </div>
+                           ) : (
+                             <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-gray-500 group-hover:text-white transition-colors">
+                                <Trophy size={18} className="opacity-20" />
+                             </div>
+                           )}
+                         </div>
                         </div>
                       </div>
                    </motion.div>

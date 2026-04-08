@@ -17,6 +17,7 @@ import { IPL_PLAYERS } from '../../data/players';
 const SquadPreview = ({ 
   ownedPlayers = [], 
   currentSquad = null, 
+  playerStats = {},
   onEdit, 
   isLocked = false 
 }) => {
@@ -113,13 +114,20 @@ const SquadPreview = ({
                        <div className="w-10 h-10 bg-black/60 rounded-lg border border-white/5 p-0.5 shrink-0 overflow-hidden relative">
                           <img src={player.image} alt="" className="w-full h-full object-cover " />
                        </div>
-                       <div className="min-w-0 flex-1">
+                        <div className="min-w-0 flex-1">
                           <h4 className="text-[11px] font-black uppercase tracking-tight truncate flex items-center gap-2">
                              {player.name}
                              {isCaptain && <Crown size={10} className="text-yellow-500" />}
                              {isVice && <Star size={10} className="text-purple-500" />}
                           </h4>
-                          <p className="text-[8px] font-bold text-gray-600 uppercase tracking-widest">{player.teamId} • {player.type}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-[8px] font-bold text-gray-600 uppercase tracking-widest">{player.teamId} • {player.type}</p>
+                            {playerStats[player.id] && (
+                              <span className="text-[8px] font-black text-blue-500 bg-blue-500/10 px-1.5 py-0.5 rounded leading-none">
+                                Avg: {(playerStats[player.id].totalPoints / playerStats[player.id].matches).toFixed(1)}
+                              </span>
+                            )}
+                          </div>
                        </div>
                        {(isCaptain || isVice) && (
                           <div className={`text-[8px] font-black uppercase px-2 py-0.5 rounded ${isCaptain ? 'bg-yellow-500/10 text-yellow-500' : 'bg-purple-500/10 text-purple-500'}`}>

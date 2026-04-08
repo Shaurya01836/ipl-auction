@@ -16,6 +16,7 @@ import {
 const SquadSelector = ({ 
   ownedPlayers = [], 
   currentSquad = null, 
+  playerStats = {},
   onSave, 
   isLocked = false,
   deadline = null 
@@ -196,7 +197,14 @@ const SquadSelector = ({
                         </div>
                         <div className="min-w-0 flex-1">
                           <h4 className="text-[12px] font-black uppercase tracking-tight truncate">{player.name}</h4>
-                          <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">{player.type} • {player.teamId}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">{player.teamId} • {player.type}</p>
+                            {playerStats[player.id] && (
+                              <span className="text-[8px] font-black text-orange-500 bg-orange-500/10 px-1.5 py-0.5 rounded leading-none">
+                                Avg: {(playerStats[player.id].totalPoints / playerStats[player.id].matches).toFixed(1)}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
 
