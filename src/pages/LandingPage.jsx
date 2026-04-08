@@ -24,6 +24,7 @@ import {
   GitBranchPlusIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import GithubStarButton from '../components/GithubStarButton';
 
 const LogoMarquee = () => {
   const marqueeTeams = [...TEAMS, ...TEAMS]; // Double for seamless loop
@@ -229,6 +230,7 @@ const LandingPage = () => {
   if (!user) {
     return (
       <div className="relative min-h-screen bg-[#050505] flex flex-col items-center justify-center py-10 px-4 font-sans text-white overflow-x-hidden">
+        <GithubStarButton />
         
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-orange-600/20 blur-[120px] rounded-full" />
@@ -427,6 +429,7 @@ const LandingPage = () => {
   // ─── Signed In: Show Create / Join / History ───
   return (
     <div className="relative min-h-screen bg-[#050505] flex flex-col items-center justify-center py-10 px-4 font-sans text-white overflow-x-hidden">
+      <GithubStarButton />
       
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-orange-600/20 blur-[120px] rounded-full" />
