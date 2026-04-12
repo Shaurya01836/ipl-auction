@@ -22,13 +22,34 @@ const loadEnv = () => {
         envContent.split('\n').forEach(line => {
             const [key, ...valueParts] = line.split('=');
             if (key && valueParts.length > 0) {
-                process.env[key.trim()] = valueParts.join('=').trim();
+                const trimmedKey = key.trim();
+                const trimmedVal = valueParts.join('=').trim();
+                if (trimmedKey && !process.env[trimmedKey]) {
+                    process.env[trimmedKey] = trimmedVal;
+                }
             }
         });
     }
 };
 
 loadEnv();
+
+const requiredEnv = [
+    'VITE_FIREBASE_API_KEY',
+    'VITE_FIREBASE_AUTH_DOMAIN',
+    'VITE_FIREBASE_PROJECT_ID',
+    'VITE_FIREBASE_STORAGE_BUCKET',
+    'VITE_FIREBASE_MESSAGING_SENDER_ID',
+    'VITE_FIREBASE_APP_ID'
+];
+
+requiredEnv.forEach(key => {
+    if (!process.env[key]) {
+        console.error(`[Critical] Environment variable ${key} is missing or empty.`);
+        console.error(`Please check your .env file or GitHub Secrets.`);
+        process.exit(1);
+    }
+});
 
 const firebaseConfig = {
     apiKey: process.env.VITE_FIREBASE_API_KEY,
@@ -173,35 +194,50 @@ async function runAutoUpdate() {
         await signInAnonymously(auth);
         console.log("[Auth] Signed in.");
 
-        console.log("[AutoUpdate] Initializing daily fetch...");
+        console.log("[AutoUpdate] Initializing catch-up fetch...");
 
-        const matches = await fetchFromAPI('currentMatches');
-        const finishedIPL = matches.filter(m => 
-            m.matchFinished && 
-            (m.name.toLowerCase().includes("ipl") || m.name.toLowerCase().includes("indian premier league"))
-        );
+        // 1. Get Status from DB
+        const statusRef = doc(db, "fantasyConfig", "autoUpdateStatus");
+        const statusSnap = await getDoc(statusRef);
+        let status = statusSnap.exists() ? statusSnap.data() : {
+            lastProcessedMatchDate: "2026-04-08T00:00:00Z", // User hint: fetched till 8/4/26
+            seriesId: "87c62aac-bc3c-4738-ab93-19da0690488f" // Found via discovery
+        };
 
-        if (finishedIPL.length === 0) {
-            console.log("[AutoUpdate] No new IPL matches finished.");
+        const lastDate = new Date(status.lastProcessedMatchDate);
+        console.log(`[AutoUpdate] Catching up on matches since: ${lastDate.toISOString()}`);
+
+        // 2. Fetch All Matches in Series
+        const seriesData = await fetchFromAPI(`series_info?id=${status.seriesId}`);
+        const matches = seriesData.matchList || [];
+
+        // 3. Filter for concluded matches after lastDate
+        const pendingMatches = matches
+            .filter(m => m.matchFinished && new Date(m.dateTimeGMT) > lastDate)
+            .sort((a, b) => new Date(a.dateTimeGMT) - new Date(b.dateTimeGMT));
+
+        if (pendingMatches.length === 0) {
+            console.log("[AutoUpdate] No new matches to process.");
             process.exit(0);
         }
 
-        const aggregatedPoints = {};
-        const playerStatsUpdates = {}; // { playerId: { totalPoints: X, matches: Y } }
+        console.log(`[AutoUpdate] Found ${pendingMatches.length} new matches to process.`);
+
         const batch = writeBatch(db);
+        let latestProcessedDate = lastDate;
 
-        const weekInfoSnap = await getDoc(doc(db, "matchSchedule", "current_match"));
-        const weekId = weekInfoSnap.exists() ? weekInfoSnap.data().weekId : "Week_Auto";
-
-        for (const match of finishedIPL) {
+        for (const match of pendingMatches) {
+            console.log(`[AutoUpdate] --> Processing ${match.name} (${match.dateTimeGMT})`);
+            
+            // Check if already processed (secondary safety)
             const sampleRef = doc(db, "playerMatchPoints", `p_1_${match.id}`); 
             const sampleSnap = await getDoc(sampleRef);
             if (sampleSnap.exists()) {
-                console.log(`[AutoUpdate] Skipping ${match.name} (already processed)`);
+                console.log(`[AutoUpdate] Skipping ${match.name} (ID record exists)`);
+                latestProcessedDate = new Date(match.dateTimeGMT);
                 continue;
             }
 
-            console.log(`[AutoUpdate] Processing ${match.name}`);
             const scorecard = await fetchFromAPI(`match_scorecard?id=${match.id}`);
             const info = await fetchFromAPI(`match_info?id=${match.id}`);
 
@@ -228,81 +264,85 @@ async function runAutoUpdate() {
                 });
             });
 
+            const matchAggregatedPoints = {};
+            const playerStatsUpdates = {};
+
             for (const [name, stats] of Object.entries(matchPlayers)) {
-                // Resolution: explicit map -> direct map -> name only map
                 const pId = explicitMappings[name] || playerMap[name]?.id;
                 const player = IPL_PLAYERS.find(p => p.id === pId);
 
                 if (player) {
                     const { points, details } = calculatePoints(stats, player.role);
-                    aggregatedPoints[player.id] = (aggregatedPoints[player.id] || 0) + points;
+                    matchAggregatedPoints[player.id] = points;
 
-                    // Track cumulative stats for average calculation
                     if (!playerStatsUpdates[player.id]) playerStatsUpdates[player.id] = { totalPoints: 0, matches: 0 };
                     playerStatsUpdates[player.id].totalPoints += points;
                     playerStatsUpdates[player.id].matches += 1;
 
-                    // Store granular match record
                     batch.set(doc(db, "playerMatchPoints", `${player.id}_${match.id}`), {
                         playerId: player.id, playerName: player.name, matchId: match.id,
                         matchName: match.name, points, details, updatedAt: new Date().toISOString()
                     }, { merge: true });
                 }
             }
+
+            // Update cumulative player stats for THIS match
+            const globalStatsRef = doc(db, 'fantasyConfig', 'playerStats');
+            const globalPointsRef = doc(db, 'fantasyConfig', 'playerPoints');
+            const statsInc = {};
+            const pointsInc = {};
+
+            for (const [pId, updates] of Object.entries(playerStatsUpdates)) {
+                statsInc[`${pId}.totalPoints`] = increment(updates.totalPoints);
+                statsInc[`${pId}.matches`] = increment(updates.matches);
+                pointsInc[pId] = increment(updates.totalPoints);
+            }
+            batch.update(globalStatsRef, statsInc);
+            batch.update(globalPointsRef, pointsInc);
+
+            // Update user squads and leaderboard for this match
+            // Note: In an auto-update, we typically update the weekly bucket.
+            const weekId = "Week_Catchup"; // Or dynamically deteremine
+
+            const squadsSnap = await getDocs(collection(db, "userSquads"));
+            for (const squadDoc of squadsSnap.docs) {
+                const squad = squadDoc.data();
+                const { userId, players, captain, viceCaptain, impactPlayer } = squad;
+                
+                let matchPointsGained = 0;
+                players.forEach(pId => {
+                    let pts = matchAggregatedPoints[pId] || 0;
+                    if (pId === captain) pts *= 2;
+                    else if (pId === viceCaptain) pts *= 1.5;
+                    matchPointsGained += pts;
+                });
+                if (impactPlayer) matchPointsGained += (matchAggregatedPoints[impactPlayer] || 0);
+
+                if (matchPointsGained !== 0) {
+                    const userRef = doc(db, "users", userId);
+                    batch.update(userRef, { totalFantasyPoints: increment(matchPointsGained) });
+
+                    batch.set(doc(db, "fantasyLeaderboard", `${weekId}_${userId}`), {
+                        userId, 
+                        userName: squad.userName || userId,
+                        weeklyPoints: increment(matchPointsGained),
+                        updatedAt: new Date().toISOString()
+                    }, { merge: true });
+                }
+            }
+
+            latestProcessedDate = new Date(match.dateTimeGMT);
         }
 
-        if (Object.keys(aggregatedPoints).length === 0) {
-            console.log("[AutoUpdate] No new points to process.");
-            process.exit(0);
-        }
-
-        // 1. Update overall playerStats (Total Points & Match Counts)
-        const globalStatsRef = doc(db, 'fantasyConfig', 'playerStats');
-        const incrementObj = {};
-        for (const [pId, updates] of Object.entries(playerStatsUpdates)) {
-            incrementObj[`${pId}.totalPoints`] = increment(updates.totalPoints);
-            incrementObj[`${pId}.matches`] = increment(updates.matches);
-        }
-        batch.update(globalStatsRef, incrementObj);
-
-        // 2. Update playerPoints (cumulative totals)
-        const globalPointsRef = doc(db, 'fantasyConfig', 'playerPoints');
-        const pointsIncObj = {};
-        for (const [pId, pts] of Object.entries(aggregatedPoints)) {
-            pointsIncObj[pId] = increment(pts);
-        }
-        batch.update(globalPointsRef, pointsIncObj);
-
-        // 3. Update weekly stats and leaderboards
-        await setDoc(doc(db, "matchStats", weekId), { weekId, calculatedPoints: aggregatedPoints, updatedAt: new Date().toISOString() }, { merge: true });
-
-        const squadsSnap = await getDocs(collection(db, "userSquads"));
-        for (const squadDoc of squadsSnap.docs) {
-            const squad = squadDoc.data();
-            const { userId, players, captain, viceCaptain, impactPlayer } = squad;
-            
-            let weeklyTotal = 0;
-            players.forEach(pId => {
-                let pts = aggregatedPoints[pId] || 0;
-                if (pId === captain) pts *= 2;
-                else if (pId === viceCaptain) pts *= 1.5;
-                weeklyTotal += pts;
-            });
-            if (impactPlayer) weeklyTotal += (aggregatedPoints[impactPlayer] || 0);
-
-            const userRef = doc(db, "users", userId);
-            const userSnap = await getDoc(userRef);
-            const currentTotal = userSnap.exists() ? (userSnap.data().totalFantasyPoints || 0) : 0;
-            const newTotal = currentTotal + weeklyTotal;
-
-            batch.set(doc(db, "fantasyLeaderboard", `${weekId}_${userId}`), {
-                ...squad, weekId, weeklyPoints: weeklyTotal, totalPoints: newTotal, updatedAt: new Date().toISOString()
-            }, { merge: true });
-            batch.set(userRef, { totalFantasyPoints: newTotal }, { merge: true });
-        }
+        // Update tracking status
+        batch.set(statusRef, {
+            lastProcessedMatchDate: latestProcessedDate.toISOString(),
+            seriesId: status.seriesId,
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
 
         await batch.commit();
-        console.log(`[Success] Auto-update completed for ${weekId}.`);
+        console.log(`[Success] Processed ${pendingMatches.length} matches. Last Date: ${latestProcessedDate.toISOString()}`);
         process.exit(0);
 
     } catch (error) {

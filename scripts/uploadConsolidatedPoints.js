@@ -18,13 +18,34 @@ const loadEnv = () => {
     envContent.split('\n').forEach(line => {
       const [key, ...valueParts] = line.split('=');
       if (key && valueParts.length > 0) {
-        process.env[key.trim()] = valueParts.join('=').trim();
+        const trimmedKey = key.trim();
+        const trimmedVal = valueParts.join('=').trim();
+        if (trimmedKey && !process.env[trimmedKey]) {
+          process.env[trimmedKey] = trimmedVal;
+        }
       }
     });
   }
 };
 
 loadEnv();
+
+const requiredEnv = [
+  'VITE_FIREBASE_API_KEY',
+  'VITE_FIREBASE_AUTH_DOMAIN',
+  'VITE_FIREBASE_PROJECT_ID',
+  'VITE_FIREBASE_STORAGE_BUCKET',
+  'VITE_FIREBASE_MESSAGING_SENDER_ID',
+  'VITE_FIREBASE_APP_ID'
+];
+
+requiredEnv.forEach(key => {
+  if (!process.env[key]) {
+    console.error(`[Critical] Environment variable ${key} is missing or empty.`);
+    console.error(`Please check your .env file or GitHub Secrets.`);
+    process.exit(1);
+  }
+});
 
 const firebaseConfig = {
   apiKey: process.env.VITE_FIREBASE_API_KEY,
