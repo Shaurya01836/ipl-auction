@@ -213,7 +213,13 @@ async function runAutoUpdate() {
 
         // 3. Filter for concluded matches after lastDate
         const pendingMatches = matches
-            .filter(m => m.matchFinished && new Date(m.dateTimeGMT) > lastDate)
+            .filter(m => {
+                const isFinished = m.matchFinished || 
+                                 m.status?.toLowerCase().includes("won") || 
+                                 m.status?.toLowerCase().includes("tied") || 
+                                 m.status?.toLowerCase().includes("no result");
+                return isFinished && new Date(m.dateTimeGMT) > lastDate;
+            })
             .sort((a, b) => new Date(a.dateTimeGMT) - new Date(b.dateTimeGMT));
 
         if (pendingMatches.length === 0) {
