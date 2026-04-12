@@ -65,7 +65,10 @@ const CRICKET_API_KEY = process.env.CRICKET_API_KEY || process.env.VITE_CRICKET_
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const normalizeName = (name) => name.toLowerCase().replace(/[^a-z0-9]/g, '');
+const normalizeName = (name) => {
+    if (!name) return '';
+    return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+};
 
 // Robust player mapping with specific fixes
 const playerMap = {};
@@ -249,21 +252,26 @@ async function runAutoUpdate() {
 
             const matchPlayers = {};
             const announced = new Set();
-            info.players?.forEach(p => announced.add(normalizeName(p.name)));
+            info.players?.forEach(p => {
+                if (p.name) announced.add(normalizeName(p.name));
+            });
 
             scorecard.scorecard?.forEach(inning => {
                 inning.batting?.forEach(b => {
+                    if (!b.name) return;
                     const name = normalizeName(b.name);
                     if (!matchPlayers[name]) matchPlayers[name] = {};
                     matchPlayers[name].batting = b;
                     if (announced.has(name)) matchPlayers[name].announced = true;
                 });
                 inning.bowling?.forEach(bw => {
+                    if (!bw.name) return;
                     const name = normalizeName(bw.name);
                     if (!matchPlayers[name]) matchPlayers[name] = {};
                     matchPlayers[name].bowling = bw;
                 });
                 inning.fielding?.forEach(f => {
+                    if (!f.name) return;
                     const name = normalizeName(f.name);
                     if (!matchPlayers[name]) matchPlayers[name] = {};
                     matchPlayers[name].fielding = f;
