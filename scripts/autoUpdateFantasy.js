@@ -213,6 +213,8 @@ async function runAutoUpdate() {
         // 2. Fetch All Matches in Series
         const seriesData = await fetchFromAPI(`series_info?id=${status.seriesId}`);
         const matches = seriesData.matchList || [];
+        console.log(`[Debug] Total matches in series: ${matches.length}`);
+
 
         // 3. Filter for concluded matches after lastDate
         const pendingMatches = matches
@@ -278,15 +280,22 @@ async function runAutoUpdate() {
                 });
             });
 
+            if (Object.keys(matchPlayers).length === 0) {
+                console.warn(`[Warning] No player data found in scorecard for ${match.name}`);
+            }
+
             const matchAggregatedPoints = {};
             const playerStatsUpdates = {};
+            let matchedCount = 0;
 
             for (const [name, stats] of Object.entries(matchPlayers)) {
                 const pId = explicitMappings[name] || playerMap[name]?.id;
                 const player = IPL_PLAYERS.find(p => p.id === pId);
 
                 if (player) {
+                    matchedCount++;
                     const { points, details } = calculatePoints(stats, player.role);
+
                     matchAggregatedPoints[player.id] = points;
 
                     if (!playerStatsUpdates[player.id]) playerStatsUpdates[player.id] = { totalPoints: 0, matches: 0 };
@@ -300,7 +309,10 @@ async function runAutoUpdate() {
                 }
             }
 
+            console.log(`[AutoUpdate] ${match.name}: Matched ${matchedCount}/${Object.keys(matchPlayers).length} players.`);
+
             // Update cumulative player stats for THIS match
+
             const globalStatsRef = doc(db, 'fantasyConfig', 'playerStats');
             const globalPointsRef = doc(db, 'fantasyConfig', 'playerPoints');
             const statsInc = {};
@@ -316,7 +328,8 @@ async function runAutoUpdate() {
 
             // Update user squads and leaderboard for this match
             // Note: In an auto-update, we typically update the weekly bucket.
-            const weekId = "Week_Catchup"; // Or dynamically deteremine
+            const weekId = "Week_Catchup"; 
+            console.log(`[AutoUpdate] Updating leaderboards for week: ${weekId}`);
 
             const squadsSnap = await getDocs(collection(db, "userSquads"));
             for (const squadDoc of squadsSnap.docs) {
@@ -355,8 +368,11 @@ async function runAutoUpdate() {
             updatedAt: new Date().toISOString()
         }, { merge: true });
 
+        console.log("[AutoUpdate] Committing batch...");
         await batch.commit();
+        console.log("[AutoUpdate] Batch committed successfully.");
         console.log(`[Success] Processed ${pendingMatches.length} matches. Last Date: ${latestProcessedDate.toISOString()}`);
+
         process.exit(0);
 
     } catch (error) {
