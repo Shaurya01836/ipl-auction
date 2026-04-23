@@ -217,22 +217,37 @@ async function runAutoUpdate() {
 
 
         // 3. Filter for concluded matches after lastDate
+        console.log(`[Debug] Filtering matches starting from ${lastDate.toISOString()}...`);
         const pendingMatches = matches
             .filter(m => {
+                const matchDate = new Date(m.dateTimeGMT);
                 const isFinished = m.matchFinished || 
                                  m.status?.toLowerCase().includes("won") || 
                                  m.status?.toLowerCase().includes("tied") || 
-                                 m.status?.toLowerCase().includes("no result");
-                return isFinished && new Date(m.dateTimeGMT) > lastDate;
+                                 m.status?.toLowerCase().includes("no result") ||
+                                 m.status?.toLowerCase().includes("result") ||
+                                 m.status?.toLowerCase().includes("abandoned");
+                
+                const isNewer = matchDate >= lastDate;
+                
+                if (isNewer && !isFinished) {
+                    console.log(`[Debug] Match found but not finished: ${m.name} (Status: ${m.status})`);
+                }
+                
+                return isFinished && isNewer;
             })
             .sort((a, b) => new Date(a.dateTimeGMT) - new Date(b.dateTimeGMT));
 
         if (pendingMatches.length === 0) {
-            console.log("[AutoUpdate] No new matches to process.");
+            console.log("[AutoUpdate] No new matches found after filtering.");
+            // Log the first few upcoming/recent matches for debugging
+            matches.slice(0, 5).forEach(m => {
+                console.log(`[Debug] Sample Match: ${m.name} | Date: ${m.dateTimeGMT} | Status: ${m.status} | Finished: ${m.matchFinished}`);
+            });
             process.exit(0);
         }
 
-        console.log(`[AutoUpdate] Found ${pendingMatches.length} new matches to process.`);
+        console.log(`[AutoUpdate] Found ${pendingMatches.length} pending matches to process.`);
 
         let latestProcessedDate = lastDate;
 
@@ -338,11 +353,15 @@ async function runAutoUpdate() {
             const statsInc = {};
             const pointsInc = {};
 
+            const now = new Date().toISOString();
             for (const [pId, updates] of Object.entries(playerStatsUpdates)) {
                 statsInc[`${pId}.totalPoints`] = increment(updates.totalPoints);
                 statsInc[`${pId}.matches`] = increment(updates.matches);
                 pointsInc[pId] = increment(updates.totalPoints);
             }
+            statsInc.updatedAt = now;
+            pointsInc.updatedAt = now;
+            
             matchBatch.update(globalStatsRef, statsInc);
             matchBatch.update(globalPointsRef, pointsInc);
 
