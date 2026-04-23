@@ -177,9 +177,22 @@ const calculatePoints = (stats, role) => {
 
 async function fetchFromAPI(endpoint) {
     if (!CRICKET_API_KEY) throw new Error("CRICKET_API_KEY is missing in environment.");
+    console.log(`[API] Fetching: ${endpoint}`);
     const url = `https://api.cricapi.com/v1/${endpoint}${endpoint.includes('?') ? '&' : '?'}apikey=${CRICKET_API_KEY}`;
     const res = await fetch(url);
     const data = await res.json();
+    
+    // Log hit stats if available
+    if (data.info) {
+        const { hitsToday, hitsLimit } = data.info;
+        const remaining = hitsLimit - hitsToday;
+        console.log(`[API Usage] Hits: ${hitsToday}/${hitsLimit} (Remaining today: ${remaining})`);
+        if (remaining <= 0) {
+            console.error("[Fatal] Daily API Limit Reached! Cannot process more matches today.");
+            process.exit(0);
+        }
+    }
+
     if (data.status !== "success") {
         if (data.reason?.toLowerCase().includes("hits today exceeded")) {
             console.error("[Fatal] API Rate Limit Exceeded.");
@@ -262,28 +275,38 @@ async function runAutoUpdate() {
                 continue;
             }
 
-            console.log(`[AutoUpdate] Fetching data for ${match.name}...`);
+            const now = new Date().toISOString();
             const scorecardData = await fetchFromAPI(`match_scorecard?id=${match.id}`);
             
-            // Try to find announced players in scorecard first to save an API call
-            let announcedPlayers = scorecardData.players || [];
+            // Extract from various possible player fields (resilient detection)
+            let pSource = scorecardData.players || scorecardData.playerList || [];
             
-            // If scorecard doesn't have players, we must fetch match_info
-            if (announcedPlayers.length === 0) {
-                console.log(`[Debug] No players list in scorecard, fetching match_info for ${match.name}`);
-                const info = await fetchFromAPI(`match_info?id=${match.id}`);
-                announcedPlayers = info.players || [];
-            } else {
-                console.log(`[Debug] Found players list in scorecard for ${match.name}`);
+            // Smart Fallback: If scorecard is empty, try match_info only if we have hits
+            // Note: fetchFromAPI already logs usage, we can check global hits state if we stored it
+            // but for now we'll just try if we didn't find any players in the main list
+            if (pSource.length === 0) {
+                console.log(`[Debug] No player list in scorecard. Trying match_info...`);
+                try {
+                    const infoData = await fetchFromAPI(`match_info?id=${match.id}`);
+                    pSource = infoData.players || infoData.playerList || [];
+                } catch (e) {
+                    console.warn(`[Warning] Could not fetch secondary info: ${e.message}`);
+                }
             }
 
             const matchPlayers = {};
             const announced = new Set();
-            announcedPlayers.forEach(p => {
-                if (p.name) announced.add(normalizeName(p.name));
+            pSource.forEach(p => {
+                const name = p.name || p.playerName;
+                if (name) announced.add(normalizeName(name));
             });
 
-            scorecardData.scorecard?.forEach(inning => {
+            const scorecard = scorecardData.scorecard || scorecardData.score || scorecardData.data?.scorecard;
+            scorecard?.forEach((inning, idx) => {
+                const bCount = inning.batting?.length || 0;
+                const bwCount = inning.bowling?.length || 0;
+                console.log(`[Debug] Processing Inning ${idx + 1}: ${bCount} bat, ${bwCount} bowl`);
+                
                 inning.batting?.forEach(b => {
                     if (!b.name) return;
                     const name = normalizeName(b.name);
@@ -314,13 +337,12 @@ async function runAutoUpdate() {
                 }
             });
 
-            if (Object.keys(matchPlayers).length === 0) {
-                console.warn(`[Warning] No player data found for ${match.name}`);
-            }
+            console.log(`[AutoUpdate] Match data parsed. Found ${Object.keys(matchPlayers).length} players total.`);
 
             const matchAggregatedPoints = {};
             const playerStatsUpdates = {};
             let matchedCount = 0;
+            let unmapped = [];
 
             const matchBatch = writeBatch(db);
 
@@ -331,7 +353,6 @@ async function runAutoUpdate() {
                 if (player) {
                     matchedCount++;
                     const { points, details } = calculatePoints(stats, player.role);
-
                     matchAggregatedPoints[player.id] = points;
 
                     if (!playerStatsUpdates[player.id]) playerStatsUpdates[player.id] = { totalPoints: 0, matches: 0 };
@@ -340,12 +361,21 @@ async function runAutoUpdate() {
 
                     matchBatch.set(doc(db, "playerMatchPoints", `${player.id}_${match.id}`), {
                         playerId: player.id, playerName: player.name, matchId: match.id,
-                        matchName: match.name, points, details, updatedAt: new Date().toISOString()
+                        matchName: match.name, points, details, updatedAt: now
                     }, { merge: true });
+                } else {
+                    unmapped.push(name);
                 }
             }
 
-            console.log(`[AutoUpdate] ${match.name}: Matched ${matchedCount}/${Object.keys(matchPlayers).length} players.`);
+            console.log(`[AutoUpdate] Summary: Matched ${matchedCount}/${Object.keys(matchPlayers).length} players.`);
+            if (unmapped.length > 0) {
+                console.log(`[Advice] To fix 0 players matched, add these to explicitMappings: "${unmapped.slice(0, 5).join('", "')}"`);
+            }
+
+            if (matchedCount === 0 && Object.keys(matchPlayers).length > 0) {
+                console.warn(`[Warning] Found players in API but NONE matched your database. Check normalizeName or explicitMappings.`);
+            }
 
             // Update cumulative player stats for THIS match
             const globalStatsRef = doc(db, 'fantasyConfig', 'playerStats');
