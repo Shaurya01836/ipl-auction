@@ -305,25 +305,27 @@ async function runAutoUpdate() {
             scorecard?.forEach((inning, idx) => {
                 const bCount = inning.batting?.length || 0;
                 const bwCount = inning.bowling?.length || 0;
-                console.log(`[Debug] Processing Inning ${idx + 1}: ${bCount} bat, ${bwCount} bowl`);
                 
                 inning.batting?.forEach(b => {
-                    if (!b.name) return;
-                    const name = normalizeName(b.name);
+                    const rawName = b.batsman?.name || b.name || b.player || b.playerName;
+                    if (!rawName) return;
+                    const name = normalizeName(rawName);
                     if (!matchPlayers[name]) matchPlayers[name] = {};
                     matchPlayers[name].batting = b;
                     if (announced.has(name)) matchPlayers[name].announced = true;
                 });
                 inning.bowling?.forEach(bw => {
-                    if (!bw.name) return;
-                    const name = normalizeName(bw.name);
+                    const rawName = bw.bowler?.name || bw.name || bw.player || bw.playerName;
+                    if (!rawName) return;
+                    const name = normalizeName(rawName);
                     if (!matchPlayers[name]) matchPlayers[name] = {};
                     matchPlayers[name].bowling = bw;
                     if (announced.has(name)) matchPlayers[name].announced = true;
                 });
                 inning.fielding?.forEach(f => {
-                    if (!f.name) return;
-                    const name = normalizeName(f.name);
+                    const rawName = f.catcher?.name || f.fielder?.name || f.fielder?.playerName || f.name || f.player || f.playerName;
+                    if (!rawName) return;
+                    const name = normalizeName(rawName);
                     if (!matchPlayers[name]) matchPlayers[name] = {};
                     matchPlayers[name].fielding = f;
                     if (announced.has(name)) matchPlayers[name].announced = true;
@@ -383,7 +385,6 @@ async function runAutoUpdate() {
             const statsInc = {};
             const pointsInc = {};
 
-            const now = new Date().toISOString();
             for (const [pId, updates] of Object.entries(playerStatsUpdates)) {
                 statsInc[`${pId}.totalPoints`] = increment(updates.totalPoints);
                 statsInc[`${pId}.matches`] = increment(updates.matches);
@@ -415,7 +416,9 @@ async function runAutoUpdate() {
 
                 if (matchPointsGained !== 0) {
                     const userRef = doc(db, "users", userId);
-                    matchBatch.update(userRef, { totalFantasyPoints: increment(matchPointsGained) });
+                    matchBatch.set(userRef, { 
+                        totalFantasyPoints: increment(matchPointsGained) 
+                    }, { merge: true });
 
                     matchBatch.set(doc(db, "fantasyLeaderboard", `${weekId}_${userId}`), {
                         userId, 
