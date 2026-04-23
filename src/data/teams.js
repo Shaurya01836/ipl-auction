@@ -4,14 +4,14 @@ export const TEAMS = [
     name: 'Mumbai Indians', 
     color: 'bg-blue-600', 
     textColor: 'text-white',
-    logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/c/cd/Mumbai_Indians_Logo.svg/1200px-Mumbai_Indians_Logo.svg.png'
+    logo: 'https://documents.iplt20.com/ipl/MI/Logos/Logooutline/MIoutline.png'
   },
   { 
     id: 'CSK', 
     name: 'Chennai Super Kings', 
     color: 'bg-yellow-400', 
     textColor: 'text-black',
-    logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/2/2b/Chennai_Super_Kings_Logo.svg/1200px-Chennai_Super_Kings_Logo.svg.png'
+    logo: 'https://documents.iplt20.com/ipl/CSK/logos/Logooutline/CSKoutline.png'
   },
   { 
     id: 'RCB', 
@@ -25,7 +25,7 @@ export const TEAMS = [
     name: 'Kolkata Knight Riders', 
     color: 'bg-purple-800', 
     textColor: 'text-white',
-    logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/4/4c/Kolkata_Knight_Riders_Logo.svg/1200px-Kolkata_Knight_Riders_Logo.svg.png'
+    logo: 'https://documents.iplt20.com/ipl/KKR/Logos/Logooutline/KKRoutline.png'
   },
   { 
     id: 'DC', 
@@ -39,7 +39,7 @@ export const TEAMS = [
     name: 'Punjab Kings', 
     color: 'bg-red-500', 
     textColor: 'text-white',
-    logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/d/d4/Punjab_Kings_Logo.svg/1200px-Punjab_Kings_Logo.svg.png'
+    logo: 'https://documents.iplt20.com/ipl/PBKS/Logos/Logooutline/PBKSoutline.png'
   },
   { 
     id: 'RR', 
@@ -60,7 +60,7 @@ export const TEAMS = [
     name: 'Gujarat Titans', 
     color: 'bg-slate-700', 
     textColor: 'text-white',
-    logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/0/09/Gujarat_Titans_Logo.svg/1200px-Gujarat_Titans_Logo.svg.png'
+    logo: 'https://documents.iplt20.com/ipl/GT/Logos/Logooutline/GToutline.png'
   },
   { 
     id: 'LSG', 
