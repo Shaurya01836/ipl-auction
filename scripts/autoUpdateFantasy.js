@@ -234,31 +234,41 @@ async function runAutoUpdate() {
 
         console.log(`[AutoUpdate] Found ${pendingMatches.length} new matches to process.`);
 
-        const batch = writeBatch(db);
         let latestProcessedDate = lastDate;
 
         for (const match of pendingMatches) {
             console.log(`[AutoUpdate] --> Processing ${match.name} (${match.dateTimeGMT})`);
             
-            // Check if already processed (secondary safety)
-            const sampleRef = doc(db, "playerMatchPoints", `p_1_${match.id}`); 
-            const sampleSnap = await getDoc(sampleRef);
-            if (sampleSnap.exists()) {
-                console.log(`[AutoUpdate] Skipping ${match.name} (ID record exists)`);
-                latestProcessedDate = new Date(match.dateTimeGMT);
+            // Check if match already processed via dedicated collection
+            const procRef = doc(db, "processedMatches", match.id);
+            const procSnap = await getDoc(procRef);
+            if (procSnap.exists()) {
+                console.log(`[AutoUpdate] Skipping ${match.name} (Match ID: ${match.id} already processed)`);
                 continue;
             }
 
-            const scorecard = await fetchFromAPI(`match_scorecard?id=${match.id}`);
-            const info = await fetchFromAPI(`match_info?id=${match.id}`);
+            console.log(`[AutoUpdate] Fetching data for ${match.name}...`);
+            const scorecardData = await fetchFromAPI(`match_scorecard?id=${match.id}`);
+            
+            // Try to find announced players in scorecard first to save an API call
+            let announcedPlayers = scorecardData.players || [];
+            
+            // If scorecard doesn't have players, we must fetch match_info
+            if (announcedPlayers.length === 0) {
+                console.log(`[Debug] No players list in scorecard, fetching match_info for ${match.name}`);
+                const info = await fetchFromAPI(`match_info?id=${match.id}`);
+                announcedPlayers = info.players || [];
+            } else {
+                console.log(`[Debug] Found players list in scorecard for ${match.name}`);
+            }
 
             const matchPlayers = {};
             const announced = new Set();
-            info.players?.forEach(p => {
+            announcedPlayers.forEach(p => {
                 if (p.name) announced.add(normalizeName(p.name));
             });
 
-            scorecard.scorecard?.forEach(inning => {
+            scorecardData.scorecard?.forEach(inning => {
                 inning.batting?.forEach(b => {
                     if (!b.name) return;
                     const name = normalizeName(b.name);
@@ -271,22 +281,33 @@ async function runAutoUpdate() {
                     const name = normalizeName(bw.name);
                     if (!matchPlayers[name]) matchPlayers[name] = {};
                     matchPlayers[name].bowling = bw;
+                    if (announced.has(name)) matchPlayers[name].announced = true;
                 });
                 inning.fielding?.forEach(f => {
                     if (!f.name) return;
                     const name = normalizeName(f.name);
                     if (!matchPlayers[name]) matchPlayers[name] = {};
                     matchPlayers[name].fielding = f;
+                    if (announced.has(name)) matchPlayers[name].announced = true;
                 });
             });
 
+            // Also include players who were announced but didn't bat/bowl/field
+            announced.forEach(name => {
+                if (!matchPlayers[name]) {
+                    matchPlayers[name] = { announced: true };
+                }
+            });
+
             if (Object.keys(matchPlayers).length === 0) {
-                console.warn(`[Warning] No player data found in scorecard for ${match.name}`);
+                console.warn(`[Warning] No player data found for ${match.name}`);
             }
 
             const matchAggregatedPoints = {};
             const playerStatsUpdates = {};
             let matchedCount = 0;
+
+            const matchBatch = writeBatch(db);
 
             for (const [name, stats] of Object.entries(matchPlayers)) {
                 const pId = explicitMappings[name] || playerMap[name]?.id;
@@ -302,7 +323,7 @@ async function runAutoUpdate() {
                     playerStatsUpdates[player.id].totalPoints += points;
                     playerStatsUpdates[player.id].matches += 1;
 
-                    batch.set(doc(db, "playerMatchPoints", `${player.id}_${match.id}`), {
+                    matchBatch.set(doc(db, "playerMatchPoints", `${player.id}_${match.id}`), {
                         playerId: player.id, playerName: player.name, matchId: match.id,
                         matchName: match.name, points, details, updatedAt: new Date().toISOString()
                     }, { merge: true });
@@ -312,7 +333,6 @@ async function runAutoUpdate() {
             console.log(`[AutoUpdate] ${match.name}: Matched ${matchedCount}/${Object.keys(matchPlayers).length} players.`);
 
             // Update cumulative player stats for THIS match
-
             const globalStatsRef = doc(db, 'fantasyConfig', 'playerStats');
             const globalPointsRef = doc(db, 'fantasyConfig', 'playerPoints');
             const statsInc = {};
@@ -323,14 +343,13 @@ async function runAutoUpdate() {
                 statsInc[`${pId}.matches`] = increment(updates.matches);
                 pointsInc[pId] = increment(updates.totalPoints);
             }
-            batch.update(globalStatsRef, statsInc);
-            batch.update(globalPointsRef, pointsInc);
+            matchBatch.update(globalStatsRef, statsInc);
+            matchBatch.update(globalPointsRef, pointsInc);
 
-            // Update user squads and leaderboard for this match
-            // Note: In an auto-update, we typically update the weekly bucket.
-            const weekId = "Week_Catchup"; 
-            console.log(`[AutoUpdate] Updating leaderboards for week: ${weekId}`);
-
+            // Update user squads and leaderboard
+            // Note: We use the actual week ID if possible, otherwise a generic one
+            const weekId = "Week_1"; // Default for current season
+            
             const squadsSnap = await getDocs(collection(db, "userSquads"));
             for (const squadDoc of squadsSnap.docs) {
                 const squad = squadDoc.data();
@@ -347,9 +366,9 @@ async function runAutoUpdate() {
 
                 if (matchPointsGained !== 0) {
                     const userRef = doc(db, "users", userId);
-                    batch.update(userRef, { totalFantasyPoints: increment(matchPointsGained) });
+                    matchBatch.update(userRef, { totalFantasyPoints: increment(matchPointsGained) });
 
-                    batch.set(doc(db, "fantasyLeaderboard", `${weekId}_${userId}`), {
+                    matchBatch.set(doc(db, "fantasyLeaderboard", `${weekId}_${userId}`), {
                         userId, 
                         userName: squad.userName || userId,
                         weeklyPoints: increment(matchPointsGained),
@@ -358,21 +377,25 @@ async function runAutoUpdate() {
                 }
             }
 
-            latestProcessedDate = new Date(match.dateTimeGMT);
+            // Mark match as processed
+            matchBatch.set(procRef, { 
+                matchId: match.id, 
+                name: match.name, 
+                processedAt: new Date().toISOString() 
+            });
+
+            // Update tracking status
+            matchBatch.set(statusRef, {
+                lastProcessedMatchDate: match.dateTimeGMT,
+                updatedAt: new Date().toISOString()
+            }, { merge: true });
+
+            console.log(`[AutoUpdate] Committing batch for ${match.name}...`);
+            await matchBatch.commit();
+            console.log(`[AutoUpdate] Match ${match.name} processed successfully.`);
         }
 
-        // Update tracking status
-        batch.set(statusRef, {
-            lastProcessedMatchDate: latestProcessedDate.toISOString(),
-            seriesId: status.seriesId,
-            updatedAt: new Date().toISOString()
-        }, { merge: true });
-
-        console.log("[AutoUpdate] Committing batch...");
-        await batch.commit();
-        console.log("[AutoUpdate] Batch committed successfully.");
-        console.log(`[Success] Processed ${pendingMatches.length} matches. Last Date: ${latestProcessedDate.toISOString()}`);
-
+        console.log(`[Success] Final Check: Processed ${pendingMatches.length} matches. Last Date: ${latestProcessedDate.toISOString()}`);
         process.exit(0);
 
     } catch (error) {
