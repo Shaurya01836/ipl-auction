@@ -276,7 +276,20 @@ async function runAutoUpdate() {
             }
 
             const now = new Date().toISOString();
-            const scorecardData = await fetchFromAPI(`match_scorecard?id=${match.id}`);
+            let scorecardData;
+            try {
+                scorecardData = await fetchFromAPI(`match_scorecard?id=${match.id}`);
+            } catch (err) {
+                console.error(`[Error] Failed to fetch scorecard for ${match.name}: ${err.message}`);
+                const statusLower = (match.status || "").toLowerCase();
+                if (statusLower.includes("abandoned") || statusLower.includes("no result")) {
+                    console.log(`[AutoUpdate] Match was abandoned/no result. Processing with available data.`);
+                    scorecardData = { scorecard: [], players: [] };
+                } else {
+                    console.log(`[AutoUpdate] Halting further match processing to preserve order. Will retry next time.`);
+                    break;
+                }
+            }
             
             // Extract from various possible player fields (resilient detection)
             let pSource = scorecardData.players || scorecardData.playerList || [];
