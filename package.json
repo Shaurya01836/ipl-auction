@@ -16,6 +16,7 @@
     "agora-rtc-sdk-ng": "^4.24.3",
     "canvas-confetti": "^1.9.4",
     "firebase": "^12.11.0",
+    "firebase-admin": "^13.10.0",
     "framer-motion": "^12.38.0",
     "html-to-image": "^1.11.13",
     "lucide-react": "^1.0.1",
