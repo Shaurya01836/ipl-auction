@@ -23,6 +23,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { TEAMS } from '../data/teams';
+import TextChat from '../components/TextChat';
 
 const Lobby = () => {
   const { id } = useParams();
@@ -559,6 +560,7 @@ const Lobby = () => {
             <div className="flex bg-white/[0.02] p-2 gap-2">
               {[
                 { id: 'players', icon: Users, label: `Crew` },
+                { id: 'chat', icon: MessageSquare, label: 'Chat' },
                 { id: 'settings', icon: SettingsIcon, label: 'Configs' }
               ].map(tab => (
                 <button
@@ -634,6 +636,18 @@ const Lobby = () => {
                         </motion.div>
                       );
                     })}
+                  </motion.div>
+                )}
+
+                {activeTab === 'chat' && (
+                  <motion.div 
+                    key="chat"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="h-[400px]"
+                  >
+                    <TextChat roomId={id} />
                   </motion.div>
                 )}
 
