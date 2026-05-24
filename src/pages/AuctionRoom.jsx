@@ -19,8 +19,6 @@ import {
    MessageSquare,
    Settings as SettingsIcon,
    Home,
-   Volume2,
-   VolumeX,
    Pause,
    XCircle,
    Rocket,
@@ -41,15 +39,11 @@ import {
    ShieldAlert,
    Trophy,
    Clock,
-   LogOut,
-   Mic,
-   MicOff,
-   PhoneOff
+   LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { TEAMS } from '../data/teams';
-import VoiceChat from '../components/VoiceChat';
 
 const AuctionRoom = () => {
    const { id } = useParams();
@@ -83,13 +77,10 @@ const AuctionRoom = () => {
    const [mobileTab, setMobileTab] = useState('arena'); // arena, squad, activity
    const [showSettings, setShowSettings] = useState(false);
    const [summaryTab, setSummaryTab] = useState('squads'); // squads, leaderboard
-   const [newTimerValue, setNewTimerValue] = useState(currentAuction?.settings?.bidTimer || 10);
    const [showParticipantsOverlay, setShowParticipantsOverlay] = useState(false);
-   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
-   const [isMicMuted, setIsMicMuted] = useState(false);
    const audioRef = useRef(null);
    const celebrationAudioRef = useRef(null);
-
+   const [newTimerValue, setNewTimerValue] = useState(currentAuction?.settings?.bidTimer || 10);
    const [optimisticState, setOptimisticState] = useState(null);
    const [joiningTeam, setJoiningTeam] = useState(null);
    const [banError, setBanError] = useState(null);
@@ -101,7 +92,8 @@ const AuctionRoom = () => {
       }
    }, [currentAuction?.currentAuction?.currentBid, optimisticState]);
 
-   const displayAuctionState = optimisticState || currentAuction?.currentAuction;
+    const displayAuctionState = optimisticState || currentAuction?.currentAuction;
+
 
    // Audio unlocker for mobile devices
    useEffect(() => {
@@ -156,6 +148,185 @@ const AuctionRoom = () => {
    const currentPlayer = useMemo(() => {
       return IPL_PLAYERS.find(p => p.id === displayAuctionState?.playerId) || IPL_PLAYERS[0];
    }, [displayAuctionState?.playerId]);
+
+   const [isTtsEnabled, setIsTtsEnabled] = useState(true);
+   const [ttsSpeed, setTtsSpeed] = useState(1.15); // configurable pace
+   const [ttsPitch, setTtsPitch] = useState(0.95); // configurable pitch
+   const [availableVoices, setAvailableVoices] = useState([]);
+   const [selectedVoiceName, setSelectedVoiceName] = useState('');
+
+   const lastSpokenPlayerIdRef = useRef(null);
+   const lastSpokenBidRef = useRef(0);
+   const lastSpokenStatusRef = useRef(null);
+
+   // Indian currency speech formatter
+   const formatPriceForSpeech = (amount) => {
+      if (amount === 0) return "zero crores";
+      if (amount < 1) {
+         const lakhs = Math.round(amount * 100);
+         return `${lakhs} lakh${lakhs !== 1 ? 's' : ''}`;
+      } else {
+         const crores = Math.floor(amount);
+         const lakhs = Math.round((amount - crores) * 100);
+         if (lakhs === 0) {
+            return `${crores} crore${crores !== 1 ? 's' : ''}`;
+         }
+         return `${crores} crore${crores !== 1 ? 's' : ''} ${lakhs} lakh${lakhs !== 1 ? 's' : ''}`;
+      }
+   };
+
+   // Curated list of high-quality, natural-sounding English voice patterns
+   const getVoiceLabel = (name) => {
+      const cleanName = name.toLowerCase();
+      if (cleanName.includes("neerja")) return "Neerja (Authentic Indian Female)";
+      if (cleanName.includes("rishi")) return "Rishi (Authentic Indian Male)";
+      if (cleanName.includes("daniel")) return "Daniel (Classic UK Auctioneer)";
+      if (cleanName.includes("david")) return "David (Professional Deep Male)";
+      if (cleanName.includes("samantha")) return "Samantha (Natural US Female)";
+      if (cleanName.includes("google us")) return "Google US English (Clear)";
+      if (cleanName.includes("google uk male")) return "Google UK Male (Sleek)";
+      if (cleanName.includes("google uk female")) return "Google UK Female (Refined)";
+      
+      return name.replace("Microsoft", "").replace("Google", "").replace("Desktop", "").replace("Natural", "").trim();
+   };
+
+   // Fetch browser English voices (curated list of 3-5 real-sounding voices)
+   useEffect(() => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+         const updateVoices = () => {
+            const voices = window.speechSynthesis.getVoices();
+            
+            const targetPatterns = [
+               "Google US English",
+               "Google UK English Male",
+               "Google UK English Female",
+               "Microsoft David",
+               "Neerja",
+               "Daniel",
+               "Samantha",
+               "Rishi"
+            ];
+
+            let filtered = voices.filter(v => 
+               v.lang.startsWith('en') && 
+               targetPatterns.some(pattern => v.name.toLowerCase().includes(pattern.toLowerCase()))
+            );
+
+            // Deduplicate by display label, preferring "Online" or "Natural" high-quality voice versions
+            const uniqueMap = new Map();
+            filtered.forEach(v => {
+               const label = getVoiceLabel(v.name);
+               const cleanName = v.name.toLowerCase();
+               if (!uniqueMap.has(label) || cleanName.includes("online") || cleanName.includes("natural")) {
+                  uniqueMap.set(label, v);
+               }
+            });
+            filtered = Array.from(uniqueMap.values());
+
+            if (filtered.length === 0) {
+               filtered = voices.filter(v => v.lang.startsWith('en')).slice(0, 5);
+            } else {
+               filtered = filtered.slice(0, 5);
+            }
+
+            setAvailableVoices(filtered);
+
+            // Set default selected voice
+            if (!selectedVoiceName && filtered.length > 0) {
+               const defaultVoice = filtered.find(v => 
+                  v.name.includes("Neerja") ||
+                  v.name.includes("Daniel") || 
+                  v.name.includes("Rishi") || 
+                  v.name.includes("David") || 
+                  v.name.includes("Google US")
+               ) || filtered[0];
+               
+               if (defaultVoice) {
+                  setSelectedVoiceName(defaultVoice.name);
+               }
+            }
+         };
+
+         updateVoices();
+         if (window.speechSynthesis.onvoiceschanged !== undefined) {
+            window.speechSynthesis.onvoiceschanged = updateVoices;
+         }
+      }
+   }, [selectedVoiceName]);
+
+   // Core Text-to-Speech call
+   const speak = (text) => {
+      if (!isTtsEnabled) return;
+      if ('speechSynthesis' in window) {
+         window.speechSynthesis.cancel(); // cancel any active or queued speech immediately
+         const utterance = new SpeechSynthesisUtterance(text);
+         const voices = window.speechSynthesis.getVoices();
+         
+         const chosenVoice = voices.find(v => v.name === selectedVoiceName) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+         if (chosenVoice) {
+            utterance.voice = chosenVoice;
+         }
+         utterance.rate = ttsSpeed;
+         utterance.pitch = ttsPitch;
+         window.speechSynthesis.speak(utterance);
+      }
+   };
+
+   // TTS Live Auctioneer Sync Hook
+   useEffect(() => {
+      if (currentAuction?.status !== 'active' || !displayAuctionState) return;
+
+      const playerId = displayAuctionState.playerId;
+      const currentBid = displayAuctionState.currentBid || 0;
+      const status = displayAuctionState.status;
+      const highBidderTeamId = displayAuctionState.highBidderTeamId;
+
+      if (status === 'bidding') {
+         // 1. A new player is up for bidding
+         if (lastSpokenPlayerIdRef.current !== playerId) {
+            lastSpokenPlayerIdRef.current = playerId;
+            lastSpokenBidRef.current = 0;
+            lastSpokenStatusRef.current = 'bidding';
+
+            const pName = currentPlayer?.name || "Player";
+            const pRole = currentPlayer?.role || "";
+            const baseValStr = formatPriceForSpeech(currentPlayer?.basePrice || 0);
+            speak(`Now up for auction: ${pName}, a ${pRole}. Starting with a base price of ${baseValStr}. Do I see a bid?`);
+         }
+         // 2. A new bid is placed
+         else if (currentBid > lastSpokenBidRef.current) {
+            lastSpokenBidRef.current = currentBid;
+            const teamName = TEAMS.find(t => t.id === highBidderTeamId)?.name || highBidderTeamId || "a manager";
+            const bidValStr = formatPriceForSpeech(currentBid);
+            
+            const bidPhrases = [
+               `We have ${bidValStr} from ${teamName}!`,
+               `Bid is ${bidValStr} with ${teamName}!`,
+               `${teamName} bids ${bidValStr}!`,
+               `${bidValStr} is bid by ${teamName}!`
+            ];
+            const chosenPhrase = bidPhrases[Math.floor(Math.random() * bidPhrases.length)];
+            speak(chosenPhrase);
+         }
+      } else if (status === 'sold' && lastSpokenStatusRef.current !== 'sold') {
+         lastSpokenStatusRef.current = 'sold';
+         const teamName = TEAMS.find(t => t.id === highBidderTeamId)?.name || highBidderTeamId || "a franchise";
+         const bidValStr = formatPriceForSpeech(currentBid);
+         speak(`Sold! ${currentPlayer?.name || "Player"} goes to ${teamName} for ${bidValStr}!`);
+      } else if (status === 'unsold' && lastSpokenStatusRef.current !== 'unsold') {
+         lastSpokenStatusRef.current = 'unsold';
+         speak(`${currentPlayer?.name || "Player"} is unsold.`);
+      }
+   }, [displayAuctionState?.playerId, displayAuctionState?.currentBid, displayAuctionState?.status, currentAuction?.status, isTtsEnabled, currentPlayer]);
+
+   // Cancel all TTS speech when room is unmounted (cleanup)
+   useEffect(() => {
+      return () => {
+         if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+         }
+      };
+   }, []);
 
    const isAdmin = currentAuction?.hostId === user?.uid;
    const currentBid = displayAuctionState?.currentBid || 0;
@@ -604,14 +775,7 @@ const AuctionRoom = () => {
 
    return (
       <div className="h-screen bg-[#050505] text-white font-sans flex flex-col items-center overflow-hidden">
-         {/* Voice Chat Component (Background Logic) */}
-         {isVoiceEnabled && (
-            <VoiceChat
-               channel={id}
-               isModal={false}
-               externalIsMicMuted={isMicMuted}
-            />
-         )}
+
 
          <header className="w-full min-h-14 h-auto md:h-14 bg-black/40 backdrop-blur-md border-b border-white/5 flex flex-col md:flex-row items-center justify-between px-4 md:px-6 py-3 md:py-0 z-50 gap-4 md:gap-0">
             <div className="flex items-center gap-3 md:gap-6">
@@ -660,32 +824,32 @@ const AuctionRoom = () => {
                      >
                         <Users size={12} fill="currentColor" /> <span className="hidden sm:inline">Participants</span>
                      </button>
-                     <button
-                        onClick={() => setShowSettings(true)}
-                        className={`p-1.5 rounded-lg border transition-all cursor-pointer ${showSettings ? 'bg-blue-600 text-white border-blue-400' : 'bg-white/5 text-gray-400 border-white/5'}`}
-                     >
-                        <SettingsIcon size={16} />
-                     </button>
                   </div>
                )}
                <div className="flex items-center gap-1.5 border-l border-white/10 pl-6 h-6">
                   <button
-                     onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
-                     className={`relative p-1.5 rounded-lg border transition-all cursor-pointer ${isVoiceEnabled ? 'bg-green-500/20 border-green-500/30 text-green-500 shadow-[0_0_10px_rgba(34,197,94,0.2)]' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}
-                     title={isVoiceEnabled ? "Leave Voice Channel" : "Join Voice Channel"}
+                     onClick={() => {
+                        const newTtsVal = !isTtsEnabled;
+                        setIsTtsEnabled(newTtsVal);
+                        if (!newTtsVal) {
+                           if ('speechSynthesis' in window) {
+                              window.speechSynthesis.cancel();
+                           }
+                        } else {
+                           speak("Voice Auctioneer enabled.");
+                        }
+                     }}
+                     className={`p-1.5 rounded-lg border transition-all cursor-pointer ${isTtsEnabled ? 'bg-yellow-500/20 border-yellow-500/30 text-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.2)]' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}
+                     title={isTtsEnabled ? "Mute Voice Auctioneer" : "Enable Voice Auctioneer"}
                   >
-                     {isVoiceEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-                     {isVoiceEnabled && (
-                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-[#050505] animate-pulse shadow-[0_0_8px_#22c55e]" />
-                     )}
+                     <Gavel size={16} />
                   </button>
                   <button
-                     onClick={() => setIsMicMuted(!isMicMuted)}
-                     disabled={!isVoiceEnabled}
-                     className={`p-1.5 rounded-lg border transition-all ${!isVoiceEnabled ? 'opacity-30 grayscale cursor-not-allowed hidden md:block' : isMicMuted ? 'bg-red-500/20 border-red-500/30 text-red-500 cursor-pointer' : 'bg-orange-500/20 border-orange-500/30 text-orange-500 hover:bg-orange-500/30 cursor-pointer shadow-[0_0_10px_rgba(249,115,22,0.2)]'}`}
-                     title={isMicMuted ? "Unmute Microphone" : "Mute Microphone"}
+                     onClick={() => setShowSettings(!showSettings)}
+                     className={`p-1.5 rounded-lg border transition-all cursor-pointer ${showSettings ? 'bg-blue-600 text-white border-blue-400' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                     title="Local & Room Settings"
                   >
-                     {isMicMuted ? <MicOff size={16} /> : <Mic size={16} />}
+                     <SettingsIcon size={16} />
                   </button>
                   <button onClick={() => navigate('/')} className="p-1.5 hover:bg-white/5 rounded-lg text-gray-400 cursor-pointer"><Home size={16} /></button>
                   <button onClick={logout} className="p-1.5 hover:bg-red-500/20 rounded-lg text-gray-400 hover:text-red-400 cursor-pointer transition-colors" title="Logout"><LogOut size={16} /></button>
@@ -1127,10 +1291,77 @@ const AuctionRoom = () => {
          <AnimatePresence>
             {showSettings && (
                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="fixed top-20 right-6 z-[100] bg-[#181818] border border-white/10 p-6 rounded-[2rem] shadow-2xl w-80 backdrop-blur-3xl">
-                  <div className="flex items-center justify-between mb-6"><h3 className="text-sm font-black text-gray-400 uppercase tracking-widest">Auction Settings</h3><button onClick={() => setShowSettings(false)} className="hover:text-white transition-colors"><X size={16} /></button></div>
+                  <div className="flex items-center justify-between mb-6"><h3 className="text-sm font-black text-gray-400 uppercase tracking-widest">Settings</h3><button onClick={() => setShowSettings(false)} className="hover:text-white transition-colors"><X size={16} /></button></div>
                   <div className="space-y-6">
-                     <div><label className="block text-[10px] font-black text-blue-500 uppercase tracking-widest mb-3">Player Bid Countdown</label><div className="flex items-center gap-4"><input type="range" min="5" max="60" value={newTimerValue} onChange={(e) => setNewTimerValue(parseInt(e.target.value))} className="flex-1 accent-blue-500" /><span className="text-2xl font-black  w-12 text-center">{newTimerValue}s</span></div></div>
-                     <button onClick={async () => { await updateRoomSettings(id, { ...currentAuction.settings, bidTimer: newTimerValue }); setShowSettings(false); }} className="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20">Update Settings</button>
+                     {/* Host settings: Bid Timer */}
+                     {isAdmin && (
+                        <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl">
+                           <label className="block text-[9px] font-black text-blue-500 uppercase tracking-widest mb-3">Bid Countdown (Host)</label>
+                           <div className="flex items-center gap-4">
+                              <input type="range" min="5" max="60" value={newTimerValue} onChange={(e) => setNewTimerValue(parseInt(e.target.value))} className="flex-1 accent-blue-500" />
+                              <span className="text-xl font-black w-10 text-center">{newTimerValue}s</span>
+                           </div>
+                           <button onClick={async () => { await updateRoomSettings(id, { ...currentAuction.settings, bidTimer: newTimerValue }); }} className="w-full bg-blue-600 hover:bg-blue-500 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all mt-3">Sync Countdown</button>
+                        </div>
+                     )}
+
+                     {/* Client Local settings: TTS */}
+                     <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl">
+                        <h4 className="text-[9px] font-black text-yellow-500 uppercase tracking-widest mb-4">Voice Auctioneer (Local)</h4>
+                        
+                        {/* TTS Speed */}
+                        <div className="mb-4">
+                           <label className="block text-[8px] font-bold text-gray-500 uppercase tracking-widest mb-2">Speaking Pace</label>
+                           <div className="flex items-center gap-3">
+                              <input type="range" min="0.70" max="1.80" step="0.05" value={ttsSpeed} onChange={(e) => setTtsSpeed(parseFloat(e.target.value))} className="flex-1 accent-yellow-500" />
+                              <span className="text-xs font-black w-12 text-center text-yellow-500">{ttsSpeed.toFixed(2)}x</span>
+                           </div>
+                        </div>
+
+                        {/* TTS Pitch */}
+                        <div className="mb-4">
+                           <label className="block text-[8px] font-bold text-gray-500 uppercase tracking-widest mb-2">Vocal Pitch</label>
+                           <div className="flex items-center gap-3">
+                              <input type="range" min="0.60" max="1.40" step="0.05" value={ttsPitch} onChange={(e) => setTtsPitch(parseFloat(e.target.value))} className="flex-1 accent-yellow-500" />
+                              <span className="text-xs font-black w-12 text-center text-yellow-500">{ttsPitch.toFixed(2)}</span>
+                           </div>
+                        </div>
+
+                        {/* Voice Selector */}
+                        {availableVoices.length > 0 && (
+                           <div>
+                              <label className="block text-[8px] font-bold text-gray-500 uppercase tracking-widest mb-2">Select Voice</label>
+                              <select 
+                                 value={selectedVoiceName} 
+                                 onChange={(e) => {
+                                    const newVoiceName = e.target.value;
+                                    setSelectedVoiceName(newVoiceName);
+                                    
+                                    // Brief preview of the selected voice
+                                    setTimeout(() => {
+                                       if ('speechSynthesis' in window) {
+                                          window.speechSynthesis.cancel();
+                                          const previewUtterance = new SpeechSynthesisUtterance("Voice selected.");
+                                          const voices = window.speechSynthesis.getVoices();
+                                          const vMatch = voices.find(v => v.name === newVoiceName);
+                                          if (vMatch) previewUtterance.voice = vMatch;
+                                          previewUtterance.rate = ttsSpeed;
+                                          previewUtterance.pitch = ttsPitch;
+                                          window.speechSynthesis.speak(previewUtterance);
+                                       }
+                                    }, 100);
+                                 }}
+                                 className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-[10px] text-gray-300 font-semibold focus:outline-none focus:border-yellow-500/50 transition-colors"
+                              >
+                                 {availableVoices.map(v => (
+                                    <option key={v.name} value={v.name} className="bg-[#181818] text-white">
+                                       {getVoiceLabel(v.name)}
+                                    </option>
+                                 ))}
+                              </select>
+                           </div>
+                        )}
+                     </div>
                   </div>
                </motion.div>
             )}
