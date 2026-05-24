@@ -1,0 +1,43 @@
+{
+  "rules": {
+    /* 
+      IPL Auction - Realtime Database Security Rules
+      
+      These rules secure the Realtime Database against unauthorized public access,
+      preventing the "insecure rules" warning from Firebase, while maintaining
+      full real-time functionality for authenticated auction players and guests.
+    */
+    ".read": false,
+    ".write": false,
+
+    "auctions": {
+      "$roomId": {
+        // Any authenticated user (including anonymous guest sign-ins) can read the auction state
+        ".read": "auth != null",
+
+        "room": {
+          // Any authenticated user can write/sync the room state
+          ".write": "auth != null"
+        },
+        "live": {
+          // Any authenticated user can write/sync the live bidding state
+          ".write": "auth != null"
+        },
+        "messages": {
+          // Any authenticated user can write to the messages sub-path for chat synchronization
+          ".write": "auth != null"
+        },
+        "teams": {
+          // Any authenticated user can write/sync team roster data
+          ".write": "auth != null"
+        },
+        "presence": {
+          "$userId": {
+            // Ensure that presence writes are strictly authorized to the user themselves
+            ".write": "auth != null && auth.uid == $userId"
+          }
+        }
+      }
+    }
+  }
+}
