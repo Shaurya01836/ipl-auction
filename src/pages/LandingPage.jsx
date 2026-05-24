@@ -192,6 +192,7 @@ const LandingPage = () => {
     setIsSubmitting(true);
     try {
       await loginAsGuest(guestName.trim());
+      setIsSubmitting(false);
     } catch (err) {
       setError('Guest login failed. Ensure Anonymous Auth is enabled.');
       setTimeout(() => setError(''), 3000);

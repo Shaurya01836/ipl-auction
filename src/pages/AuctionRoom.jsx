@@ -44,6 +44,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { TEAMS } from '../data/teams';
+import TextChat from '../components/TextChat';
 
 const AuctionRoom = () => {
    const { id } = useParams();
@@ -78,6 +79,7 @@ const AuctionRoom = () => {
    const [showSettings, setShowSettings] = useState(false);
    const [summaryTab, setSummaryTab] = useState('squads'); // squads, leaderboard
    const [showParticipantsOverlay, setShowParticipantsOverlay] = useState(false);
+   const [sidebarTab, setSidebarTab] = useState('activity'); // activity or chat
    const audioRef = useRef(null);
    const celebrationAudioRef = useRef(null);
    const [newTimerValue, setNewTimerValue] = useState(currentAuction?.settings?.bidTimer || 10);
@@ -1093,85 +1095,129 @@ const AuctionRoom = () => {
             </main>
 
             <aside className={`${mobileTab === 'activity' ? 'flex' : 'hidden'} md:flex w-full md:w-96 bg-black/40 border-l border-white/5 flex-col h-full md:max-h-[calc(100vh-3.5rem)]`}>
-               <div className="p-6 border-b border-white/5 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                     <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Live Activity</h4>
-                     <span className="text-[8px] font-black text-gray-600 bg-white/5 px-1.5 py-0.5 rounded">{messages.filter(m => m.type === 'log' || m.type === 'sold_card').filter(m => !m.text.includes('New bid:')).length}</span>
-                  </div>
-                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+               {/* Premium Tabs Header */}
+               <div className="flex bg-white/[0.02] border-b border-white/5 p-2 gap-2 shrink-0">
+                  <button
+                     onClick={() => setSidebarTab('activity')}
+                     className={`flex-1 py-3 flex items-center justify-center gap-2 transition-all rounded-xl cursor-pointer ${
+                        sidebarTab === 'activity'
+                           ? 'bg-white/5 text-yellow-500 border border-white/10 shadow-inner font-black'
+                           : 'text-gray-500 hover:text-gray-400 hover:bg-white/[0.01] font-bold'
+                     }`}
+                  >
+                     <History size={14} />
+                     <span className="text-[10px] uppercase tracking-widest">Live Activity</span>
+                  </button>
+                  <button
+                     onClick={() => setSidebarTab('chat')}
+                     className={`flex-1 py-3 flex items-center justify-center gap-2 transition-all rounded-xl cursor-pointer ${
+                        sidebarTab === 'chat'
+                           ? 'bg-white/5 text-yellow-500 border border-white/10 shadow-inner font-black'
+                           : 'text-gray-500 hover:text-gray-400 hover:bg-white/[0.01] font-bold'
+                     }`}
+                  >
+                     <MessageSquare size={14} />
+                     <span className="text-[10px] uppercase tracking-widest">Chat</span>
+                  </button>
                </div>
-               <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar space-y-3">
-                  {[...messages.filter(m => m.type === 'log' || m.type === 'sold_card').filter(m => !m.text.includes('New bid:'))].reverse().map((msg, index) => {
-                     if (msg.type === 'sold_card') return <SoldCard key={msg.id || index} msg={msg} />;
 
-                     // Determine icon and color based on message content
-                     const text = msg.text || '';
-                     let icon = <MessageSquare size={14} />;
-                     let borderColor = 'border-white/5';
-                     let iconBg = 'bg-white/5 text-gray-500';
-
-                     if (text.includes('SOLD')) {
-                        icon = <Gavel size={14} />;
-                        borderColor = 'border-green-500/20';
-                        iconBg = 'bg-green-500/10 text-green-500';
-                     } else if (text.includes('UNSOLD')) {
-                        icon = <XCircle size={14} />;
-                        borderColor = 'border-red-500/20';
-                        iconBg = 'bg-red-500/10 text-red-500';
-                     } else if (text.includes('PAUSED')) {
-                        icon = <Pause size={14} />;
-                        borderColor = 'border-yellow-500/20';
-                        iconBg = 'bg-yellow-500/10 text-yellow-500';
-                     } else if (text.includes('RESUMED')) {
-                        icon = <Play size={14} />;
-                        borderColor = 'border-blue-500/20';
-                        iconBg = 'bg-blue-500/10 text-blue-500';
-                     } else if (text.includes('started') || text.includes('COMPLETED')) {
-                        icon = <Rocket size={14} />;
-                        borderColor = 'border-orange-500/20';
-                        iconBg = 'bg-orange-500/10 text-orange-500';
-                     } else if (text.includes('removed')) {
-                        icon = <LogOut size={14} />;
-                        borderColor = 'border-red-500/20';
-                        iconBg = 'bg-red-500/10 text-red-400';
-                     }
-
-                     // Relative timestamp
-                     let timeAgo = '';
-                     if (msg.timestamp) {
-                        const tsValue = typeof msg.timestamp === 'number' ? msg.timestamp : (msg.timestamp?.toDate ? msg.timestamp.toDate().getTime() : Date.now());
-                        
-                        // Prevent negative time due to clock drift
-                        let diffMs = Date.now() - tsValue;
-                        if (diffMs < 0) diffMs = 0;
-                        
-                        const diffSec = Math.floor(diffMs / 1000);
-                        if (diffSec < 60) timeAgo = `${diffSec}s ago`;
-                        else if (diffSec < 3600) timeAgo = `${Math.floor(diffSec / 60)}m ago`;
-                        else timeAgo = `${Math.floor(diffSec / 3600)}h ago`;
-                     }
-
-                     return (
+               {/* Tab Panels */}
+               <div className="flex-1 min-h-0 flex flex-col relative">
+                  <AnimatePresence mode="wait">
+                     {sidebarTab === 'activity' ? (
                         <motion.div
-                           key={`log-${msg.id || index}`}
-                           initial={index === 0 ? { opacity: 0, y: -10 } : false}
+                           key="activity"
+                           initial={{ opacity: 0, y: 10 }}
                            animate={{ opacity: 1, y: 0 }}
-                           className={`flex gap-3 items-start p-3 rounded-xl border ${borderColor} bg-white/[0.02] hover:bg-white/[0.04] transition-all`}
+                           exit={{ opacity: 0, y: -10 }}
+                           className="flex-1 flex flex-col min-h-0 h-full"
                         >
-                           <div className={`mt-0.5 p-1.5 rounded-lg flex items-center justify-center shrink-0 ${iconBg}`}>{icon}</div>
-                           <div className="flex-1 min-w-0">
-                              <p className="text-[11px] md:text-[12px] font-semibold leading-relaxed text-gray-300">{msg.text}</p>
-                              {timeAgo && <span className="text-[8px] font-bold text-gray-600 uppercase tracking-widest mt-1 block">{timeAgo}</span>}
+                           <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-3 h-full">
+                              {[...messages.filter(m => m.type === 'log' || m.type === 'sold_card').filter(m => !m.text.includes('New bid:'))].reverse().map((msg, index) => {
+                                 if (msg.type === 'sold_card') return <SoldCard key={msg.id || index} msg={msg} />;
+
+                                 // Determine icon and color based on message content
+                                 const text = msg.text || '';
+                                 let icon = <MessageSquare size={14} />;
+                                 let borderColor = 'border-white/5';
+                                 let iconBg = 'bg-white/5 text-gray-500';
+
+                                 if (text.includes('SOLD')) {
+                                    icon = <Gavel size={14} />;
+                                    borderColor = 'border-green-500/20';
+                                    iconBg = 'bg-green-500/10 text-green-500';
+                                 } else if (text.includes('UNSOLD')) {
+                                    icon = <XCircle size={14} />;
+                                    borderColor = 'border-red-500/20';
+                                    iconBg = 'bg-red-500/10 text-red-500';
+                                 } else if (text.includes('PAUSED')) {
+                                    icon = <Pause size={14} />;
+                                    borderColor = 'border-yellow-500/20';
+                                    iconBg = 'bg-yellow-500/10 text-yellow-500';
+                                 } else if (text.includes('RESUMED')) {
+                                    icon = <Play size={14} />;
+                                    borderColor = 'border-blue-500/20';
+                                    iconBg = 'bg-blue-500/10 text-blue-500';
+                                 } else if (text.includes('started') || text.includes('COMPLETED')) {
+                                    icon = <Rocket size={14} />;
+                                    borderColor = 'border-orange-500/20';
+                                    iconBg = 'bg-orange-500/10 text-orange-500';
+                                 } else if (text.includes('removed')) {
+                                    icon = <LogOut size={14} />;
+                                    borderColor = 'border-red-500/20';
+                                    iconBg = 'bg-red-500/10 text-red-400';
+                                 }
+
+                                 // Relative timestamp
+                                 let timeAgo = '';
+                                 if (msg.timestamp) {
+                                    const tsValue = typeof msg.timestamp === 'number' ? msg.timestamp : (msg.timestamp?.toDate ? msg.timestamp.toDate().getTime() : Date.now());
+                                    
+                                    // Prevent negative time due to clock drift
+                                    let diffMs = Date.now() - tsValue;
+                                    if (diffMs < 0) diffMs = 0;
+                                    
+                                    const diffSec = Math.floor(diffMs / 1000);
+                                    if (diffSec < 60) timeAgo = `${diffSec}s ago`;
+                                    else if (diffSec < 3600) timeAgo = `${Math.floor(diffSec / 60)}m ago`;
+                                    else timeAgo = `${Math.floor(diffSec / 3600)}h ago`;
+                                 }
+
+                                 return (
+                                    <motion.div
+                                       key={`log-${msg.id || index}`}
+                                       initial={index === 0 ? { opacity: 0, y: -10 } : false}
+                                       animate={{ opacity: 1, y: 0 }}
+                                       className={`flex gap-3 items-start p-3 rounded-xl border ${borderColor} bg-white/[0.02] hover:bg-white/[0.04] transition-all`}
+                                    >
+                                       <div className={`mt-0.5 p-1.5 rounded-lg flex items-center justify-center shrink-0 ${iconBg}`}>{icon}</div>
+                                       <div className="flex-1 min-w-0">
+                                          <p className="text-[11px] md:text-[12px] font-semibold leading-relaxed text-gray-300">{msg.text}</p>
+                                          {timeAgo && <span className="text-[8px] font-bold text-gray-600 uppercase tracking-widest mt-1 block">{timeAgo}</span>}
+                                       </div>
+                                    </motion.div>
+                                 );
+                              })}
+                              {messages.filter(m => m.type === 'log' || m.type === 'sold_card').filter(m => !m.text.includes('New bid:')).length === 0 && (
+                                 <div className="h-full flex flex-col items-center justify-center py-10 opacity-30">
+                                    <History size={24} className="text-gray-700 mb-2" />
+                                    <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">No activity yet</p>
+                                 </div>
+                              )}
                            </div>
                         </motion.div>
-                     );
-                  })}
-                  {messages.filter(m => m.type === 'log' || m.type === 'sold_card').filter(m => !m.text.includes('New bid:')).length === 0 && (
-                     <div className="h-full flex flex-col items-center justify-center py-20 opacity-30">
-                        <History size={32} className="text-gray-700 mb-4" />
-                        <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">No activity yet</p>
-                     </div>
-                  )}
+                     ) : (
+                        <motion.div
+                           key="chat"
+                           initial={{ opacity: 0, y: 10 }}
+                           animate={{ opacity: 1, y: 0 }}
+                           exit={{ opacity: 0, y: -10 }}
+                           className="flex-1 flex flex-col min-h-0 h-full p-2"
+                        >
+                           <TextChat roomId={id} />
+                        </motion.div>
+                     )}
+                  </AnimatePresence>
                </div>
             </aside>
          </div>
