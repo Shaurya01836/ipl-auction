@@ -73,12 +73,9 @@ const BuyMeACoffee = () => {
           boxShadow: "0 0 25px rgba(245, 158, 11, 0.15)"
         }}
         whileTap={{ scale: 0.95 }}
-        className="fixed bottom-6 right-6 z-[90] flex items-center gap-2 bg-[#0a0a0a]/80 hover:bg-white/[0.05] text-white px-3.5 py-2 rounded-full border border-white/10 backdrop-blur-xl shadow-2xl transition-all duration-300 group cursor-pointer"
+        className="fixed bottom-6 right-6 z-[90] flex items-center gap-2 bg-[#0a0a0a]/80 hover:bg-white/[0.05] text-white px-3.5 py-2 rounded-full border border-white/10 backdrop-blur-xl shadow-2xl transition-[color,border-color,background-color] duration-300 group cursor-pointer"
       >
-        <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-        </span>
+    
         <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/70 group-hover:text-white transition-colors duration-300">
           Support ☕
         </span>
@@ -141,8 +138,8 @@ const BuyMeACoffee = () => {
                       key={key}
                       onClick={() => setSelectedTier(key)}
                       className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border transition-all duration-300 cursor-pointer ${selectedTier === key
-                          ? 'border-amber-500 bg-amber-500/5 shadow-[0_0_12px_rgba(245,158,11,0.1)]'
-                          : 'border-white/5 hover:border-white/10 bg-white/[0.01]'
+                        ? 'border-amber-500 bg-amber-500/5 shadow-[0_0_12px_rgba(245,158,11,0.1)]'
+                        : 'border-white/5 hover:border-white/10 bg-white/[0.01]'
                         }`}
                     >
                       <div className="scale-90 flex-shrink-0">{tier.icon}</div>
@@ -161,8 +158,8 @@ const BuyMeACoffee = () => {
                   <button
                     onClick={() => setSelectedTier('custom')}
                     className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border transition-all duration-300 cursor-pointer ${selectedTier === 'custom'
-                        ? 'border-amber-500 bg-amber-500/5 shadow-[0_0_12px_rgba(245,158,11,0.1)]'
-                        : 'border-white/5 hover:border-white/10 bg-white/[0.01]'
+                      ? 'border-amber-500 bg-amber-500/5 shadow-[0_0_12px_rgba(245,158,11,0.1)]'
+                      : 'border-white/5 hover:border-white/10 bg-white/[0.01]'
                       }`}
                   >
                     <div className="scale-90 flex-shrink-0"><Heart className="w-4 h-4 text-pink-500" /></div>

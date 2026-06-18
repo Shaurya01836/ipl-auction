@@ -36,8 +36,6 @@ const PageLoader = () => {
         {/* Top Badge - Shows Text as it is */}
         <SkeletonPulse className="px-4 py-1.5 rounded-full mb-8 border border-yellow-500/20 bg-yellow-500/5 backdrop-blur-md">
            <div className="flex items-center gap-2 text-yellow-500 text-[10px] font-black uppercase tracking-widest opacity-40">
-             <div className="w-1 h-1 bg-yellow-500 rounded-full animate-ping" />
-             <Gavel size={12} strokeWidth={3} />
              IPL Auction Live
            </div>
         </SkeletonPulse>
