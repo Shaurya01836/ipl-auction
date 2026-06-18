@@ -6,12 +6,12 @@ import { db } from '../lib/firebase';
 import { collection, query, where, getDocs, doc, getDoc, documentId } from 'firebase/firestore';
 import { IPL_PLAYERS } from '../data/players';
 import { TEAMS } from '../data/teams';
-import { 
-  Zap, 
-  Gavel, 
-  KeyRound, 
-  Loader2, 
-  Users, 
+import {
+  Zap,
+  Gavel,
+  KeyRound,
+  Loader2,
+  Users,
   ChevronRight,
   ChevronDown,
   CheckCircle2,
@@ -33,21 +33,21 @@ const LogoMarquee = () => {
     <div className="relative overflow-hidden w-full py-12 select-none">
       <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#050505] to-transparent z-10" />
       <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#050505] to-transparent z-10" />
-      
-      <motion.div 
+
+      <motion.div
         className="flex gap-12 items-center"
         animate={{ x: [0, -1920] }}
-        transition={{ 
-          duration: 40, 
-          repeat: Infinity, 
-          ease: "linear" 
+        transition={{
+          duration: 40,
+          repeat: Infinity,
+          ease: "linear"
         }}
       >
         {marqueeTeams.map((t, idx) => (
           <div key={`${t.id}-${idx}`} className="flex-shrink-0 group">
-            <img 
-              src={t.logo} 
-              alt={`${t.name} IPL Logo`} 
+            <img
+              src={t.logo}
+              alt={`${t.name} IPL Logo`}
               className="h-12 md:h-16 w-auto object-contain transition-all duration-500 opacity-40 group-hover:opacity-100 group-hover:scale-110 grayscale group-hover:grayscale-0 filter drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]"
             />
           </div>
@@ -69,10 +69,10 @@ const LandingPage = () => {
   const [historyData, setHistoryData] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [expandedSession, setExpandedSession] = useState(null);
-  
+
   const [isGuestMode, setIsGuestMode] = useState(false);
   const [guestName, setGuestName] = useState('');
-  
+
   const { user, loginWithGoogle, loginAsGuest, logout } = useAuth();
   const { createRoom, joinRoomDb } = useAuction();
   const navigate = useNavigate();
@@ -90,7 +90,7 @@ const LandingPage = () => {
   // Fetch auction history when user switches to history tab
   useEffect(() => {
     if (activeTab !== 'history' || !user?.uid) return;
-    
+
     const fetchHistory = async () => {
       setHistoryLoading(true);
       try {
@@ -99,7 +99,7 @@ const LandingPage = () => {
           where('userId', '==', user.uid)
         );
         const snapshot = await getDocs(teamsQuery);
-        
+
         // Extract unique auction IDs
         const teamDocsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         const auctionIds = [...new Set(teamDocsData.map(t => t.auctionId))].filter(Boolean);
@@ -123,7 +123,7 @@ const LandingPage = () => {
           const auctionData = auctionDataMap[teamData.auctionId];
           const totalBudget = auctionData?.settings?.budget || 120;
           const spent = totalBudget - (teamData.budgetRemaining || totalBudget);
-          
+
           return {
             id: teamData.id,
             roomId: teamData.auctionId,
@@ -143,7 +143,7 @@ const LandingPage = () => {
             createdAt: teamData.createdAt || auctionData?.createdAt || null
           };
         });
-        
+
         // Sorting: Strictly Time (latest first)
         sessions.sort((a, b) => {
           const timeA = a.createdAt?.seconds || a.createdAt?._seconds || 0;
@@ -151,13 +151,13 @@ const LandingPage = () => {
           return timeB - timeA;
         });
         setHistoryData(sessions);
-    } catch (err) {
-      // Failed to fetch history
-    } finally {
+      } catch (err) {
+        // Failed to fetch history
+      } finally {
         setHistoryLoading(false);
       }
     };
-    
+
     fetchHistory();
   }, [activeTab, user?.uid]);
 
@@ -203,11 +203,11 @@ const LandingPage = () => {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     if (!user) return;
-    
+
     setIsSubmitting(true);
     try {
       const displayName = user.displayName || 'Manager';
-      
+
       if (activeTab === 'new') {
         const newRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
         await createRoom(newRoomId, user.uid, { name: displayName, team: selectedTeam }, auctionType);
@@ -234,23 +234,23 @@ const LandingPage = () => {
       <div className="relative min-h-screen bg-[#050505] flex flex-col items-center justify-center py-10 px-4 font-sans text-white overflow-x-hidden">
         <GithubStarButton />
         <BuyMeACoffee />
-        
+
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-orange-600/20 blur-[120px] rounded-full" />
           <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03]" />
         </div>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="relative z-10 flex items-center gap-2 border border-yellow-500/30 bg-yellow-500/5 text-yellow-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest backdrop-blur-md mb-8 shadow-[0_0_20px_rgba(234,179,8,0.1)]"
         >
-          <div className="w-1 h-1 bg-yellow-500 rounded-full animate-ping" />
-          <Gavel size={12} strokeWidth={3} /> IPL Auction Live
+
+          IPL Auction Live
         </motion.div>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           className="text-center mb-10 z-10 relative"
@@ -269,19 +269,19 @@ const LandingPage = () => {
           </div>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="w-full max-w-md bg-white/[0.03] border border-white/10 rounded-[2rem] p-3 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10 relative"
         >
           <div className="bg-[#0c0c0c] rounded-[1.75rem] p-8 md:p-10 border border-white/5 flex flex-col items-center">
-             <h2 className="text-xl font-black uppercase tracking-tight mb-1">
-               {isGuestMode ? 'Guest Access' : 'Welcome, Manager'}
-             </h2>
-             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-8">
-               {isGuestMode ? 'Enter a name to join' : 'Sign in to enter the auction hub'}
-             </p>
+            <h2 className="text-xl font-black uppercase tracking-tight mb-1">
+              {isGuestMode ? 'Guest Access' : 'Welcome, Manager'}
+            </h2>
+            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-8">
+              {isGuestMode ? 'Enter a name to join' : 'Sign in to enter the auction hub'}
+            </p>
 
             {!isGuestMode ? (
               <div className="w-full space-y-4">
@@ -302,8 +302,8 @@ const LandingPage = () => {
                 </button>
 
                 <div className="relative py-2 flex items-center justify-center">
-                   <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5" /></div>
-                   <span className="relative bg-[#0c0c0c] px-4 text-[9px] font-black text-gray-700 uppercase tracking-widest italic">Wait, I'm a guest</span>
+                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5" /></div>
+                  <span className="relative bg-[#0c0c0c] px-4 text-[9px] font-black text-gray-700 uppercase tracking-widest italic">Wait, I'm a guest</span>
                 </div>
 
                 <button
@@ -316,17 +316,17 @@ const LandingPage = () => {
             ) : (
               <form onSubmit={handleGuestSignIn} className="w-full space-y-4">
                 <div className="space-y-2">
-                   <label className="block text-[9px] font-black text-gray-700 uppercase tracking-widest ml-1">Your Manager Name</label>
-                   <input 
-                      type="text"
-                      value={guestName}
-                      onChange={(e) => setGuestName(e.target.value)}
-                      placeholder="e.g. MS Dhoni"
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white font-black uppercase text-sm tracking-widest placeholder:text-gray-800 focus:outline-none focus:border-orange-500/50 transition-all"
-                      autoFocus
-                   />
+                  <label className="block text-[9px] font-black text-gray-700 uppercase tracking-widest ml-1">Your Manager Name</label>
+                  <input
+                    type="text"
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                    placeholder="e.g. MS Dhoni"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white font-black uppercase text-sm tracking-widest placeholder:text-gray-800 focus:outline-none focus:border-orange-500/50 transition-all"
+                    autoFocus
+                  />
                 </div>
-                
+
                 <button
                   type="submit"
                   disabled={isSubmitting}
@@ -354,7 +354,7 @@ const LandingPage = () => {
             )}
           </div>
         </motion.div>
-        
+
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -362,69 +362,69 @@ const LandingPage = () => {
           className="w-full max-w-6xl mt-12 mb-4"
         >
           <div className="flex items-center justify-center gap-4 mb-4">
-             <div className="h-px w-12 bg-white/10" />
-             <span className="text-[10px] font-black text-gray-600 uppercase tracking-[0.4em]">Official Franchises</span>
-             <div className="h-px w-12 bg-white/10" />
+            <div className="h-px w-12 bg-white/10" />
+            <span className="text-[10px] font-black text-gray-600 uppercase tracking-[0.4em]">Official Franchises</span>
+            <div className="h-px w-12 bg-white/10" />
           </div>
           <LogoMarquee />
         </motion.div>
 
         <footer className="mt-32 mb-16 flex flex-col items-center z-10 w-full px-4 border-t border-white/5 pt-16">
-        <div className="relative z-10 w-full max-w-xl">
-          {/* Minimal Developer Showcase */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="flex flex-col items-center text-center gap-8"
-          >
-            <div className="space-y-3">
-              <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.5em] leading-none mb-1">Developed & Designed by</p>
-              <a 
-                href="https://shaurya-upadhyay.me" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="block hover:scale-[1.02] transition-transform duration-500"
-              >
-                <h3 className="text-2xl md:text-3xl font-black font-black text-gray-600 ">
-                  SHAURYA UPADHYAY
-                </h3>
-              </a>
-            </div>
-
-            <div className="flex gap-4">
-              {[
-                { icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>, href: "https://github.com/Shaurya01836", label: "GitHub" },
-                { icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>, href: "https://shaurya-upadhyay.me", label: "Portfolio" },
-                { icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>, href: "https://www.linkedin.com/in/this-is-shaurya-upadhyay/", label: "LinkedIn" }
-              ].map((social) => (
-                <motion.a
-                  key={social.label}
-                  href={social.href}
+          <div className="relative z-10 w-full max-w-xl">
+            {/* Minimal Developer Showcase */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="flex flex-col items-center text-center gap-8"
+            >
+              <div className="space-y-3">
+                <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.5em] leading-none mb-1">Developed & Designed by</p>
+                <a
+                  href="https://shaurya-upadhyay.me"
                   target="_blank"
                   rel="noopener noreferrer"
-                  whileHover={{ y: -5, scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.05)" }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-12 h-12 rounded-2xl glass flex items-center justify-center text-gray-500 hover:text-white transition-all duration-300"
-                  title={social.label}
+                  className="block hover:scale-[1.02] transition-transform duration-500"
                 >
-                  {social.icon}
-                </motion.a>
-              ))}
-            </div>
+                  <h3 className="text-2xl md:text-3xl font-black font-black text-gray-600 ">
+                    SHAURYA UPADHYAY
+                  </h3>
+                </a>
+              </div>
 
-            <motion.a
-              href="https://shaurya-upadhyay.me"
-              target="_blank"
-              rel="noopener noreferrer"
-              whileHover={{ opacity: 0.7 }}
-              className="text-[9px] font-black text-gray-700 uppercase tracking-[0.4em] mt-2 block"
-            >
-              Building the Future of Auction Simulation
-            </motion.a>
-          </motion.div>
-        </div>
-      </footer>
+              <div className="flex gap-4">
+                {[
+                  { icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>, href: "https://github.com/Shaurya01836", label: "GitHub" },
+                  { icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>, href: "https://shaurya-upadhyay.me", label: "Portfolio" },
+                  { icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>, href: "https://www.linkedin.com/in/this-is-shaurya-upadhyay/", label: "LinkedIn" }
+                ].map((social) => (
+                  <motion.a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{ y: -5, scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.05)" }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-12 h-12 rounded-2xl glass flex items-center justify-center text-gray-500 hover:text-white transition-all duration-300"
+                    title={social.label}
+                  >
+                    {social.icon}
+                  </motion.a>
+                ))}
+              </div>
+
+              <motion.a
+                href="https://shaurya-upadhyay.me"
+                target="_blank"
+                rel="noopener noreferrer"
+                whileHover={{ opacity: 0.7 }}
+                className="text-[9px] font-black text-gray-700 uppercase tracking-[0.4em] mt-2 block"
+              >
+                Building the Future of Auction Simulation
+              </motion.a>
+            </motion.div>
+          </div>
+        </footer>
       </div>
     );
   }
@@ -434,7 +434,7 @@ const LandingPage = () => {
     <div className="relative min-h-screen bg-[#050505] flex flex-col items-center justify-center py-10 px-4 font-sans text-white overflow-x-hidden">
       <GithubStarButton />
       <BuyMeACoffee />
-      
+
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-orange-600/20 blur-[120px] rounded-full" />
         <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
@@ -442,17 +442,17 @@ const LandingPage = () => {
       </div>
 
       {/* Top Badge */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="relative z-10 flex items-center gap-2 border border-yellow-500/30 bg-yellow-500/5 text-yellow-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest backdrop-blur-md mb-8 shadow-[0_0_20px_rgba(234,179,8,0.1)]"
       >
-        <div className="w-1 h-1 bg-yellow-500 rounded-full animate-ping" />
-        <Gavel size={12} strokeWidth={3} /> IPL Auction Live
+
+        IPL Auction Live
       </motion.div>
 
       {/* Hero */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="text-center mb-8 z-10 relative"
@@ -471,7 +471,7 @@ const LandingPage = () => {
       </motion.div>
 
       {/* Signed-in user badge with Test Crash */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="z-10 flex flex-wrap items-center justify-center gap-3 bg-white/5 border border-white/10 rounded-3xl p-3 mb-6 backdrop-blur-md"
@@ -483,9 +483,9 @@ const LandingPage = () => {
           <span className="text-sm font-black text-white">{user.displayName}</span>
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
         </div>
-        
+
         <div className="flex gap-2">
-          <button 
+          <button
             onClick={logout}
             className="px-4 py-2 bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 rounded-xl text-[9px] font-black text-gray-400 hover:text-red-400 uppercase tracking-widest transition-all cursor-pointer"
           >
@@ -495,46 +495,43 @@ const LandingPage = () => {
       </motion.div>
 
       {/* Main Action Card */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
         className="w-full max-w-2xl bg-white/[0.03] border border-white/10 rounded-[2rem] p-3 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10 relative"
       >
         <div className="bg-[#0c0c0c] rounded-[1.75rem] p-6 md:p-8 border border-white/5 relative">
-          
+
           {/* 3-Tab Navigation: Create / Join / History */}
           <div className="flex bg-white/5 p-1 rounded-xl mb-6">
-            <button 
+            <button
               type="button"
               onClick={() => setActiveTab('new')}
-              className={`flex-1 py-3 rounded-lg font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 ${
-                activeTab === 'new' 
-                  ? 'bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-lg' 
-                  : 'text-gray-500 hover:text-gray-300'
-              }`}
+              className={`flex-1 py-3 rounded-lg font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 ${activeTab === 'new'
+                ? 'bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-lg'
+                : 'text-gray-500 hover:text-gray-300'
+                }`}
             >
               <Zap size={14} fill={activeTab === 'new' ? 'white' : 'none'} /> Create
             </button>
-            <button 
+            <button
               type="button"
               onClick={() => setActiveTab('join')}
-              className={`flex-1 py-3 rounded-lg font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 ${
-                activeTab === 'join' 
-                  ? 'bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-lg' 
-                  : 'text-gray-500 hover:text-gray-300'
-              }`}
+              className={`flex-1 py-3 rounded-lg font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 ${activeTab === 'join'
+                ? 'bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-lg'
+                : 'text-gray-500 hover:text-gray-300'
+                }`}
             >
               <KeyRound size={14} /> Join
             </button>
-            <button 
+            <button
               type="button"
               onClick={() => setActiveTab('history')}
-              className={`flex-1 py-3 rounded-lg font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 ${
-                activeTab === 'history' 
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg' 
-                  : 'text-gray-500 hover:text-gray-300'
-              }`}
+              className={`flex-1 py-3 rounded-lg font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 ${activeTab === 'history'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg'
+                : 'text-gray-500 hover:text-gray-300'
+                }`}
             >
               <History size={14} /> History
             </button>
@@ -543,7 +540,7 @@ const LandingPage = () => {
           <AnimatePresence mode="wait">
             {/* ─── CREATE TAB ─── */}
             {activeTab === 'new' && (
-              <motion.form 
+              <motion.form
                 key="create-tab"
                 onSubmit={handleFormSubmit}
                 initial={{ opacity: 0, x: -20 }}
@@ -555,24 +552,23 @@ const LandingPage = () => {
                   <div className="flex items-center justify-between mb-4 ml-1">
                     <label className="block text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">Select Franchise</label>
                     <span className="text-[9px] font-black text-orange-500 bg-orange-500/10 px-2 py-0.5 rounded italic flex items-center gap-1">
-                       <Star size={10} fill="currentColor" /> CHOOSE WISELY
+                      <Star size={10} fill="currentColor" /> CHOOSE WISELY
                     </span>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                     {TEAMS.map((t) => (
                       <button
                         key={t.id}
                         type="button"
                         onClick={() => setSelectedTeam(t.id)}
-                        className={`relative group/team flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-300 border ${
-                          selectedTeam === t.id 
-                            ? 'border-yellow-400 bg-white/5 shadow-[0_0_15px_rgba(250,204,21,0.1)]' 
-                            : 'border-white/5 hover:border-white/10'
-                        }`}
+                        className={`relative group/team flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-300 border ${selectedTeam === t.id
+                          ? 'border-yellow-400 bg-white/5 shadow-[0_0_15px_rgba(250,204,21,0.1)]'
+                          : 'border-white/5 hover:border-white/10'
+                          }`}
                       >
                         {selectedTeam === t.id && (
-                          <motion.div 
+                          <motion.div
                             layoutId="sel-badge"
                             className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-yellow-400 flex items-center justify-center z-20 shadow-lg shadow-yellow-400/20"
                           >
@@ -594,16 +590,15 @@ const LandingPage = () => {
                   <div className="flex items-center justify-between mb-4 ml-1">
                     <label className="block text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">Auction Mode</label>
                   </div>
-                  
+
                   <div className="flex flex-col sm:flex-row gap-3">
                     <button
                       type="button"
                       onClick={() => setAuctionType('mega')}
-                      className={`flex-1 p-4 rounded-2xl border transition-all duration-300 text-left relative overflow-hidden group/mode ${
-                        auctionType === 'mega' 
-                          ? 'border-orange-500 bg-orange-500/5' 
-                          : 'border-white/5 hover:border-white/10'
-                      }`}
+                      className={`flex-1 p-4 rounded-2xl border transition-all duration-300 text-left relative overflow-hidden group/mode ${auctionType === 'mega'
+                        ? 'border-orange-500 bg-orange-500/5'
+                        : 'border-white/5 hover:border-white/10'
+                        }`}
                     >
                       {auctionType === 'mega' && (
                         <div className="absolute top-0 right-0 p-2"><CheckCircle2 size={12} className="text-orange-500" /></div>
@@ -618,11 +613,10 @@ const LandingPage = () => {
                     <button
                       type="button"
                       onClick={() => setAuctionType('sprint11')}
-                      className={`flex-1 p-4 rounded-2xl border transition-all duration-300 text-left relative overflow-hidden group/mode ${
-                        auctionType === 'sprint11' 
-                          ? 'border-yellow-500 bg-yellow-500/5' 
-                          : 'border-white/5 hover:border-white/10'
-                      }`}
+                      className={`flex-1 p-4 rounded-2xl border transition-all duration-300 text-left relative overflow-hidden group/mode ${auctionType === 'sprint11'
+                        ? 'border-yellow-500 bg-yellow-500/5'
+                        : 'border-white/5 hover:border-white/10'
+                        }`}
                     >
                       {auctionType === 'sprint11' && (
                         <div className="absolute top-0 right-0 p-2"><CheckCircle2 size={12} className="text-yellow-500" /></div>
@@ -637,11 +631,10 @@ const LandingPage = () => {
                     <button
                       type="button"
                       onClick={() => setAuctionType('sprint5')}
-                      className={`flex-1 p-4 rounded-2xl border transition-all duration-300 text-left relative overflow-hidden group/mode ${
-                        auctionType === 'sprint5' 
-                          ? 'border-blue-500 bg-blue-500/5' 
-                          : 'border-white/5 hover:border-white/10'
-                      }`}
+                      className={`flex-1 p-4 rounded-2xl border transition-all duration-300 text-left relative overflow-hidden group/mode ${auctionType === 'sprint5'
+                        ? 'border-blue-500 bg-blue-500/5'
+                        : 'border-white/5 hover:border-white/10'
+                        }`}
                     >
                       {auctionType === 'sprint5' && (
                         <div className="absolute top-0 right-0 p-2"><CheckCircle2 size={12} className="text-blue-500" /></div>
@@ -655,7 +648,7 @@ const LandingPage = () => {
                   </div>
                 </div>
 
-                <button 
+                <button
                   type="submit"
                   disabled={isSubmitting}
                   className="w-full h-14 relative overflow-hidden group/submit rounded-xl shadow-[0_10px_30px_rgba(255,85,0,0.2)] disabled:opacity-50 cursor-pointer"
@@ -680,8 +673,8 @@ const LandingPage = () => {
               >
                 <div className="relative group">
                   <label className="block text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2 ml-1">Access Token</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={roomCode}
                     onChange={(e) => setRoomCode(e.target.value)}
                     className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-4 focus:outline-none focus:border-orange-500/50 transition-all text-white font-black uppercase tracking-[0.5em] text-center text-lg placeholder:tracking-normal placeholder:text-xs placeholder:text-gray-700"
@@ -690,7 +683,7 @@ const LandingPage = () => {
                   />
                 </div>
 
-                <button 
+                <button
                   type="submit"
                   disabled={isSubmitting}
                   className="w-full h-14 relative overflow-hidden group/submit rounded-xl shadow-[0_10px_30px_rgba(255,85,0,0.2)] disabled:opacity-50 cursor-pointer"
@@ -738,30 +731,27 @@ const LandingPage = () => {
                           <div key={session.id} className="space-y-1">
                             <button
                               onClick={() => setExpandedSession(isExpanded ? null : session.id)}
-                              className={`w-full text-left p-4 rounded-2xl border transition-all flex items-center justify-between group cursor-pointer ${
-                                isExpanded ? 'bg-white/10 border-white/20 shadow-lg' : 'bg-white/[0.03] border-white/5 hover:bg-white/5'
-                              }`}
+                              className={`w-full text-left p-4 rounded-2xl border transition-all flex items-center justify-between group cursor-pointer ${isExpanded ? 'bg-white/10 border-white/20 shadow-lg' : 'bg-white/[0.03] border-white/5 hover:bg-white/5'
+                                }`}
                             >
                               <div className="flex items-center gap-3">
                                 <div className={`w-12 h-12 rounded-2xl bg-white/5 border border-white/10 p-1.5 flex items-center justify-center shadow-2xl relative`}>
-                                   <img src={teamMeta?.logo} alt={`${teamMeta?.name || 'Team'} Logo`} className="w-full h-full object-contain" />
+                                  <img src={teamMeta?.logo} alt={`${teamMeta?.name || 'Team'} Logo`} className="w-full h-full object-contain" />
                                 </div>
                                 <div>
                                   <h5 className="text-sm font-black uppercase tracking-tight">{teamMeta?.name || session.teamName}</h5>
                                   <div className="flex items-center gap-2 mt-0.5">
                                     <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest">Room: {session.roomId}</span>
-                                    <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded ${
-                                      session.mode === 'mega' ? 'bg-orange-500/10 text-orange-500' 
-                                      : session.mode === 'sprint11' ? 'bg-yellow-500/10 text-yellow-500' 
-                                      : 'bg-blue-500/10 text-blue-500'
-                                    }`}>
+                                    <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded ${session.mode === 'mega' ? 'bg-orange-500/10 text-orange-500'
+                                      : session.mode === 'sprint11' ? 'bg-yellow-500/10 text-yellow-500'
+                                        : 'bg-blue-500/10 text-blue-500'
+                                      }`}>
                                       {session.mode}
                                     </span>
-                                    <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded ${
-                                      session.status === 'completed' ? 'bg-green-500/10 text-green-500' 
-                                      : session.status === 'active' ? 'bg-yellow-500/10 text-yellow-500' 
-                                      : 'bg-gray-500/10 text-gray-500'
-                                    }`}>
+                                    <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded ${session.status === 'completed' ? 'bg-green-500/10 text-green-500'
+                                      : session.status === 'active' ? 'bg-yellow-500/10 text-yellow-500'
+                                        : 'bg-gray-500/10 text-gray-500'
+                                      }`}>
                                       {session.status}
                                     </span>
                                   </div>
@@ -869,7 +859,7 @@ const LandingPage = () => {
       <footer className="mt-32 mb-16 flex flex-col items-center z-10 w-full px-4 border-t border-white/5 pt-16">
         <div className="relative z-10 w-full max-w-xl">
           {/* Minimal Developer Showcase */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -877,9 +867,9 @@ const LandingPage = () => {
           >
             <div className="space-y-3">
               <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.5em] leading-none mb-1">Developed & Designed by</p>
-              <a 
-                href="https://shaurya-upadhyay.me" 
-                target="_blank" 
+              <a
+                href="https://shaurya-upadhyay.me"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="block hover:scale-[1.02] transition-transform duration-500"
               >
