@@ -1,6 +1,6 @@
 import { db } from './firebase';
 import { collection, doc, setDoc } from 'firebase/firestore';
-import { IPL_PLAYERS } from './src/data/players';
+import { IPL_PLAYERS } from '../data/players';
 
 // This script can be run from the console or a temporary component to seed Firestore
 export const seedPlayers = async () => {
