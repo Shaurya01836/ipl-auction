@@ -10,7 +10,6 @@ import {
 } from 'firebase/auth';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import BrandLoader from '../components/BrandLoader';
 import PageLoader from '../components/PageLoader';
 
 const AuthContext = createContext({
@@ -78,7 +77,7 @@ export const AuthProvider = ({ children }) => {
             transition={{ duration: 0.3, ease: "easeIn" }}
             className="fixed inset-0 z-[9999]"
           >
-            {window.location.pathname === '/' ? <PageLoader /> : <BrandLoader />}
+            <PageLoader />
           </motion.div>
         ) : (
           <motion.div

@@ -15,6 +15,7 @@ import {
   MessageSquare,
   Settings as SettingsIcon,
   CheckCircle2,
+  Check,
   Rocket,
   TrendingUp,
   Zap,
@@ -24,6 +25,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import { TEAMS } from '../data/teams';
 import TextChat from '../components/TextChat';
+import Footer from '../components/Footer';
+import PageLoader from '../components/PageLoader';
 
 const Lobby = () => {
   const { id } = useParams();
@@ -202,9 +205,7 @@ const Lobby = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <BrandLoader />
-      </div>
+      <PageLoader />
     );
   }
 
@@ -394,23 +395,16 @@ const Lobby = () => {
         </div>
 
         <div className="flex items-center justify-center md:justify-end gap-4 w-full md:w-auto">
-          <div className="flex flex-col items-end mr-4">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black text-green-500 bg-green-500/10 px-2 py-0.5 rounded leading-none uppercase">Live Engine</span>
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_#22c55e]" />
-            </div>
-            <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest mt-1">Ready for Auction</p>
-          </div>
 
           {isAdmin && (
             <button
               onClick={handleStartAuction}
               disabled={isStarting}
-              className="relative overflow-hidden group px-8 py-3 bg-gradient-to-r from-orange-600 to-orange-500 rounded-2xl font-black text-xs uppercase tracking-widest shadow-[0_10px_30px_rgba(255,85,0,0.3)] disabled:opacity-50 transition-all active:scale-95"
+              className="relative overflow-hidden group px-8 py-3 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] rounded-2xl font-black text-xs uppercase tracking-widest shadow-[0_10px_30px_rgba(255,85,0,0.3)] disabled:opacity-50 transition-all active:scale-95 cursor-pointer"
             >
-              <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+          <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
               <div className="relative flex items-center gap-2">
-                {isStarting ? <Loader2 size={16} className="animate-spin" /> : <Rocket size={16} className="group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />}
+                {isStarting ? <Loader2 size={18} className="animate-spin" /> : <Rocket size={18} className="group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />}
                 <span>{isStarting ? 'Igniting...' : 'Start Auction'}</span>
               </div>
             </button>
@@ -418,146 +412,142 @@ const Lobby = () => {
         </div>
       </div>
 
-      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8 z-10">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="w-full max-w-6xl bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-3 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10 relative mt-2"
+      >
+        {/* Subtle Glow behind panel */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#ff5500]/[0.02] via-[#ff5500]/[0.01] to-transparent rounded-[2.5rem] blur-xl pointer-events-none -z-10" />
+        <div className="absolute -inset-2 bg-gradient-to-r from-[#ff5500]/5 to-[#0088ff]/2 rounded-[2.5rem] blur-3xl opacity-40 pointer-events-none -z-10" />
         
-        {/* Left Column: Management Hub */}
-        <div className="lg:col-span-5 space-y-6">
+        <div className="bg-[#0c0c0c] rounded-[2.2rem] border border-white/5 grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch divide-y lg:divide-y-0 lg:divide-x divide-white/5 overflow-hidden">
           
-          {/* Share Section */}
-          <motion.section 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="bg-white/[0.03] border border-white/10 rounded-[2rem] p-6 backdrop-blur-3xl shadow-2xl relative overflow-hidden group"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent pointer-events-none" />
-            <div className="flex items-center gap-2 mb-4">
-               <Zap size={14} className="text-orange-500" />
-               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Invite Crew Members</h3>
-            </div>
+          {/* Left Column: Management Hub */}
+          <div className="lg:col-span-5 w-full flex flex-col p-6 md:p-8 relative gap-6">
+            {/* Background glow blob */}
+            <div className="absolute -top-12 -right-12 w-24 h-24 bg-white/5 blur-[40px] rounded-full pointer-events-none" />
 
-            <div className="flex gap-3">
-              <div className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-gray-500 font-medium truncate">
-                {window.location.href}
+            {/* Battle Rules Section */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Battle Rules</h3>
               </div>
-              <button onClick={copyLink} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all border border-white/5 relative group/copy">
-                {copied ? <CheckCircle2 size={18} className="text-green-500" /> : <Copy size={18} className="group-hover/copy:scale-110 transition-transform" />}
-              </button>
-              <button 
-                onClick={shareWhatsApp} 
-                className="p-3 bg-[#25D366]/5 hover:bg-[#25D366]/10 rounded-xl transition-all border border-[#25D366]/10 text-[#25D366] group/wa"
-              >
-                <MessageSquare size={18} className="group-hover/wa:scale-110 transition-transform" />
-              </button>
-            </div>
-          </motion.section>
 
-          {/* Session Rules Card */}
-          <motion.section
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white/[0.03] border border-white/10 rounded-[2rem] p-6 backdrop-blur-3xl shadow-2xl relative overflow-hidden"
-          >
-            <div className="flex items-center gap-2 mb-6">
-               <ShieldAlert size={14} className="text-blue-500" />
-               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Battle Rules</h3>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-1">Auction Mode</span>
-                <span className="text-[11px] font-black text-white uppercase tracking-tight">
-                  {currentAuction?.auctionType === 'sprint5' ? '5-Player Sprint' : 
-                   currentAuction?.auctionType === 'sprint11' ? '11-Player Classic' : 
-                   'Mega Auction'}
-                </span>
-              </div>
-              <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-1">Initial Budget</span>
-                <span className="text-[11px] font-black text-yellow-500 uppercase tracking-tight">
-                  ₹{currentAuction?.settings?.budget || 120}.0 Cr
-                </span>
-              </div>
-              <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-1">Squad Capacity</span>
-                <span className="text-[11px] font-black text-blue-400 uppercase tracking-tight">
-                  {currentAuction?.squadLimit || 25} Players
-                </span>
-              </div>
-              <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-1">Overseas Quota</span>
-                <span className="text-[11px] font-black text-purple-400 uppercase tracking-tight">
-                  Max {currentAuction?.overseasLimit || 8}
-                </span>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
+                  <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-1">Auction Mode</span>
+                  <span className="text-[11px] font-black text-white uppercase tracking-tight">
+                    {currentAuction?.auctionType === 'sprint5' ? '5-Player Sprint' : 
+                     currentAuction?.auctionType === 'sprint11' ? '11-Player Classic' : 
+                     'Mega Auction'}
+                  </span>
+                </div>
+                <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
+                  <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-1">Initial Budget</span>
+                  <span className="text-[11px] font-black text-yellow-500 uppercase tracking-tight">
+                    ₹{currentAuction?.settings?.budget || 120}.0 Cr
+                  </span>
+                </div>
+                <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
+                  <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-1">Squad Capacity</span>
+                  <span className="text-[11px] font-black text-blue-400 uppercase tracking-tight">
+                    {currentAuction?.squadLimit || 25} Players
+                  </span>
+                </div>
+                <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
+                  <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-1">Overseas Quota</span>
+                  <span className="text-[11px] font-black text-purple-400 uppercase tracking-tight">
+                    Max {currentAuction?.overseasLimit || 8}
+                  </span>
+                </div>
               </div>
             </div>
-          </motion.section>
 
-          {/* Franchise Selector */}
-          <motion.section 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white/[0.03] border border-white/10 rounded-[2rem] p-6 backdrop-blur-3xl shadow-2xl relative"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-2">
-                 <Star size={14} className="text-yellow-500" />
-                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Claim Franchise</h3>
+            {/* Divider */}
+            <div className="w-full h-px bg-white/5" />
+
+            {/* Franchise Selector */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                   <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Claim Franchise</h3>
+                </div>
+                {currentUserPlayer?.team && (
+                  <div className="text-[9px] font-black text-green-500 bg-green-500/10 px-2 py-0.5 rounded uppercase tracking-wider">Locked In</div>
+                )}
               </div>
-              {currentUserPlayer?.team && (
-                <div className="text-[9px] font-black text-orange-500 bg-orange-500/10 px-2 py-0.5 rounded uppercase">Locked In</div>
-              )}
+
+              <div className="grid grid-cols-5 gap-2.5">
+                {TEAMS.map((team) => {
+                  const isTaken = teamAssignments[team.id];
+                  const isMine = currentUserPlayer?.team === team.id;
+
+                  return (
+                    <button
+                      key={team.id}
+                      onClick={() => handleTeamSelect(team.id)}
+                      disabled={!!isTaken && !isMine}
+                      className={`relative group/team flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-200 border ${
+                        isMine 
+                          ? 'bg-[#1b1b1b] border-white/[0.12] scale-[1.02] shadow-[0_4px_20px_rgba(0,0,0,0.4)]' 
+                          : isTaken 
+                            ? 'border-transparent opacity-20 grayscale cursor-not-allowed' 
+                            : 'border-transparent hover:bg-white/[0.04]'
+                      }`}
+                    >
+                      {isMine && (
+                        <div className="absolute top-2 right-2 text-white z-20">
+                          <Check size={10} strokeWidth={3} />
+                        </div>
+                      )}
+
+                      <div className={`w-9 h-9 rounded-xl bg-white/5 border border-white/5 p-1.5 flex items-center justify-center mb-2 transition-all duration-300 ${isMine ? 'scale-105 border-white/[0.12] shadow-lg' : 'group-hover/team:scale-105'}`}>
+                        {isSelectingTeam === team.id ? <Loader2 size={14} className="animate-spin text-white" /> : <img src={team.logo} alt="" className="w-full h-full object-contain" />}
+                      </div>
+                      
+                      <span className={`text-[8px] font-black uppercase text-center tracking-tighter truncate w-full ${isMine ? 'text-white' : 'text-gray-500'}`}>
+                        {isTaken ? isTaken.split(' ')[0] : team.id}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-              {TEAMS.map((team) => {
-                const isTaken = teamAssignments[team.id];
-                const isMine = currentUserPlayer?.team === team.id;
+            {/* Divider */}
+            <div className="w-full h-px bg-white/5" />
 
-                return (
-                  <button
-                    key={team.id}
-                    onClick={() => handleTeamSelect(team.id)}
-                    disabled={!!isTaken && !isMine}
-                    className={`relative group/team flex flex-col items-center justify-center p-2 rounded-2xl transition-all duration-300 border ${
-                      isMine 
-                        ? 'border-yellow-400 bg-yellow-400/5 shadow-[0_0_15px_rgba(250,204,21,0.1)]' 
-                        : isTaken 
-                          ? 'border-white/5 opacity-30 grayscale cursor-not-allowed' 
-                          : 'border-white/5 hover:border-white/20 hover:bg-white/5'
-                    }`}
-                  >
-                    {isMine && (
-                      <motion.div layoutId="lobby-badge" className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-yellow-400 flex items-center justify-center z-20 shadow-lg">
-                        <CheckCircle2 size={10} className="text-black" />
-                      </motion.div>
-                    )}
+            {/* Share Section */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Invite Crew Members</h3>
+              </div>
 
-                    <div className={`w-12 h-12 rounded-2xl bg-white/5 border border-white/5 p-1.5 flex items-center justify-center mb-2 transition-all duration-300 ${isMine ? 'scale-110 border-yellow-400 shadow-lg' : 'group-hover/team:scale-110'}`}>
-                      {isSelectingTeam === team.id ? <Loader2 size={14} className="animate-spin text-yellow-500" /> : <img src={team.logo} alt="" className="w-full h-full object-contain" />}
-                    </div>
-                    
-                    <span className={`text-[8px] font-black uppercase text-center tracking-tighter truncate w-full ${isMine ? 'text-yellow-400' : isTaken ? 'text-gray-600' : 'text-gray-500'}`}>
-                      {isTaken ? isTaken.split(' ')[0] : team.id}
-                    </span>
-                  </button>
-                );
-              })}
+              <div className="flex gap-3">
+                <div className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-gray-500 font-medium truncate flex items-center">
+                  {window.location.href}
+                </div>
+                <button onClick={copyLink} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all border border-white/5 relative group/copy cursor-pointer">
+                  {copied ? <CheckCircle2 size={18} className="text-green-500" /> : <Copy size={18} className="group-hover/copy:scale-110 transition-transform" />}
+                </button>
+                <button 
+                  onClick={shareWhatsApp} 
+                  className="p-3 bg-[#25D366]/5 hover:bg-[#25D366]/10 rounded-xl transition-all border border-[#25D366]/10 text-[#25D366] group/wa cursor-pointer"
+                >
+                  <MessageSquare size={18} className="group-hover/wa:scale-110 transition-transform" />
+                </button>
+              </div>
             </div>
-          </motion.section>
-        </div>
 
-        {/* Right Column: Engagement Hub */}
-        <div className="lg:col-span-7">
-          <motion.section 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-[#0c0c0c] border border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl h-full flex flex-col"
-          >
+          </div>
+
+          {/* Right Column: Engagement Hub */}
+          <div className="lg:col-span-7 w-full p-6 md:p-8 flex flex-col justify-start">
+            
             {/* Tabs Header */}
-            <div className="flex bg-white/[0.02] p-2 gap-2">
+            <div className="flex bg-white/[0.02] p-1.5 gap-1.5 rounded-2xl mb-6 border border-white/5">
               {[
                 { id: 'players', icon: Users, label: `Crew` },
                 { id: 'chat', icon: MessageSquare, label: 'Chat' },
@@ -566,18 +556,18 @@ const Lobby = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 py-4 flex flex-col items-center justify-center gap-1.5 transition-all rounded-2xl ${activeTab === tab.id
-                      ? 'bg-white/5 text-yellow-500 border border-white/10 shadow-inner'
-                      : 'text-gray-600 hover:text-gray-400 hover:bg-white/[0.01]'
+                  className={`flex-1 py-3 flex flex-col items-center justify-center gap-1.5 transition-all rounded-xl cursor-pointer ${activeTab === tab.id
+                      ? 'bg-white/5 text-[#ff5500] border border-white/10 shadow-inner'
+                      : 'text-gray-500 hover:text-gray-300 hover:bg-white/[0.01]'
                     }`}
                 >
-                  <tab.icon size={18} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
-                  <span className="text-[10px] font-black uppercase tracking-widest">{tab.id === 'players' ? `${tab.label} (${players.length})` : tab.label}</span>
+                  <tab.icon size={16} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
+                  <span className="text-[9px] font-black uppercase tracking-widest">{tab.id === 'players' ? `${tab.label} (${players.length})` : tab.label}</span>
                 </button>
               ))}
             </div>
 
-            <div className="p-8 flex-1 overflow-y-auto max-h-[600px]">
+            <div className="flex-1 overflow-y-auto max-h-[500px] custom-scrollbar pr-1">
               <AnimatePresence mode="wait">
                 {activeTab === 'players' && (
                   <motion.div 
@@ -627,7 +617,7 @@ const Lobby = () => {
                             {isAdmin && !player.isHost && (
                               <button
                                 onClick={() => handleKickPlayer(player)}
-                                className="opacity-0 group-hover:opacity-100 p-2 text-gray-700 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
+                                className="opacity-0 group-hover:opacity-100 p-2 text-gray-700 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all cursor-pointer"
                               >
                                 <UserMinus size={18} />
                               </button>
@@ -678,12 +668,12 @@ const Lobby = () => {
                                disabled={!isAdmin || isUpdatingSettings}
                                className={`py-3 rounded-xl border text-[10px] font-black uppercase transition-all flex flex-col items-center justify-center gap-1 shadow-lg ${
                                  currentAuction?.settings?.bidTimer === s
-                                   ? 'bg-yellow-500 text-black border-yellow-500'
-                                   : 'bg-white/5 border-white/5 text-gray-600 hover:border-white/20'
-                               } disabled:opacity-50`}
+                                   ? 'bg-[#1b1b1b] border-white/[0.12] text-white'
+                                   : 'bg-[#151515] border-transparent text-gray-500 hover:bg-white/[0.04]'
+                               } disabled:opacity-50 cursor-pointer`}
                             >
                                {s}s
-                               <TrendingUp size={10} className={currentAuction?.settings?.bidTimer === s ? 'text-black' : 'text-gray-800'} />
+                               <TrendingUp size={10} className={currentAuction?.settings?.bidTimer === s ? 'text-white' : 'text-gray-600'} />
                             </button>
                          ))}
                       </div>
@@ -704,20 +694,11 @@ const Lobby = () => {
                 )}
               </AnimatePresence>
             </div>
-          </motion.section>
+          </div>
         </div>
-      </div>
+      </motion.div>
 
-      <footer className="mt-auto py-12 flex flex-col items-center gap-6 z-10 ">
-        <div className="h-px w-20 bg-gradient-to-r from-transparent via-gray-600 to-transparent mb-2" />
-        <div className="flex gap-10 text-[9px] font-black uppercase tracking-[0.4em] text-gray-700">
-           <span className="hover:text-yellow-500 transition-colors">Designed &</span>
-           <span className="hover:text-orange-500 transition-colors">Developed By</span>
-           <a href="https://shaurya-upadhyay.me" target="_blank" rel="noopener noreferrer"> 
-              <span className="hover:text-blue-500 transition-colors">Shaurya Upadhyay</span>
-           </a>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
