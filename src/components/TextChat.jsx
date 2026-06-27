@@ -81,16 +81,9 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
    }, [showGifPicker]);
 
    return (
-      <div className="relative flex flex-col h-full bg-black/20 rounded-3xl overflow-hidden border border-white/5 backdrop-blur-md">
-         {/* Feed Header */}
-         <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
-            <div className="flex items-center gap-2">
-               <MessageSquare size={14} className="text-yellow-500" />
-               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                  Chat
-               </span>
-            </div>
-            {onToggleCollapse && (
+      <div className="relative flex flex-col h-full bg-transparent w-full">
+         {onToggleCollapse && (
+            <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
                <button
                   type="button"
                   onClick={onToggleCollapse}
@@ -99,8 +92,8 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
                >
                   {isCollapsed ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                </button>
-            )}
-         </div>
+            </div>
+         )}
 
          {!isCollapsed && (
             <>
@@ -129,7 +122,7 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
                               {/* Name and Team Header (only for other users) */}
                               {!isMe && (
                                  <div className="flex items-center gap-1.5 mb-1 px-1">
-                                    <span className="text-[9px] font-black text-yellow-500 uppercase tracking-tight">
+                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tight">
                                        {msg.userName}
                                     </span>
                                     {msg.teamId && (
@@ -146,8 +139,8 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
                                     msg.type === 'gif' || (msg.text?.startsWith('http') && msg.text?.includes('.gif'))
                                        ? 'border border-white/10 max-w-[200px]'
                                        : isMe
-                                          ? 'px-4 py-3 bg-yellow-500/10 border border-yellow-500/20 text-yellow-100 rounded-tr-none'
-                                          : 'px-4 py-3 bg-white/5 border border-white/10 text-gray-200 rounded-tl-none'
+                                          ? 'px-4 py-3 bg-white/10 border border-white/10 text-white rounded-tr-none'
+                                          : 'px-4 py-3 bg-white/5 border border-white/10 text-gray-300 rounded-tl-none'
                                  }`}
                               >
                                  {msg.type === 'gif' || (msg.text?.startsWith('http') && msg.text?.includes('.gif')) ? (
@@ -168,7 +161,7 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
                   <button
                      type="button"
                      onClick={() => setShowGifPicker(!showGifPicker)}
-                     className={`w-10 h-10 border rounded-xl flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0 ${showGifPicker ? 'bg-yellow-500/10 border-yellow-500/30 text-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.2)]' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'}`}
+                     className={`w-10 h-10 border rounded-xl flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0 ${showGifPicker ? 'bg-white/10 border-white/20 text-white shadow-inner' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'}`}
                      title="Send a GIF"
                   >
                      <ImageIcon size={14} />
@@ -178,13 +171,13 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
                      value={text}
                      onChange={(e) => setText(e.target.value)}
                      placeholder="Type a message..."
-                     className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-[11px] text-white focus:outline-none focus:border-yellow-500/50 transition-colors placeholder:text-gray-700"
+                     className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-[11px] text-white focus:outline-none focus:border-white/30 transition-colors placeholder:text-gray-700"
                      maxLength={150}
                   />
                   <button
                      type="submit"
                      disabled={!text.trim()}
-                     className="w-10 h-10 bg-yellow-500 disabled:opacity-40 hover:bg-yellow-400 text-[#050505] rounded-xl flex items-center justify-center transition-all active:scale-95 disabled:scale-100 cursor-pointer shrink-0"
+                     className="w-10 h-10 bg-white disabled:opacity-40 hover:bg-white/90 text-black rounded-xl flex items-center justify-center transition-all active:scale-95 disabled:scale-100 cursor-pointer shrink-0"
                   >
                      <Send size={14} fill="currentColor" />
                   </button>
@@ -213,11 +206,11 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
                            value={gifSearchQuery}
                            onChange={(e) => setGifSearchQuery(e.target.value)}
                            placeholder="Search any GIF (e.g. Dhoni, Kohli...)"
-                           className="flex-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-[10px] text-white focus:outline-none focus:border-yellow-500/50 transition-colors placeholder:text-gray-700"
+                           className="flex-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-[10px] text-white focus:outline-none focus:border-white/30 transition-colors placeholder:text-gray-700"
                         />
                         <button
                            type="submit"
-                           className="px-3 bg-yellow-500 hover:bg-yellow-400 text-black font-black text-[9px] uppercase tracking-widest rounded-xl transition-all active:scale-95 cursor-pointer shrink-0"
+                           className="px-3 bg-white hover:bg-white/90 text-black font-black text-[9px] uppercase tracking-widest rounded-xl transition-all active:scale-95 cursor-pointer shrink-0"
                         >
                            Search
                         </button>
@@ -244,7 +237,7 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
                                        setGifSearchQuery('');
                                     } catch (e) {}
                                  }}
-                                 className="relative rounded-lg overflow-hidden border border-white/5 hover:border-yellow-500/50 aspect-video group cursor-pointer transition-all active:scale-95 bg-white/5"
+                                 className="relative rounded-lg overflow-hidden border border-white/5 hover:border-white/30 aspect-video group cursor-pointer transition-all active:scale-95 bg-white/5"
                               >
                                  <img src={gif.url} alt={gif.name} className="w-full h-full object-cover animate-pulse" />
                                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">

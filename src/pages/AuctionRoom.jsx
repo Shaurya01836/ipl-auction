@@ -94,7 +94,7 @@ const AuctionRoom = () => {
       }
    }, [currentAuction?.currentAuction?.currentBid, optimisticState]);
 
-    const displayAuctionState = optimisticState || currentAuction?.currentAuction;
+   const displayAuctionState = optimisticState || currentAuction?.currentAuction;
 
 
    // Audio unlocker for mobile devices
@@ -188,7 +188,7 @@ const AuctionRoom = () => {
       if (cleanName.includes("google us")) return "Google US English (Clear)";
       if (cleanName.includes("google uk male")) return "Google UK Male (Sleek)";
       if (cleanName.includes("google uk female")) return "Google UK Female (Refined)";
-      
+
       return name.replace("Microsoft", "").replace("Google", "").replace("Desktop", "").replace("Natural", "").trim();
    };
 
@@ -197,7 +197,7 @@ const AuctionRoom = () => {
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
          const updateVoices = () => {
             const voices = window.speechSynthesis.getVoices();
-            
+
             const targetPatterns = [
                "Google US English",
                "Google UK English Male",
@@ -209,8 +209,8 @@ const AuctionRoom = () => {
                "Rishi"
             ];
 
-            let filtered = voices.filter(v => 
-               v.lang.startsWith('en') && 
+            let filtered = voices.filter(v =>
+               v.lang.startsWith('en') &&
                targetPatterns.some(pattern => v.name.toLowerCase().includes(pattern.toLowerCase()))
             );
 
@@ -235,14 +235,14 @@ const AuctionRoom = () => {
 
             // Set default selected voice
             if (!selectedVoiceName && filtered.length > 0) {
-               const defaultVoice = filtered.find(v => 
+               const defaultVoice = filtered.find(v =>
                   v.name.includes("Neerja") ||
-                  v.name.includes("Daniel") || 
-                  v.name.includes("Rishi") || 
-                  v.name.includes("David") || 
+                  v.name.includes("Daniel") ||
+                  v.name.includes("Rishi") ||
+                  v.name.includes("David") ||
                   v.name.includes("Google US")
                ) || filtered[0];
-               
+
                if (defaultVoice) {
                   setSelectedVoiceName(defaultVoice.name);
                }
@@ -263,7 +263,7 @@ const AuctionRoom = () => {
          window.speechSynthesis.cancel(); // cancel any active or queued speech immediately
          const utterance = new SpeechSynthesisUtterance(text);
          const voices = window.speechSynthesis.getVoices();
-         
+
          const chosenVoice = voices.find(v => v.name === selectedVoiceName) || voices.find(v => v.lang.startsWith('en')) || voices[0];
          if (chosenVoice) {
             utterance.voice = chosenVoice;
@@ -300,7 +300,7 @@ const AuctionRoom = () => {
             lastSpokenBidRef.current = currentBid;
             const teamName = TEAMS.find(t => t.id === highBidderTeamId)?.name || highBidderTeamId || "a manager";
             const bidValStr = formatPriceForSpeech(currentBid);
-            
+
             const bidPhrases = [
                `We have ${bidValStr} from ${teamName}!`,
                `Bid is ${bidValStr} with ${teamName}!`,
@@ -393,33 +393,33 @@ const AuctionRoom = () => {
       return groups;
    }, [activeOverlayTab, filteredPlayers]);
 
-    useEffect(() => {
-       if (!id || !user?.uid) return;
-       const unsub = joinAuction(id, user.uid);
-       
-       const autoJoin = async () => {
+   useEffect(() => {
+      if (!id || !user?.uid) return;
+      const unsub = joinAuction(id, user.uid);
+
+      const autoJoin = async () => {
          try {
-           await joinRoomDb(id, user.uid, { name: user.displayName || 'Manager' });
+            await joinRoomDb(id, user.uid, { name: user.displayName || 'Manager' });
          } catch (e) {
-           // Auto-join failed
-           if (e.message.includes("kicked")) {
-             setBanError(e.message);
-           }
+            // Auto-join failed
+            if (e.message.includes("kicked")) {
+               setBanError(e.message);
+            }
          }
-       };
-       autoJoin();
+      };
+      autoJoin();
 
-       return () => unsub();
-    }, [id, user?.uid, user?.displayName, joinAuction, joinRoomDb]);
+      return () => unsub();
+   }, [id, user?.uid, user?.displayName, joinAuction, joinRoomDb]);
 
-    useEffect(() => {
+   useEffect(() => {
       if (currentAuction && user) {
-        const isUserBanned = currentAuction.bannedPlayers?.includes(user.uid);
-        if (isUserBanned) {
-          setBanError("You have been kicked from this room and cannot rejoin.");
-        }
+         const isUserBanned = currentAuction.bannedPlayers?.includes(user.uid);
+         if (isUserBanned) {
+            setBanError("You have been kicked from this room and cannot rejoin.");
+         }
       }
-    }, [currentAuction, user]);
+   }, [currentAuction, user]);
 
    const playBeep = (freq = 440, duration = 0.1) => {
       try {
@@ -499,7 +499,7 @@ const AuctionRoom = () => {
                audio.pause();
                audio.src = TEAM_SONGS[teamId.toLowerCase()];
                audio.volume = 0.4;
-               audio.play().catch(e => {});
+               audio.play().catch(e => { });
             }
          }
       } else if (status === 'unsold') {
@@ -515,7 +515,7 @@ const AuctionRoom = () => {
             audio.pause();
             audio.src = randomAudio;
             audio.volume = 0.5;
-            audio.play().catch(e => {});
+            audio.play().catch(e => { });
          }
       } else {
          const audio = celebrationAudioRef.current;
@@ -645,14 +645,14 @@ const AuctionRoom = () => {
    if (banError) {
       return (
          <div className="min-h-screen bg-[#050505] flex items-center justify-center p-6 font-primary text-white">
-            <motion.div 
+            <motion.div
                initial={{ opacity: 0, scale: 0.9 }}
                animate={{ opacity: 1, scale: 1 }}
                className="max-w-md w-full bg-white/5 border border-white/10 p-12 rounded-[3.5rem] text-center backdrop-blur-3xl relative overflow-hidden"
             >
                <div className="absolute top-0 right-0 p-8 w-32 h-32 bg-red-500/10 rounded-full -mr-16 -mt-16 blur-3xl" />
                <div className="absolute bottom-0 left-0 p-8 w-32 h-32 bg-red-500/10 rounded-full -ml-16 -mb-16 blur-3xl" />
-               
+
                <div className="w-24 h-24 bg-red-500/10 border border-red-500/20 rounded-[2.5rem] flex items-center justify-center mx-auto mb-10 shadow-2xl shadow-red-500/20 relative group">
                   <ShieldAlert size={48} className="text-red-500 group-hover:scale-110 transition-transform duration-500" />
                </div>
@@ -662,7 +662,7 @@ const AuctionRoom = () => {
                   {banError}
                </p>
 
-               <button 
+               <button
                   onClick={() => navigate('/')}
                   className="w-full py-6 bg-white text-black font-black uppercase tracking-widest rounded-[2rem] hover:bg-gray-100 transition-all active:scale-95 flex items-center justify-center gap-3"
                >
@@ -734,10 +734,10 @@ const AuctionRoom = () => {
                                  onClick={() => !isTaken && handleQuickJoin(t)}
                                  disabled={isTaken || !!joiningTeam}
                                  className={`relative group flex flex-col items-center justify-center p-3 md:p-4 rounded-2xl transition-all duration-300 border cursor-pointer ${isJoining
-                                       ? 'border-yellow-400 bg-yellow-400/10 shadow-[0_0_25px_rgba(250,204,21,0.2)] scale-105'
-                                       : isTaken
-                                          ? 'border-white/5 opacity-25 grayscale cursor-not-allowed'
-                                          : 'border-white/10 hover:border-yellow-500/30 hover:bg-white/5 hover:scale-105 active:scale-95'
+                                    ? 'border-yellow-400 bg-yellow-400/10 shadow-[0_0_25px_rgba(250,204,21,0.2)] scale-105'
+                                    : isTaken
+                                       ? 'border-white/5 opacity-25 grayscale cursor-not-allowed'
+                                       : 'border-white/10 hover:border-yellow-500/30 hover:bg-white/5 hover:scale-105 active:scale-95'
                                     }`}
                               >
                                  <div className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/5 border border-white/10 p-1.5 flex items-center justify-center ${isJoining ? 'animate-pulse' : ''}`}>
@@ -776,18 +776,17 @@ const AuctionRoom = () => {
    }
 
    return (
-      <div className="h-screen bg-[#050505] text-white font-sans flex flex-col items-center overflow-hidden">
-
+      <div className="h-screen bg-[#0d0d0d] text-white font-sans flex flex-col items-center overflow-hidden">
 
          <header className="w-full min-h-14 h-auto md:h-14 bg-black/40 backdrop-blur-md border-b border-white/5 flex flex-col md:flex-row items-center justify-between px-4 md:px-6 py-3 md:py-0 z-50 gap-4 md:gap-0">
             <div className="flex items-center gap-3 md:gap-6">
                <div className="flex items-center gap-1.5 sm:gap-3">
                   <span className="text-gray-500 text-[9px] sm:text-[10px] font-black uppercase tracking-widest">ID:</span>
-                  <span className="text-yellow-500 font-black tracking-widest text-[11px] sm:text-sm">{id}</span>
+                  <span className="text-white font-mono font-bold tracking-widest text-[11px] sm:text-sm">{id}</span>
                </div>
-               <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full">
+               <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full" title="Connected Users">
                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                  <span className="text-[10px] font-black text-green-500">{currentAuction?.players?.length || 1}/10</span>
+                  <span className="text-[10px] font-black text-gray-300">{currentAuction?.players?.length || 1}/10</span>
                </div>
                <div className="flex items-center gap-2 border-l border-white/10 pl-4 sm:pl-6 h-6">
                   <button onClick={copyRoomId} className="p-1.5 bg-white/5 text-gray-400 rounded-lg hover:bg-white/10 transition-colors cursor-pointer">
@@ -802,29 +801,29 @@ const AuctionRoom = () => {
                      {displayAuctionState?.status === 'paused' ? (
                         <button
                            onClick={() => resumeAuction(id)}
-                           className="flex items-center gap-1.5 sm:gap-2 bg-green-500/10 border border-green-500/20 px-2 sm:px-3 py-1.5 rounded-lg text-green-500 text-[10px] font-black uppercase tracking-widest hover:bg-green-500/20 transition-all cursor-pointer"
+                           className="flex items-center gap-1.5 sm:gap-2 bg-white/5 border border-white/10 px-2 sm:px-3 py-1.5 rounded-lg text-gray-300 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer"
                         >
-                           <PlayCircle size={12} fill="currentColor" /> <span className="hidden sm:inline">Resume</span>
+                           <PlayCircle size={12} /> <span className="hidden sm:inline">Resume</span>
                         </button>
                      ) : (
                         <button
                            onClick={() => pauseAuction(id)}
-                           className="flex items-center gap-1.5 sm:gap-2 bg-yellow-500/10 border border-yellow-500/20 px-2 sm:px-3 py-1.5 rounded-lg text-yellow-500 text-[10px] font-black uppercase tracking-widest hover:bg-yellow-500/20 transition-all cursor-pointer"
+                           className="flex items-center gap-1.5 sm:gap-2 bg-white/5 border border-white/10 px-2 sm:px-3 py-1.5 rounded-lg text-gray-300 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer"
                         >
-                           <Pause size={12} fill="currentColor" /> <span className="hidden sm:inline">Pause</span>
+                           <Pause size={12} /> <span className="hidden sm:inline">Pause</span>
                         </button>
                      )}
                      <button
                         onClick={() => endAuction(id)}
-                        className="flex items-center gap-1.5 sm:gap-2 bg-red-500/10 border border-red-500/20 px-2 sm:px-3 py-1.5 rounded-lg text-red-500 text-[10px] font-black uppercase tracking-widest hover:bg-red-500/20 transition-all cursor-pointer"
+                        className="flex items-center gap-1.5 sm:gap-2 bg-white/5 border border-white/10 px-2 sm:px-3 py-1.5 rounded-lg text-gray-300 text-[10px] font-black uppercase tracking-widest hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/20 transition-all cursor-pointer"
                      >
-                        <XCircle size={12} fill="currentColor" /> <span className="hidden sm:inline">End</span>
+                        <XCircle size={12} /> <span className="hidden sm:inline">End</span>
                      </button>
                      <button
                         onClick={() => setShowParticipantsOverlay(true)}
-                        className="flex items-center gap-1.5 sm:gap-2 bg-blue-500/10 border border-blue-500/20 px-2 sm:px-3 py-1.5 rounded-lg text-blue-500 text-[10px] font-black uppercase tracking-widest hover:bg-blue-500/20 transition-all cursor-pointer"
+                        className="flex items-center gap-1.5 sm:gap-2 bg-white/5 border border-white/10 px-2 sm:px-3 py-1.5 rounded-lg text-gray-300 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer"
                      >
-                        <Users size={12} fill="currentColor" /> <span className="hidden sm:inline">Participants</span>
+                        <Users size={12} /> <span className="hidden sm:inline">Participants</span>
                      </button>
                   </div>
                )}
@@ -841,19 +840,19 @@ const AuctionRoom = () => {
                            speak("Voice Auctioneer enabled.");
                         }
                      }}
-                     className={`p-1.5 rounded-lg border transition-all cursor-pointer ${isTtsEnabled ? 'bg-yellow-500/20 border-yellow-500/30 text-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.2)]' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}
+                     className={`p-1.5 rounded-lg border transition-all cursor-pointer ${isTtsEnabled ? 'bg-white/10 border-white/20 text-white shadow-sm' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}
                      title={isTtsEnabled ? "Mute Voice Auctioneer" : "Enable Voice Auctioneer"}
                   >
                      <Gavel size={16} />
                   </button>
                   <button
                      onClick={() => setShowSettings(!showSettings)}
-                     className={`p-1.5 rounded-lg border transition-all cursor-pointer ${showSettings ? 'bg-blue-600 text-white border-blue-400' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                     className={`p-1.5 rounded-lg border transition-all cursor-pointer ${showSettings ? 'bg-white/10 border-white/20 text-white shadow-sm' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}
                      title="Local & Room Settings"
                   >
                      <SettingsIcon size={16} />
                   </button>
-                  <button onClick={() => navigate('/')} className="p-1.5 hover:bg-white/5 rounded-lg text-gray-400 cursor-pointer"><Home size={16} /></button>
+                  <button onClick={() => navigate('/')} className="p-1.5 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition-colors cursor-pointer"><Home size={16} /></button>
                   <button onClick={logout} className="p-1.5 hover:bg-red-500/20 rounded-lg text-gray-400 hover:text-red-400 cursor-pointer transition-colors" title="Logout"><LogOut size={16} /></button>
                </div>
             </div>
@@ -861,17 +860,11 @@ const AuctionRoom = () => {
 
          <div className="w-full flex flex-col md:flex-row flex-1 overflow-hidden relative">
             <aside className={`${mobileTab === 'squad' ? 'flex' : 'hidden'} md:flex w-full md:w-80 bg-black/40 border-r border-white/5 flex-col h-full md:max-h-[calc(100vh-3.5rem)]`}>
-               <div className="p-6 border-b border-white/5 bg-gradient-to-br from-blue-500/10 to-transparent">
-                  <div className="flex items-center gap-3 mb-2">
-
-                     <div>
-                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none">Auction Teams</span>
-
-                     </div>
-                  </div>
+               <div className="h-14 border-b border-white/5 bg-white/[0.01] flex items-center px-6 shrink-0">
+                  <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none">Auction Teams</span>
                </div>
 
-               <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+               <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                   {TEAMS.map((t, idx) => {
                      const teamDoc = roomTeams.find(doc => doc.teamId === t.id);
                      const manager = currentAuction?.players?.find(p => p.id === teamDoc?.userId);
@@ -879,35 +872,41 @@ const AuctionRoom = () => {
                      const isSelected = selectedTeamId === (manager?.id || t.id);
 
                      return (
-                        <div key={idx} className="space-y-1">
+                        <div key={idx} className="border-b border-white/5 last:border-b-0 py-1">
                            <button
                               onClick={() => setSelectedTeamId(isSelected ? null : (manager?.id || t.id))}
-                              className={`w-full text-left p-4 rounded-md border transition-all flex items-center justify-between group cursor-pointer ${isSelected ? 'bg-white/10 border-white/20 shadow-xl' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}
+                              className={`w-full text-left py-3 px-2 rounded-xl transition-all flex items-center justify-between group cursor-pointer ${isSelected ? 'bg-white/[0.03]' : 'hover:bg-white/[0.02]'}`}
                            >
                               <div className="flex items-center gap-3">
-                                 <div className={`w-10 h-10 rounded-xl bg-white/5 border border-white/10 p-1.5 flex items-center justify-center`}>
+                                 <div className="w-9 h-9 rounded-lg bg-white/5 p-1 flex items-center justify-center">
                                     <img src={t.logo} alt="" className="w-full h-full object-contain" />
                                  </div>
                                  <div className="overflow-hidden">
-                                    <div className="flex items-center gap-2">
-                                       <h5 className="text-[11px] font-black truncate max-w-[120px]">{t.name}</h5>
-                                       {manager && (
-                                          <div className={`w-1.5 h-1.5 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.5)] ${manager.isOnline ? 'bg-green-500 shadow-green-500/20 animate-pulse' : 'bg-gray-700'}`} />
+                                    <h5 className="text-[11px] font-bold text-white leading-tight truncate max-w-[110px]">{t.name}</h5>
+                                    <div className="flex items-center gap-1.5 mt-0.5">
+                                       {manager ? (
+                                          <>
+                                             <div className={`w-1.5 h-1.5 rounded-full ${manager.isOnline ? 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.4)] animate-pulse' : 'bg-gray-600'}`} />
+                                             <span className="text-[9px] font-semibold text-gray-400 truncate max-w-[110px]">
+                                                {manager.name} {isMyTeam ? '(You)' : ''}
+                                             </span>
+                                          </>
+                                       ) : (
+                                          <span className="text-[8px] font-bold text-gray-500 uppercase tracking-wider">
+                                             Available
+                                          </span>
                                        )}
                                     </div>
-                                    <span className={`text-[9px] font-black uppercase tracking-tight ${manager ? (manager.isOnline ? 'text-green-500' : 'text-gray-400') : 'text-gray-600'}`}>
-                                       {manager ? `Managed by: ${manager.name} ${isMyTeam ? '(YOU)' : ''}` : 'Franchise Available'}
-                                    </span>
                                  </div>
                               </div>
                               <div className="flex items-center gap-4">
                                  <div className="text-right">
-                                    <span className={`text-[10px] font-black block leading-none ${manager ? 'text-green-500' : 'text-gray-700'}`}>
+                                    <span className="text-[10px] font-bold block leading-none text-gray-200">
                                        ₹{(teamDoc?.budgetRemaining || (currentAuction?.settings?.budget || 120.0)).toFixed(1)} Cr
                                     </span>
-                                    <span className="text-[8px] font-bold text-gray-600 uppercase tracking-widest">{teamDoc?.squad?.length || 0}/{currentAuction?.squadLimit || 25}</span>
+                                    <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest mt-0.5 block">{teamDoc?.squad?.length || 0}/{currentAuction?.squadLimit || 25}</span>
                                  </div>
-                                 <ChevronDown size={14} className={`text-gray-600 transition-transform duration-300 ${isSelected ? 'rotate-180' : ''}`} />
+                                 <ChevronDown size={12} className={`text-gray-500 transition-transform duration-300 ${isSelected ? 'rotate-180' : ''}`} />
                               </div>
                            </button>
 
@@ -917,17 +916,16 @@ const AuctionRoom = () => {
                                     initial={{ height: 0, opacity: 0 }}
                                     animate={{ height: 'auto', opacity: 1 }}
                                     exit={{ height: 0, opacity: 0 }}
-                                    className="overflow-hidden px-2 mb-4"
+                                    className="overflow-hidden px-3 pb-3"
                                  >
-                                    <div className="bg-[#111] border border-white/10 rounded-md overflow-hidden mt-1 p-2 space-y-2">
-                                       <div className="p-2 bg-white/5 rounded-lg flex items-center justify-between text-[9px] font-black uppercase tracking-tight">
-                                          <div className="flex gap-3">
-                                             <span className="text-gray-500">OS: <span className="text-white">{(teamDoc?.squad?.filter(s => {
-                                                const pid = typeof s === 'string' ? s : s.id;
-                                                return IPL_PLAYERS.find(pl => pl.id === pid)?.country !== 'IND';
-                                             }).length || 0)}/{currentAuction?.overseasLimit || 8}</span></span>
-                                             <span className="text-gray-500">Spent: <span className="text-yellow-500">{((currentAuction?.settings?.budget || 120) - (teamDoc?.budgetRemaining || (currentAuction?.settings?.budget || 120))).toFixed(2)} Cr</span></span>
-                                          </div>
+                                    <div className="space-y-3 pt-2 pl-1">
+                                       {/* Header Stats */}
+                                       <div className="flex items-center justify-between text-[9px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5 pb-2">
+                                          <span>Spent: <span className="text-yellow-500">₹{((currentAuction?.settings?.budget || 120) - (teamDoc?.budgetRemaining || (currentAuction?.settings?.budget || 120))).toFixed(2)} Cr</span></span>
+                                          <span>Overseas: <span className="text-white">{(teamDoc?.squad?.filter(s => {
+                                             const pid = typeof s === 'string' ? s : s.id;
+                                             return IPL_PLAYERS.find(pl => pl.id === pid)?.country !== 'IND';
+                                          }).length || 0)}/{currentAuction?.overseasLimit || 8}</span></span>
                                        </div>
 
                                        {teamDoc?.squad?.length > 0 ? (
@@ -945,32 +943,34 @@ const AuctionRoom = () => {
                                                 if (playersInRole.length === 0) return null;
 
                                                 return (
-                                                   <div key={role} className="space-y-1">
-                                                      <div className="flex items-center justify-between px-2 py-1 bg-white/5 rounded-lg mb-1">
-                                                         <span className="text-[7px] font-black text-gray-400 uppercase tracking-widest">{role}</span>
-                                                         <span className="text-[8px] font-black text-blue-500">{playersInRole.length}</span>
+                                                   <div key={role} className="space-y-1.5">
+                                                      <div className="flex items-center justify-between border-b border-white/5 pb-1">
+                                                         <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest">{role}</span>
+                                                         <span className="text-[9px] font-bold text-gray-400">{playersInRole.length}</span>
                                                       </div>
-                                                      {playersInRole.map((p, sidx) => (
-                                                         <div key={sidx} className="bg-white/5 p-2 rounded-xl flex items-center justify-between group hover:bg-white/10 transition-all">
-                                                            <div className="flex items-center gap-2">
-                                                               <img src={p?.image} className="w-6 h-6 object-contain rounded-md" />
-                                                               <div className="overflow-hidden">
-                                                                  <h5 className="text-[10px] font-black whitespace-nowrap overflow-hidden text-ellipsis max-w-[80px]">{p?.name}</h5>
-                                                                  <span className="text-[7px] font-bold text-gray-400 uppercase tracking-widest">{p?.role}</span>
+
+                                                      <div className="space-y-1">
+                                                         {playersInRole.map((p, sidx) => (
+                                                            <div key={sidx} className="py-1 flex items-center justify-between group hover:bg-white/[0.01] rounded-lg px-1 transition-all">
+                                                               <div className="flex items-center gap-2">
+                                                                  <img src={p?.image} className="w-5 h-5 object-contain rounded bg-white/5" />
+                                                                  <div className="overflow-hidden">
+                                                                     <h5 className="text-[10px] font-semibold text-gray-200 truncate max-w-[90px]">{p?.name}</h5>
+                                                                  </div>
                                                                </div>
+                                                               <span className="text-[9px] font-bold text-yellow-500">
+                                                                  ₹{p?.bidVal ? p.bidVal.toFixed(2) : (p?.basePrice || 0).toFixed(2)} Cr
+                                                               </span>
                                                             </div>
-                                                            <span className="text-[8px] font-black  text-yellow-500">
-                                                               ₹{p?.bidVal ? p.bidVal.toFixed(2) : (p?.basePrice || 0).toFixed(2)} Cr
-                                                            </span>
-                                                         </div>
-                                                      ))}
+                                                         ))}
+                                                      </div>
                                                    </div>
                                                 );
                                              })}
                                           </div>
                                        ) : (
-                                          <div className="py-4 text-center opacity-30 ">
-                                             <p className="text-[9px] font-black text-white/50 uppercase">No players joined yet</p>
+                                          <div className="py-3 text-center opacity-30">
+                                             <p className="text-[9px] font-medium text-gray-500 uppercase tracking-wider">No players joined yet</p>
                                           </div>
                                        )}
                                     </div>
@@ -983,138 +983,153 @@ const AuctionRoom = () => {
                </div>
             </aside>
 
-            <main className={`${mobileTab === 'arena' ? 'flex' : 'hidden'} md:flex flex-1 overflow-y-auto p-4 md:p-8 flex-col items-center custom-scrollbar`}>
-               <div className="w-full max-w-4xl flex flex-col gap-4 md:gap-6">
-                  <AnimatePresence mode="wait">
-                     {(displayAuctionState?.status === 'sold' || displayAuctionState?.status === 'unsold') ? (
-                        <motion.div
-                           key="celebration"
-                           initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                           animate={{ opacity: 1, scale: 1, y: 0 }}
-                           exit={{ opacity: 0, scale: 1.1 }}
-                           className={`w-full max-w-2xl mx-auto min-h-[400px] flex flex-col items-center justify-center rounded-[2.5rem] overflow-hidden relative shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/20 ${displayAuctionState.status === 'sold' ? (TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.color || 'bg-green-500') : 'bg-red-950'}`}
-                        >
-                           {/* Confetti deleted for brevity during recovery */}
-                           <div className="flex flex-col items-center text-center z-10 px-8 py-10 w-full bg-gradient-to-b from-white/10 to-transparent">
-                              <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="relative mb-6">
-                                 <img src={currentPlayer.image} alt={currentPlayer.name} className="w-32 h-32 md:w-36 md:h-40 object-cover rounded-3xl border-4 border-white/30 shadow-2xl relative z-10" />
-                              </motion.div>
-                              <motion.h2 initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="text-xl sm:text-2xl md:text-3xl font-black text-white uppercase tracking-tighter mb-1 drop-shadow-md">
-                                 {currentPlayer.name}
-                              </motion.h2>
-                              <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.4, type: 'spring' }} className="text-4xl sm:text-6xl md:text-8xl font-black  tracking-tighter text-white drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)] mb-6">
-                                 {displayAuctionState.status === 'sold' ? 'SOLD' : 'UNSOLD'}
-                              </motion.div>
-                              {displayAuctionState.status === 'sold' && (
-                                 <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }} className="flex flex-col items-center gap-4 w-full">
-                                    <div className="bg-black/40 backdrop-blur-xl px-6 sm:px-10 py-3 rounded-full border border-yellow-500/50 shadow-[0_0_30px_rgba(234,179,8,0.3)]">
-                                       <span className="text-2xl sm:text-4xl md:text-5xl font-black text-yellow-500 tracking-tight">₹{(displayAuctionState.currentBid || 0).toFixed(2)} Cr</span>
-                                    </div>
-                                    <div className="bg-white/10 backdrop-blur-md px-8 py-3 rounded-2xl border border-white/20 flex items-center gap-3">
-                                       <div className={`w-10 h-10 rounded-xl bg-white/5 border border-white/10 p-1.5 flex items-center justify-center`}>
-                                          <img src={TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.logo} alt="" className="w-full h-full object-contain" />
-                                       </div>
-                                       <span className="text-base sm:text-lg md:text-xl font-black uppercase text-white tracking-widest">{TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.name || 'Franchise'}</span>
-                                    </div>
+            <div className={`${mobileTab === 'arena' ? 'flex' : 'hidden'} md:flex flex-col flex-1 h-full overflow-hidden`}>
+               {/* Center Fixed Header */}
+               <div className="h-14 border-b border-white/5 bg-white/[0.01] flex items-center px-6 md:px-8 w-full shrink-0">
+                  <div className="w-full max-w-4xl mx-auto flex items-center justify-between gap-4">
+                     <div className="flex items-center gap-3 md:gap-4">
+                        <div className="px-2 pb-0.5 md:px-3 bg-yellow-500/20 border border-yellow-500/30 rounded-md">
+                           <span className="text-[8px] md:text-[9px] font-black text-yellow-500 uppercase tracking-widest ">{currentPlayer?.set}</span>
+                        </div>
+                        <span className="text-[9px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest">Base Price:</span>
+                        <span className="text-sm md:text-base font-black text-white">₹{currentPlayer?.basePrice?.toFixed(2)} Cr</span>
+                     </div>
+                     <div className="flex items-center gap-2 md:gap-3">
+                        <span className="text-[9px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest">High Bidder:</span>
+                        <div className="bg-green-500/20 border border-green-500/30 px-2 pb-0.5 md:px-3 rounded-md">
+                           <span className="text-[9px] md:text-[10px] font-black text-green-400 uppercase tracking-widest ">{displayAuctionState?.highBidderName}</span>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+
+               {/* Center Scrollable Main Body */}
+               <main className="flex-1 overflow-y-auto p-4 md:p-8 flex flex-col items-center custom-scrollbar">
+                  <div className="w-full max-w-4xl flex flex-col gap-4 md:gap-6">
+                     <AnimatePresence mode="wait">
+                        {(displayAuctionState?.status === 'sold' || displayAuctionState?.status === 'unsold') ? (
+                           <motion.div
+                              key="celebration"
+                              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                              animate={{ opacity: 1, scale: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 1.1 }}
+                              className={`w-full max-w-2xl mx-auto min-h-[400px] flex flex-col items-center justify-center rounded-[2.5rem] overflow-hidden relative shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/20 ${displayAuctionState.status === 'sold' ? (TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.color || 'bg-green-500') : 'bg-red-950'}`}
+                           >
+                              {/* Confetti deleted for brevity during recovery */}
+                              <div className="flex flex-col items-center text-center z-10 px-8 py-10 w-full bg-gradient-to-b from-white/10 to-transparent">
+                                 <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="relative mb-6">
+                                    <img src={currentPlayer.image} alt={currentPlayer.name} className="w-32 h-32 md:w-36 md:h-40 object-cover rounded-3xl border-4 border-white/30 shadow-2xl relative z-10" />
                                  </motion.div>
-                              )}
-                           </div>
-                        </motion.div>
-                     ) : (
-                        <motion.div key="player-card" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full flex-col gap-4 md:gap-6 flex">
-                           <div className="w-full flex flex-col md:flex-row items-center justify-between gap-4 px-2 md:px-4">
-                              <div className="flex items-center gap-3 md:gap-4">
-                                 <div className="px-2 pb-0.5 md:px-3 bg-yellow-500/20 border border-yellow-500/30 rounded-md">
-                                    <span className="text-[8px] md:text-[9px] font-black text-yellow-500 uppercase tracking-widest ">{currentPlayer.set}</span>
-                                 </div>
-                                 <span className="text-[9px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest">Base Price:</span>
-                                 <span className="text-lg md:text-xl font-black  text-white">₹{currentPlayer.basePrice.toFixed(2)} Cr</span>
-                              </div>
-                              <div className="flex items-center gap-2 md:gap-3">
-                                 <span className="text-[9px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest">High Bidder:</span>
-                                 <div className="bg-green-500/20 border border-green-500/30 px-2 pb-0.5 md:px-3 rounded-md">
-                                    <span className="text-[9px] md:text-[10px] font-black text-green-400 uppercase tracking-widest ">{displayAuctionState?.highBidderName}</span>
-                                 </div>
-                              </div>
-                           </div>
-                           <div className="bg-[#111] border border-white/5 rounded-3xl md:rounded-md overflow-hidden shadow-2xl relative min-h-[400px]">
-                              <div className="absolute top-0 inset-x-0 h-1 bg-white/5">
-                                 <motion.div initial={{ width: "100%" }} animate={{ width: `${(timeLeft / (currentAuction?.settings?.bidTimer || 10)) * 100}%` }} className={`h-full transition-colors duration-1000 ${timeLeft < 5 ? 'bg-red-500' : 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]'}`} />
-                              </div>
-                              <div className="p-4 md:p-8 flex flex-col md:flex-row items-center gap-4 md:gap-8">
-                                 <div className="w-32 h-32 md:w-60 md:h-80 bg-gradient-to-b from-white/10 to-transparent rounded-2xl md:rounded-[2rem] overflow-hidden border border-white/5 relative z-10">
-                                    <img src={currentPlayer.image} alt={currentPlayer.name} className="w-full h-full object-cover" />
-                                 </div>
-                                 <div className="flex-1 flex flex-col gap-4 md:gap-6 w-full text-center md:text-left">
-                                    <div>
-                                       <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2 md:mb-4">
-                                          <span className="bg-blue-600 border border-blue-400/30 text-white text-[8px] md:text-[10px] font-black px-2 py-0.5 md:px-3 md:py-1 rounded-full uppercase  tracking-widest">{currentPlayer.role}</span>
-                                          <span className="bg-purple-600/20 border border-purple-500/30 text-purple-400 text-[8px] md:text-[10px] font-black px-2 py-0.5 md:px-3 md:py-1 rounded-full uppercase  tracking-widest">{currentPlayer.type}</span>
+                                 <motion.h2 initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="text-xl sm:text-2xl md:text-3xl font-black text-white uppercase tracking-tighter mb-1 drop-shadow-md">
+                                    {currentPlayer.name}
+                                 </motion.h2>
+                                 <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.4, type: 'spring' }} className="text-4xl sm:text-6xl md:text-8xl font-black  tracking-tighter text-white drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)] mb-6">
+                                    {displayAuctionState.status === 'sold' ? 'SOLD' : 'UNSOLD'}
+                                 </motion.div>
+                                 {displayAuctionState.status === 'sold' && (
+                                    <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }} className="flex flex-col items-center gap-4 w-full">
+                                       <div className="bg-black/40 backdrop-blur-xl px-6 sm:px-10 py-3 rounded-full border border-yellow-500/50 shadow-[0_0_30px_rgba(234,179,8,0.3)]">
+                                          <span className="text-2xl sm:text-4xl md:text-5xl font-black text-yellow-500 tracking-tight">₹{(displayAuctionState.currentBid || 0).toFixed(2)} Cr</span>
                                        </div>
-                                       <h2 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight  leading-none">{currentPlayer.name}</h2>
+                                       <div className="bg-white/10 backdrop-blur-md px-8 py-3 rounded-2xl border border-white/20 flex items-center gap-3">
+                                          <div className={`w-10 h-10 rounded-xl bg-white/5 border border-white/10 p-1.5 flex items-center justify-center`}>
+                                             <img src={TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.logo} alt="" className="w-full h-full object-contain" />
+                                          </div>
+                                          <span className="text-base sm:text-lg md:text-xl font-black uppercase text-white tracking-widest">{TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.name || 'Franchise'}</span>
+                                       </div>
+                                    </motion.div>
+                                 )}
+                              </div>
+                           </motion.div>
+                        ) : (
+                           <motion.div key="player-card" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full flex-col gap-4 md:gap-6 flex">
+                              <div className="bg-gradient-to-b from-[#161616] to-[#0f0f0f] border border-white/[0.08] rounded-[2rem] overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.6)] relative min-h-[400px]">
+                                 <div className="absolute top-0 inset-x-0 h-1 bg-white/5">
+                                    <motion.div initial={{ width: "100%" }} animate={{ width: `${(timeLeft / (currentAuction?.settings?.bidTimer || 10)) * 100}%` }} className={`h-full transition-colors duration-1000 ${timeLeft < 5 ? 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]'}`} />
+                                 </div>
+                                 <div className="p-6 md:p-10 flex flex-col md:flex-row items-center gap-6 md:gap-10">
+                                    <div className="w-36 h-36 md:w-60 md:h-80 bg-gradient-to-b from-white/10 to-transparent rounded-[1.5rem] md:rounded-[2rem] overflow-hidden border border-white/10 relative z-10 shadow-[0_12px_40px_rgba(0,0,0,0.4)] group hover:scale-[1.02] transition-transform duration-500">
+                                       <img src={currentPlayer.image} alt={currentPlayer.name} className="w-full h-full object-cover" />
                                     </div>
-                                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3 bg-white/5 p-2 md:p-3 rounded-xl md:rounded-2xl border border-white/5 backdrop-blur-sm">
-                                       <div className="text-center group"><span className="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">Matches</span><span className="text-2xl font-black ">{currentPlayer.stats?.matches || 0}</span></div>
-                                       {currentPlayer.stats?.runs !== undefined && (<div className="text-center border-l border-white/10"><span className="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">Runs</span><span className="text-2xl font-black  text-yellow-500">{currentPlayer.stats.runs}</span></div>)}
-                                       {currentPlayer.stats?.sr !== undefined && (<div className="text-center border-l border-white/10"><span className="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">S.Rate</span><span className="text-2xl font-black ">{currentPlayer.stats.sr}</span></div>)}
-                                       {currentPlayer.stats?.wickets !== undefined && (<div className="text-center border-l border-white/10"><span className="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">Wkts</span><span className="text-2xl font-black  text-green-500">{currentPlayer.stats.wickets}</span></div>)}
-                                    </div>
-                                    <div className="flex items-center justify-between mt-2 md:mt-4">
-                                       <div className="text-left">
-                                          <span className="text-[8px] md:text-[10px] font-black text-blue-500 uppercase tracking-widest block mb-0.5 md:mb-1">Current Bid</span>
-                                          <div className="flex items-center gap-3">
-                                             <span className="text-xl md:text-3xl font-black text-white leading-none">₹{(displayAuctionState?.currentBid || 0).toFixed(2)} Cr</span>
-                                             {displayAuctionState?.highBidderTeamId && (
-                                                <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-2 py-1 rounded-xl">
-                                                   <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-white/5 border border-white/10 p-0.5 flex items-center justify-center">
-                                                      <img src={TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.logo} alt="" className="w-full h-full object-contain" />
+                                    <div className="flex-1 flex flex-col gap-5 md:gap-6 w-full text-center md:text-left">
+                                       <div>
+                                          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-3 md:mb-4">
+                                             <span className="bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[8px] md:text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">{currentPlayer.role}</span>
+                                             <span className="bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[8px] md:text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">{currentPlayer.type}</span>
+                                          </div>
+                                          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-white leading-none">{currentPlayer.name}</h2>
+                                       </div>
+                                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 bg-white/[0.02] p-3 md:p-4 rounded-2xl border border-white/[0.04] backdrop-blur-md">
+                                          <div className="text-center"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Matches</span><span className="text-xl font-bold text-gray-100">{currentPlayer.stats?.matches || 0}</span></div>
+                                          {currentPlayer.stats?.runs !== undefined && (<div className="text-center border-l border-white/5"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Runs</span><span className="text-xl font-bold text-yellow-500">{currentPlayer.stats.runs}</span></div>)}
+                                          {currentPlayer.stats?.sr !== undefined && (<div className="text-center border-l border-white/5"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">S.Rate</span><span className="text-xl font-bold text-gray-100">{currentPlayer.stats.sr}</span></div>)}
+                                          {currentPlayer.stats?.wickets !== undefined && (<div className="text-center border-l border-white/5"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Wkts</span><span className="text-xl font-bold text-green-500">{currentPlayer.stats.wickets}</span></div>)}
+                                       </div>
+                                       <div className="flex items-center justify-between mt-3 md:mt-4">
+                                          <div className="text-left">
+                                             <span className="text-[9px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Current Bid</span>
+                                             <div className="flex items-center gap-3">
+                                                <span className="text-2xl md:text-3xl font-extrabold text-white leading-none">₹{(displayAuctionState?.currentBid || 0).toFixed(2)} Cr</span>
+                                                {displayAuctionState?.highBidderTeamId && (
+                                                   <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-2 py-1 rounded-xl">
+                                                      <div className="w-6 h-6 rounded-lg bg-white/5 border border-white/10 p-0.5 flex items-center justify-center">
+                                                         <img src={TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.logo} alt="" className="w-full h-full object-contain" />
+                                                      </div>
+                                                      <span className="text-[9px] md:text-[10px] font-bold text-gray-300 uppercase tracking-widest">{displayAuctionState.highBidderTeamId}</span>
                                                    </div>
-                                                   <span className="text-[9px] md:text-[11px] font-black text-gray-300 uppercase tracking-widest">{displayAuctionState.highBidderTeamId}</span>
-                                                </div>
-                                             )}
+                                                )}
+                                             </div>
+                                          </div>
+                                          <div className={`w-14 h-14 md:w-16 md:h-16 rounded-full flex flex-col items-center justify-center transition-all duration-300 border-2 ${timeLeft < 5
+                                             ? 'border-red-500 bg-red-500/10 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]'
+                                             : 'border-green-500/30 bg-green-500/5 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.1)]'
+                                             }`}>
+                                             <span className="text-lg md:text-xl font-black leading-none">{timeLeft}</span>
+                                             <span className="text-[6px] md:text-[7px] font-bold tracking-widest uppercase mt-0.5">Sec</span>
                                           </div>
                                        </div>
-                                       <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl md:rounded-3xl flex flex-col items-center justify-center text-black border-4 border-black/10 shadow-2xl transition-all ${displayAuctionState?.status === 'sold' || displayAuctionState?.status === 'unsold' ? (displayAuctionState.status === 'sold' ? 'bg-green-500 scale-110' : 'bg-red-500 scale-110') : 'bg-yellow-500'}`}>
-                                          <span className="text-xl md:text-3xl font-black leading-none uppercase tracking-tighter">{timeLeft}</span>
-                                          <span className="text-[7px] md:text-[8px] font-black uppercase tracking-widest">SEC</span>
-                                       </div>
                                     </div>
                                  </div>
+                                 <div className="bg-black/20 border-t border-white/5 p-4 md:p-6 flex gap-3 md:gap-4">
+                                    <button
+                                       onClick={handleBid}
+                                       disabled={timeLeft === 0 || displayAuctionState?.status !== 'bidding' || displayAuctionState?.highBidderId === user?.uid}
+                                       className={`flex-1 h-14 md:h-18 font-black text-base md:text-xl rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale cursor-pointer ${displayAuctionState?.highBidderId === user?.uid
+                                          ? 'bg-white/5 text-green-500 border border-green-500/20 shadow-inner'
+                                          : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-[#050505] shadow-[0_4px_20px_rgba(34,197,94,0.2)] hover:shadow-[0_8px_30px_rgba(34,197,94,0.3)]'
+                                          }`}
+                                    >
+                                       {displayAuctionState?.status === 'paused' ? 'PAUSED' : displayAuctionState?.highBidderId === user?.uid ? "LEADING BIDDER" : `PLACE BID: ₹${nextBidAmount.toFixed(2)} Cr`}
+                                    </button>
+                                    <button onClick={() => setShowPlayersOverlay(true)} className="w-14 h-14 md:w-18 md:h-18 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-all"><List size={20} /></button>
+                                 </div>
                               </div>
-                              <div className="bg-black/40 border-t border-white/5 p-3 md:p-5 flex gap-2 md:gap-4">
-                                 <button onClick={handleBid} disabled={timeLeft === 0 || displayAuctionState?.status !== 'bidding' || displayAuctionState?.highBidderId === user?.uid} className={`flex-1 h-14 md:h-20 font-black text-lg md:text-2xl rounded-xl md:rounded-2xl flex items-center justify-center gap-2 md:gap-4 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale cursor-pointer shadow-[0_0_40px_rgba(34,197,94,0.3)] ${displayAuctionState?.highBidderId === user?.uid ? 'bg-yellow-500/20 text-yellow-500 border border-yellow-500/20' : 'bg-green-500 hover:bg-green-400 text-[#050505]'}`}>
-                                    {displayAuctionState?.status === 'paused' ? 'PAUSED' : displayAuctionState?.highBidderId === user?.uid ? "LEADING BIDDER" : `PLACE BID: ₹${nextBidAmount.toFixed(2)} Cr`}
-                                 </button>
-                                 <button onClick={() => setShowPlayersOverlay(true)} className="w-14 h-14 md:w-20 md:h-20 bg-[#181818] border border-white/5 rounded-xl md:rounded-2xl flex items-center justify-center text-gray-400"><List size={24} /></button>
-                              </div>
-                           </div>
-                        </motion.div>
-                     )}
-                  </AnimatePresence>
-               </div>
-            </main>
+                           </motion.div>
+                        )}
+                     </AnimatePresence>
+                  </div>
+               </main>
+            </div>
 
             <aside className={`${mobileTab === 'activity' ? 'flex' : 'hidden'} md:flex w-full md:w-96 bg-black/40 border-l border-white/5 flex-col h-full md:max-h-[calc(100vh-3.5rem)]`}>
                {/* Premium Tabs Header */}
-               <div className="flex bg-white/[0.02] border-b border-white/5 p-2 gap-2 shrink-0">
+               <div className="h-14 bg-white/[0.01] border-b border-white/5 flex items-center shrink-0 w-full">
                   <button
                      onClick={() => setSidebarTab('activity')}
-                     className={`flex-1 py-3 flex items-center justify-center gap-2 transition-all rounded-xl cursor-pointer ${
-                        sidebarTab === 'activity'
-                           ? 'bg-white/5 text-yellow-500 border border-white/10 shadow-inner font-black'
-                           : 'text-gray-500 hover:text-gray-400 hover:bg-white/[0.01] font-bold'
-                     }`}
+                     className={`h-full flex-1 flex items-center justify-center gap-2 transition-all cursor-pointer ${sidebarTab === 'activity'
+                        ? 'bg-white/[0.04] text-white border-b-2 border-white/60 font-black'
+                        : 'text-gray-500 hover:text-gray-400 hover:bg-white/[0.01] border-b-2 border-transparent font-bold'
+                        }`}
                   >
                      <History size={14} />
                      <span className="text-[10px] uppercase tracking-widest">Live Activity</span>
                   </button>
                   <button
                      onClick={() => setSidebarTab('chat')}
-                     className={`flex-1 py-3 flex items-center justify-center gap-2 transition-all rounded-xl cursor-pointer ${
-                        sidebarTab === 'chat'
-                           ? 'bg-white/5 text-yellow-500 border border-white/10 shadow-inner font-black'
-                           : 'text-gray-500 hover:text-gray-400 hover:bg-white/[0.01] font-bold'
-                     }`}
+                     className={`h-full flex-1 flex items-center justify-center gap-2 transition-all cursor-pointer ${sidebarTab === 'chat'
+                        ? 'bg-white/[0.04] text-white border-b-2 border-white/60 font-black'
+                        : 'text-gray-500 hover:text-gray-400 hover:bg-white/[0.01] border-b-2 border-transparent font-bold'
+                        }`}
                   >
                      <MessageSquare size={14} />
                      <span className="text-[10px] uppercase tracking-widest">Chat</span>
@@ -1132,72 +1147,79 @@ const AuctionRoom = () => {
                            exit={{ opacity: 0, y: -10 }}
                            className="flex-1 flex flex-col min-h-0 h-full"
                         >
-                           <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-3 h-full">
-                              {[...messages.filter(m => m.type === 'log' || m.type === 'sold_card').filter(m => !m.text.includes('New bid:'))].reverse().map((msg, index) => {
-                                 if (msg.type === 'sold_card') return <SoldCard key={msg.id || index} msg={msg} />;
+                           <div className="flex-1 overflow-y-auto p-4 custom-scrollbar h-full relative">
+                              {/* Timeline line */}
+                              <div className="absolute left-10 top-6 bottom-6 w-[1px] bg-white/5 pointer-events-none" />
 
-                                 // Determine icon and color based on message content
-                                 const text = msg.text || '';
-                                 let icon = <MessageSquare size={14} />;
-                                 let borderColor = 'border-white/5';
-                                 let iconBg = 'bg-white/5 text-gray-500';
+                              <div className="space-y-4 relative">
+                                 {[...messages.filter(m => m.type === 'log' || m.type === 'sold_card').filter(m => !m.text.includes('New bid:'))].reverse().map((msg, index) => {
+                                    const isSold = msg.type === 'sold_card';
 
-                                 if (text.includes('SOLD')) {
-                                    icon = <Gavel size={14} />;
-                                    borderColor = 'border-green-500/20';
-                                    iconBg = 'bg-green-500/10 text-green-500';
-                                 } else if (text.includes('UNSOLD')) {
-                                    icon = <XCircle size={14} />;
-                                    borderColor = 'border-red-500/20';
-                                    iconBg = 'bg-red-500/10 text-red-500';
-                                 } else if (text.includes('PAUSED')) {
-                                    icon = <Pause size={14} />;
-                                    borderColor = 'border-yellow-500/20';
-                                    iconBg = 'bg-yellow-500/10 text-yellow-500';
-                                 } else if (text.includes('RESUMED')) {
-                                    icon = <Play size={14} />;
-                                    borderColor = 'border-blue-500/20';
-                                    iconBg = 'bg-blue-500/10 text-blue-500';
-                                 } else if (text.includes('started') || text.includes('COMPLETED')) {
-                                    icon = <Rocket size={14} />;
-                                    borderColor = 'border-orange-500/20';
-                                    iconBg = 'bg-orange-500/10 text-orange-500';
-                                 } else if (text.includes('removed')) {
-                                    icon = <LogOut size={14} />;
-                                    borderColor = 'border-red-500/20';
-                                    iconBg = 'bg-red-500/10 text-red-400';
-                                 }
+                                    // Relative timestamp
+                                    let timeAgo = '';
+                                    if (msg.timestamp) {
+                                       const tsValue = typeof msg.timestamp === 'number' ? msg.timestamp : (msg.timestamp?.toDate ? msg.timestamp.toDate().getTime() : Date.now());
 
-                                 // Relative timestamp
-                                 let timeAgo = '';
-                                 if (msg.timestamp) {
-                                    const tsValue = typeof msg.timestamp === 'number' ? msg.timestamp : (msg.timestamp?.toDate ? msg.timestamp.toDate().getTime() : Date.now());
-                                    
-                                    // Prevent negative time due to clock drift
-                                    let diffMs = Date.now() - tsValue;
-                                    if (diffMs < 0) diffMs = 0;
-                                    
-                                    const diffSec = Math.floor(diffMs / 1000);
-                                    if (diffSec < 60) timeAgo = `${diffSec}s ago`;
-                                    else if (diffSec < 3600) timeAgo = `${Math.floor(diffSec / 60)}m ago`;
-                                    else timeAgo = `${Math.floor(diffSec / 3600)}h ago`;
-                                 }
+                                       // Prevent negative time due to clock drift
+                                       let diffMs = Date.now() - tsValue;
+                                       if (diffMs < 0) diffMs = 0;
 
-                                 return (
-                                    <motion.div
-                                       key={`log-${msg.id || index}`}
-                                       initial={index === 0 ? { opacity: 0, y: -10 } : false}
-                                       animate={{ opacity: 1, y: 0 }}
-                                       className={`flex gap-3 items-start p-3 rounded-xl border ${borderColor} bg-white/[0.02] hover:bg-white/[0.04] transition-all`}
-                                    >
-                                       <div className={`mt-0.5 p-1.5 rounded-lg flex items-center justify-center shrink-0 ${iconBg}`}>{icon}</div>
-                                       <div className="flex-1 min-w-0">
-                                          <p className="text-[11px] md:text-[12px] font-semibold leading-relaxed text-gray-300">{msg.text}</p>
-                                          {timeAgo && <span className="text-[8px] font-bold text-gray-600 uppercase tracking-widest mt-1 block">{timeAgo}</span>}
-                                       </div>
-                                    </motion.div>
-                                 );
-                              })}
+                                       const diffSec = Math.floor(diffMs / 1000);
+                                       if (diffSec < 60) timeAgo = `${diffSec}s ago`;
+                                       else if (diffSec < 3600) timeAgo = `${Math.floor(diffSec / 60)}m ago`;
+                                       else timeAgo = `${Math.floor(diffSec / 3600)}h ago`;
+                                    }
+
+                                    if (isSold) {
+                                       return (
+                                          <motion.div
+                                             key={`log-${msg.id || index}`}
+                                             initial={index === 0 ? { opacity: 0, y: -10 } : false}
+                                             animate={{ opacity: 1, y: 0 }}
+                                             className="py-2"
+                                          >
+                                             <SoldCard msg={msg} />
+                                          </motion.div>
+                                       );
+                                    }
+
+                                    const text = msg.text || '';
+                                    let displayText = text;
+                                    if (text.includes('PAUSED')) {
+                                       displayText = 'Auction paused by Admin';
+                                    } else if (text.includes('RESUMED')) {
+                                       displayText = 'Auction resumed by Admin';
+                                    } else if (text.endsWith('UNSOLD')) {
+                                       const pName = text.replace('UNSOLD', '').trim();
+                                       displayText = `${pName} went unsold`;
+                                    } else if (text.includes('started')) {
+                                       displayText = 'Auction started';
+                                    }
+
+                                    return (
+                                       <motion.div
+                                          key={`log-${msg.id || index}`}
+                                          initial={index === 0 ? { opacity: 0, y: -10 } : false}
+                                          animate={{ opacity: 1, y: 0 }}
+                                          className="flex gap-4 items-start py-1 px-3 hover:bg-white/[0.01] rounded-xl transition-all relative group"
+                                       >
+                                          {/* Timeline tiny dot node */}
+                                          <div className="relative z-10 flex items-center justify-center w-6 h-6 shrink-0">
+                                             <div className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover:bg-white/40 transition-colors" />
+                                          </div>
+
+                                          {/* Minimal Text content */}
+                                          <div className="flex-1 min-w-0">
+                                             <p className="text-[11px] md:text-[12px] font-medium leading-relaxed text-gray-400">
+                                                {displayText}
+                                             </p>
+                                             {timeAgo && <span className="text-[8px] font-bold text-gray-600 uppercase tracking-widest mt-0.5 block">{timeAgo}</span>}
+                                          </div>
+                                       </motion.div>
+                                    );
+                                 })}
+                              </div>
+
                               {messages.filter(m => m.type === 'log' || m.type === 'sold_card').filter(m => !m.text.includes('New bid:')).length === 0 && (
                                  <div className="h-full flex flex-col items-center justify-center py-10 opacity-30">
                                     <History size={24} className="text-gray-700 mb-2" />
@@ -1354,7 +1376,7 @@ const AuctionRoom = () => {
                      {/* Client Local settings: TTS */}
                      <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl">
                         <h4 className="text-[9px] font-black text-yellow-500 uppercase tracking-widest mb-4">Voice Auctioneer (Local)</h4>
-                        
+
                         {/* TTS Speed */}
                         <div className="mb-4">
                            <label className="block text-[8px] font-bold text-gray-500 uppercase tracking-widest mb-2">Speaking Pace</label>
@@ -1377,12 +1399,12 @@ const AuctionRoom = () => {
                         {availableVoices.length > 0 && (
                            <div>
                               <label className="block text-[8px] font-bold text-gray-500 uppercase tracking-widest mb-2">Select Voice</label>
-                              <select 
-                                 value={selectedVoiceName} 
+                              <select
+                                 value={selectedVoiceName}
                                  onChange={(e) => {
                                     const newVoiceName = e.target.value;
                                     setSelectedVoiceName(newVoiceName);
-                                    
+
                                     // Brief preview of the selected voice
                                     setTimeout(() => {
                                        if ('speechSynthesis' in window) {
