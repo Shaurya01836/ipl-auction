@@ -37,11 +37,23 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
-      // Add a slight delay to make the transition feel more natural/premium
-      setTimeout(() => setLoading(false), 1500);
+      const isLandingPage = typeof window !== 'undefined' && window.location.pathname === '/';
+      if (!isLandingPage) {
+        // Add a slight delay to make the transition feel more natural/premium
+        setTimeout(() => setLoading(false), 1500);
+      }
     });
 
     return unsubscribe;
+  }, []);
+
+  // Listen to manual skip/continue event from PageLoader
+  useEffect(() => {
+    const handleSkip = () => {
+      setLoading(false);
+    };
+    document.addEventListener('skipIntro', handleSkip);
+    return () => document.removeEventListener('skipIntro', handleSkip);
   }, []);
 
   const loginWithGoogle = async () => {

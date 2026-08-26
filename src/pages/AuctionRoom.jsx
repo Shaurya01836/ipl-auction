@@ -45,6 +45,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import { TEAMS } from '../data/teams';
 import TextChat from '../components/TextChat';
+import PageLoader from '../components/PageLoader';
 
 const AuctionRoom = () => {
    const { id } = useParams();
@@ -676,16 +677,7 @@ const AuctionRoom = () => {
 
    if (loading || !user) {
       return (
-         <div className="h-screen bg-[#050505] text-white flex flex-col items-center justify-center p-8 text-center">
-            <div className="relative">
-               <div className="w-24 h-24 border-4 border-yellow-500/20 border-t-yellow-500 rounded-full animate-spin" />
-               <div className="absolute inset-0 flex items-center justify-center">
-                  <Gavel size={32} className="text-yellow-500 animate-pulse" />
-               </div>
-            </div>
-            <h2 className="mt-8 text-2xl font-black tracking-widest uppercase animate-pulse text-gray-400">Syncing Auction Data...</h2>
-            <p className="mt-2 text-gray-600 text-sm font-bold uppercase tracking-[0.3em]">Connecting to Mega Auction</p>
-         </div>
+         <PageLoader />
       );
    }
 
