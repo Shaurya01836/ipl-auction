@@ -16,6 +16,8 @@ const PageLoader = ({ isGame = false }) => {
   const [progress, setProgress] = useState(0);
   const [tipIndex, setTipIndex] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
+  // Ensure loader UI stays visible for at least 2 seconds
+  const [showLoader, setShowLoader] = useState(true);
 
   // Check if we are on the landing page
   const isGameMode = isGame || (typeof window !== 'undefined' && window.location.pathname === '/');
@@ -23,23 +25,55 @@ const PageLoader = ({ isGame = false }) => {
   useEffect(() => {
     if (!isGameMode) return;
 
-    // Simulate loading progress
-    const duration = 2000; // 2 seconds
-    const intervalTime = 30;
-    const step = 100 / (duration / intervalTime);
+    // Load progress based on actual page load event
+    let progressInterval = null;
+    let simulatedInterval = null;
+    const finishLoading = () => {
+      setProgress(100);
+      setIsLoaded(true);
+      setShowLoader(false);
+      if (progressInterval) clearInterval(progressInterval);
+      if (simulatedInterval) clearInterval(simulatedInterval);
+    };
 
-    const timer = setInterval(() => {
+    const startRealProgress = () => {
+      // Increment progress slowly until the page load event fires (stop near 95% to keep animation smooth)
+      progressInterval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 95) {
+            return prev; // pause increment, wait for load event
+          }
+          return prev + 0.5; // smooth gradual increase
+        });
+      }, 30);
+    };
+
+    // Start with a deterministic 2‑second simulated loading
+    const simulatedStep = 100 / (2000 / 30);
+    simulatedInterval = setInterval(() => {
       setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(timer);
-          setIsLoaded(true);
-          return 100;
+        if (prev >= 95) {
+          return prev;
         }
-        return Math.min(prev + step, 100);
+        return Math.min(prev + simulatedStep, 95);
       });
-    }, intervalTime);
+    }, 30);
 
-    // Rotate tips every 4 seconds
+    // After 2 seconds switch to real progress handling
+    const switchTimeout = setTimeout(() => {
+      if (simulatedInterval) clearInterval(simulatedInterval);
+      startRealProgress();
+      // Ensure at least 2 s display before considering load
+      if (document.readyState === 'complete') {
+        finishLoading();
+      } else {
+        window.addEventListener('load', finishLoading);
+      }
+    }, 2000);
+
+    // No immediate load listener; will be attached after simulated phase
+    
+  // Rotate tips every 4 seconds
     const tipTimer = setInterval(() => {
       setTipIndex((prev) => (prev + 1) % GAME_TIPS.length);
     }, 4000);
@@ -55,11 +89,14 @@ const PageLoader = ({ isGame = false }) => {
 
     window.addEventListener('keydown', handleKeyDown);
 
-    return () => {
-      clearInterval(timer);
-      clearInterval(tipTimer);
-      window.removeEventListener('keydown', handleKeyDown);
-    };
+      return () => {
+        if (progressInterval) clearInterval(progressInterval);
+        if (simulatedInterval) clearInterval(simulatedInterval);
+        if (switchTimeout) clearTimeout(switchTimeout);
+        clearInterval(tipTimer);
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('load', finishLoading);
+      };
   }, [isGameMode]);
 
   // Handle local skip action
@@ -108,6 +145,15 @@ const PageLoader = ({ isGame = false }) => {
           IPL Auction Simulator
         </div>
 
+        {/* Left/Center Side: Decorative Cricket Artwork (Responsive and Fitted) */}
+        <div className="absolute left-1/2 -translate-x-1/2 md:translate-x-0 md:left-4 top-16 bottom-[180px] md:bottom-[130px] w-[85vw] md:w-[50vw] max-w-[650px] z-10 flex items-center justify-center p-0 select-none pointer-events-none">
+          <img 
+            src="/images/auct1.png" 
+            alt="IPL Auction Loading" 
+            className="w-full h-full object-contain filter drop-shadow-[0_15px_45px_rgba(249,115,22,0.25)] opacity-95"
+          />
+        </div>
+
         {/* Bottom Loading Bar & Tips */}
         <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col gap-6">
 
@@ -137,7 +183,7 @@ const PageLoader = ({ isGame = false }) => {
 
             {/* Bottom Right: Spinning Cricket Ball Loading Icon */}
             <div className="self-end md:self-auto flex items-center gap-4">
-              {!isLoaded ? (
+              {(!isLoaded && showLoader) ? (
                 <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 px-4 py-2.5 rounded-md backdrop-blur-md shadow-lg">
                   <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest">
                     Loading
@@ -156,10 +202,10 @@ const PageLoader = ({ isGame = false }) => {
               ) : (
                 <motion.button
                   onClick={handleContinue}
-                  className="bg-orange-500 hover:bg-orange-600 text-white font-black uppercase tracking-widest text-xs px-6 py-3 rounded-md shadow-[0_4px_20px_rgba(249,115,22,0.4)] transition-all cursor-pointer animate-pulse"
-                  initial={{ scale: 0.95 }}
-                  animate={{ scale: 1 }}
-                >
+                  className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-semibold uppercase tracking-wider text-xs px-6 py-3 rounded-md shadow-lg transition-transform transform hover:scale-105 focus:outline-none"
+                initial={{ scale: 0.95 }}
+                animate={{ scale: 1 }}
+              >
                   Click to Enter / Press Enter
                 </motion.button>
               )}
