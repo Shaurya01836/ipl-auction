@@ -1,22 +1,23 @@
 <div align="center">
-  <img src="./public/readme-assets/ipl-logo.png" width="120" height="120" alt="IPL Auction 2026 Logo">
+  <img src="./public/readme-assets/ipl-logo.png" width="120" height="120" alt="IPL Auction Logo">
 
-  # 🏏 IPL Mega Auction
-  ### *The Ultimate Real-Time SaaS Auction Experience*
+  # 🏏 IPL Mega Auction & Fantasy Arena
+  ### *The Ultimate Real-Time SaaS Auction & Live Fantasy Experience*
 
-  [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
-  [![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
-  [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-  [![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
-  [![Gemini AI](https://img.shields.io/badge/Gemini_AI-4285F4?style=for-the-badge&logo=google-gemini&logoColor=white)](https://deepmind.google/technologies/gemini/)
+  [![React](https://img.shields.io/badge/React-19.2-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+  [![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+  [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4.0-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+  [![Firebase](https://img.shields.io/badge/Firebase-12.11-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
+  [![CricAPI](https://img.shields.io/badge/CricAPI-Integration-red?style=for-the-badge&logo=cricket&logoColor=white)](https://cricapi.com/)
 
   <p align="center">
-    <b>A high-performance, real-time simulation platform designed to replicate the intensity and professional aesthetic of the official IPL auction.</b>
+    <b>A high-performance, real-time multiplayer simulation platform designed to replicate the intensity of the official IPL auction combined with an interactive Fantasy Arena powered by real-world match scorecards.</b>
     <br />
     <a href="#-key-features">Key Features</a> •
-    <a href="#-visual-showcase">Visual Showcase</a> •
     <a href="#-tech-stack">Tech Stack</a> •
-    <a href="#-getting-started">Getting Started</a>
+    <a href="#-project-structure">Project Structure</a> •
+    <a href="#-getting-started">Getting Started</a> •
+    <a href="#-automation-scripts">Automation Scripts</a>
   </p>
 </div>
 
@@ -27,37 +28,43 @@
 <table align="center" width="100%">
   <tr>
     <td width="50%" valign="top">
-      <h3>🏢 Enterprise Bidding Engine</h3>
+      <h3>🏢 Real-Time Auction Engine</h3>
       <ul>
-        <li><b>Real-Time Sync:</b> Powered by Firebase for sub-second latency.</li>
-        <li><b>Atomic Transactions:</b> Ensures data integrity for every bid.</li>
-        <li><b>Smart Countdown:</b> Universal time sync for all participants.</li>
+        <li><b>Firebase Sync:</b> Sub-second latency powered by Firebase Realtime Database.</li>
+        <li><b>Universal Clock Offset:</b> Automated synchronization of bid timers across all client machines using RTDB offset.</li>
+        <li><b>Flexible Auction Formats:</b>
+          <ul>
+            <li><b>Mega:</b> 25 squad limit, 8 overseas limit, 120 Cr budget.</li>
+            <li><b>Sprint 11:</b> 11 squad limit, 4 overseas limit, 90 Cr budget.</li>
+            <li><b>Sprint 5:</b> 5 squad limit, 2 overseas limit, 60 Cr budget.</li>
+          </ul>
+        </li>
       </ul>
     </td>
     <td width="50%" valign="top">
-      <h3>🧠 Gemini AI Engine</h3>
+      <h3>🏆 Fantasy Arena</h3>
       <ul>
-        <li><b>Squad Valuation:</b> Dynamic scoring based on player stats.</li>
-        <li><b>Power Rankings:</b> Automated leaderboards for draft quality.</li>
-        <li><b>Smart Guards:</b> 18-player minimum enforcement logic.</li>
+        <li><b>Squad Selection:</b> Draft your Playing XI, select a Captain (2x points), Vice-Captain (1.5x points), and Impact Player from your auction acquisitions.</li>
+        <li><b>Real-time Leaderboard:</b> Ranks players based on actual match scores.</li>
+        <li><b>Admin Console:</b> Dedicated interface for administrators to manage rooms and sync stats.</li>
       </ul>
     </td>
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <h3>📺 Broadcast UI/UX</h3>
+      <h3>📺 Premium Broadcast UI/UX</h3>
       <ul>
-        <li><b>Premium Design:</b> Dark mode with sleek glassmorphism.</li>
-        <li><b>Dynamic Overlays:</b> Confetti and "SOLD" card animations.</li>
-        <li><b>Infinite Marquee:</b> Branded landing for instant engagement.</li>
+        <li><b>Sophisticated Design:</b> Sleek dark mode styling using Tailwind CSS v4 and glassmorphism.</li>
+        <li><b>Micro-Animations:</b> Smoothed with Framer Motion, including confetti and animated "SOLD"/"UNSOLD" cards.</li>
+        <li><b>Interactive Lobby:</b> Features team assignment tools, live chat, and kick/ban controls.</li>
       </ul>
     </td>
     <td width="50%" valign="top">
-      <h3>📊 Roster Management</h3>
+      <h3>🔌 CricAPI Live Scorecard Sync</h3>
       <ul>
-        <li><b>Set-Wise Auction:</b> Chronological player groups and sets.</li>
-        <li><b>History Log:</b> Full transparency on every acquisition.</li>
-        <li><b>Results Export:</b> Professional summaries post-auction.</li>
+        <li><b>CricAPI Integration:</b> Automated fetchers pull real scorecard stats.</li>
+        <li><b>Automatic Point Calculator:</b> Converts runs, wickets, catches, and strike rates into fantasy points.</li>
+        <li><b>Backfill Tools:</b> Scripts to seed and update database with historical IPL data.</li>
       </ul>
     </td>
   </tr>
@@ -65,35 +72,45 @@
 
 ---
 
-## 🖼 Visual Showcase
+## 🛠 Tech Stack
 
-> [!TIP]
-> This platform is optimized for large-scale displays and real-time multiplayer engagement.
-
-<div align="center">
-  <img src="./public/readme-assets/landing.png" width="90%" alt="Landing Page">
-  <p><i>The high-fidelity landing experience with real-time room management.</i></p>
-  
-  <br />
-
-  <img src="./public/readme-assets/auction_live.png" width="45%" align="left" alt="Auction Live">
-  <img src="./public/readme-assets/results.png" width="45%" align="right" alt="Results Page">
-  
-  <div style="clear: both;"></div>
-  
-  <p align="center"><i>From high-stakes bidding (Left) to AI-powered results (Right).</i></p>
-</div>
+- **Frontend Core:** `React 19.2` + `Vite 6` (Ultra-fast Hot Module Replacement)
+- **Styling:** `Tailwind CSS v4` + `Framer Motion` (Smooth animations)
+- **Backend & Database:** `Firebase` (Authentication, Cloud Firestore, Realtime Database)
+- **Live Stats Integration:** `CricAPI` (Match data and real-world scoreboard points)
+- **Icons & Utilities:** `Lucide React`, `Canvas Confetti`, `html-to-image`
+- **Future Integrations:** Prepared for `@google/generative-ai` (Gemini API) and Agora Voice Chat.
 
 ---
 
-## 🛠 Tech Stack
+## 📂 Project Structure
 
-- **Frontend Core:** `React 18` + `Vite` (Ultra-fast HMR)
-- **Styling:** `Tailwind CSS v4` + `Framer Motion` (Broadcast Animations)
-- **Real-time Backend:** `Firebase` (Auth, Firestore, Realtime DB)
-- **AI Intelligence:** `Google Gemini API` (Squad Analysis)
-- **Voice Chat:** `Agora RTC SDK` (Broadcast Integration)
-- **Utilities:** `Lucide React`, `Canvas Confetti`, `html-to-image`
+```
+ipl-auction/
+├── public/                 # Static assets, sitemaps, robots.txt
+├── scripts/                # Database and data synchronization scripts
+│   ├── autoUpdateFantasy.js      # Auto-calculates points from live CricAPI matches
+│   ├── backfillIPL2026.js        # Imports IPL series scorecards
+│   ├── deployDatabaseRules.js    # Syncs rules to Firebase RTDB
+│   └── uploadConsolidatedPoints.js
+├── src/
+│   ├── components/         # Reusable widgets (Activity feed, Chat, Footer, etc.)
+│   │   └── fantasy/        # Fantasy team editor and squad preview components
+│   ├── contexts/           # State management (Auction and Authentication)
+│   ├── data/               # Seed data (Players list, franchises details)
+│   ├── lib/                # Firebase connection helpers and config
+│   ├── pages/              # Main routing pages
+│   │   ├── AuctionRoom.jsx       # Interactive bidding screen
+│   │   ├── AuctionSummary.jsx    # Post-auction summary and Fantasy Arena
+│   │   ├── FantasyAdmin.jsx      # Admin panel for score calculations
+│   │   ├── LandingPage.jsx       # Franchise marquee & Room selector
+│   │   └── Lobby.jsx             # Pre-auction franchise lobby
+│   ├── App.jsx             # Router and layout definitions
+│   └── main.jsx            # React root mount
+├── database.rules.json     # Firebase Realtime Database Security Rules
+├── vite.config.js          # Vite config using `@tailwindcss/vite`
+└── package.json            # Dependencies and npm script shortcuts
+```
 
 ---
 
@@ -101,30 +118,62 @@
 
 ### Prerequisites
 - Node.js (v18+)
-- Firebase Project setup
-- Gemini API Key (optional for AI features)
+- Firebase account and setup project
+- CricAPI key (optional, required to run point synchronizer scripts)
 
 ### Installation
 
-1. **Clone & Install**
+1. **Clone the Repository & Install Dependencies**
    ```bash
    git clone https://github.com/Shaurya01836/ipl-auction.git
    cd ipl-auction
    npm install
    ```
 
-2. **Configure Environment**
-   Create a `.env` file in the root with your credentials:
+2. **Configure Environment Variables**
+   Create a `.env` file in the root of the project:
    ```env
-   VITE_FIREBASE_API_KEY=your_key
-   VITE_GEMINI_API_KEY=your_key
-   VITE_AGORA_APP_ID=your_id
+   VITE_FIREBASE_API_KEY=your_firebase_api_key
+   VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+   VITE_FIREBASE_DATABASE_URL=https://your_project-default-rtdb.firebaseio.com
+   VITE_FIREBASE_PROJECT_ID=your_project_id
+   VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+   VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+   VITE_FIREBASE_APP_ID=your_app_id
+   VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
+   
+   # Optional: Administrative and Integration keys
+   VITE_ADMIN_EMAIL=your_admin_email_to_access_fantasy_admin
+   VITE_CRICKET_API_KEY=your_cricapi_key
+   VITE_GEMINI_API_KEY=your_gemini_api_key
    ```
 
-3. **Launch**
+3. **Start the Development Server**
    ```bash
    npm run dev
    ```
+
+---
+
+## ⚙️ Automation Scripts
+
+The project includes CLI utilities inside the `scripts/` directory to manage database configuration and sync fantasy points:
+
+* **Sync Realtime Database Rules**
+  Updates rules on Firebase to secure bidding operations:
+  ```bash
+  node scripts/deployDatabaseRules.js
+  ```
+* **Backfill Match scorecards**
+  Fetches IPL matches and player points from CricAPI and registers them inside Firestore:
+  ```bash
+  node scripts/backfillIPL2026.js
+  ```
+* **Auto-Update Live Scores**
+  Processes current live scorecards to update the global fantasy leaderboard:
+  ```bash
+  node scripts/autoUpdateFantasy.js
+  ```
 
 ---
 
