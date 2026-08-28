@@ -12,6 +12,44 @@ const GAME_TIPS = [
   "TIP: Pace bowlers with good yorker execution are essential for controlling the death overs."
 ];
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 70,
+      damping: 15
+    }
+  }
+};
+
+const imageVariants = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 50,
+      damping: 15,
+      delay: 0.2
+    }
+  }
+};
+
 const PageLoader = ({ isGame = false }) => {
   const [progress, setProgress] = useState(0);
   const [tipIndex, setTipIndex] = useState(0);
@@ -108,7 +146,12 @@ const PageLoader = ({ isGame = false }) => {
 
   if (isGameMode && !skippedLocalState(isLoaded)) {
     return (
-      <div className="fixed inset-0 z-[9999] bg-[#050505] flex flex-col justify-end p-6 md:p-12 overflow-hidden select-none font-sans text-white">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="fixed inset-0 z-[9999] bg-[#050505] flex flex-col justify-end p-6 md:p-12 overflow-hidden select-none font-sans text-white"
+      >
 
         {/* Dynamic HTML/CSS Gaming Backdrop (Matches Landing Page Theme) */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -140,22 +183,31 @@ const PageLoader = ({ isGame = false }) => {
         </div>
 
         {/* Top-Right: Game Info Tag */}
-        <div className="absolute top-6 right-6 z-10 flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1 rounded-sm text-[9px] font-black uppercase tracking-widest text-orange-400">
+        <motion.div
+          variants={itemVariants}
+          className="absolute top-6 right-6 z-10 flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1 rounded-sm text-[9px] font-black uppercase tracking-widest text-orange-400"
+        >
           <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
           IPL Auction Simulator
-        </div>
+        </motion.div>
 
         {/* Left/Center Side: Decorative Cricket Artwork (Responsive and Fitted) */}
-        <div className="absolute left-1/2 -translate-x-1/2 md:translate-x-0 md:left-4 top-16 bottom-[180px] md:bottom-[130px] w-[85vw] md:w-[50vw] max-w-[650px] z-10 flex items-center justify-center p-0 select-none pointer-events-none">
+        <motion.div
+          variants={imageVariants}
+          className="absolute left-1/2 -translate-x-1/2 md:translate-x-0 md:left-4 top-16 bottom-[180px] md:bottom-[130px] w-[85vw] md:w-[50vw] max-w-[650px] z-10 flex items-center justify-center p-0 select-none pointer-events-none"
+        >
           <img 
             src="/images/auct1.png" 
             alt="IPL Auction Loading" 
             className="w-full h-full object-contain filter drop-shadow-[0_15px_45px_rgba(249,115,22,0.25)] opacity-95"
           />
-        </div>
+        </motion.div>
 
         {/* Bottom Loading Bar & Tips */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col gap-6">
+        <motion.div
+          variants={itemVariants}
+          className="relative z-10 w-full max-w-7xl mx-auto flex flex-col gap-6"
+        >
 
           {/* Tip Box & Spinning Seam Ball */}
           <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
@@ -218,8 +270,8 @@ const PageLoader = ({ isGame = false }) => {
             <div className="h-full w-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
           </div>
 
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     );
   }
 

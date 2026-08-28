@@ -60,6 +60,43 @@ const LogoMarquee = () => {
   );
 };
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 70,
+      damping: 15
+    }
+  }
+};
+
+const scaleVariants = {
+  hidden: { opacity: 0, scale: 0.92 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 60,
+      damping: 15
+    }
+  }
+};
+
 const LandingPage = () => {
   const [selectedTeam, setSelectedTeam] = useState('MI');
   const [activeTab, setActiveTab] = useState('new');
@@ -234,7 +271,12 @@ const LandingPage = () => {
   // ─── Not Signed In: Show Google / Guest Login ───
   if (!user) {
     return (
-      <div className="relative min-h-screen bg-[#050505] flex flex-col items-center justify-center py-10 px-4 font-sans text-white overflow-x-hidden">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="relative min-h-screen bg-[#050505] flex flex-col items-center justify-center py-10 px-4 font-sans text-white overflow-x-hidden"
+      >
         <GithubStarButton />
         <BuyMeACoffee />
 
@@ -245,19 +287,17 @@ const LandingPage = () => {
         </div>
 
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
+          variants={itemVariants}
           className="relative z-10 flex items-center gap-2 border border-yellow-500/30 bg-yellow-500/5 text-yellow-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest backdrop-blur-md mb-4 shadow-[0_0_20px_rgba(234,179,8,0.1)]"
         >
           🏏 LIVE IPL AUCTION
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
+          variants={scaleVariants}
           className="text-center mb-4 z-10 relative max-w-3xl px-4"
         >
-          <h1 className="sr-only">IPL Mega Auction Simulation Game</h1>
+          <h1 className="sr-only">IPL Auction Simulator & Game - Live IPL Mega Auction 2026</h1>
           <div className="text-3xl sm:text-4xl md:text-5xl lg:text-[64px] font-extrabold tracking-tighter leading-none bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">
             CREATE YOUR
           </div>
@@ -266,7 +306,7 @@ const LandingPage = () => {
           </div>
 
           <p className="text-xs sm:text-sm text-gray-400 font-medium max-w-xl mx-auto mt-3.5 leading-relaxed">
-            Host live IPL auctions with friends. Choose a franchise, bid in real time, and build your championship squad.
+            The ultimate multiplayer IPL auction simulator and game. Host live IPL mega auctions with friends in real-time, choose your favorite franchise, bid strategically, and build a championship T20 squad.
           </p>
 
           {/* Three-step visual story */}
@@ -280,12 +320,13 @@ const LandingPage = () => {
         </motion.div>
 
         {/* Subtle gradient line / Faded Divider */}
-        <div className="w-full max-w-4xl h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-4 z-10 relative" />
+        <motion.div
+          variants={itemVariants}
+          className="w-full max-w-4xl h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-4 z-10 relative"
+        />
 
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          variants={itemVariants}
           className="w-full max-w-6xl bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-3 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10 relative mt-2"
         >
           {/* Subtle Orange Glow behind panel */}
@@ -380,9 +421,7 @@ const LandingPage = () => {
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
+          variants={itemVariants}
           className="w-full max-w-6xl mt-12 mb-4"
         >
           <div className="flex items-center justify-center gap-4 mb-4">
@@ -394,13 +433,18 @@ const LandingPage = () => {
         </motion.div>
 
         <Footer />
-      </div>
+      </motion.div>
     );
   }
 
   // ─── Signed In: Show Create / Join / History ───
   return (
-    <div className="relative min-h-screen bg-[#050505] flex flex-col items-center justify-center py-10 px-4 font-sans text-white overflow-x-hidden">
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="relative min-h-screen bg-[#050505] flex flex-col items-center justify-center py-10 px-4 font-sans text-white overflow-x-hidden"
+    >
       <GithubStarButton />
       <BuyMeACoffee />
 
@@ -412,8 +456,7 @@ const LandingPage = () => {
 
       {/* Top Badge */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
+        variants={itemVariants}
         className="relative z-10 flex items-center gap-2 border border-yellow-500/30 bg-yellow-500/5 text-yellow-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest backdrop-blur-md mb-4 shadow-[0_0_20px_rgba(234,179,8,0.1)]"
       >
         🏏 LIVE IPL AUCTION
@@ -421,11 +464,10 @@ const LandingPage = () => {
 
       {/* Hero */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
+        variants={scaleVariants}
         className="text-center mb-4 z-10 relative max-w-3xl px-4"
       >
-        <h1 className="sr-only">IPL Mega Auction Simulation Game</h1>
+        <h1 className="sr-only">IPL Auction Simulator & Game - Live IPL Mega Auction 2026</h1>
         <div className="text-3xl sm:text-4xl md:text-5xl lg:text-[64px] font-extrabold tracking-tighter leading-none bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">
           CREATE YOUR
         </div>
@@ -434,7 +476,7 @@ const LandingPage = () => {
         </div>
 
         <p className="text-xs sm:text-sm text-gray-400 font-medium max-w-xl mx-auto mt-3.5 leading-relaxed">
-          Host live IPL auctions with friends. Choose a franchise, bid in real time, and build your championship squad.
+          The ultimate multiplayer IPL auction simulator and game. Host live IPL mega auctions with friends in real-time, choose your favorite franchise, bid strategically, and build a championship T20 squad.
         </p>
 
 
@@ -449,12 +491,13 @@ const LandingPage = () => {
       </motion.div>
 
       {/* Subtle gradient line / Faded Divider */}
-      <div className="w-full max-w-4xl h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-4 z-10 relative" />
+      <motion.div
+        variants={itemVariants}
+        className="w-full max-w-4xl h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-4 z-10 relative"
+      />
 
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+        variants={itemVariants}
         className="w-full max-w-6xl bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-3 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10 relative mt-2"
       >
         {/* Subtle Orange Glow behind panel */}
@@ -846,7 +889,7 @@ const LandingPage = () => {
       </motion.div>
 
       <Footer />
-    </div>
+    </motion.div>
   );
 };
 
