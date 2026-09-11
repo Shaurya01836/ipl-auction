@@ -8,6 +8,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '../../lib/firebase';
 import { doc, setDoc, onSnapshot, collection, query, where } from 'firebase/firestore';
+import { useAuth } from '../../contexts/AuthContext';
+import { useQuota } from '../../contexts/QuotaContext';
 import { IPL_PLAYERS } from '../../data/players';
 import { TEAMS } from '../../data/teams';
 import SquadSelector from './SquadSelector';
@@ -92,6 +94,8 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
   }, [allSquads, playerStats, currentAuction, user]);
 
  
+  const { handleFirebaseError } = useQuota();
+
   useEffect(() => {
     if (!auctionId || !user?.uid) return;
 
@@ -104,23 +108,22 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
       } else {
         setIsEditing(true);
       }
-    });
+    }, (err) => handleFirebaseError(err));
 
     // 2. ALL squads in this auction room (for leaderboard calculation)
     const squadsRef = collection(db, 'userSquads');
     const qSquads = query(squadsRef, where('auctionId', '==', auctionId));
     const unsubAllSquads = onSnapshot(qSquads, (snap) => {
       setAllSquads(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    });
+    }, (err) => handleFirebaseError(err));
 
     // 3. Player points from Firestore (single doc: fantasyConfig/playerPoints)
-    //    Structure: { playerId1: 120, playerId2: 85, ... }
     const ppRef = doc(db, 'fantasyConfig', 'playerPoints');
     const unsubPP = onSnapshot(ppRef, (snap) => {
       if (snap.exists()) {
         setPlayerPoints(snap.data());
       }
-    });
+    }, (err) => handleFirebaseError(err));
 
     // 4. Detailed player stats (totalPoints, matches)
     const statsRef = doc(db, 'fantasyConfig', 'playerStats');
@@ -128,7 +131,7 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
       if (snap.exists()) {
         setPlayerStats(snap.data());
       }
-    });
+    }, (err) => handleFirebaseError(err));
 
     return () => {
       unsubMySquad();
@@ -136,7 +139,7 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
       unsubPP();
       unsubStats();
     };
-  }, [auctionId, user]);
+  }, [auctionId, user, handleFirebaseError]);
 
   // Save squad handler
   const handleSaveSquad = async (squadData) => {
@@ -153,6 +156,7 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
       }, { merge: true });
       setIsEditing(false);
     } catch (err) {
+      handleFirebaseError(err);
       alert("Error saving squad.");
     } finally {
       setIsSaving(false);
