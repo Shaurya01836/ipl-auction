@@ -129,7 +129,8 @@ const LandingPage = () => {
 
   // Fetch auction history when user switches to history tab
   useEffect(() => {
-    if (activeTab !== 'history' || !user?.uid) return;
+    if (activeTab !== 'history' || !user?.uid || historyData.length > 0) return;
+
 
     const fetchHistory = async () => {
       setHistoryLoading(true);

@@ -551,21 +551,25 @@ export const AuctionProvider = ({ children }) => {
         checkLoaded();
       } else if (!didFallbackFetch) {
         didFallbackFetch = true;
-        try {
-          const fsDoc = await getDoc(doc(db, 'auctions', auctionId));
-          if (fsDoc.exists()) {
-            const data = fsDoc.data();
-            if (data.bannedPlayers && data.bannedPlayers.includes(userId)) {
-               window.location.href = '/?error=kicked';
-               return;
+        // Wait 1.5s grace period before hitting Firestore to allow RTDB initialization to complete
+        setTimeout(async () => {
+          if (auctionLoaded) return;
+          try {
+            const fsDoc = await getDoc(doc(db, 'auctions', auctionId));
+            if (fsDoc.exists()) {
+              const data = fsDoc.data();
+              if (data.bannedPlayers && data.bannedPlayers.includes(userId)) {
+                 window.location.href = '/?error=kicked';
+                 return;
+              }
+              auctionLoaded = true;
+              currentRoomData = data;
+              checkAndSet();
+              checkLoaded();
+              await updateRtdb(ref(rtdb, `auctions/${auctionId}/room`), data);
             }
-            auctionLoaded = true;
-            currentRoomData = data;
-            checkAndSet();
-            checkLoaded();
-            await updateRtdb(ref(rtdb, `auctions/${auctionId}/room`), data);
-          }
-        } catch(e) { handleFirebaseError(e); }
+          } catch(e) { handleFirebaseError(e); }
+        }, 1500);
       }
     }, (error) => {
       setLoading(false);
@@ -595,34 +599,38 @@ export const AuctionProvider = ({ children }) => {
         checkLoaded();
       } else if (!didTeamsFallback) {
         didTeamsFallback = true;
-        try {
-          const tq = query(collection(db, 'teams'), where('auctionId', '==', auctionId));
-          const tSnap = await getDocs(tq);
-          if (!tSnap.empty) {
-            teamsLoaded = true;
-            const teamsArr = tSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setRoomTeams(teamsArr);
-            
-            if (userId) {
-              const myTeam = teamsArr.find(t => t.id === `${auctionId}_${userId}`);
-              if (myTeam) setTeam(myTeam);
-              else setTeam(null);
+        // Wait 1.5s grace period before hitting Firestore
+        setTimeout(async () => {
+          if (teamsLoaded) return;
+          try {
+            const tq = query(collection(db, 'teams'), where('auctionId', '==', auctionId));
+            const tSnap = await getDocs(tq);
+            if (!tSnap.empty) {
+              teamsLoaded = true;
+              const teamsArr = tSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+              setRoomTeams(teamsArr);
+              
+              if (userId) {
+                const myTeam = teamsArr.find(t => t.id === `${auctionId}_${userId}`);
+                if (myTeam) setTeam(myTeam);
+                else setTeam(null);
+              }
+              checkLoaded();
+              
+              const teamsToSync = {};
+              tSnap.docs.forEach(doc => {
+                teamsToSync[doc.id] = doc.data();
+              });
+              await updateRtdb(ref(rtdb, `auctions/${auctionId}/teams`), teamsToSync);
+            } else {
+               // no teams yet
+               teamsLoaded = true;
+               setRoomTeams([]);
+               setTeam(null);
+               checkLoaded();
             }
-            checkLoaded();
-            
-            const teamsToSync = {};
-            tSnap.docs.forEach(doc => {
-              teamsToSync[doc.id] = doc.data();
-            });
-            await updateRtdb(ref(rtdb, `auctions/${auctionId}/teams`), teamsToSync);
-          } else {
-             // no teams yet
-             teamsLoaded = true;
-             setRoomTeams([]);
-             setTeam(null);
-             checkLoaded();
-          }
-        } catch(e) { handleFirebaseError(e); }
+          } catch(e) { handleFirebaseError(e); }
+        }, 1500);
       }
     }, (error) => {
       setLoading(false);
