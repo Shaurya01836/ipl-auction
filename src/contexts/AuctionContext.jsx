@@ -31,6 +31,8 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
+import { useQuota } from './QuotaContext';
+
 
 const TEAMS = [
   { id: 'MI', name: 'Mumbai Indians', color: 'bg-blue-600' },
@@ -60,12 +62,14 @@ const shuffleArray = (array) => {
 
 export const AuctionProvider = ({ children }) => {
   const { user } = useAuth();
+  const { handleFirebaseError } = useQuota();
   const [currentAuction, setCurrentAuction] = useState(null);
   const [team, setTeam] = useState(null);
   const [roomTeams, setRoomTeams] = useState([]);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const endingPlayerRef = React.useRef(false);
+
 
   // Server-authoritative time using Firebase RTDB offset.
   // getServerTime() returns Date.now() + serverOffset, synced across all clients.
@@ -561,16 +565,20 @@ export const AuctionProvider = ({ children }) => {
             checkLoaded();
             await updateRtdb(ref(rtdb, `auctions/${auctionId}/room`), data);
           }
-        } catch(e) { /* Fallback room fetch fail */ }
+        } catch(e) { handleFirebaseError(e); }
       }
     }, (error) => {
       setLoading(false);
+      handleFirebaseError(error);
     });
 
     const unsubLive = onValue(ref(rtdb, `auctions/${auctionId}/live`), (snapshot) => {
       currentRtdbData = snapshot.val();
       checkAndSet();
+    }, (error) => {
+      handleFirebaseError(error);
     });
+
 
     const unsubTeams = onValue(ref(rtdb, `auctions/${auctionId}/teams`), async (snapshot) => {
       if (snapshot.exists()) {
@@ -614,10 +622,11 @@ export const AuctionProvider = ({ children }) => {
              setTeam(null);
              checkLoaded();
           }
-        } catch(e) { /* Fallback teams fetch fail */ }
+        } catch(e) { handleFirebaseError(e); }
       }
     }, (error) => {
       setLoading(false);
+      handleFirebaseError(error);
     });
 
     const unsubMessages = onValue(ref(rtdb, `auctions/${auctionId}/messages`), (snapshot) => {
@@ -634,6 +643,7 @@ export const AuctionProvider = ({ children }) => {
       checkLoaded();
     }, (error) => {
       setLoading(false);
+      handleFirebaseError(error);
     });
 
     return () => {

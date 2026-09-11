@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+
 import { auth } from '../lib/firebase';
 import { 
   onAuthStateChanged, 
@@ -32,29 +33,42 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const hasSeen = sessionStorage.getItem('ipl_has_seen_loader');
+      if (hasSeen) return false;
+    }
+    return true;
+  });
+
+  const markLoaderSeen = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('ipl_has_seen_loader', 'true');
+    }
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       const isLandingPage = typeof window !== 'undefined' && window.location.pathname === '/';
       if (!isLandingPage) {
-        // Add a slight delay to make the transition feel more natural/premium
-        setTimeout(() => setLoading(false), 1500);
+        setTimeout(markLoaderSeen, 1500);
       }
     });
 
     return unsubscribe;
-  }, []);
+  }, [markLoaderSeen]);
 
   // Listen to manual skip/continue event from PageLoader
   useEffect(() => {
     const handleSkip = () => {
-      setLoading(false);
+      markLoaderSeen();
     };
     document.addEventListener('skipIntro', handleSkip);
     return () => document.removeEventListener('skipIntro', handleSkip);
-  }, []);
+  }, [markLoaderSeen]);
+
 
   const loginWithGoogle = async () => {
     const result = await signInWithPopup(auth, googleProvider);
