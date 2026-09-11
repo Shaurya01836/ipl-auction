@@ -7,9 +7,13 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '../../lib/firebase';
-import { doc, setDoc, onSnapshot, collection, query, where } from 'firebase/firestore';
+import { doc, setDoc, getDoc, onSnapshot, collection, query, where } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
 import { useQuota } from '../../contexts/QuotaContext';
+
+let cachedPlayerPoints = null;
+let cachedPlayerStats = null;
+
 import { IPL_PLAYERS } from '../../data/players';
 import { TEAMS } from '../../data/teams';
 import SquadSelector from './SquadSelector';
@@ -117,28 +121,36 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
       setAllSquads(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     }, (err) => handleFirebaseError(err));
 
-    // 3. Player points from Firestore (single doc: fantasyConfig/playerPoints)
-    const ppRef = doc(db, 'fantasyConfig', 'playerPoints');
-    const unsubPP = onSnapshot(ppRef, (snap) => {
-      if (snap.exists()) {
-        setPlayerPoints(snap.data());
-      }
-    }, (err) => handleFirebaseError(err));
+    // 3. Player points & stats from Firestore (cached single getDoc)
+    if (cachedPlayerPoints) {
+      setPlayerPoints(cachedPlayerPoints);
+    } else {
+      const ppRef = doc(db, 'fantasyConfig', 'playerPoints');
+      getDoc(ppRef).then(snap => {
+        if (snap.exists()) {
+          cachedPlayerPoints = snap.data();
+          setPlayerPoints(cachedPlayerPoints);
+        }
+      }).catch(handleFirebaseError);
+    }
 
-    // 4. Detailed player stats (totalPoints, matches)
-    const statsRef = doc(db, 'fantasyConfig', 'playerStats');
-    const unsubStats = onSnapshot(statsRef, (snap) => {
-      if (snap.exists()) {
-        setPlayerStats(snap.data());
-      }
-    }, (err) => handleFirebaseError(err));
+    if (cachedPlayerStats) {
+      setPlayerStats(cachedPlayerStats);
+    } else {
+      const statsRef = doc(db, 'fantasyConfig', 'playerStats');
+      getDoc(statsRef).then(snap => {
+        if (snap.exists()) {
+          cachedPlayerStats = snap.data();
+          setPlayerStats(cachedPlayerStats);
+        }
+      }).catch(handleFirebaseError);
+    }
 
     return () => {
       unsubMySquad();
       unsubAllSquads();
-      unsubPP();
-      unsubStats();
     };
+
   }, [auctionId, user, handleFirebaseError]);
 
   // Save squad handler
