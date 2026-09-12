@@ -977,19 +977,21 @@ const AuctionRoom = () => {
 
             <div className={`${mobileTab === 'arena' ? 'flex' : 'hidden'} md:flex flex-col flex-1 h-full overflow-hidden`}>
                {/* Center Fixed Header */}
-               <div className="h-14 border-b border-white/5 bg-white/[0.01] flex items-center px-6 md:px-8 w-full shrink-0">
-                  <div className="w-full max-w-4xl mx-auto flex items-center justify-between gap-4">
-                     <div className="flex items-center gap-3 md:gap-4">
-                        <div className="px-2 pb-0.5 md:px-3 bg-yellow-500/20 border border-yellow-500/30 rounded-md">
-                           <span className="text-[8px] md:text-[9px] font-black text-yellow-500 uppercase tracking-widest ">{currentPlayer?.set}</span>
+               <div className="min-h-12 border-b border-white/5 bg-white/[0.01] flex items-center px-3 sm:px-6 md:px-8 w-full shrink-0 py-2 md:py-0">
+                  <div className="w-full max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-2 md:gap-4">
+                     <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4">
+                        <div className="px-2 py-0.5 bg-yellow-500/20 border border-yellow-500/30 rounded-md shrink-0">
+                           <span className="text-[8px] sm:text-[9px] font-black text-yellow-500 uppercase tracking-wider">{currentPlayer?.set}</span>
                         </div>
-                        <span className="text-[9px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest">Base Price:</span>
-                        <span className="text-sm md:text-base font-black text-white">₹{currentPlayer?.basePrice?.toFixed(2)} Cr</span>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                           <span className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-wider">Base Price:</span>
+                           <span className="text-xs sm:text-sm md:text-base font-black text-white">₹{currentPlayer?.basePrice?.toFixed(2)} Cr</span>
+                        </div>
                      </div>
-                     <div className="flex items-center gap-2 md:gap-3">
-                        <span className="text-[9px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest">High Bidder:</span>
-                        <div className="bg-green-500/20 border border-green-500/30 px-2 pb-0.5 md:px-3 rounded-md">
-                           <span className="text-[9px] md:text-[10px] font-black text-green-400 uppercase tracking-widest ">{displayAuctionState?.highBidderName}</span>
+                     <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-wider">High Bidder:</span>
+                        <div className="bg-green-500/20 border border-green-500/30 px-2 py-0.5 rounded-md max-w-[120px] sm:max-w-[180px] truncate">
+                           <span className="text-[8px] sm:text-[9px] font-black text-green-400 uppercase tracking-wider truncate block">{displayAuctionState?.highBidderName}</span>
                         </div>
                      </div>
                   </div>
@@ -1039,61 +1041,61 @@ const AuctionRoom = () => {
                                  <div className="absolute top-0 inset-x-0 h-1 bg-white/5">
                                     <motion.div initial={{ width: "100%" }} animate={{ width: `${(timeLeft / (currentAuction?.settings?.bidTimer || 10)) * 100}%` }} className={`h-full transition-colors duration-1000 ${timeLeft < 5 ? 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]'}`} />
                                  </div>
-                                 <div className="p-6 md:p-10 flex flex-col md:flex-row items-center gap-6 md:gap-10">
-                                    <div className="w-36 h-36 md:w-60 md:h-80 bg-gradient-to-b from-white/10 to-transparent rounded-[1.5rem] md:rounded-[2rem] overflow-hidden border border-white/10 relative z-10 shadow-[0_12px_40px_rgba(0,0,0,0.4)] group hover:scale-[1.02] transition-transform duration-500">
+                                 <div className="p-4 sm:p-6 md:p-10 flex flex-col md:flex-row items-center gap-4 sm:gap-6 md:gap-10">
+                                    <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-60 md:h-80 bg-gradient-to-b from-white/10 to-transparent rounded-2xl md:rounded-[2rem] overflow-hidden border border-white/10 relative z-10 shadow-[0_12px_40px_rgba(0,0,0,0.4)] group hover:scale-[1.02] transition-transform duration-500 shrink-0">
                                        <img src={currentPlayer.image} alt={currentPlayer.name} className="w-full h-full object-cover" />
                                     </div>
-                                    <div className="flex-1 flex flex-col gap-5 md:gap-6 w-full text-center md:text-left">
+                                    <div className="flex-1 flex flex-col gap-4 md:gap-6 w-full text-center md:text-left">
                                        <div>
-                                          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-3 md:mb-4">
+                                          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2 md:mb-4">
                                              <span className="bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[8px] md:text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">{currentPlayer.role}</span>
                                              <span className="bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[8px] md:text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">{currentPlayer.type}</span>
                                           </div>
-                                          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-white leading-none">{currentPlayer.name}</h2>
+                                          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-white leading-none">{currentPlayer.name}</h2>
                                        </div>
-                                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 bg-white/[0.02] p-3 md:p-4 rounded-2xl border border-white/[0.04] backdrop-blur-md">
-                                          <div className="text-center"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Matches</span><span className="text-xl font-bold text-gray-100">{currentPlayer.stats?.matches || 0}</span></div>
-                                          {currentPlayer.stats?.runs !== undefined && (<div className="text-center border-l border-white/5"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Runs</span><span className="text-xl font-bold text-yellow-500">{currentPlayer.stats.runs}</span></div>)}
-                                          {currentPlayer.stats?.sr !== undefined && (<div className="text-center border-l border-white/5"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">S.Rate</span><span className="text-xl font-bold text-gray-100">{currentPlayer.stats.sr}</span></div>)}
-                                          {currentPlayer.stats?.wickets !== undefined && (<div className="text-center border-l border-white/5"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Wkts</span><span className="text-xl font-bold text-green-500">{currentPlayer.stats.wickets}</span></div>)}
+                                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 bg-white/[0.02] p-2.5 sm:p-3 md:p-4 rounded-2xl border border-white/[0.04] backdrop-blur-md">
+                                          <div className="text-center"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Matches</span><span className="text-lg sm:text-xl font-bold text-gray-100">{currentPlayer.stats?.matches || 0}</span></div>
+                                          {currentPlayer.stats?.runs !== undefined && (<div className="text-center border-l border-white/5"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Runs</span><span className="text-lg sm:text-xl font-bold text-yellow-500">{currentPlayer.stats.runs}</span></div>)}
+                                          {currentPlayer.stats?.sr !== undefined && (<div className="text-center border-l border-white/5"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">S.Rate</span><span className="text-lg sm:text-xl font-bold text-gray-100">{currentPlayer.stats.sr}</span></div>)}
+                                          {currentPlayer.stats?.wickets !== undefined && (<div className="text-center border-l border-white/5"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Wkts</span><span className="text-lg sm:text-xl font-bold text-green-500">{currentPlayer.stats.wickets}</span></div>)}
                                        </div>
-                                       <div className="flex items-center justify-between mt-3 md:mt-4">
+                                       <div className="flex items-center justify-between mt-2 md:mt-4">
                                           <div className="text-left">
                                              <span className="text-[9px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Current Bid</span>
-                                             <div className="flex items-center gap-3">
-                                                <span className="text-2xl md:text-3xl font-extrabold text-white leading-none">₹{(displayAuctionState?.currentBid || 0).toFixed(2)} Cr</span>
+                                             <div className="flex items-center gap-2 sm:gap-3">
+                                                <span className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white leading-none">₹{(displayAuctionState?.currentBid || 0).toFixed(2)} Cr</span>
                                                 {displayAuctionState?.highBidderTeamId && (
-                                                   <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-2 py-1 rounded-xl">
-                                                      <div className="w-6 h-6 rounded-lg bg-white/5 border border-white/10 p-0.5 flex items-center justify-center">
+                                                   <div className="flex items-center gap-1.5 sm:gap-2 bg-white/5 border border-white/10 px-2 py-1 rounded-xl">
+                                                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-white/5 border border-white/10 p-0.5 flex items-center justify-center">
                                                          <img src={TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.logo} alt="" className="w-full h-full object-contain" />
                                                       </div>
-                                                      <span className="text-[9px] md:text-[10px] font-bold text-gray-300 uppercase tracking-widest">{displayAuctionState.highBidderTeamId}</span>
+                                                      <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold text-gray-300 uppercase tracking-widest">{displayAuctionState.highBidderTeamId}</span>
                                                    </div>
                                                 )}
                                              </div>
                                           </div>
-                                          <div className={`w-14 h-14 md:w-16 md:h-16 rounded-full flex flex-col items-center justify-center transition-all duration-300 border-2 ${timeLeft < 5
+                                          <div className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full flex flex-col items-center justify-center transition-all duration-300 border-2 ${timeLeft < 5
                                              ? 'border-red-500 bg-red-500/10 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]'
                                              : 'border-green-500/30 bg-green-500/5 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.1)]'
                                              }`}>
-                                             <span className="text-lg md:text-xl font-black leading-none">{timeLeft}</span>
+                                             <span className="text-base sm:text-lg md:text-xl font-black leading-none">{timeLeft}</span>
                                              <span className="text-[6px] md:text-[7px] font-bold tracking-widest uppercase mt-0.5">Sec</span>
                                           </div>
                                        </div>
                                     </div>
                                  </div>
-                                 <div className="bg-black/20 border-t border-white/5 p-4 md:p-6 flex gap-3 md:gap-4">
+                                 <div className="bg-black/20 border-t border-white/5 p-3 sm:p-4 md:p-6 flex gap-3 md:gap-4">
                                     <button
                                        onClick={handleBid}
                                        disabled={timeLeft === 0 || displayAuctionState?.status !== 'bidding' || displayAuctionState?.highBidderId === user?.uid}
-                                       className={`flex-1 h-14 md:h-18 font-black text-base md:text-xl rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale cursor-pointer ${displayAuctionState?.highBidderId === user?.uid
+                                       className={`flex-1 h-12 sm:h-14 md:h-18 font-black text-sm sm:text-base md:text-xl rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale cursor-pointer ${displayAuctionState?.highBidderId === user?.uid
                                           ? 'bg-white/5 text-green-500 border border-green-500/20 shadow-inner'
                                           : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-[#050505] shadow-[0_4px_20px_rgba(34,197,94,0.2)] hover:shadow-[0_8px_30px_rgba(34,197,94,0.3)]'
                                           }`}
                                     >
                                        {displayAuctionState?.status === 'paused' ? 'PAUSED' : displayAuctionState?.highBidderId === user?.uid ? "LEADING BIDDER" : `PLACE BID: ₹${nextBidAmount.toFixed(2)} Cr`}
                                     </button>
-                                    <button onClick={() => setShowPlayersOverlay(true)} className="w-14 h-14 md:w-18 md:h-18 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-all"><List size={20} /></button>
+                                    <button onClick={() => setShowPlayersOverlay(true)} className="w-12 h-12 sm:w-14 sm:h-14 md:w-18 md:h-18 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-all"><List size={20} /></button>
                                  </div>
                               </div>
                            </motion.div>
@@ -1236,8 +1238,8 @@ const AuctionRoom = () => {
             </aside>
          </div>
 
-         <div className="w-full shrink-0 bg-black/90 backdrop-blur-2xl border-t border-white/5 flex md:hidden z-50 pb-[env(safe-area-inset-bottom)] relative before:absolute before:inset-x-0 before:top-0 before:-mt-5 before:h-5 before:bg-gradient-to-t before:from-[#050505]/80 before:to-transparent before:pointer-events-none">
-            <div className="flex w-full h-12 items-center justify-around px-4">
+         <div className="w-full shrink-0 bg-black/95 backdrop-blur-2xl border-t border-white/10 flex md:hidden z-50 pb-[max(0.75rem,env(safe-area-inset-bottom))] relative">
+            <div className="flex w-full h-14 items-center justify-around px-4">
                <button onClick={() => setMobileTab('squad')} className={`flex flex-col items-center justify-center w-16 gap-0.5 transition-all duration-300 ${mobileTab === 'squad' ? 'text-blue-500 translate-y-0' : 'text-gray-500 hover:text-gray-400 translate-y-0.5'}`}>
                   <div className={`p-1 rounded-lg transition-colors duration-300 ${mobileTab === 'squad' ? 'bg-blue-500/10' : 'bg-transparent'}`}>
                      <Users size={16} strokeWidth={mobileTab === 'squad' ? 2.5 : 2} />
@@ -1272,39 +1274,65 @@ const AuctionRoom = () => {
                         </div>
                         <button onClick={() => setShowPlayersOverlay(false)} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-gray-400 hover:bg-red-500 hover:text-white transition-all"><X size={20} /></button>
                      </div>
-                     <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-white/5">
+                     <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-white/5 no-scrollbar snap-x snap-mandatory shrink-0">
                         {['upcoming', 'sold', 'unsold', 'leaderboard'].map(tab => (
-                           <button key={tab} onClick={() => setActiveOverlayTab(tab)} className={`px-6 py-4 rounded-2xl transition-all uppercase text-sm font-black ${activeOverlayTab === tab ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300'}`}>{tab}</button>
+                           <button
+                              key={tab}
+                              onClick={() => setActiveOverlayTab(tab)}
+                              className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-full transition-all uppercase text-xs sm:text-sm font-black whitespace-nowrap snap-start cursor-pointer border ${activeOverlayTab === tab
+                                 ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40 shadow-[0_0_15px_rgba(234,179,8,0.15)]'
+                                 : 'bg-white/5 text-gray-400 border-transparent hover:text-white hover:bg-white/10'
+                                 }`}
+                           >
+                              {tab}
+                           </button>
                         ))}
                      </div>
-                     <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-12">
-                        {activeOverlayTab === 'upcoming' ? (
-                           <div className="space-y-12">
+                     <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 sm:pr-2 pb-12">
+                        {filteredPlayers.length === 0 ? (
+                           <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
+                              <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-gray-400 mb-4 shadow-xl">
+                                 <Users size={32} className="opacity-50" />
+                              </div>
+                              <h4 className="text-base font-black uppercase tracking-wider text-gray-300 mb-1">
+                                 No {activeOverlayTab} players found
+                              </h4>
+                              <p className="text-xs text-gray-500 font-medium max-w-sm">
+                                 {activeOverlayTab === 'unsold' && "No players have gone unsold in this auction yet."}
+                                 {activeOverlayTab === 'sold' && "No players have been bought by any team yet."}
+                                 {activeOverlayTab === 'leaderboard' && "Top sold players will appear here once bidding starts."}
+                                 {activeOverlayTab === 'upcoming' && "No upcoming players remaining in the inventory."}
+                              </p>
+                           </div>
+                        ) : activeOverlayTab === 'upcoming' ? (
+                           <div className="space-y-8 sm:space-y-12">
                               {Object.entries(groupedUpcomingPlayers || {}).map(([setName, players]) => (
-                                 <div key={setName} className="space-y-6">
-                                    <div className="flex items-center gap-6">
+                                 <div key={setName} className="space-y-4 sm:space-y-6">
+                                    <div className="flex items-center gap-4 sm:gap-6">
                                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-yellow-500/20 to-transparent" />
-                                       <h3 className="text-sm font-black text-yellow-500 uppercase tracking-[0.3em] bg-yellow-500/5 px-6 py-2 rounded-full border border-yellow-500/10 ">
+                                       <h3 className="text-xs sm:text-sm font-black text-yellow-500 uppercase tracking-[0.2em] sm:tracking-[0.3em] bg-yellow-500/5 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full border border-yellow-500/10 whitespace-nowrap">
                                           {setName}
                                        </h3>
                                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-yellow-500/20 to-transparent" />
                                     </div>
-                                    <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3 md:gap-4">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2.5 sm:gap-3 md:gap-4">
                                        {players.map(p => (
-                                          <div key={p.id} className="bg-white/5 border border-white/5 p-3 rounded-2xl hover:bg-white/10 transition-all group">
-                                             <div className="w-16 h-16 md:w-20 md:h-20 bg-white/10 rounded-2xl overflow-hidden mb-3 border border-white/10 group-hover:scale-105 transition-transform mx-auto">
-                                                <img src={p.image} className="w-full h-full object-contain" alt={p.name} />
+                                          <div key={p.id} className="bg-white/5 border border-white/5 p-2.5 sm:p-3 rounded-2xl hover:bg-white/10 transition-all group flex flex-col justify-between">
+                                             <div>
+                                                <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-white/10 rounded-xl sm:rounded-2xl overflow-hidden mb-2 sm:mb-3 border border-white/10 group-hover:scale-105 transition-transform mx-auto">
+                                                   <img src={p.image} className="w-full h-full object-contain" alt={p.name} />
+                                                </div>
+                                                <div className="text-center">
+                                                   <h5 className="text-[11px] sm:text-xs font-black truncate mb-0.5 leading-tight">{p.name}</h5>
+                                                   <div className="flex items-center justify-center gap-1.5 mb-2">
+                                                      <span className="text-[8px] font-bold text-gray-400 uppercase bg-white/5 px-1.5 py-0.5 rounded">{p.role}</span>
+                                                   </div>
+                                                </div>
                                              </div>
-                                             <div className="text-center">
-                                                <h5 className="text-[10px] md:text-xs font-black truncate mb-0.5">{p.name}</h5>
-                                                <div className="flex items-center justify-center gap-2 mb-2">
-                                                   <span className="text-[8px] md:text-[9px] font-bold text-gray-500 uppercase ">{p.role}</span>
-                                                </div>
-                                                <div className="bg-black/40 px-3 py-1 rounded-lg border border-white/5">
-                                                   <span className="text-[10px] font-black text-yellow-500">
-                                                      ₹{p.basePrice.toFixed(2)} Cr
-                                                   </span>
-                                                </div>
+                                             <div className="bg-black/40 px-2 py-1 rounded-lg border border-white/5 text-center">
+                                                <span className="text-[9px] sm:text-[10px] font-black text-yellow-500">
+                                                   ₹{p.basePrice.toFixed(2)} Cr
+                                                </span>
                                              </div>
                                           </div>
                                        ))}
@@ -1313,22 +1341,24 @@ const AuctionRoom = () => {
                               ))}
                            </div>
                         ) : (
-                           <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3 md:gap-4">
+                           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2.5 sm:gap-3 md:gap-4">
                               {filteredPlayers.map(p => (
-                                 <div key={p.id} className="bg-white/5 border border-white/5 p-3 rounded-2xl hover:bg-white/10 transition-all group">
-                                    <div className="w-16 h-16 md:w-20 md:h-20 bg-white/10 rounded-2xl overflow-hidden mb-3 border border-white/10 group-hover:scale-105 transition-transform mx-auto">
-                                       <img src={p.image} className="w-full h-full object-contain" alt={p.name} />
+                                 <div key={p.id} className="bg-white/5 border border-white/5 p-2.5 sm:p-3 rounded-2xl hover:bg-white/10 transition-all group flex flex-col justify-between">
+                                    <div>
+                                       <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-white/10 rounded-xl sm:rounded-2xl overflow-hidden mb-2 sm:mb-3 border border-white/10 group-hover:scale-105 transition-transform mx-auto">
+                                          <img src={p.image} className="w-full h-full object-contain" alt={p.name} />
+                                       </div>
+                                       <div className="text-center">
+                                          <h5 className="text-[11px] sm:text-xs font-black truncate mb-0.5 leading-tight">{p.name}</h5>
+                                          <div className="flex items-center justify-center gap-1.5 mb-2">
+                                             <span className="text-[8px] font-bold text-gray-400 uppercase bg-white/5 px-1.5 py-0.5 rounded">{p.role}</span>
+                                          </div>
+                                       </div>
                                     </div>
-                                    <div className="text-center">
-                                       <h5 className="text-[10px] md:text-xs font-black truncate mb-0.5">{p.name}</h5>
-                                       <div className="flex items-center justify-center gap-2 mb-2">
-                                          <span className="text-[8px] md:text-[9px] font-bold text-gray-500 uppercase ">{p.role}</span>
-                                       </div>
-                                       <div className="bg-black/40 px-3 py-1 rounded-lg border border-white/5">
-                                          <span className="text-[10px] font-black text-yellow-500">
-                                             ₹{(activeOverlayTab === 'sold' || activeOverlayTab === 'leaderboard' ? p.bid : p.basePrice).toFixed(2)} Cr
-                                          </span>
-                                       </div>
+                                    <div className="bg-black/40 px-2 py-1 rounded-lg border border-white/5 text-center">
+                                       <span className="text-[9px] sm:text-[10px] font-black text-yellow-500">
+                                          ₹{(activeOverlayTab === 'sold' || activeOverlayTab === 'leaderboard' ? p.bid : p.basePrice).toFixed(2)} Cr
+                                       </span>
                                     </div>
                                  </div>
                               ))}
