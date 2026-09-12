@@ -51,7 +51,7 @@ const AuctionSummary = () => {
           teamColor: teamInfo?.color,
           teamTextColor: teamInfo?.textColor
         };
-      })
+      }).filter(p => p && p.id)
     ).sort((a, b) => b.bidVal - a.bidVal);
   }, [roomTeams]);
 
