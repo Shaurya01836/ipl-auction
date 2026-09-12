@@ -16,6 +16,28 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  /* Prevent horizontal bounce and enable smooth scrolling */
+  overscroll-behavior-y: none;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Global Mobile Touch Responsiveness & Instant Tap Feedback */
+button, 
+a, 
+input, 
+select, 
+textarea, 
+[role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent unwanted selection on rapid action buttons (e.g. Bid button) */
+button, .no-select {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
@@ -36,8 +58,8 @@ body {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  transform: translateZ(0);
 }
-
 
 .ipl-text-gradient {
   background: linear-gradient(135deg, #fff 0%, #d4af37 100%);
@@ -111,6 +133,7 @@ body {
   box-shadow:
     0 4px 24px -1px rgba(0, 0, 0, 0.2),
     inset 0 0 20px 0 rgba(255, 255, 255, 0.02);
+  transform: translateZ(0);
 }
 
 .animate-glow {
@@ -118,7 +141,6 @@ body {
 }
 
 @keyframes pulse-glow {
-
   0%,
   100% {
     opacity: 0.3;
@@ -136,7 +158,6 @@ body {
 }
 
 @keyframes pulse-slow {
-
   0%,
   100% {
     opacity: 0.2;
@@ -146,5 +167,26 @@ body {
   50% {
     opacity: 0.4;
     transform: scale(1.2) translate(-50%, -50%);
+  }
+}
+
+/* Mobile GPU Performance Enhancements (< 768px viewports) */
+@media (max-width: 767px) {
+  .glass {
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    background: rgba(15, 20, 35, 0.85);
+  }
+
+  .glass-premium {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background: rgba(11, 14, 30, 0.9);
+  }
+
+  /* Disable battery-draining continuous background animations on small mobile screens */
+  .animate-pulse-slow,
+  .animate-glow {
+    animation: none !important;
   }
 }

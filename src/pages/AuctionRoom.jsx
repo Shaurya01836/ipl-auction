@@ -1040,7 +1040,7 @@ const AuctionRoom = () => {
                                  </div>
                                  <div className="p-4 sm:p-6 md:p-10 flex flex-col md:flex-row items-center gap-4 sm:gap-6 md:gap-10">
                                     <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-60 md:h-80 bg-gradient-to-b from-white/10 to-transparent rounded-2xl md:rounded-[2rem] overflow-hidden border border-white/10 relative z-10 shadow-[0_12px_40px_rgba(0,0,0,0.4)] group hover:scale-[1.02] transition-transform duration-500 shrink-0">
-                                       <img src={currentPlayer.image} alt={currentPlayer.name} className="w-full h-full object-cover" />
+                                       <img src={currentPlayer.image} alt={currentPlayer.name} decoding="async" className="w-full h-full object-cover" />
                                     </div>
                                     <div className="flex-1 flex flex-col gap-4 md:gap-6 w-full text-center md:text-left">
                                        <div>
