@@ -44,7 +44,7 @@ const FantasyAdmin = () => {
       unsubAvg();
       unsubMatch();
     };
-  }, []);
+  }, [user, ADMIN_EMAIL]);
 
   // Search logic
   const filteredPlayers = useMemo(() => {

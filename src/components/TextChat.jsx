@@ -12,13 +12,15 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
    const { messages, sendMessage } = useAuction();
    const { user } = useAuth();
    const [text, setText] = useState('');
-   const messagesEndRef = useRef(null);
+   const scrollContainerRef = useRef(null);
 
    // Filter only text and gif chat messages
    const chatMessages = messages.filter(m => m.type === 'text' || m.type === 'gif' || !m.type);
 
    const scrollToBottom = () => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      if (scrollContainerRef.current) {
+         scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+      }
    };
 
 
@@ -60,10 +62,10 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
             }));
             setSearchedGifs(list);
          } else {
-            setSearchedGifs(IPL_GIFS);
+            setSearchedGifs([]);
          }
       } catch (err) {
-         setSearchedGifs(IPL_GIFS);
+         setSearchedGifs([]);
       } finally {
          setIsSearchingGifs(false);
       }
@@ -98,7 +100,7 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
          {!isCollapsed && (
             <>
                {/* Messages Scroll Area */}
-               <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar flex flex-col min-h-0">
+               <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar flex flex-col min-h-0">
                   {chatMessages.length === 0 ? (
                      <div className="flex-1 flex flex-col items-center justify-center opacity-30 p-8 text-center my-auto">
                         <MessageSquare size={24} className="text-gray-500 mb-2 animate-pulse" />
@@ -153,7 +155,6 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
                         );
                      })
                   )}
-                  <div ref={messagesEndRef} />
                </div>
 
                {/* Message Input Box */}

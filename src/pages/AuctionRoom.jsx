@@ -505,10 +505,7 @@ const AuctionRoom = () => {
          }
       } else if (status === 'unsold') {
          const unsoldAudios = [
-            '/unsold1.mpeg',
-            '/dun-dun-dun-sound-effect-brass_8nFBccR.mp3',
-            '/gopgopgop.mp3',
-            '/ny-video-online-audio-converter.mp3'
+            '/unsold1.mpeg'
          ];
          const randomAudio = unsoldAudios[Math.floor(Math.random() * unsoldAudios.length)];
          const audio = celebrationAudioRef.current;
@@ -541,10 +538,10 @@ const AuctionRoom = () => {
    const lastBeepedSecRef = useRef(-1);
    const endTriggeredRef = useRef(false);
 
-   // Reset the end-trigger lock whenever a new player starts
+   // Reset the end-trigger lock whenever a new player starts or timer resets (new bid)
    useEffect(() => {
       endTriggeredRef.current = false;
-   }, [displayAuctionState?.playerId]);
+   }, [displayAuctionState?.playerId, displayAuctionState?.timerEndsAt]);
 
    useEffect(() => {
       if (currentAuction?.status !== 'active' || !displayAuctionState?.timerEndsAt || displayAuctionState?.status !== 'bidding') {
@@ -980,8 +977,8 @@ const AuctionRoom = () => {
                <div className="min-h-12 border-b border-white/5 bg-white/[0.01] flex items-center px-3 sm:px-6 md:px-8 w-full shrink-0 py-2 md:py-0">
                   <div className="w-full max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-2 md:gap-4">
                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4">
-                        <div className="px-2 py-0.5 bg-yellow-500/20 border border-yellow-500/30 rounded-md shrink-0">
-                           <span className="text-[8px] sm:text-[9px] font-black text-yellow-500 uppercase tracking-wider">{currentPlayer?.set}</span>
+                        <div className="px-2.5 py-0.5 bg-yellow-500/10 border border-yellow-500/20 rounded-full shrink-0 flex items-center">
+                           <span className="text-[8px] sm:text-[9px] font-extrabold text-yellow-400/90 uppercase tracking-widest">{currentPlayer?.set}</span>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
                            <span className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-wider">Base Price:</span>
@@ -1141,11 +1138,11 @@ const AuctionRoom = () => {
                            exit={{ opacity: 0, y: -10 }}
                            className="flex-1 flex flex-col min-h-0 h-full"
                         >
-                           <div className="flex-1 overflow-y-auto p-4 custom-scrollbar h-full relative">
+                           <div className="flex-1 overflow-y-auto p-3 sm:p-4 custom-scrollbar h-full relative">
                               {/* Timeline line */}
-                              <div className="absolute left-10 top-6 bottom-6 w-[1px] bg-white/5 pointer-events-none" />
+                              <div className="absolute left-6 sm:left-10 top-6 bottom-6 w-[1px] bg-white/5 pointer-events-none" />
 
-                              <div className="space-y-4 relative">
+                              <div className="space-y-3 sm:space-y-4 relative">
                                  {[...messages.filter(m => m.type === 'log' || m.type === 'sold_card').filter(m => !m.text.includes('New bid:'))].reverse().map((msg, index) => {
                                     const isSold = msg.type === 'sold_card';
 
@@ -1170,7 +1167,7 @@ const AuctionRoom = () => {
                                              key={`log-${msg.id || index}`}
                                              initial={index === 0 ? { opacity: 0, y: -10 } : false}
                                              animate={{ opacity: 1, y: 0 }}
-                                             className="py-2"
+                                             className="py-1 sm:py-2"
                                           >
                                              <SoldCard msg={msg} />
                                           </motion.div>
@@ -1195,16 +1192,16 @@ const AuctionRoom = () => {
                                           key={`log-${msg.id || index}`}
                                           initial={index === 0 ? { opacity: 0, y: -10 } : false}
                                           animate={{ opacity: 1, y: 0 }}
-                                          className="flex gap-4 items-start py-1 px-3 hover:bg-white/[0.01] rounded-xl transition-all relative group"
+                                          className="flex gap-2.5 sm:gap-4 items-start py-1 px-2 sm:px-3 hover:bg-white/[0.01] rounded-xl transition-all relative group"
                                        >
                                           {/* Timeline tiny dot node */}
-                                          <div className="relative z-10 flex items-center justify-center w-6 h-6 shrink-0">
+                                          <div className="relative z-10 flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 shrink-0">
                                              <div className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover:bg-white/40 transition-colors" />
                                           </div>
 
                                           {/* Minimal Text content */}
                                           <div className="flex-1 min-w-0">
-                                             <p className="text-[11px] md:text-[12px] font-medium leading-relaxed text-gray-400">
+                                             <p className="text-[10px] sm:text-[11px] md:text-[12px] font-medium leading-relaxed text-gray-300">
                                                 {displayText}
                                              </p>
                                              {timeAgo && <span className="text-[8px] font-bold text-gray-600 uppercase tracking-widest mt-0.5 block">{timeAgo}</span>}
@@ -1511,43 +1508,43 @@ const SoldCard = ({ msg }) => {
    };
 
    return (
-      <div className="space-y-2 mb-6">
-         <div ref={cardRef} className="relative w-full h-[480px] aspect-[4/5] rounded-[2rem] overflow-hidden bg-[#0A0A0B] border border-white/10 shadow-2xl">
+      <div className="space-y-2 mb-4 sm:mb-6">
+         <div ref={cardRef} className="relative w-full min-h-[400px] max-h-[480px] h-auto aspect-[4/5] rounded-2xl sm:rounded-[2rem] overflow-hidden bg-[#0A0A0B] border border-white/10 shadow-2xl">
             <div className={`absolute inset-0 opacity-20 bg-gradient-to-br ${team?.color.replace('bg-', 'from-')} to-black`} />
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
 
-            <div className="relative h-full flex flex-col p-6 z-10">
-               <div className="flex justify-between items-start mb-4">
-                  <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/10">
+            <div className="relative h-full flex flex-col p-4 sm:p-6 z-10 justify-between">
+               <div className="flex justify-between items-start mb-2 sm:mb-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl p-1.5 sm:p-2 border border-white/10">
                      <img src={team?.logo} alt="" className="w-full h-full object-contain " />
                   </div>
-                  <div className="text-right uppercase tracking-[0.2em]">
-                     <p className="text-[8px] font-black text-blue-500 mb-0.5">IPL Auction</p>
-                     <p className="text-[10px] font-bold text-white/50 leading-none">Sold to</p>
-                     <p className="text-[12px] font-black text-white">{msg.metadata.buyerName}</p>
+                  <div className="text-right uppercase tracking-[0.15em] sm:tracking-[0.2em]">
+                     <p className="text-[7px] sm:text-[8px] font-black text-blue-500 mb-0.5">IPL Auction</p>
+                     <p className="text-[9px] sm:text-[10px] font-bold text-white/50 leading-none">Sold to</p>
+                     <p className="text-[11px] sm:text-[12px] font-black text-white">{msg.metadata.buyerName}</p>
                   </div>
                </div>
 
-               <div className="flex-1 flex flex-col justify-center items-center py-4">
-                  <div className="relative w-40 h-40 group">
+               <div className="flex-1 flex flex-col justify-center items-center py-2 sm:py-4">
+                  <div className="relative w-28 h-28 sm:w-40 sm:h-40 group">
                      <div className={`absolute inset-0 rounded-full blur-3xl opacity-30 ${team?.color}`} />
                      <img src={player?.image} className="relative w-full h-full object-contain z-10 drop-shadow-[0_0_20px_rgba(0,0,0,0.5)]" alt="" />
                   </div>
-                  <div className="text-center mt-4">
-                     <h2 className="text-2xl font-black uppercase tracking-tight text-white leading-tight">{player?.name}</h2>
-                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em]">{player?.role} • {player?.country}</p>
+                  <div className="text-center mt-2 sm:mt-4">
+                     <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white leading-tight">{player?.name}</h2>
+                     <p className="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] sm:tracking-[0.3em]">{player?.role} • {player?.country}</p>
                   </div>
                </div>
 
-               <div className="space-y-4">
+               <div className="space-y-3 sm:space-y-4">
                   <div className="text-center">
-                     <p className="text-[16px] font-black italic uppercase tracking-wider text-yellow-500 drop-shadow-lg">#{slogan.slogan}</p>
+                     <p className="text-sm sm:text-[16px] font-black italic uppercase tracking-wider text-yellow-500 drop-shadow-lg">#{slogan.slogan}</p>
 
                   </div>
 
-                  <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-3xl text-center">
+                  <div className="bg-white/5 backdrop-blur-md border border-white/10 p-3 sm:p-4 rounded-2xl sm:rounded-3xl text-center">
 
-                     <p className="text-2xl font-black text-white">₹{msg.metadata.bid.toFixed(2)} Cr</p>
+                     <p className="text-xl sm:text-2xl font-black text-white">₹{msg.metadata.bid.toFixed(2)} Cr</p>
                   </div>
                </div>
             </div>

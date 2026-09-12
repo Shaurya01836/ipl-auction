@@ -722,7 +722,7 @@ const LandingPage = () => {
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] transition-transform duration-500 group-hover/submit:scale-105" />
                     <div className="relative flex items-center justify-center gap-3 text-white font-black uppercase tracking-[0.2em] text-sm">
-                      {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <><KeyRound size={16} /><span>Enter Portal</span><ChevronRight size={18} className="group-hover/submit:translate-x-1 transition-transform" /></>}
+                      {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <><span>Join Auction</span><ChevronRight size={18} className="group-hover/submit:translate-x-1 transition-transform" /></>}
                     </div>
                   </button>
                 </motion.form>
@@ -763,24 +763,24 @@ const LandingPage = () => {
                             <div key={session.id} className="space-y-1">
                               <button
                                 onClick={() => setExpandedSession(isExpanded ? null : session.id)}
-                                className={`w-full text-left p-4 rounded-2xl border transition-all flex items-center justify-between group cursor-pointer ${isExpanded ? 'bg-white/10 border-white/20 shadow-lg' : 'bg-white/[0.03] border-white/5 hover:bg-white/5'
+                                className={`w-full text-left p-3 sm:p-4 rounded-2xl border transition-all flex items-center justify-between group cursor-pointer ${isExpanded ? 'bg-white/10 border-white/20 shadow-lg' : 'bg-white/[0.03] border-white/5 hover:bg-white/5'
                                   }`}
                               >
-                                <div className="flex items-center gap-3">
-                                  <div className={`w-12 h-12 rounded-2xl bg-white/5 border border-white/10 p-1.5 flex items-center justify-center shadow-2xl relative`}>
+                                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 p-1 sm:p-1.5 flex items-center justify-center shrink-0">
                                     <img src={teamMeta?.logo} alt={`${teamMeta?.name || 'Team'} Logo`} className="w-full h-full object-contain" />
                                   </div>
-                                  <div>
-                                    <h5 className="text-sm font-black uppercase tracking-tight">{teamMeta?.name || session.teamName}</h5>
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                      <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest">Room: {session.roomId}</span>
-                                      <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded ${session.mode === 'mega' ? 'bg-orange-500/10 text-orange-500'
+                                  <div className="min-w-0 flex-1">
+                                    <h5 className="text-xs sm:text-sm font-black uppercase tracking-tight truncate">{teamMeta?.name || session.teamName}</h5>
+                                    <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 mt-0.5">
+                                      <span className="text-[8px] font-bold text-gray-500 uppercase tracking-wider shrink-0">Room: {session.roomId}</span>
+                                      <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded shrink-0 ${session.mode === 'mega' ? 'bg-orange-500/10 text-orange-500'
                                         : session.mode === 'sprint11' ? 'bg-yellow-500/10 text-yellow-500'
                                           : 'bg-blue-500/10 text-blue-500'
                                         }`}>
                                         {session.mode}
                                       </span>
-                                      <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded ${session.status === 'completed' ? 'bg-green-500/10 text-green-500'
+                                      <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded shrink-0 ${session.status === 'completed' ? 'bg-green-500/10 text-green-500'
                                         : session.status === 'active' ? 'bg-yellow-500/10 text-yellow-500'
                                           : 'bg-gray-500/10 text-gray-500'
                                         }`}>
@@ -789,12 +789,12 @@ const LandingPage = () => {
                                     </div>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2 sm:gap-4 shrink-0 ml-2">
                                   <div className="text-right">
-                                    <span className="text-[10px] sm:text-xs font-black italic text-yellow-500">₹{session.spent.toFixed(1)} Cr</span>
-                                    <span className="block text-[7px] sm:text-[8px] font-bold text-gray-600">{session.squad.length} players</span>
+                                    <span className="text-[10px] sm:text-xs font-black italic text-yellow-500 block">₹{session.spent.toFixed(1)} Cr</span>
+                                    <span className="block text-[7px] sm:text-[8px] font-bold text-gray-500">{session.squad.length} players</span>
                                   </div>
-                                  <ChevronDown size={16} className={`text-gray-600 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                  <ChevronDown size={14} className={`text-gray-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                                 </div>
                               </button>
 
@@ -807,12 +807,12 @@ const LandingPage = () => {
                                     exit={{ height: 0, opacity: 0 }}
                                     className="overflow-hidden"
                                   >
-                                    <div className="bg-[#111] border border-white/5 rounded-2xl p-4 space-y-3 mt-1">
+                                    <div className="bg-[#111] border border-white/5 rounded-2xl p-3 sm:p-4 space-y-3 mt-1">
                                       {/* Quick Stats */}
-                                      <div className="flex items-center gap-3 text-[9px] font-black uppercase tracking-tight px-2">
-                                        <span className="text-gray-500">Budget Left: <span className="text-green-500">₹{session.budgetRemaining?.toFixed(1)} Cr</span></span>
-                                        <span className="text-gray-500">Overseas: <span className="text-purple-400">{overseasCount}/8</span></span>
-                                        <span className="text-gray-500">Squad: <span className="text-white">{session.squad.length}/25</span></span>
+                                      <div className="flex flex-wrap items-center justify-between gap-1.5 sm:gap-3 text-[8px] sm:text-[9px] font-black uppercase tracking-tight px-1.5 py-1 bg-white/[0.02] rounded-xl border border-white/5">
+                                        <span className="text-gray-400">Budget Left: <span className="text-green-400">₹{session.budgetRemaining?.toFixed(1)} Cr</span></span>
+                                        <span className="text-gray-400">Overseas: <span className="text-purple-400">{overseasCount}/8</span></span>
+                                        <span className="text-gray-400">Squad: <span className="text-white">{session.squad.length}/25</span></span>
                                       </div>
 
                                       {/* Players by Role */}
@@ -822,25 +822,25 @@ const LandingPage = () => {
 
                                         return (
                                           <div key={role}>
-                                            <div className="flex items-center gap-2 px-2 mb-2">
-                                              <span className="text-[7px] font-black text-blue-500 uppercase tracking-widest">{role}s</span>
+                                            <div className="flex items-center gap-2 px-1 mb-1.5">
+                                              <span className="text-[7px] sm:text-[8px] font-black text-blue-500 uppercase tracking-widest">{role}s</span>
                                               <div className="flex-1 h-px bg-white/5" />
-                                              <span className="text-[8px] font-black text-gray-700">{rolePlayers.length}</span>
+                                              <span className="text-[8px] font-black text-gray-600">{rolePlayers.length}</span>
                                             </div>
                                             <div className="space-y-1">
                                               {rolePlayers.map((p, idx) => (
-                                                <div key={idx} className="flex items-center justify-between bg-white/[0.03] hover:bg-white/5 transition-all p-2.5 rounded-xl">
-                                                  <div className="flex items-center gap-2.5">
-                                                    <img src={p?.image} alt={p?.name} className="w-7 h-7 object-contain rounded-md bg-white/5" />
-                                                    <div>
-                                                      <h6 className="text-[10px] font-black leading-tight">{p?.name}</h6>
+                                                <div key={idx} className="flex items-center justify-between bg-white/[0.03] hover:bg-white/5 transition-all p-2 sm:p-2.5 rounded-xl">
+                                                  <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
+                                                    <img src={p?.image} alt={p?.name} className="w-6 h-6 sm:w-7 sm:h-7 object-contain rounded-md bg-white/5 shrink-0" />
+                                                    <div className="min-w-0 flex-1">
+                                                      <h6 className="text-[10px] sm:text-[11px] font-black leading-tight truncate">{p?.name}</h6>
                                                       <div className="flex items-center gap-1.5">
                                                         <span className="text-[7px] font-bold text-gray-500 uppercase">{p?.type}</span>
-                                                        {p?.country !== 'IND' && <Wifi size={8} className="text-purple-400 rotate-90" />}
+                                                        {p?.country !== 'IND' && <Wifi size={8} className="text-purple-400 rotate-90 shrink-0" />}
                                                       </div>
                                                     </div>
                                                   </div>
-                                                  <span className="text-[10px] font-black italic text-yellow-500">₹{(p?.bid || 0).toFixed(2)} Cr</span>
+                                                  <span className="text-[9px] sm:text-[10px] font-black italic text-yellow-500 shrink-0">₹{(p?.bid || 0).toFixed(2)} Cr</span>
                                                 </div>
                                               ))}
                                             </div>
@@ -856,7 +856,7 @@ const LandingPage = () => {
                                       {session.status === 'completed' ? (
                                         <button
                                           onClick={() => navigate(`/summary/${session.roomId}`)}
-                                          className="w-full mt-2 py-3 bg-blue-600/10 border border-blue-500/20 rounded-xl text-blue-500 text-[10px] font-black uppercase tracking-widest hover:bg-blue-600/20 transition-all cursor-pointer flex items-center justify-center gap-2"
+                                          className="w-full mt-2 py-2.5 sm:py-3 bg-blue-600/10 border border-blue-500/20 rounded-xl text-blue-500 text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-blue-600/20 transition-all cursor-pointer flex items-center justify-center gap-2"
                                         >
                                           <Trophy size={12} /> View Full Summary
                                         </button>

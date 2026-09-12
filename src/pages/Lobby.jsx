@@ -371,45 +371,44 @@ const Lobby = () => {
       </div>
 
       {/* Top Navigation */}
-      <div className="w-full max-w-6xl flex flex-col md:flex-row items-center justify-between gap-8 md:gap-0 mb-10 z-20 px-4">
-        <div className="flex flex-wrap justify-center md:justify-start items-center gap-3 sm:gap-4">
+      <div className="w-full max-w-6xl flex flex-wrap items-center justify-between gap-3 sm:gap-4 mb-6 md:mb-10 z-20 px-2 sm:px-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <button 
             onClick={() => navigate('/')}
-            className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all group flex items-center gap-2"
+            className="p-2.5 sm:p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl sm:rounded-2xl transition-all group flex items-center gap-2"
+            title="Exit Hub"
           >
-            <Home size={20} className="group-hover:scale-110 transition-transform" />
+            <Home size={18} className="group-hover:scale-110 transition-transform" />
             <span className="text-[10px] font-black uppercase tracking-widest hidden sm:block">Exit Hub</span>
           </button>
           <button 
             onClick={logout}
-            className="p-3 bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 rounded-2xl transition-all group flex items-center gap-2 text-gray-400 hover:text-red-400"
+            className="p-2.5 sm:p-3 bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 rounded-xl sm:rounded-2xl transition-all group flex items-center gap-2 text-gray-400 hover:text-red-400"
+            title="Logout"
           >
-            <LogOut size={20} className="group-hover:scale-110 transition-transform" />
+            <LogOut size={18} className="group-hover:scale-110 transition-transform" />
             <span className="text-[10px] font-black uppercase tracking-widest hidden sm:block">Logout</span>
           </button>
-          <div className="h-10 w-px bg-white/10" />
+          <div className="h-8 sm:h-10 w-px bg-white/10" />
           <div className="flex flex-col">
-            <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none mb-1">Room ID</span>
-            <span className="text-xl font-black text-white  tracking-tighter">{id}</span>
+            <span className="text-[7px] sm:text-[9px] font-black text-gray-500 uppercase tracking-widest leading-none mb-0.5 sm:mb-1">Room ID</span>
+            <span className="text-base sm:text-xl font-black text-white tracking-tight leading-none">{id}</span>
           </div>
         </div>
 
-        <div className="flex items-center justify-center md:justify-end gap-4 w-full md:w-auto">
-
-          {isAdmin && (
-            <button
-              onClick={handleStartAuction}
-              disabled={isStarting}
-              className="relative overflow-hidden group px-8 py-3 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] rounded-2xl font-black text-xs uppercase tracking-widest shadow-[0_10px_30px_rgba(255,85,0,0.3)] disabled:opacity-50 transition-all active:scale-95 cursor-pointer"
-            >
-          <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-              <div className="relative flex items-center gap-2">
-                {isStarting ? <Loader2 size={18} className="animate-spin" /> : <Rocket size={18} className="group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />}
-                <span>{isStarting ? 'Igniting...' : 'Start Auction'}</span>
-              </div>
-            </button>
-          )}
-        </div>
+        {isAdmin && (
+          <button
+            onClick={handleStartAuction}
+            disabled={isStarting}
+            className="relative overflow-hidden group px-4 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-wider sm:tracking-widest shadow-[0_10px_30px_rgba(255,85,0,0.3)] disabled:opacity-50 transition-all active:scale-95 cursor-pointer shrink-0"
+          >
+            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+            <div className="relative flex items-center gap-1.5 sm:gap-2">
+              {isStarting && <Loader2 size={16} className="animate-spin" />}
+              <span>{isStarting ? 'Igniting...' : 'Start Auction'}</span>
+            </div>
+          </button>
+        )}
       </div>
 
       <motion.div
@@ -545,13 +544,11 @@ const Lobby = () => {
 
           {/* Right Column: Engagement Hub */}
           <div className="lg:col-span-7 w-full p-6 md:p-8 flex flex-col justify-start">
-            
             {/* Tabs Header */}
             <div className="flex bg-white/[0.02] p-1.5 gap-1.5 rounded-2xl mb-6 border border-white/5">
               {[
                 { id: 'players', icon: Users, label: `Crew` },
-                { id: 'chat', icon: MessageSquare, label: 'Chat' },
-                { id: 'settings', icon: SettingsIcon, label: 'Configs' }
+                { id: 'chat', icon: MessageSquare, label: 'Chat' }
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -611,7 +608,7 @@ const Lobby = () => {
                             <div className="flex flex-col items-end">
                                <div className={`w-1.5 h-1.5 rounded-full shadow-lg ${player.isOnline ? 'bg-green-500 shadow-green-500/50' : 'bg-gray-700'}`} />
                                <span className={`text-[8px] font-black uppercase tracking-tighter mt-1 ${player.isOnline ? 'text-green-500' : 'text-gray-700'}`}>
-                                 {player.isOnline ? 'Online' : 'Offline'}
+                                  {player.isOnline ? 'Online' : 'Offline'}
                                </span>
                             </div>
                             {isAdmin && !player.isHost && (
@@ -638,58 +635,6 @@ const Lobby = () => {
                     className="h-[400px]"
                   >
                     <TextChat roomId={id} />
-                  </motion.div>
-                )}
-
-                {activeTab === 'settings' && (
-                  <motion.div 
-                    key="config"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="space-y-8"
-                  >
-                    <div className="p-6 bg-white/[0.02] border border-white/10 rounded-3xl">
-                      <div className="flex items-center justify-between mb-8">
-                         <div>
-                            <h4 className="text-sm font-black text-white uppercase tracking-widest leading-none mb-2">Auction Bid Cycle</h4>
-                            <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">Duration of bidding window per player</p>
-                         </div>
-                         <div className="text-2xl font-black text-yellow-500 ">
-                            {currentAuction?.settings?.bidTimer || 10}<span className="text-xs ml-1 font-bold not-italic text-gray-600">S</span>
-                         </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-5 gap-3">
-                         {[5, 10, 15, 20, 25].map((s) => (
-                            <button
-                               key={s}
-                               onClick={() => handleUpdateBidTimer(s)}
-                               disabled={!isAdmin || isUpdatingSettings}
-                               className={`py-3 rounded-xl border text-[10px] font-black uppercase transition-all flex flex-col items-center justify-center gap-1 shadow-lg ${
-                                 currentAuction?.settings?.bidTimer === s
-                                   ? 'bg-[#1b1b1b] border-white/[0.12] text-white'
-                                   : 'bg-[#151515] border-transparent text-gray-500 hover:bg-white/[0.04]'
-                               } disabled:opacity-50 cursor-pointer`}
-                            >
-                               {s}s
-                               <TrendingUp size={10} className={currentAuction?.settings?.bidTimer === s ? 'text-white' : 'text-gray-600'} />
-                            </button>
-                         ))}
-                      </div>
-                    </div>
-
-                    {!isAdmin && (
-                      <div className="p-5 bg-blue-500/5 border border-blue-500/10 rounded-2xl flex gap-4 items-center">
-                         <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0">
-                            <ShieldAlert size={20} />
-                         </div>
-                         <div>
-                            <p className="text-[9px] text-blue-400 font-black uppercase tracking-widest mb-1">Restricted Control</p>
-                            <p className="text-[10px] text-blue-200/50 font-medium">Only the Hub Host can calibrate auction engine parameters.</p>
-                         </div>
-                      </div>
-                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
