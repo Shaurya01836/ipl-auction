@@ -162,6 +162,8 @@ export default function AuctionActivityFeed() {
                     <img 
                       src={notif.team.logo} 
                       alt={notif.team.id} 
+                      decoding="async"
+                      loading="lazy"
                       className="w-4.5 h-4.5 object-contain flex-shrink-0 group-hover:scale-105 transition-transform" 
                     />
                     <div className="truncate text-gray-400">

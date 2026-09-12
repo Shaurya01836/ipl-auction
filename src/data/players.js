@@ -25,7 +25,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/108.png",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/415500/415592.jpg",
     "stats": {
       "matches": 165,
       "runs": 4912,
@@ -403,7 +403,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/Default-Men.png",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/417500/417526.jpg",
     "stats": {
       "matches": 221,
       "wickets": 193,
@@ -655,7 +655,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 2,
     "set": "Marquee Set 1",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/Default-Men.png",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/415900/415979.jpg",
     "stats": {
       "matches": 222,
       "runs": 3214,
@@ -853,7 +853,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 2,
     "set": "Set 1",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/Default-Men.png",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/416900/416996.jpg",
     "stats": {
       "matches": 191,
       "runs": 5013,
@@ -1105,7 +1105,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 2,
     "set": "Set 1",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/Default-Men.png",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/412800/412865.jpg",
     "stats": {
       "matches": 244,
       "wickets": 188,
@@ -1285,7 +1285,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 2,
     "set": "Set 2",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/595.png",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/416700/416748.jpg",
     "stats": {
       "matches": 135,
       "runs": 4642,
@@ -1303,7 +1303,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 1.5,
     "set": "Set 2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=RahmanullahGurbaz&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/418200/418223.jpg",
     "stats": {
       "matches": 55,
       "runs": 2036,
@@ -1465,7 +1465,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 1,
     "set": "Set 2",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/Default-Men.png",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/416000/416080.jpg",
     "stats": {
       "matches": 89,
       "runs": 2514,
@@ -1591,7 +1591,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 2,
     "set": "Set 2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=AnrichNortje&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/413700/413768.jpg",
     "stats": {
       "matches": 179,
       "wickets": 128,
@@ -1609,7 +1609,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 2,
     "set": "Set 2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=AkealHosein&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/417200/417206.jpg",
     "stats": {
       "matches": 244,
       "wickets": 103,
@@ -1645,7 +1645,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 1,
     "set": "Set 2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=RahulChahar&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/339300/339303.jpg",
     "stats": {
       "matches": 101,
       "wickets": 51,
@@ -1699,7 +1699,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.75,
     "set": "Set 2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=NitishRana&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/416100/416152.jpg",
     "stats": {
       "matches": 55,
       "runs": 663,
@@ -1753,7 +1753,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "Set 2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=DigveshRathi&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/400300/400306.jpg",
     "stats": {
       "matches": 62,
       "wickets": 16,
@@ -1843,7 +1843,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.5,
     "set": "Set 2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=HarshitRana&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/411800/411863.jpg",
     "stats": {
       "matches": 63,
       "wickets": 43,
@@ -1861,7 +1861,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.5,
     "set": "Set 2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=SandeepSharma&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/415300/415377.jpg",
     "stats": {
       "matches": 34,
       "wickets": 28,
@@ -1897,7 +1897,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.5,
     "set": "Set 2",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/Default-Men.png",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/399000/399041.jpg",
     "stats": {
       "matches": 74,
       "wickets": 8,
@@ -2221,7 +2221,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "Set 3",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=MohsinKhan&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1280,q_80/lsci/db/PICTURES/CMS/416200/416254.jpg",
     "stats": {
       "matches": 59,
       "wickets": 56,
@@ -2401,7 +2401,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 2,
     "set": "Set 4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=MattHenry&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/415200/415227.jpg",
     "stats": {
       "matches": 235,
       "wickets": 105,
@@ -2419,7 +2419,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 2,
     "set": "Set 4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=MujeebRahman&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1280,q_80/lsci/db/PICTURES/CMS/395300/395324.jpg",
     "stats": {
       "matches": 115,
       "wickets": 132,
@@ -2545,7 +2545,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 0.75,
     "set": "Set 4",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/Default-Men.png",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/402300/402346.jpg",
     "stats": {
       "matches": 80,
       "runs": 508,
@@ -2581,7 +2581,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 0.75,
     "set": "Set 4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=MitchellOwen&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/402000/402034.jpg",
     "stats": {
       "matches": 79,
       "runs": 946,
@@ -2923,7 +2923,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 0.3,
     "set": "Set 4",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/Default-Men.png",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/416600/416657.jpg",
     "stats": {
       "matches": 49,
       "wickets": 24,
@@ -2941,7 +2941,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "Set 4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=GurjapneetSingh&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/415800/415832.jpg",
     "stats": {
       "matches": 16,
       "wickets": 5,
@@ -2959,7 +2959,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "Set 4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=GurnoorBrar&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/418200/418219.jpg",
     "stats": {
       "matches": 61,
       "wickets": 57,
@@ -3391,7 +3391,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "Set 4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=SuryanshShedge&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/416800/416869.jpg",
     "stats": {
       "matches": 48,
       "runs": 611,
@@ -3499,7 +3499,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "Set 4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=YudhvirCharak&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1280,q_80/lsci/db/PICTURES/CMS/358100/358150.jpg",
     "stats": {
       "matches": 45,
       "runs": 679,
@@ -3553,7 +3553,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 2,
     "set": "AL1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=GusAtkinson&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/417900/417990.jpg",
     "stats": {
       "matches": 213,
       "runs": 4655,
@@ -3571,7 +3571,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 1,
     "set": "AL1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=WiaanMulder&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/403300/403345.jpg",
     "stats": {
       "matches": 103,
       "runs": 2243,
