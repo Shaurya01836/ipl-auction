@@ -6,8 +6,9 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { db } from '../../lib/firebase';
-import { doc, setDoc, getDoc, onSnapshot, collection, query, where } from 'firebase/firestore';
+import { db, rtdb } from '../../lib/firebase';
+import { ref, onValue, update as updateRtdb } from 'firebase/database';
+import { doc, getDoc } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
 import { useQuota } from '../../contexts/QuotaContext';
 
@@ -103,22 +104,26 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
   useEffect(() => {
     if (!auctionId || !user?.uid) return;
 
-    // 1. Current user's own squad (for the editor)
-    const squadRef = doc(db, 'userSquads', `${auctionId}_${user.uid}`);
-    const unsubMySquad = onSnapshot(squadRef, (snap) => {
+    // 1. Current user's own squad (from RTDB - 0 Firestore writes/reads)
+    const mySquadRef = ref(rtdb, `auctions/${auctionId}/userSquads/${user.uid}`);
+    const unsubMySquad = onValue(mySquadRef, (snap) => {
       if (snap.exists()) {
-        setUserSquad(snap.data());
+        setUserSquad(snap.val());
         if (!isEditing) setIsEditing(false);
       } else {
         setIsEditing(true);
       }
     }, (err) => handleFirebaseError(err));
 
-    // 2. ALL squads in this auction room (for leaderboard calculation)
-    const squadsRef = collection(db, 'userSquads');
-    const qSquads = query(squadsRef, where('auctionId', '==', auctionId));
-    const unsubAllSquads = onSnapshot(qSquads, (snap) => {
-      setAllSquads(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    // 2. ALL squads in this auction room (from RTDB - 0 Firestore writes/reads)
+    const allSquadsRef = ref(rtdb, `auctions/${auctionId}/userSquads`);
+    const unsubAllSquads = onValue(allSquadsRef, (snap) => {
+      if (snap.exists()) {
+        const val = snap.val();
+        setAllSquads(Object.entries(val).map(([uid, squad]) => ({ id: `${auctionId}_${uid}`, ...squad })));
+      } else {
+        setAllSquads([]);
+      }
     }, (err) => handleFirebaseError(err));
 
     // 3. Player points & stats from Firestore (cached single getDoc)
@@ -153,19 +158,19 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
 
   }, [auctionId, user, handleFirebaseError]);
 
-  // Save squad handler
+  // Save squad handler (RTDB - 0 Firestore write cost)
   const handleSaveSquad = async (squadData) => {
     if (!user?.uid || !auctionId) return;
     setIsSaving(true);
     try {
-      const squadRef = doc(db, 'userSquads', `${auctionId}_${user.uid}`);
-      await setDoc(squadRef, {
+      const squadRef = ref(rtdb, `auctions/${auctionId}/userSquads/${user.uid}`);
+      await updateRtdb(squadRef, {
         userId: user.uid,
         userName: user.displayName || 'Manager',
         teamId: userTeamDoc?.teamId || 'N/A',
         auctionId,
         ...squadData
-      }, { merge: true });
+      });
       setIsEditing(false);
     } catch (err) {
       handleFirebaseError(err);
