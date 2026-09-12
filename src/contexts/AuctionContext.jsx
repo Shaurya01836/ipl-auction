@@ -79,9 +79,8 @@ export const AuctionProvider = ({ children }) => {
     return getServerTime();
   }, []);
 
-  // Create a new room in DB
+  // Create a new room in DB (RTDB only - 0 Firestore writes)
   const createRoom = useCallback(async (roomId, userId, playerDetails, auctionType = 'mega') => {
-    const roomRef = doc(db, 'auctions', roomId);
     const teamDetails = TEAMS.find(t => t.id === playerDetails.team);
     
     // Mode-specific configurations
@@ -91,44 +90,6 @@ export const AuctionProvider = ({ children }) => {
     const budget = isSprint5 ? 60.0 : isSprint11 ? 90.0 : 120.0;
     const squadLimit = isSprint5 ? 5 : isSprint11 ? 11 : 25;
     const overseasLimit = isSprint5 ? 2 : isSprint11 ? 4 : 8;
-    
-    await setDoc(roomRef, {
-      hostId: userId,
-      status: 'waiting',
-      auctionType,
-      squadLimit,
-      overseasLimit,
-      createdAt: serverTimestamp(),
-      players: [{
-        id: userId,
-        name: playerDetails.name,
-        team: playerDetails.team,
-        teamName: teamDetails?.name || 'Unknown',
-        isHost: true
-      }],
-      bannedPlayers: [],
-      currentAuction: null,
-      logs: [],
-      settings: {
-        bidTimer: 10, // Default 10s
-        budget
-      }
-    });
-
-    // Create the teams document for the host
-    if (playerDetails.team) {
-      const teamRef = doc(db, 'teams', `${roomId}_${userId}`);
-      await setDoc(teamRef, {
-        auctionId: roomId,
-        userId: userId,
-        teamId: playerDetails.team,
-        teamName: teamDetails?.name || 'Unknown',
-        budgetRemaining: budget,
-        spent: 0,
-        squad: [],
-        createdAt: serverTimestamp()
-      });
-    }
 
     const liveRef = ref(rtdb, `auctions/${roomId}/live`);
     await set(liveRef, { status: 'waiting' });
@@ -226,9 +187,6 @@ export const AuctionProvider = ({ children }) => {
       status: 'active',
       playerOrder: randomizedIndices
     });
-
-    // Batch sync initial room & team state to Firestore once
-    await flushAuctionToFirestore(roomId);
 
     const liveRef = ref(rtdb, `auctions/${roomId}/live`);
     await set(liveRef, {
