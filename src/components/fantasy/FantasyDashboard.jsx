@@ -7,8 +7,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db, rtdb } from '../../lib/firebase';
-import { ref, onValue, update as updateRtdb } from 'firebase/database';
-import { doc, getDoc } from 'firebase/firestore';
+import { ref, onValue, update as updateRtdb, set as setRtdb, get as getRtdb } from 'firebase/database';
+import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
 import { useQuota } from '../../contexts/QuotaContext';
 
@@ -31,18 +31,23 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
 
   // Current user's team doc from roomTeams
   const userTeamDoc = useMemo(() => {
-    return roomTeams.find(rt => rt.userId === user?.uid);
-  }, [roomTeams, user]);
+    if (!user?.uid) return null;
+    return roomTeams.find(rt => 
+      rt.userId === user.uid || 
+      rt.id === `${auctionId}_${user.uid}` ||
+      (currentAuction?.players || []).some(p => (p.uid === user.uid || p.id === user.uid) && p.team === rt.teamId)
+    );
+  }, [roomTeams, user, auctionId, currentAuction]);
 
   // Owned players for squad selection
   const ownedPlayers = useMemo(() => {
     if (!userTeamDoc || !userTeamDoc.squad) return [];
     return userTeamDoc.squad.map(s => {
-      const pid = typeof s === 'string' ? s : s.id;
-      const bidVal = typeof s === 'string' ? 0 : s.bid;
+      const pid = typeof s === 'string' ? s : (s?.id || s);
+      const bidVal = typeof s === 'string' ? 0 : (s?.bid || 0);
       const pInfo = IPL_PLAYERS.find(p => p.id === pid);
-      return { ...pInfo, bid: bidVal, teamId: userTeamDoc.teamId };
-    }).filter(p => !!p);
+      return pInfo ? { ...pInfo, bid: bidVal, teamId: userTeamDoc.teamId } : null;
+    }).filter(p => !!p && !!p.id);
   }, [userTeamDoc]);
 
 
@@ -52,31 +57,36 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
     return allSquads.map(squad => {
       const { userId, userName, teamId, players = [], captain, viceCaptain, impactPlayer } = squad;
 
+      const normalizedPlayers = players.map(p => typeof p === 'string' ? p : (p?.id || p));
+      const captainId = typeof captain === 'string' ? captain : (captain?.id || captain);
+      const viceCaptainId = typeof viceCaptain === 'string' ? viceCaptain : (viceCaptain?.id || viceCaptain);
+      const impactId = typeof impactPlayer === 'string' ? impactPlayer : (impactPlayer?.id || impactPlayer);
+
       // Calculate total fantasy points and total matches
       let totalPoints = 0;
       let totalMatches = 0;
 
-      players.forEach(pId => {
+      normalizedPlayers.forEach(pId => {
         const stats = playerStats[pId] || { totalPoints: 0, matches: 0 };
         const pts = stats.totalPoints || 0;
         const matches = stats.matches || 0;
         
-        if (pId === captain) totalPoints += pts * 2;
-        else if (pId === viceCaptain) totalPoints += pts * 1.5;
+        if (pId === captainId) totalPoints += pts * 2;
+        else if (pId === viceCaptainId) totalPoints += pts * 1.5;
         else totalPoints += pts;
 
         totalMatches += matches;
       });
 
       // Impact player points
-      if (impactPlayer && !players.includes(impactPlayer)) {
-        const stats = playerStats[impactPlayer] || { totalPoints: 0, matches: 0 };
+      if (impactId && !normalizedPlayers.includes(impactId)) {
+        const stats = playerStats[impactId] || { totalPoints: 0, matches: 0 };
         totalPoints += stats.totalPoints || 0;
         totalMatches += stats.matches || 0;
       }
 
       // Calculate average
-      const avgPoints = totalMatches > 0 ? (totalPoints / (players.length + (impactPlayer ? 1 : 0))) : 0;
+      const avgPoints = totalMatches > 0 ? (totalPoints / (normalizedPlayers.length + (impactId ? 1 : 0))) : 0;
 
       // Resolve manager name from multiple sources
       const auctionPlayer = auctionPlayers.find(p => p.uid === userId || p.team === teamId);
@@ -93,9 +103,9 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
         teamLogo: teamInfo?.logo || null,
         totalPoints: Math.round(totalPoints),
         avgPoints: Number(avgPoints.toFixed(1)),
-        playerCount: players.length,
+        playerCount: normalizedPlayers.length,
       };
-    }).sort((a, b) => b.avgPoints - a.avgPoints);
+    }).sort((a, b) => b.avgPoints - a.avgPoints || b.totalPoints - a.totalPoints);
   }, [allSquads, playerStats, currentAuction, user]);
 
  
@@ -104,25 +114,93 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
   useEffect(() => {
     if (!auctionId || !user?.uid) return;
 
-    // 1. Current user's own squad (from RTDB - 0 Firestore writes/reads)
+    // Legacy Scanner for squads saved previously in Firestore or alternative RTDB paths
+    const scanLegacySquads = async () => {
+      try {
+        // 1. Check Firestore fantasySquads collection
+        const q1 = query(collection(db, 'fantasySquads'), where('auctionId', '==', auctionId));
+        const snap1 = await getDocs(q1);
+        if (!snap1.empty) {
+          const legacySquads = {};
+          snap1.docs.forEach(docSnap => {
+            const data = docSnap.data();
+            const uId = data.userId || docSnap.id.replace(`${auctionId}_`, '');
+            if (data.players?.length) {
+              legacySquads[uId] = data;
+              setRtdb(ref(rtdb, `auctions/${auctionId}/userSquads/${uId}`), data).catch(() => {});
+            }
+          });
+          if (legacySquads[user.uid]) {
+            setUserSquad(legacySquads[user.uid]);
+            setIsEditing(false);
+          }
+          setAllSquads(Object.entries(legacySquads).map(([uid, squad]) => ({ id: `${auctionId}_${uid}`, ...squad })));
+          return;
+        }
+
+        // 2. Check Firestore userSquads collection
+        const q2 = query(collection(db, 'userSquads'), where('auctionId', '==', auctionId));
+        const snap2 = await getDocs(q2);
+        if (!snap2.empty) {
+          const legacySquads = {};
+          snap2.docs.forEach(docSnap => {
+            const data = docSnap.data();
+            const uId = data.userId || docSnap.id.replace(`${auctionId}_`, '');
+            if (data.players?.length) {
+              legacySquads[uId] = data;
+              setRtdb(ref(rtdb, `auctions/${auctionId}/userSquads/${uId}`), data).catch(() => {});
+            }
+          });
+          if (legacySquads[user.uid]) {
+            setUserSquad(legacySquads[user.uid]);
+            setIsEditing(false);
+          }
+          setAllSquads(Object.entries(legacySquads).map(([uid, squad]) => ({ id: `${auctionId}_${uid}`, ...squad })));
+          return;
+        }
+
+        // 3. Check legacy RTDB paths
+        const legacyRtdbRef = ref(rtdb, `userSquads/${auctionId}`);
+        const legacyRtdbSnap = await getRtdb(legacyRtdbRef);
+        if (legacyRtdbSnap.exists()) {
+          const val = legacyRtdbSnap.val();
+          const legacySquads = {};
+          Object.entries(val).forEach(([uId, squad]) => {
+            if (squad?.players?.length) {
+              legacySquads[uId] = squad;
+              setRtdb(ref(rtdb, `auctions/${auctionId}/userSquads/${uId}`), squad).catch(() => {});
+            }
+          });
+          if (legacySquads[user.uid]) {
+            setUserSquad(legacySquads[user.uid]);
+            setIsEditing(false);
+          }
+          setAllSquads(Object.entries(legacySquads).map(([uid, squad]) => ({ id: `${auctionId}_${uid}`, ...squad })));
+        }
+      } catch (e) {
+        // Non-blocking legacy scan
+      }
+    };
+
+    // 1. Current user's own squad (from RTDB)
     const mySquadRef = ref(rtdb, `auctions/${auctionId}/userSquads/${user.uid}`);
     const unsubMySquad = onValue(mySquadRef, (snap) => {
-      if (snap.exists()) {
+      if (snap.exists() && snap.val()?.players?.length > 0) {
         setUserSquad(snap.val());
-        if (!isEditing) setIsEditing(false);
+        setIsEditing(false);
       } else {
-        setIsEditing(true);
+        scanLegacySquads();
       }
     }, (err) => handleFirebaseError(err));
 
-    // 2. ALL squads in this auction room (from RTDB - 0 Firestore writes/reads)
+    // 2. ALL squads in this auction room (from RTDB)
     const allSquadsRef = ref(rtdb, `auctions/${auctionId}/userSquads`);
     const unsubAllSquads = onValue(allSquadsRef, (snap) => {
       if (snap.exists()) {
         const val = snap.val();
         setAllSquads(Object.entries(val).map(([uid, squad]) => ({ id: `${auctionId}_${uid}`, ...squad })));
       } else {
-        setAllSquads([]);
+        scanLegacySquads();
       }
     }, (err) => handleFirebaseError(err));
 
@@ -164,7 +242,7 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
     setIsSaving(true);
     try {
       const squadRef = ref(rtdb, `auctions/${auctionId}/userSquads/${user.uid}`);
-      await updateRtdb(squadRef, {
+      await setRtdb(squadRef, {
         userId: user.uid,
         userName: user.displayName || 'Manager',
         teamId: userTeamDoc?.teamId || 'N/A',
@@ -181,9 +259,9 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
   };
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-6 sm:space-y-12">
       {/* Sub Tabs */}
-      <div className="flex justify-start gap-4 border-b border-white/5 pb-6">
+      <div className="grid grid-cols-2 sm:flex sm:justify-start gap-2 sm:gap-4 border-b border-white/5 pb-4 sm:pb-6">
         {[
           { id: 'squad', label: 'My Fantasy XI', icon: Users },
           { id: 'leaderboard', label: 'Point Leaderboard', icon: Trophy }
@@ -191,13 +269,13 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
           <button
             key={tab.id}
             onClick={() => setActiveSubTab(tab.id)}
-            className={`px-6 py-2 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all flex items-center gap-3 ${
+            className={`px-3 sm:px-6 py-2.5 sm:py-3 rounded-xl font-black uppercase text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest transition-all flex items-center justify-center gap-1.5 sm:gap-3 touch-manipulation ${
               activeSubTab === tab.id 
                 ? 'bg-orange-600 text-white shadow-lg' 
-                : 'text-gray-500 hover:text-white'
+                : 'text-gray-400 hover:text-white bg-white/5 sm:bg-transparent'
             }`}
           >
-            <tab.icon size={14} /> {tab.label}
+            <tab.icon size={14} className="shrink-0" /> <span className="truncate">{tab.label}</span>
           </button>
         ))}
       </div>
@@ -211,10 +289,10 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
             exit={{ opacity: 0, scale: 1.02 }}
           >
             {!userTeamDoc ? (
-              <div className="bg-red-500/10 border border-red-500/20 p-12 rounded-[2.5rem] text-center">
-                 <AlertCircle size={48} className="text-red-500 mx-auto mb-4" />
-                 <h2 className="text-2xl font-black uppercase tracking-tight text-white mb-2 italic">No Team Assigned</h2>
-                 <p className="text-sm text-gray-500">You must be part of a franchise to participate in fantasy selections.</p>
+              <div className="bg-red-500/10 border border-red-500/20 p-6 sm:p-12 rounded-2xl sm:rounded-[2.5rem] text-center">
+                 <AlertCircle size={40} className="text-red-500 mx-auto mb-3" />
+                 <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white mb-2 italic">No Team Assigned</h2>
+                 <p className="text-xs sm:text-sm text-gray-400">You must be part of a franchise to participate in fantasy selections.</p>
               </div>
             ) : isEditing ? (
               <SquadSelector 
@@ -238,23 +316,18 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -30 }}
-            className="max-w-5xl mx-auto space-y-12 pb-32"
+            className="max-w-5xl mx-auto space-y-6 sm:space-y-12 pb-24 sm:pb-32"
           >
             {/* Header */}
-            <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-16">
-              <div className="flex items-center gap-6">
-                <div className="w-16 h-16 bg-[#ff5500] rounded-3xl flex items-center justify-center text-white shadow-[0_0_40px_rgba(255,85,0,0.4)]">
-                   <Trophy size={32} />
-                </div>
-                <div>
-                  <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter drop-shadow-2xl italic leading-none">Room <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff5500] to-[#ff8c00]">Standings</span></h2>
-                  <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em] mt-2 ml-1">Live Fantasy Points Table</p>
-                </div>
+            <div className="flex items-center gap-4 sm:gap-6 mb-6 sm:mb-12">
+              <div>
+                <h2 className="text-2xl sm:text-4xl md:text-5xl font-black uppercase tracking-tighter drop-shadow-2xl italic leading-none">Room <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff5500] to-[#ff8c00]">Standings</span></h2>
+                <p className="text-[9px] sm:text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] sm:tracking-[0.4em] mt-1 sm:mt-2">Live Fantasy Points Table</p>
               </div>
             </div>
 
             {/* Points Table */}
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:gap-4">
                {calculatedLeaderboard.length > 0 ? (
                  calculatedLeaderboard.map((entry, idx) => (
                    <motion.div
@@ -262,58 +335,58 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
                      initial={{ x: -30, opacity: 0 }}
                      animate={{ x: 0, opacity: 1 }}
                      transition={{ delay: idx * 0.08 }}
-                     className={`group relative bg-[#0c0c0c] border p-1 rounded-[2.5rem] transition-all overflow-hidden ${
+                     className={`group relative bg-[#0c0c0c] border p-1 rounded-2xl sm:rounded-[2.5rem] transition-all overflow-hidden ${
                        entry.userId === user?.uid 
                        ? 'border-white/10 shadow-[0_0_50px_rgba(59,130,246,0.15)]' 
                        : 'border-white/5 hover:border-blue-500/30'
                      }`}
                    >
-                      <div className="p-6 sm:p-8 relative z-10">
-                        {/* Huge Background Rank Number */}
-                        <div className="absolute -left-4 -top-6 text-9xl italic font-black text-white/10 pointer-events-none group-hover:text-blue-500/[0.03] transition-colors leading-none select-none">
+                      <div className="p-4 sm:p-8 relative z-10">
+                        {/* Background Rank Number */}
+                        <div className="absolute -left-2 -top-4 text-7xl sm:text-9xl italic font-black text-white/5 pointer-events-none group-hover:text-blue-500/[0.03] transition-colors leading-none select-none">
                            #{idx + 1}
                         </div>
 
-                        <div className="flex items-center justify-between gap-8 relative z-10">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 sm:gap-8 relative z-10">
                           {/* Manager Identity & Team Logo */}
-                          <div className="flex items-center gap-6 min-w-0 flex-1">
+                          <div className="flex items-center gap-3 sm:gap-6 min-w-0 flex-1">
                              {/* Team Logo */}
-                             <div className={`w-16 h-16 rounded-2xl bg-white/5 border border-white/10 p-2 flex items-center justify-center shadow-2xl relative transition-transform group-hover:scale-110 duration-500 shrink-0`}>
+                             <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 p-1.5 sm:p-2 flex items-center justify-center shadow-2xl relative transition-transform group-hover:scale-110 duration-500 shrink-0">
                                 {entry.teamLogo ? (
                                   <img src={entry.teamLogo} alt={entry.teamId} className="w-full h-full object-contain" />
                                 ) : (
-                                  <span className="text-xl font-black">{entry.userName?.[0]}</span>
+                                  <span className="text-lg sm:text-xl font-black">{entry.userName?.[0]}</span>
                                 )}
                              </div>
                              
-                             <div className="min-w-0">
-                                <div className="flex items-center gap-3 flex-wrap">
-                                   <h3 className="text-2xl font-black uppercase tracking-tight italic truncate">
+                             <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                   <h3 className="text-lg sm:text-2xl font-black uppercase tracking-tight italic truncate">
                                      {entry.userName}
                                    </h3>
                                    {entry.userId === user?.uid && (
-                                     <div className="flex items-center gap-2 px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-full shrink-0">
+                                     <div className="flex items-center gap-1.5 px-2.5 py-0.5 bg-blue-500/20 border border-blue-500/30 rounded-full shrink-0">
                                         <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
-                                        <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest leading-none">YOU</span>
+                                        <span className="text-[8px] sm:text-[10px] font-black text-blue-400 uppercase tracking-widest leading-none">YOU</span>
                                      </div>
                                    )}
                                 </div>
-                                <div className="flex items-center gap-3 mt-1">
-                                   <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-tight">{entry.teamName}</p>
+                                <div className="flex items-center gap-2 mt-0.5 sm:mt-1">
+                                   <p className="text-[9px] sm:text-[10px] font-black text-gray-500 uppercase tracking-widest leading-tight truncate">{entry.teamName}</p>
                                 </div>
                              </div>
                           </div>
 
                           {/* Point Score Dash */}
-                         <div className="flex items-center gap-8">
-                           <div className="text-right border-r border-white/5 pr-8">
-                              <div className="flex flex-col items-center">
-                                 <span className={`text-4xl font-black leading-none ${
-                                   entry.avgPoints > 0 && idx < 3 ? 'text-[#ff5500] drop-shadow-[0_0_20px_rgba(255,85,0,0.3)]' : entry.avgPoints > 0 ? 'text-blue-500' : 'text-gray-700'
+                         <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-8 border-t sm:border-t-0 pt-3 sm:pt-0 border-white/5">
+                           <div className="text-left sm:text-right sm:border-r border-white/5 sm:pr-8">
+                              <div className="flex flex-col items-start sm:items-center">
+                                 <span className={`text-2xl sm:text-4xl font-black leading-none ${
+                                   entry.avgPoints > 0 && idx < 3 ? 'text-[#ff5500] drop-shadow-[0_0_20px_rgba(255,85,0,0.3)]' : entry.avgPoints > 0 ? 'text-blue-500' : 'text-gray-600'
                                  }`}>
                                    {entry.avgPoints}
                                  </span>
-                                 <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest mt-1">
+                                 <span className="text-[7px] sm:text-[8px] font-black text-gray-500 uppercase tracking-widest mt-1">
                                     {entry.avgPoints > 0 ? 'AVG POINTS' : 'AWAITING'}
                                  </span>
                               </div>
@@ -321,16 +394,16 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
 
                            {/* Rank Indicator Badge */}
                            {idx < 3 && entry.avgPoints > 0 ? (
-                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg border ${
+                             <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shadow-lg border shrink-0 ${
                                idx === 0 ? 'bg-yellow-500/20 border-yellow-500/30 text-yellow-500' :
                                idx === 1 ? 'bg-gray-400/20 border-gray-400/30 text-gray-300' :
                                'bg-orange-900/20 border-orange-800/30 text-orange-600'
                              }`}>
-                                <Trophy size={20} />
+                                <Trophy size={18} className="sm:w-5 sm:h-5" />
                              </div>
                            ) : (
-                             <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-gray-500 group-hover:text-white transition-colors">
-                                <Trophy size={18} className="opacity-20" />
+                             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/5 flex items-center justify-center text-gray-500 group-hover:text-white transition-colors shrink-0">
+                                <Trophy size={16} className="opacity-20 sm:w-4 sm:h-4" />
                              </div>
                            )}
                          </div>

@@ -24,14 +24,16 @@ const SquadPreview = ({
   const selectedPlayers = useMemo(() => {
     if (!currentSquad?.players) return [];
     return currentSquad.players.map(pId => {
-      const p = IPL_PLAYERS.find(op => op.id === pId);
-      return { ...p };
-    }).filter(p => !!p);
+      const targetId = typeof pId === 'string' ? pId : (pId?.id || pId);
+      const p = IPL_PLAYERS.find(op => op.id === targetId);
+      return p ? { ...p } : null;
+    }).filter(p => !!p && !!p.id);
   }, [currentSquad, ownedPlayers]);
 
   const impactPlayer = useMemo(() => {
     if (!currentSquad?.impactPlayer) return null;
-    return IPL_PLAYERS.find(p => p.id === currentSquad.impactPlayer);
+    const targetId = typeof currentSquad.impactPlayer === 'string' ? currentSquad.impactPlayer : (currentSquad.impactPlayer?.id || currentSquad.impactPlayer);
+    return IPL_PLAYERS.find(p => p.id === targetId);
   }, [currentSquad]);
 
   const roles = [
@@ -106,8 +108,10 @@ const SquadPreview = ({
 
               <div className="space-y-3">
                 {players.map(player => {
-                  const isCaptain = currentSquad.captain === player.id;
-                  const isVice = currentSquad.viceCaptain === player.id;
+                  const captainTargetId = typeof currentSquad.captain === 'string' ? currentSquad.captain : (currentSquad.captain?.id || currentSquad.captain);
+                  const viceTargetId = typeof currentSquad.viceCaptain === 'string' ? currentSquad.viceCaptain : (currentSquad.viceCaptain?.id || currentSquad.viceCaptain);
+                  const isCaptain = captainTargetId === player.id;
+                  const isVice = viceTargetId === player.id;
 
                   return (
                     <div key={player.id} className="group relative flex items-center gap-4 bg-white/[0.02] border border-white/5 p-3 rounded-2xl transition-all hover:bg-white/5 hover:border-white/10">
