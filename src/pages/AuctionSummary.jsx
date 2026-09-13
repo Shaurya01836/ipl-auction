@@ -75,61 +75,65 @@ const AuctionSummary = () => {
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-orange-600/20 blur-[150px] rounded-full" />
         <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-blue-600/10 blur-[150px] rounded-full" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(rgba(255,255,255,0.12)_1px,transparent_1px)] [background-size:12px_12px] opacity-20" />
       </div>
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 py-8 md:py-12">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 md:py-12">
         
         {/* Header Section */}
         <motion.header 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col md:flex-row items-center justify-between mb-12 gap-8"
+          className="mb-6 sm:mb-10 space-y-3 sm:space-y-4"
         >
-          <div className="text-center md:text-left">
-            <div className="flex items-center justify-center md:justify-start gap-4 mb-2">
-              <div className="bg-orange-600 text-white px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(255,85,0,0.4)]">
+          {/* Top Bar with Badges + Menu Button */}
+          <div className="flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="bg-orange-600 text-white px-2.5 sm:px-3.5 py-1 rounded-full font-black text-[9px] sm:text-[10px] uppercase tracking-[0.15em] sm:tracking-[0.2em] shadow-[0_0_20px_rgba(255,85,0,0.4)] shrink-0">
                 Upcoming Season
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-500 text-[10px] font-black uppercase tracking-widest leading-none">ID:</span>
-                <span className="text-orange-500 font-extrabold tracking-widest text-sm">{id}</span>
+              <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-2.5 py-1 rounded-full shrink-0">
+                <span className="text-gray-500 text-[9px] font-black uppercase tracking-widest leading-none">ID:</span>
+                <span className="text-orange-500 font-extrabold tracking-widest text-xs">{id}</span>
               </div>
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black  tracking-tighter uppercase leading-none drop-shadow-2xl">
-              Auction <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff5500] to-[#ff8c00]">Complete</span>
-            </h1>
-          </div>
 
-          <div className="flex items-center gap-4">
             <button 
               onClick={() => navigate('/')}
-              className="px-8 py-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white text-gray-400 hover:text-black font-black uppercase text-xs tracking-[0.2em] transition-all flex items-center gap-3 active:scale-95"
+              className="px-4 sm:px-7 py-2 sm:py-3 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl hover:bg-white text-gray-300 hover:text-black font-black uppercase text-[10px] sm:text-xs tracking-wider transition-all flex items-center gap-1.5 sm:gap-2.5 active:scale-95 touch-manipulation shrink-0 ml-auto"
             >
-              <Home size={18} /> Menu
+              <Home size={14} className="sm:w-4 sm:h-4" /> Menu
             </button>
-          
+          </div>
+
+          {/* Title */}
+          <div className="text-center md:text-left pt-1">
+            <h1 className="text-3xl sm:text-5xl lg:text-7xl font-black tracking-tighter uppercase leading-none drop-shadow-2xl">
+              Auction <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff5500] to-[#ff8c00]">Complete</span>
+            </h1>
           </div>
         </motion.header>
 
         {/* Tab Navigation */}
-        <div className="flex justify-center mb-12 overflow-x-auto custom-scrollbar pb-2">
-          <div className="bg-white/5 backdrop-blur-3xl p-1.5 rounded-[2rem] border border-white/10 flex gap-2 min-w-max">
+        <div className="mb-6 sm:mb-12">
+          <div className="bg-white/5 backdrop-blur-3xl p-1 sm:p-1.5 rounded-2xl sm:rounded-[2rem] border border-white/10 grid grid-cols-3 sm:flex sm:justify-center gap-1 sm:gap-2 max-w-full sm:max-w-max mx-auto">
             {[
-              { id: 'squads', label: 'Team Squads', icon: Users },
-              { id: 'leaderboard', label: 'Top Expensive', icon: Trophy },
-              { id: 'fantasy', label: 'Fantasy League', icon: Zap },
+              { id: 'squads', label: 'Squads', fullLabel: 'Team Squads', icon: Users },
+              { id: 'leaderboard', label: 'Top 5', fullLabel: 'Top Expensive', icon: Trophy },
+              { id: 'fantasy', label: 'Fantasy', fullLabel: 'Fantasy League', icon: Zap },
             ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 sm:px-6 md:px-10 py-3 md:py-4 rounded-[1.5rem] font-black uppercase text-[9px] md:text-[10px] tracking-wider md:tracking-[0.2em] transition-all flex items-center gap-2 md:gap-3 ${
+                className={`px-2 sm:px-6 md:px-10 py-2.5 sm:py-3.5 md:py-4 rounded-xl sm:rounded-[1.5rem] font-black uppercase text-[9px] sm:text-[10px] tracking-tight sm:tracking-[0.2em] transition-all flex items-center justify-center gap-1.5 sm:gap-3 touch-manipulation w-full sm:w-auto ${
                   activeTab === tab.id 
                     ? 'bg-[#ff5500] text-white shadow-2xl' 
-                    : 'text-gray-500 hover:text-white hover:bg-white/5'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
               >
-                <tab.icon size={16} /> {tab.label}
+                <tab.icon size={14} className="shrink-0 sm:w-4 sm:h-4" />
+                <span className="sm:hidden">{tab.label}</span>
+                <span className="hidden sm:inline">{tab.fullLabel}</span>
               </button>
             ))}
           </div>
@@ -143,52 +147,62 @@ const AuctionSummary = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.05 }}
-              className="max-w-4xl mx-auto space-y-6"
+              className="max-w-4xl mx-auto space-y-4 sm:space-y-6"
             >
-              <div className="flex items-center gap-6 mb-10">
-                <div className="w-12 h-12 bg-[#ff5500] rounded-2xl flex items-center justify-center text-white shadow-2xl">
-                    <Trophy size={24} />
+              <div className="flex items-center gap-4 sm:gap-6 mb-6 sm:mb-10">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#ff5500] rounded-2xl flex items-center justify-center text-white shadow-2xl shrink-0">
+                    <Trophy size={22} />
                 </div>
                 <div>
-                  <h2 className="text-3xl font-black uppercase  tracking-tighter">Leaderboard</h2>
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em]">The Most Expensive Signings</p>
+                  <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tighter">Leaderboard</h2>
+                  <p className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] sm:tracking-[0.3em]">The Most Expensive Signings</p>
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {topPlayers.map((player, idx) => (
                   <motion.div
                     initial={{ opacity: 0, x: -30 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.1 }}
+                    transition={{ delay: idx * 0.08 }}
                     key={player.id}
-                    className="group relative bg-white/[0.03] border border-white/5 p-4 sm:p-6 rounded-[2rem] transition-all hover:bg-white/5 hover:border-orange-500/30 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-6"
+                    className="group relative bg-white/[0.03] border border-white/5 p-3.5 sm:p-6 rounded-2xl sm:rounded-[2rem] transition-all hover:bg-white/5 hover:border-orange-500/30 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 sm:gap-6"
                   >
-                    <div className="flex items-center gap-4 sm:gap-8">
-                      <span className="text-3xl sm:text-5xl font-black  text-white/5 group-hover:text-orange-500/10 transition-colors">#{idx + 1}</span>
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-black/40 border border-white/10 rounded-2xl overflow-hidden group-hover:scale-105 transition-transform duration-500 p-2 shrink-0">
-                        <img src={player.image} className="w-full h-full object-cover filter drop-shadow-2xl" />
+                    <div className="flex items-center gap-3 sm:gap-8">
+                      <span className="text-2xl sm:text-5xl font-black text-white/10 group-hover:text-orange-500/20 transition-colors shrink-0">#{idx + 1}</span>
+                      <div className="w-12 h-12 sm:w-20 sm:h-20 bg-black/40 border border-white/10 rounded-xl sm:rounded-2xl overflow-hidden group-hover:scale-105 transition-transform duration-500 p-1 sm:p-2 shrink-0">
+                        <img 
+                          src={player.image} 
+                          alt={player.name}
+                          decoding="async"
+                          loading="lazy"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(player.name || 'Player');
+                          }}
+                          className="w-full h-full object-cover filter drop-shadow-2xl" 
+                        />
                       </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-3 mb-1">
-                          <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight italic leading-none truncate">{player.name}</h3>
-                          {player.country !== 'IND' && <Wifi size={14} className="text-purple-400 rotate-90 shrink-0" />}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
+                          <h3 className="text-base sm:text-2xl font-black uppercase tracking-tight italic leading-none truncate">{player.name}</h3>
+                          {player.country !== 'IND' && <Wifi size={12} className="text-purple-400 rotate-90 shrink-0" />}
                         </div>
-                        <div className="flex items-center gap-3">
-                          <div className={`px-2 py-0.5 rounded text-[8px] font-black uppercase shrink-0 ${player.teamColor} ${player.teamTextColor}`}>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <div className={`px-1.5 py-0.5 rounded text-[7px] sm:text-[8px] font-black uppercase shrink-0 ${player.teamColor} ${player.teamTextColor}`}>
                             {player.teamId}
                           </div>
-                          <p className="text-[9px] sm:text-[10px] font-black text-gray-500 uppercase tracking-widest truncate">
+                          <p className="text-[8px] sm:text-[10px] font-black text-gray-500 uppercase tracking-widest truncate">
                             {player.role} • {player.teamName}
                           </p>
                         </div>
                       </div>
                     </div>
-                    <div className="text-left sm:text-right">
-                      <div className="text-3xl sm:text-4xl font-black text-[#ff5500] tracking-tighter mb-1">
+                    <div className="text-left sm:text-right border-t sm:border-t-0 pt-2 sm:pt-0 border-white/5 flex sm:block items-center justify-between">
+                      <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest sm:hidden">Winning Bid</p>
+                      <div className="text-2xl sm:text-4xl font-black text-[#ff5500] tracking-tighter">
                         ₹{player.bidVal.toFixed(2)}<span className="text-xs ml-1 font-bold not-italic text-gray-500">Cr</span>
                       </div>
-                      <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest">Winning Bid</p>
                     </div>
                   </motion.div>
                 ))}
@@ -215,7 +229,7 @@ const AuctionSummary = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -30 }}
-              className="max-w-5xl mx-auto space-y-4"
+              className="max-w-5xl mx-auto space-y-3 sm:space-y-4"
             >
               {TEAMS.map((t, idx) => {
                 const teamDoc = roomTeams.find(doc => doc.teamId === t.id);
@@ -236,47 +250,47 @@ const AuctionSummary = () => {
 
                 return (
                   <div key={t.id} className="group flex flex-col gap-2">
-                    {/* Team Bar */}
+                    {/* Team Accordion Toggle */}
                     <button
                       onClick={() => setExpandedTeam(isExpanded ? null : t.id)}
-                      className={`w-full flex items-center justify-between p-6 rounded-[2.5rem] bg-[#0c0c0c] border transition-all duration-500 relative overflow-hidden group ${
+                      className={`w-full flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-4 sm:p-6 rounded-2xl sm:rounded-[2.5rem] bg-[#0c0c0c] border transition-all duration-300 relative overflow-hidden group active:scale-[0.99] touch-manipulation gap-4 ${
                         isExpanded ? 'border-orange-500/50 bg-white/5 shadow-2xl' : 'border-white/5 hover:border-white/10'
                       }`}
                     >
-                      {/* Massive Background Logo for Style */}
-                      <div className="absolute -right-12 -bottom-12 w-64 h-64 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity pointer-events-none grayscale">
-                         <img src={t.logo} alt="" className="w-full h-full object-contain" />
+                      {/* Massive Background Logo */}
+                      <div className="absolute -right-8 -bottom-8 w-40 sm:w-64 h-40 sm:h-64 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity pointer-events-none grayscale">
+                         <img src={t.logo} alt="" decoding="async" loading="lazy" className="w-full h-full object-contain" />
                       </div>
 
-                      <div className="flex items-center gap-6 relative z-10">
-                        <div className={`w-16 h-16 rounded-2xl bg-white/5 border border-white/10 p-2 flex items-center justify-center shadow-2xl relative`}>
-                           <img src={t.logo} alt="" className="w-full h-full object-contain" />
+                      <div className="flex items-center gap-3 sm:gap-6 relative z-10">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 p-1.5 sm:p-2 flex items-center justify-center shadow-2xl shrink-0">
+                           <img src={t.logo} alt="" decoding="async" loading="lazy" className="w-full h-full object-contain" />
                         </div>
-                        <div className="text-left">
-                          <h3 className="text-2xl font-black uppercase  tracking-tighter group-hover:text-orange-500 transition-colors uppercase">{t.name}</h3>
-                          <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em] leading-none mt-1">Managed by {manager?.name || 'N/A'}</p>
+                        <div className="text-left min-w-0">
+                          <h3 className="text-lg sm:text-2xl font-black uppercase tracking-tighter group-hover:text-orange-500 transition-colors truncate">{t.name}</h3>
+                          <p className="text-[9px] sm:text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] sm:tracking-[0.4em] leading-none mt-1 truncate">Managed by {manager?.name || 'N/A'}</p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-8">
+                      <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-8 relative z-10 border-t sm:border-t-0 pt-3 sm:pt-0 border-white/5">
                         {/* Summary Stats */}
-                        <div className="flex flex-wrap md:flex-nowrap gap-4 sm:gap-6 md:gap-12 text-right md:border-r border-white/5 md:pr-12 h-auto md:h-10 items-center justify-end md:justify-start">
+                        <div className="flex items-center gap-4 sm:gap-6 md:gap-12 text-left sm:text-right sm:border-r border-white/5 sm:pr-6 md:pr-12">
                           <div>
-                            <span className="block text-[8px] font-black text-blue-500 uppercase tracking-widest mb-0.5">Players</span>
-                            <span className="text-sm md:text-lg font-black ">{squad.length}</span>
+                            <span className="block text-[7px] sm:text-[8px] font-black text-blue-500 uppercase tracking-widest mb-0.5">Players</span>
+                            <span className="text-xs sm:text-lg font-black">{squad.length}</span>
                           </div>
                           <div>
-                            <span className="block text-[8px] font-black text-purple-500 uppercase tracking-widest mb-0.5">Overseas</span>
-                            <span className="text-sm md:text-lg font-black ">{osCount}</span>
+                            <span className="block text-[7px] sm:text-[8px] font-black text-purple-500 uppercase tracking-widest mb-0.5">Overseas</span>
+                            <span className="text-xs sm:text-lg font-black">{osCount}</span>
                           </div>
                           <div>
-                            <span className="block text-[8px] font-black text-orange-500 uppercase tracking-widest mb-0.5">Spent</span>
-                            <span className="text-sm md:text-lg font-black ">₹{totalSpent.toFixed(1)}Cr</span>
+                            <span className="block text-[7px] sm:text-[8px] font-black text-orange-500 uppercase tracking-widest mb-0.5">Spent</span>
+                            <span className="text-xs sm:text-lg font-black">₹{totalSpent.toFixed(1)}Cr</span>
                           </div>
                         </div>
 
-                        <div className={`w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center transition-transform duration-500 ${isExpanded ? 'rotate-180 bg-orange-600 text-white' : 'text-gray-500'}`}>
-                          <ChevronDown size={24} />
+                        <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/5 flex items-center justify-center transition-transform duration-300 shrink-0 ${isExpanded ? 'rotate-180 bg-orange-600 text-white' : 'text-gray-500'}`}>
+                          <ChevronDown size={20} />
                         </div>
                       </div>
                     </button>
@@ -288,44 +302,54 @@ const AuctionSummary = () => {
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: 'auto', opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
-                          className="overflow-hidden px-4 md:px-8 mb-4"
+                          className="overflow-hidden px-2 sm:px-4 md:px-8 mb-4"
                         >
-                          <div className="bg-white/[0.02] border-x border-b border-white/5 rounded-b-[3rem] p-8 space-y-12">
+                          <div className="bg-white/[0.02] border-x border-b border-white/5 rounded-b-2xl sm:rounded-b-[3rem] p-4 sm:p-8 space-y-6 sm:space-y-12">
                             {['Batsman', 'Wicket-Keeper', 'All-Rounder', 'Bowler'].map(role => {
                               const rolePlayers = squad.filter(p => p.role === role);
                               if (rolePlayers.length === 0) return null;
 
                               return (
-                                <div key={role} className="space-y-6">
-                                  <div className="flex items-center gap-4">
-                                    <h4 className="text-[10px] font-black text-orange-500 uppercase tracking-[0.4em]">{role}s</h4>
+                                <div key={role} className="space-y-3 sm:space-y-6">
+                                  <div className="flex items-center gap-3 sm:gap-4">
+                                    <h4 className="text-[9px] sm:text-[10px] font-black text-orange-500 uppercase tracking-[0.2em] sm:tracking-[0.4em]">{role}s</h4>
                                     <div className="flex-1 h-px bg-orange-500/20" />
-                                    <span className="text-[10px] font-black text-gray-700 ">{rolePlayers.length} Members</span>
+                                    <span className="text-[9px] sm:text-[10px] font-black text-gray-600">{rolePlayers.length} Members</span>
                                   </div>
                                   
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
                                     {rolePlayers.map((p, pidx) => (
                                       <motion.div 
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: pidx * 0.05 }}
+                                        transition={{ delay: pidx * 0.04 }}
                                         key={p.id} 
-                                        className="bg-white/5 border border-white/10 p-4 rounded-3xl flex items-center justify-between group/p hover:bg-white/10 transition-all"
+                                        className="bg-white/5 border border-white/10 p-2.5 sm:p-4 rounded-2xl sm:rounded-3xl flex items-center justify-between group/p hover:bg-white/10 transition-all"
                                       >
-                                        <div className="flex items-center gap-4">
-                                          <div className="w-12 h-12 bg-black/40 border border-white/10 rounded-xl p-1 shrink-0 overflow-hidden">
-                                            <img src={p.image} className="w-full h-full object-cover" />
+                                        <div className="flex items-center gap-3 min-w-0">
+                                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-black/40 border border-white/10 rounded-xl p-1 shrink-0 overflow-hidden">
+                                            <img 
+                                              src={p.image} 
+                                              alt={p.name}
+                                              decoding="async"
+                                              loading="lazy"
+                                              onError={(e) => {
+                                                e.target.onerror = null;
+                                                e.target.src = 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(p.name || 'Player');
+                                              }}
+                                              className="w-full h-full object-cover" 
+                                            />
                                           </div>
-                                          <div className="overflow-hidden">
-                                            <h5 className="text-[12px] font-black uppercase tracking-tight truncate max-w-[120px]">{p.name}</h5>
-                                            <div className="flex items-center gap-2">
+                                          <div className="overflow-hidden min-w-0">
+                                            <h5 className="text-[11px] sm:text-[12px] font-black uppercase tracking-tight truncate">{p.name}</h5>
+                                            <div className="flex items-center gap-1.5">
                                               <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">{p.type}</span>
-                                              {p.country !== 'IND' && <Wifi size={10} className="text-purple-400 rotate-90" />}
+                                              {p.country !== 'IND' && <Wifi size={10} className="text-purple-400 rotate-90 shrink-0" />}
                                             </div>
                                           </div>
                                         </div>
-                                        <div className="text-right">
-                                          <div className="text-[14px] font-black  text-green-500">₹{p.bid.toFixed(2)}Cr</div>
+                                        <div className="text-right shrink-0">
+                                          <div className="text-[13px] sm:text-[14px] font-black text-green-500">₹{p.bid.toFixed(2)}Cr</div>
                                         </div>
                                       </motion.div>
                                     ))}
@@ -335,13 +359,13 @@ const AuctionSummary = () => {
                             })}
 
                             {/* Summary Footer for Team */}
-                            <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6 opacity-40 hover:opacity-100 transition-opacity">
-                               <div className="flex items-center gap-4">
-                                  <LayoutGrid size={16} className="text-gray-600" />
-                                  <p className="text-[9px] font-black text-gray-700 uppercase tracking-[0.5em]">Composition Verified by Arena Engine</p>
+                            <div className="pt-4 sm:pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 opacity-70 hover:opacity-100 transition-opacity">
+                               <div className="flex items-center gap-3">
+                                  <LayoutGrid size={14} className="text-gray-600" />
+                                  <p className="text-[8px] sm:text-[9px] font-black text-gray-600 uppercase tracking-[0.3em] sm:tracking-[0.5em]">Composition Verified by Arena Engine</p>
                                </div>
                                <div className="flex gap-4">
-                                  <button className="flex items-center gap-2 text-[9px] font-black uppercase text-gray-700 hover:text-orange-500 transition-colors">
+                                  <button className="flex items-center gap-2 text-[9px] font-black uppercase text-gray-400 hover:text-orange-500 transition-colors touch-manipulation">
                                      <Share2 size={12} /> Share Squad
                                   </button>
                                </div>
@@ -361,19 +385,19 @@ const AuctionSummary = () => {
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="mt-20 flex flex-col items-center gap-8"
+          transition={{ delay: 0.5 }}
+          className="mt-12 sm:mt-20 flex flex-col items-center gap-6 sm:gap-8"
         >
-          <div className="flex items-center gap-4 text-gray-800 text-[10px] font-black uppercase tracking-[0.5em]">
+          <div className="flex items-center gap-3 text-gray-600 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] sm:tracking-[0.5em]">
             <History size={14} /> End of Session
           </div>
           <button 
             onClick={() => navigate('/')}
-            className="group relative px-16 py-6 bg-white text-black font-black uppercase text-sm tracking-[0.3em] rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.5)] active:scale-95 transition-all overflow-hidden"
+            className="group relative px-10 sm:px-16 py-4 sm:py-6 bg-white text-black font-black uppercase text-xs sm:text-sm tracking-[0.2em] sm:tracking-[0.3em] rounded-2xl sm:rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.5)] active:scale-95 transition-all overflow-hidden touch-manipulation"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-orange-600 to-orange-500 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
-            <div className="relative flex items-center gap-4 group-hover:text-white transition-colors">
-              <Home size={20} /> Exit to Main Menu
+            <div className="relative flex items-center gap-3 sm:gap-4 group-hover:text-white transition-colors">
+              <Home size={18} /> Exit to Main Menu
             </div>
           </button>
         </motion.div>

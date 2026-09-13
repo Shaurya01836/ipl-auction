@@ -139,8 +139,8 @@ const AuctionRoom = () => {
       'pbks': '/PBKS.mpeg',
       'rr': '/RR.mpeg',
       'srh': '/SRH.mpeg',
-      'lsg': '/LSG.mpeg',
-      'gt': '/GT.mpeg',
+      'lsg': '/LSG.mp3',
+      'gt': '/GT.mp3',
    };
 
    useEffect(() => {
@@ -444,78 +444,97 @@ const AuctionRoom = () => {
    };
 
 
+   const lastHandledSoundStatusRef = useRef(null);
+
    useEffect(() => {
       const status = displayAuctionState?.status;
       let rafId;
 
       if (status === 'sold') {
-         const teamId = displayAuctionState?.highBidderTeamId;
+         const currentKey = `sold_${displayAuctionState?.highBidderTeamId}_${displayAuctionState?.currentBid}`;
+         if (lastHandledSoundStatusRef.current !== currentKey) {
+            lastHandledSoundStatusRef.current = currentKey;
 
-         // Trigger Celebration Ribbons
-         const team = TEAMS.find(t => t.id === teamId);
-         const colorMap = {
-            'MI': ['#004BA0', '#FFFFFF', '#0080FF'],
-            'CSK': ['#FFFF00', '#0000FF', '#FDB913'],
-            'RCB': ['#EC1C24', '#2c30a7ff', '#FFD700'],
-            'KKR': ['#3A225D', '#B38B2D', '#D1AB3E'],
-            'DC': ['#000080', '#FF0000', '#0000CD'],
-            'PBKS': ['#ED1B24', '#FFFFFF', '#D71921'],
-            'RR': ['#EA1A85', '#004B8D', '#254AA5'],
-            'SRH': ['#FF8228', '#000000', '#F26522'],
-            'GT': ['#1B2133', '#C1AA77', '#0B132B'],
-            'LSG': ['#0057E7', '#D11D55', '#01153E']
-         };
-         const colors = teamId && colorMap[teamId] ? colorMap[teamId] : ['#FFD700', '#FFA500', '#FF4500'];
+            const teamId = displayAuctionState?.highBidderTeamId;
+            const colorMap = {
+               'MI': ['#004BA0', '#FFFFFF', '#0080FF'],
+               'CSK': ['#FFFF00', '#0000FF', '#FDB913'],
+               'RCB': ['#EC1C24', '#2c30a7ff', '#FFD700'],
+               'KKR': ['#3A225D', '#B38B2D', '#D1AB3E'],
+               'DC': ['#000080', '#FF0000', '#0000CD'],
+               'PBKS': ['#ED1B24', '#FFFFFF', '#D71921'],
+               'RR': ['#EA1A85', '#004B8D', '#254AA5'],
+               'SRH': ['#FF8228', '#000000', '#F26522'],
+               'GT': ['#1B2133', '#C1AA77', '#0B132B'],
+               'LSG': ['#0057E7', '#D11D55', '#01153E']
+            };
+            const colors = teamId && colorMap[teamId] ? colorMap[teamId] : ['#FFD700', '#FFA500', '#FF4500'];
 
-         const end = Date.now() + 3 * 1000;
-         const frame = () => {
-            confetti({
-               particleCount: 2,
-               angle: 60,
-               spread: 55,
-               origin: { x: 0, y: 0.6 },
-               colors: colors,
-               scalar: 1.2,
-               ticks: 200
-            });
-            confetti({
-               particleCount: 2,
-               angle: 120,
-               spread: 55,
-               origin: { x: 1, y: 0.6 },
-               colors: colors,
-               scalar: 1.2,
-               ticks: 200
-            });
+            const end = Date.now() + 3 * 1000;
+            const frame = () => {
+               confetti({
+                  particleCount: 2,
+                  angle: 60,
+                  spread: 55,
+                  origin: { x: 0, y: 0.6 },
+                  colors: colors,
+                  scalar: 1.2,
+                  ticks: 200
+               });
+               confetti({
+                  particleCount: 2,
+                  angle: 120,
+                  spread: 55,
+                  origin: { x: 1, y: 0.6 },
+                  colors: colors,
+                  scalar: 1.2,
+                  ticks: 200
+               });
 
-            if (Date.now() < end) {
-               rafId = requestAnimationFrame(frame);
-            }
-         };
-         frame();
+               if (Date.now() < end) {
+                  rafId = requestAnimationFrame(frame);
+               }
+            };
+            frame();
 
-         if (teamId && TEAM_SONGS[teamId.toLowerCase()]) {
-            const audio = celebrationAudioRef.current;
-            if (audio) {
-               audio.pause();
-               audio.src = TEAM_SONGS[teamId.toLowerCase()];
-               audio.volume = 0.4;
-               audio.play().catch(e => { });
+            if (teamId && TEAM_SONGS[teamId.toLowerCase()]) {
+               const audio = celebrationAudioRef.current || new Audio();
+               try {
+                  audio.pause();
+                  audio.src = TEAM_SONGS[teamId.toLowerCase()];
+                  audio.volume = 0.5;
+                  audio.play().catch(() => { });
+               } catch (e) { }
             }
          }
       } else if (status === 'unsold') {
-         const unsoldAudios = [
-            '/unsold1.mpeg'
-         ];
-         const randomAudio = unsoldAudios[Math.floor(Math.random() * unsoldAudios.length)];
-         const audio = celebrationAudioRef.current;
-         if (audio) {
-            audio.pause();
-            audio.src = randomAudio;
-            audio.volume = 0.5;
-            audio.play().catch(e => { });
+         const currentKey = `unsold_${displayAuctionState?.playerId}`;
+         if (lastHandledSoundStatusRef.current !== currentKey) {
+            lastHandledSoundStatusRef.current = currentKey;
+
+            const unsoldAudios = ['/unsold1.mpeg'];
+            const randomAudio = unsoldAudios[Math.floor(Math.random() * unsoldAudios.length)];
+            const audio = celebrationAudioRef.current;
+            
+            if (audio) {
+               try {
+                  audio.pause();
+                  audio.src = randomAudio;
+                  audio.volume = 0.7;
+                  const playPromise = audio.play();
+                  if (playPromise !== undefined) {
+                     playPromise.catch(() => {
+                        // Mobile fallback Audio object
+                        const fallbackAudio = new Audio(randomAudio);
+                        fallbackAudio.volume = 0.7;
+                        fallbackAudio.play().catch(() => { });
+                     });
+                  }
+               } catch (e) { }
+            }
          }
       } else {
+         lastHandledSoundStatusRef.current = null;
          const audio = celebrationAudioRef.current;
          if (audio) {
             audio.pause();
@@ -525,13 +544,8 @@ const AuctionRoom = () => {
 
       return () => {
          if (rafId) cancelAnimationFrame(rafId);
-         const audio = celebrationAudioRef.current;
-         if (audio) {
-            audio.pause();
-            audio.currentTime = 0;
-         }
       };
-   }, [displayAuctionState?.status, displayAuctionState?.highBidderTeamId]);
+   }, [displayAuctionState?.status, displayAuctionState?.highBidderTeamId, displayAuctionState?.playerId, displayAuctionState?.currentBid]);
 
 
 
@@ -1497,13 +1511,18 @@ const SoldCard = ({ msg }) => {
    const handleSave = async () => {
       if (cardRef.current === null) return;
       try {
-         const dataUrl = await toPng(cardRef.current, { cacheBust: true, pixelRatio: 2 });
+         const dataUrl = await toPng(cardRef.current, { 
+            cacheBust: false, 
+            pixelRatio: 2, 
+            skipFonts: true,
+            imagePlaceholder: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
+         });
          const link = document.createElement('a');
          link.download = `${player.name}_Sold.png`;
          link.href = dataUrl;
          link.click();
       } catch (err) {
-         // Error saving image
+         console.error('Error saving image:', err);
       }
    };
 
@@ -1511,7 +1530,7 @@ const SoldCard = ({ msg }) => {
       <div className="space-y-2 mb-4 sm:mb-6">
          <div ref={cardRef} className="relative w-full min-h-[400px] max-h-[480px] h-auto aspect-[4/5] rounded-2xl sm:rounded-[2rem] overflow-hidden bg-[#0A0A0B] border border-white/10 shadow-2xl">
             <div className={`absolute inset-0 opacity-20 bg-gradient-to-br ${team?.color.replace('bg-', 'from-')} to-black`} />
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
+            <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.15)_1px,transparent_1px)] [background-size:12px_12px] opacity-20" />
 
             <div className="relative h-full flex flex-col p-4 sm:p-6 z-10 justify-between">
                <div className="flex justify-between items-start mb-2 sm:mb-4">
@@ -1528,7 +1547,15 @@ const SoldCard = ({ msg }) => {
                <div className="flex-1 flex flex-col justify-center items-center py-2 sm:py-4">
                   <div className="relative w-28 h-28 sm:w-40 sm:h-40 group">
                      <div className={`absolute inset-0 rounded-full blur-3xl opacity-30 ${team?.color}`} />
-                     <img src={player?.image} className="relative w-full h-full object-contain z-10 drop-shadow-[0_0_20px_rgba(0,0,0,0.5)]" alt="" />
+                     <img 
+                        src={player?.image} 
+                        className="relative w-full h-full object-contain z-10 drop-shadow-[0_0_20px_rgba(0,0,0,0.5)]" 
+                        alt="" 
+                        onError={(e) => {
+                           e.target.onerror = null;
+                           e.target.src = 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(player?.name || 'Player');
+                        }}
+                     />
                   </div>
                   <div className="text-center mt-2 sm:mt-4">
                      <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white leading-tight">{player?.name}</h2>
