@@ -89,9 +89,7 @@ const AuctionSummary = () => {
           {/* Top Bar with Badges + Menu Button */}
           <div className="flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
             <div className="flex items-center gap-2 flex-wrap">
-              <div className="bg-orange-600 text-white px-2.5 sm:px-3.5 py-1 rounded-full font-black text-[9px] sm:text-[10px] uppercase tracking-[0.15em] sm:tracking-[0.2em] shadow-[0_0_20px_rgba(255,85,0,0.4)] shrink-0">
-                Upcoming Season
-              </div>
+              
               <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-2.5 py-1 rounded-full shrink-0">
                 <span className="text-gray-500 text-[9px] font-black uppercase tracking-widest leading-none">ID:</span>
                 <span className="text-orange-500 font-extrabold tracking-widest text-xs">{id}</span>

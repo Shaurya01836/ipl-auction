@@ -31,6 +31,10 @@
           // Any authenticated user can write/sync team roster data
           ".write": "auth != null"
         },
+        "userSquads": {
+          // Any authenticated user can write/sync their fantasy squad
+          ".write": "auth != null"
+        },
         "presence": {
           "$userId": {
             // Ensure that presence writes are strictly authorized to the user themselves
