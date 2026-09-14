@@ -19,6 +19,10 @@
           // Any authenticated user can write/sync the room state
           ".write": "auth != null"
         },
+        "playerOrder": {
+          // Any authenticated user can write/sync player order
+          ".write": "auth != null"
+        },
         "live": {
           // Any authenticated user can write/sync the live bidding state
           ".write": "auth != null"

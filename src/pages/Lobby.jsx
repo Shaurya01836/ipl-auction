@@ -31,7 +31,7 @@ import PageLoader from '../components/PageLoader';
 const Lobby = () => {
   const { id } = useParams();
   const { user, loginWithGoogle, loginAsGuest, logout, loading: authLoading } = useAuth();
-  const { joinAuction, currentAuction, kickPlayer, updatePlayerTeam, updateRoomSettings, startAuction, joinRoomDb } = useAuction();
+  const { joinAuction, currentAuction, kickPlayer, updatePlayerTeam, updateRoomSettings, startAuction, joinRoomDb, addBotTeam, removeBotTeam, fillEmptyTeamsWithBots } = useAuction();
   const navigate = useNavigate();
   
   const [activeTab, setActiveTab] = useState('players');
@@ -54,6 +54,10 @@ const Lobby = () => {
   const currentUserPlayer = players.find(p => p.id === user?.uid);
 
   const isJoined = players.some(p => p.id === user?.uid);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   useEffect(() => {
     if (id && user?.uid) {
@@ -397,17 +401,27 @@ const Lobby = () => {
         </div>
 
         {isAdmin && (
-          <button
-            onClick={handleStartAuction}
-            disabled={isStarting}
-            className="relative overflow-hidden group px-4 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-wider sm:tracking-widest shadow-[0_10px_30px_rgba(255,85,0,0.3)] disabled:opacity-50 transition-all active:scale-95 cursor-pointer shrink-0"
-          >
-            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-            <div className="relative flex items-center gap-1.5 sm:gap-2">
-              {isStarting && <Loader2 size={16} className="animate-spin" />}
-              <span>{isStarting ? 'Igniting...' : 'Start Auction'}</span>
-            </div>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => fillEmptyTeamsWithBots(id)}
+              className="px-4 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-wider text-orange-400 hover:text-orange-300 transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+              title="Add AI Bots to unassigned franchises"
+            >
+              <Zap size={14} className="text-orange-400" />
+              <span>Fill Bots</span>
+            </button>
+            <button
+              onClick={handleStartAuction}
+              disabled={isStarting}
+              className="relative overflow-hidden group px-4 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-wider sm:tracking-widest shadow-[0_10px_30px_rgba(255,85,0,0.3)] disabled:opacity-50 transition-all active:scale-95 cursor-pointer shrink-0"
+            >
+              <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+              <div className="relative flex items-center gap-1.5 sm:gap-2">
+                {isStarting && <Loader2 size={16} className="animate-spin" />}
+                <span>{isStarting ? 'Igniting...' : 'Start Auction'}</span>
+              </div>
+            </button>
+          </div>
         )}
       </div>
 
@@ -581,10 +595,10 @@ const Lobby = () => {
                           key={`${player.id}-${idx}`}
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0, transition: { delay: idx * 0.05 } }}
-                          className="flex items-center justify-between bg-white/[0.01] border border-white/5 p-4 rounded-2xl group transition-all hover:bg-white/[0.03] hover:border-white/10"
+                          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white/[0.01] border border-white/5 p-3.5 sm:p-4 rounded-2xl group transition-all hover:bg-white/[0.03] hover:border-white/10"
                         >
-                          <div className="flex items-center gap-4">
-                            <div className={`w-12 h-12 rounded-2xl border border-white/10 flex items-center justify-center shadow-2xl relative overflow-hidden bg-white/5 p-1.5`}>
+                          <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto">
+                            <div className="w-11 h-11 sm:w-12 sm:h-12 shrink-0 rounded-2xl border border-white/10 flex items-center justify-center shadow-2xl relative overflow-hidden bg-white/5 p-1.5">
                               <div className="absolute inset-x-0 bottom-0 top-1/2 bg-black/5 pointer-events-none" />
                               {playerTeam ? (
                                 <img src={playerTeam.logo} alt="" className="w-full h-full object-contain relative z-10" />
@@ -592,31 +606,42 @@ const Lobby = () => {
                                 <span className="text-gray-500 relative z-10 text-xs">?</span>
                               )}
                             </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <p className="font-black text-sm text-white uppercase tracking-tight">{player.name}</p>
-                                {player.isHost && <Crown size={14} className="text-yellow-500 fill-yellow-500 " />}
-                                {player.id === user?.uid && <span className="text-[8px] font-black bg-white/10 px-1.5 py-0.5 rounded text-gray-400">YOU</span>}
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <p className="font-black text-xs sm:text-sm text-white uppercase tracking-tight truncate max-w-[160px] sm:max-w-none">{player.name}</p>
+                                {player.isHost && <Crown size={14} className="text-yellow-500 fill-yellow-500 shrink-0" />}
+                                {(player.isBot || player.id.startsWith('bot_')) && <span className="text-[8px] font-black bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded border border-orange-500/30 flex items-center gap-1 shrink-0"><Zap size={8} /> AI BOT</span>}
+                                {player.id === user?.uid && <span className="text-[8px] font-black bg-white/10 px-1.5 py-0.5 rounded text-gray-400 shrink-0">YOU</span>}
                               </div>
-                              <p className="text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mt-0.5">
+                              <p className="text-[9px] text-gray-500 font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] mt-0.5 truncate">
                                 {playerTeam?.name || (player.team === '' ? 'CALIBRATING...' : player.team)}
                               </p>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-4">
-                            <div className="flex flex-col items-end">
-                               <div className={`w-1.5 h-1.5 rounded-full shadow-lg ${player.isOnline ? 'bg-green-500 shadow-green-500/50' : 'bg-gray-700'}`} />
-                               <span className={`text-[8px] font-black uppercase tracking-tighter mt-1 ${player.isOnline ? 'text-green-500' : 'text-gray-700'}`}>
-                                  {player.isOnline ? 'Online' : 'Offline'}
-                               </span>
+                          <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto pt-2 sm:pt-0 border-t border-white/5 sm:border-0 gap-3">
+                            <div className="flex items-center gap-1.5 sm:flex-col sm:items-end">
+                              <div className={`w-1.5 h-1.5 rounded-full shadow-lg ${player.isBot || player.isOnline ? 'bg-green-500 shadow-green-500/50' : 'bg-gray-700'}`} />
+                              <span className={`text-[8px] font-black uppercase tracking-tighter ${player.isBot || player.isOnline ? 'text-green-500' : 'text-gray-700'}`}>
+                                {player.isBot ? 'ACTIVE BOT' : player.isOnline ? 'ONLINE' : 'OFFLINE'}
+                              </span>
                             </div>
-                            {isAdmin && !player.isHost && (
+
+                            {isAdmin && (player.isBot || player.id.startsWith('bot_')) && (
+                              <button
+                                onClick={() => removeBotTeam(id, player.id)}
+                                className="p-1.5 sm:p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all border border-transparent hover:border-red-500/20 cursor-pointer"
+                                title="Remove AI Bot"
+                              >
+                                <UserMinus size={15} />
+                              </button>
+                            )}
+                            {isAdmin && !player.isHost && !(player.isBot || player.id.startsWith('bot_')) && (
                               <button
                                 onClick={() => handleKickPlayer(player)}
-                                className="opacity-0 group-hover:opacity-100 p-2 text-gray-700 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all cursor-pointer"
+                                className="sm:opacity-0 group-hover:opacity-100 p-1.5 sm:p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all cursor-pointer"
                               >
-                                <UserMinus size={18} />
+                                <UserMinus size={16} />
                               </button>
                             )}
                           </div>
