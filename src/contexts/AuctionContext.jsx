@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { db, getServerTime, rtdb } from '../lib/firebase';
 import { IPL_PLAYERS } from '../data/players';
+import { evaluateBotBid } from '../lib/botEngine';
 import { 
   ref, 
   set, 
@@ -187,11 +188,17 @@ export const AuctionProvider = ({ children }) => {
     const rtdbRoomRef = ref(rtdb, `auctions/${roomId}/room`);
     const playerOrderRef = ref(rtdb, `auctions/${roomId}/playerOrder`);
     
-    // Store playerOrder in a dedicated static node so room status updates remain lightweight
-    await set(playerOrderRef, randomizedIndices);
+    // Store playerOrder in room node (matching RTDB rules) and attempt subnode update
     await updateRtdb(rtdbRoomRef, {
-      status: 'active'
+      status: 'active',
+      playerOrder: randomizedIndices
     });
+
+    try {
+      await set(playerOrderRef, randomizedIndices);
+    } catch (e) {
+      // Graceful fallback if RTDB sub-path rule is pending deploy
+    }
 
     const liveRef = ref(rtdb, `auctions/${roomId}/live`);
     await set(liveRef, {
@@ -843,6 +850,212 @@ export const AuctionProvider = ({ children }) => {
     });
   }, [user, currentAuction, flushAuctionToFirestore]);
 
+  // ─── Bot Management & Bidding Engine ───
+  const placeBotBid = useCallback(async (roomId, botUserId, botTeamId, botName, amount) => {
+    if (!roomId) return;
+    const liveRef = ref(rtdb, `auctions/${roomId}/live`);
+    let finalAmount = amount;
+
+    await runTransactionRtdb(liveRef, (currentData) => {
+      if (!currentData) return currentData;
+      if (currentData.status !== 'bidding') return; // abort
+      if (currentData.highBidderId === botUserId) return; // abort
+      
+      const cBid = currentData.currentBid || 0;
+      const inc = cBid < 5 ? 0.20 : 0.25;
+      const nAmount = cBid === 0 ? IPL_PLAYERS.find(p => p.id === currentData.playerId)?.basePrice || 0 : cBid + inc;
+
+      finalAmount = nAmount;
+      currentData.currentBid = nAmount;
+      currentData.highBidderId = botUserId;
+      currentData.highBidderName = botName;
+      currentData.highBidderTeamId = botTeamId;
+      currentData.timerEndsAt = getSyncedTime() + 10000;
+      
+      return currentData;
+    });
+
+    const msgRef = ref(rtdb, `auctions/${roomId}/messages`);
+    await push(msgRef, {
+      userId: 'system',
+      userName: 'System',
+      text: `New bid: ₹${finalAmount.toFixed(2)} Cr by ${botName} (${botTeamId})`,
+      type: 'log',
+      timestamp: serverTimestampRtdb()
+    });
+  }, [getSyncedTime]);
+
+  const addBotTeam = useCallback(async (roomId, teamId) => {
+    const rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
+    if (!rtdbRoomSnap.exists()) return;
+    const data = rtdbRoomSnap.val();
+    const teamDetails = TEAMS.find(t => t.id === teamId);
+    if (!teamDetails) return;
+
+    const botUserId = `bot_${teamId}`;
+    const botName = `${teamDetails.name} Bot`;
+
+    const existingPlayers = data.players || [];
+    if (existingPlayers.some(p => p.id === botUserId || p.team === teamId)) return;
+
+    const updatedPlayers = [...existingPlayers, {
+      id: botUserId,
+      name: botName,
+      team: teamId,
+      teamName: teamDetails.name,
+      isHost: false,
+      isBot: true
+    }];
+
+    await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { players: updatedPlayers });
+
+    const teamDataToSet = {
+      auctionId: roomId,
+      userId: botUserId,
+      teamId,
+      teamName: teamDetails.name,
+      budgetRemaining: data.settings?.budget || 120.0,
+      spent: 0,
+      squad: []
+    };
+    await updateRtdb(ref(rtdb, `auctions/${roomId}/teams/${roomId}_${botUserId}`), teamDataToSet);
+  }, []);
+
+  const removeBotTeam = useCallback(async (roomId, botUserId) => {
+    const rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
+    if (!rtdbRoomSnap.exists()) return;
+    const data = rtdbRoomSnap.val();
+
+    const updatedPlayers = (data.players || []).filter(p => p.id !== botUserId);
+    await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { players: updatedPlayers });
+    await set(ref(rtdb, `auctions/${roomId}/teams/${roomId}_${botUserId}`), null);
+  }, []);
+
+  const fillEmptyTeamsWithBots = useCallback(async (roomId) => {
+    const rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
+    if (!rtdbRoomSnap.exists()) return;
+    const data = rtdbRoomSnap.val();
+
+    const existingPlayers = data.players || [];
+    const takenTeamIds = new Set(existingPlayers.map(p => p.team).filter(Boolean));
+
+    const updatedPlayers = [...existingPlayers];
+    const teamsToSet = {};
+
+    TEAMS.forEach(t => {
+      if (!takenTeamIds.has(t.id)) {
+        const botUserId = `bot_${t.id}`;
+        const botName = `${t.name} Bot`;
+        updatedPlayers.push({
+          id: botUserId,
+          name: botName,
+          team: t.id,
+          teamName: t.name,
+          isHost: false,
+          isBot: true
+        });
+        teamsToSet[`${roomId}_${botUserId}`] = {
+          auctionId: roomId,
+          userId: botUserId,
+          teamId: t.id,
+          teamName: t.name,
+          budgetRemaining: data.settings?.budget || 120.0,
+          spent: 0,
+          squad: []
+        };
+      }
+    });
+
+    await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { players: updatedPlayers });
+    if (Object.keys(teamsToSet).length > 0) {
+      await updateRtdb(ref(rtdb, `auctions/${roomId}/teams`), teamsToSet);
+    }
+  }, []);
+
+  // Host Bidding Bot Loop Effect
+  useEffect(() => {
+    if (!currentAuction || !user || currentAuction.hostId !== user.uid) return;
+    if (currentAuction.currentAuction?.status !== 'bidding') return;
+
+    const botPlayers = (currentAuction.players || []).filter(p => p.isBot || p.id.startsWith('bot_'));
+    if (botPlayers.length === 0) return;
+
+    const live = currentAuction.currentAuction;
+    if (!live || live.status !== 'bidding') return;
+
+    const player = IPL_PLAYERS.find(p => p.id === live.playerId);
+    if (!player) return;
+
+    const now = getSyncedTime();
+    const timerSec = currentAuction.settings?.bidTimer || 10;
+    const timerMs = timerSec * 1000;
+    const remainingMs = Math.max(0, (live.timerEndsAt || 0) - now);
+    const cBid = live.currentBid || 0;
+
+    // ─── Timer-Adaptive & Mixed Pacing Engine ───
+    // Dynamically scales to host's timer setting (5s, 10s, 15s, 20s)
+    let delayMs = 400;
+    const randMode = Math.random();
+
+    if (cBid < 3.0) {
+      // Early Price Stage: 70% rapid impulse, 30% mid-timer hesitation
+      if (randMode < 0.70) {
+        delayMs = Math.min(900, timerMs * (0.05 + Math.random() * 0.10));
+      } else {
+        delayMs = timerMs * (0.25 + Math.random() * 0.25);
+      }
+    } else {
+      // High Price / Intense Stage: Mixed blend (Impulse vs Mid-Timer vs Clutch Sniping)
+      if (randMode < 0.35) {
+        // Instant Impulse Reaction
+        delayMs = Math.min(1000, timerMs * (0.08 + Math.random() * 0.12));
+      } else if (randMode < 0.70) {
+        // Mid-Timer Re-evaluation
+        delayMs = timerMs * (0.30 + Math.random() * 0.25);
+      } else {
+        // Late Clutch Sniping (Target final 15% - 30% of countdown)
+        const targetRemainMs = timerMs * (0.15 + Math.random() * 0.15);
+        if (remainingMs > targetRemainMs) {
+          delayMs = remainingMs - targetRemainMs;
+        } else {
+          delayMs = 500 + Math.random() * 500;
+        }
+      }
+    }
+
+    // Ensure delay is bounded safely between 350ms and remainingMs - 300ms
+    delayMs = Math.max(350, Math.min(delayMs, Math.max(350, remainingMs - 300)));
+
+    const timer = setTimeout(async () => {
+      // Pick suitable bot team that is not the current high bidder
+      const eligibleBots = shuffleArray(botPlayers.filter(p => p.id !== live.highBidderId));
+      for (const botP of eligibleBots) {
+        const botTeam = roomTeams.find(t => t.userId === botP.id);
+        if (!botTeam) continue;
+
+        const bidDecision = evaluateBotBid({
+          player,
+          currentBid: live.currentBid || 0,
+          highBidderId: live.highBidderId,
+          botTeam,
+          squadLimit: currentAuction.squadLimit || 25,
+          overseasLimit: currentAuction.overseasLimit || 8
+        });
+
+        if (bidDecision && bidDecision.shouldBid) {
+          try {
+            await placeBotBid(currentAuction.id, botP.id, botP.team, botP.name, bidDecision.nextBid);
+          } catch (e) {
+            // Graceful bot bid fail
+          }
+          break; // 1 bid per delay tick
+        }
+      }
+    }, delayMs);
+
+    return () => clearTimeout(timer);
+  }, [currentAuction, user, roomTeams, placeBotBid, getSyncedTime]);
+
   const value = {
     currentAuction,
     team,
@@ -862,6 +1075,9 @@ export const AuctionProvider = ({ children }) => {
     endAuction,
     sendMessage,
     messages,
+    addBotTeam,
+    removeBotTeam,
+    fillEmptyTeamsWithBots,
     getSyncedTime
   };
 
