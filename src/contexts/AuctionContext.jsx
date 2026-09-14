@@ -10,7 +10,9 @@ import {
   onDisconnect,
   runTransaction as runTransactionRtdb,
   push,
-  serverTimestamp as serverTimestampRtdb
+  serverTimestamp as serverTimestampRtdb,
+  query as queryRtdb,
+  limitToLast
 } from 'firebase/database';
 import { 
   doc, 
@@ -183,9 +185,12 @@ export const AuctionProvider = ({ children }) => {
     });
 
     const rtdbRoomRef = ref(rtdb, `auctions/${roomId}/room`);
+    const playerOrderRef = ref(rtdb, `auctions/${roomId}/playerOrder`);
+    
+    // Store playerOrder in a dedicated static node so room status updates remain lightweight
+    await set(playerOrderRef, randomizedIndices);
     await updateRtdb(rtdbRoomRef, {
-      status: 'active',
-      playerOrder: randomizedIndices
+      status: 'active'
     });
 
     const liveRef = ref(rtdb, `auctions/${roomId}/live`);
@@ -310,10 +315,15 @@ export const AuctionProvider = ({ children }) => {
       const rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
       const roomData = rtdbRoomSnap.exists() ? rtdbRoomSnap.val() : {};
 
+      let playerOrder = roomData.playerOrder;
+      if (!playerOrder) {
+        const orderSnap = await get(ref(rtdb, `auctions/${roomId}/playerOrder`));
+        if (orderSnap.exists()) playerOrder = orderSnap.val();
+      }
+
       setTimeout(async () => {
         if (roomData.status !== 'active') return;
 
-        const playerOrder = roomData.playerOrder;
         const settings = roomData.settings;
         const currentPlayerId = auctionState.playerId;
         const order = playerOrder || Array.from({ length: IPL_PLAYERS.length }, (_, i) => i);
@@ -528,6 +538,13 @@ export const AuctionProvider = ({ children }) => {
         }
 
         auctionLoaded = true;
+        if (!data.playerOrder) {
+          get(ref(rtdb, `auctions/${auctionId}/playerOrder`)).then(oSnap => {
+            if (oSnap.exists()) data.playerOrder = oSnap.val();
+            currentRoomData = data;
+            checkAndSet();
+          }).catch(() => {});
+        }
         currentRoomData = data;
         checkAndSet();
         checkLoaded();
@@ -619,7 +636,8 @@ export const AuctionProvider = ({ children }) => {
       handleFirebaseError(error);
     });
 
-    const unsubMessages = onValue(ref(rtdb, `auctions/${auctionId}/messages`), (snapshot) => {
+    const msgQuery = queryRtdb(ref(rtdb, `auctions/${auctionId}/messages`), limitToLast(25));
+    const unsubMessages = onValue(msgQuery, (snapshot) => {
       messagesLoaded = true;
       if (snapshot.exists()) {
         const msgs = [];

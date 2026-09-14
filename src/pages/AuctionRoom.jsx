@@ -1474,7 +1474,6 @@ const AuctionRoom = () => {
                   <div className="w-full max-w-2xl flex flex-col gap-6">
                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                           <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white"><Users size={24} /></div>
                            <div><h2 className="text-xl md:text-2xl font-black uppercase tracking-tight">Active Participants</h2><p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-none">Manage Room Connectivity</p></div>
                         </div>
                         <button onClick={() => setShowParticipantsOverlay(false)} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-gray-400 hover:bg-red-500 transition-all"><X size={20} /></button>
