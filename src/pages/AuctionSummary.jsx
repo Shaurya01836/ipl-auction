@@ -1,19 +1,23 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuction } from '../contexts/AuctionContext';
 import { useAuth } from '../contexts/AuthContext';
 import { IPL_PLAYERS } from '../data/players';
 import { TEAMS } from '../data/teams';
+import { toPng } from 'html-to-image';
 import {
   Trophy,
   Users,
   Home,
   ChevronDown,
   Share2,
+  CheckCircle2,
   Wifi,
   History,
   LayoutGrid,
-  Zap
+  Zap,
+  Download,
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import FantasyDashboard from '../components/fantasy/FantasyDashboard';
@@ -26,6 +30,56 @@ const AuctionSummary = () => {
   
   const [activeTab, setActiveTab] = useState('squads');
   const [expandedTeam, setExpandedTeam] = useState(null);
+  const [sharingTeamId, setSharingTeamId] = useState(null);
+  const [copiedTeamId, setCopiedTeamId] = useState(null);
+
+  const teamCardRefs = React.useRef({});
+
+  const handleShareSquadImage = async (team, squad, manager) => {
+    const cardEl = teamCardRefs.current[team.id];
+    if (!cardEl) return;
+
+    setSharingTeamId(team.id);
+
+    try {
+      // Generate crisp 2x PNG Blob & Data URL from element
+      const dataUrl = await toPng(cardEl, {
+        cacheBust: false,
+        pixelRatio: 2,
+        skipFonts: true,
+        imagePlaceholder: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
+      });
+
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      const fileName = `${team.name.replace(/\s+/g, '_')}_Squad.png`;
+      const file = new File([blob], fileName, { type: 'image/png' });
+
+      // If Web Share API supports file sharing (Mobile browsers, Chrome Android, Safari iOS)
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: `${team.name} Squad — IPL Mega Auction`,
+          text: `Check out our IPL Mega Auction squad for ${team.name}! Managed by ${manager?.name || 'N/A'}.`,
+          files: [file]
+        });
+        setSharingTeamId(null);
+        return;
+      }
+
+      // Download fallback for desktop browsers
+      const link = document.createElement('a');
+      link.download = fileName;
+      link.href = dataUrl;
+      link.click();
+
+      setCopiedTeamId(team.id);
+      setTimeout(() => setCopiedTeamId(null), 3000);
+    } catch (e) {
+      console.error('Error generating squad image:', e);
+    } finally {
+      setSharingTeamId(null);
+    }
+  };
 
 
   useEffect(() => {
@@ -302,13 +356,21 @@ const AuctionSummary = () => {
                           exit={{ height: 0, opacity: 0 }}
                           className="overflow-hidden px-2 sm:px-4 md:px-8 mb-4"
                         >
-                          <div className="bg-white/[0.02] border-x border-b border-white/5 rounded-b-2xl sm:rounded-b-[3rem] p-4 sm:p-8 space-y-6 sm:space-y-12">
-                            {['Batsman', 'Wicket-Keeper', 'All-Rounder', 'Bowler'].map(role => {
+                          <div 
+                             ref={el => teamCardRefs.current[t.id] = el}
+                             className="bg-[#0b0c10] border-x border-b border-white/10 rounded-b-2xl sm:rounded-b-[3rem] p-4 sm:p-8 space-y-6 sm:space-y-12 relative overflow-hidden"
+                          >
+                             {/* Watermark Logo for Exported Image */}
+                             <div className="absolute right-4 top-4 w-32 h-32 opacity-5 pointer-events-none grayscale">
+                                <img src={t.logo} alt="" className="w-full h-full object-contain" />
+                             </div>
+
+                             {['Batsman', 'Wicket-Keeper', 'All-Rounder', 'Bowler'].map(role => {
                               const rolePlayers = squad.filter(p => p.role === role);
                               if (rolePlayers.length === 0) return null;
 
                               return (
-                                <div key={role} className="space-y-3 sm:space-y-6">
+                                <div key={role} className="space-y-3 sm:space-y-6 relative z-10">
                                   <div className="flex items-center gap-3 sm:gap-4">
                                     <h4 className="text-[9px] sm:text-[10px] font-black text-orange-500 uppercase tracking-[0.2em] sm:tracking-[0.4em]">{role}s</h4>
                                     <div className="flex-1 h-px bg-orange-500/20" />
@@ -357,14 +419,24 @@ const AuctionSummary = () => {
                             })}
 
                             {/* Summary Footer for Team */}
-                            <div className="pt-4 sm:pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 opacity-70 hover:opacity-100 transition-opacity">
+                            <div className="pt-4 sm:pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 opacity-70 hover:opacity-100 transition-opacity relative z-10">
                                <div className="flex items-center gap-3">
                                   <LayoutGrid size={14} className="text-gray-600" />
                                   <p className="text-[8px] sm:text-[9px] font-black text-gray-600 uppercase tracking-[0.3em] sm:tracking-[0.5em]">Composition Verified by Arena Engine</p>
                                </div>
                                <div className="flex gap-4">
-                                  <button className="flex items-center gap-2 text-[9px] font-black uppercase text-gray-400 hover:text-orange-500 transition-colors touch-manipulation">
-                                     <Share2 size={12} /> Share Squad
+                                  <button 
+                                     onClick={() => handleShareSquadImage(t, squad, manager)}
+                                     disabled={sharingTeamId === t.id}
+                                     className="flex items-center gap-2 text-[9px] font-black uppercase text-gray-400 hover:text-orange-500 transition-colors touch-manipulation cursor-pointer active:scale-95 disabled:opacity-50"
+                                  >
+                                     {sharingTeamId === t.id ? (
+                                       <span className="text-orange-400 flex items-center gap-1.5"><Loader2 size={12} className="animate-spin" /> Generating Poster...</span>
+                                     ) : copiedTeamId === t.id ? (
+                                       <span className="text-green-500 flex items-center gap-1.5"><CheckCircle2 size={12} /> Image Downloaded!</span>
+                                     ) : (
+                                       <><Share2 size={12} /> Share Squad Image</>
+                                     )}
                                   </button>
                                </div>
                             </div>

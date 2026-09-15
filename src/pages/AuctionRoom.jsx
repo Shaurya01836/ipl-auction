@@ -781,56 +781,60 @@ const AuctionRoom = () => {
    return (
       <div className="h-screen bg-[#0d0d0d] text-white font-sans flex flex-col items-center overflow-hidden">
 
-         <header className="w-full min-h-14 h-auto md:h-14 bg-black/40 backdrop-blur-md border-b border-white/5 flex flex-col md:flex-row items-center justify-between px-4 md:px-6 py-3 md:py-0 z-50 gap-4 md:gap-0">
-            <div className="flex items-center gap-3 md:gap-6">
-               <div className="flex items-center gap-1.5 sm:gap-3">
-                  <span className="text-gray-500 text-[9px] sm:text-[10px] font-black uppercase tracking-widest">ID:</span>
-                  <span className="text-white font-mono font-bold tracking-widest text-[11px] sm:text-sm">{id}</span>
+         <header className="w-full h-14 bg-black/40 backdrop-blur-md border-b border-white/5 flex flex-row items-center justify-between px-2.5 sm:px-4 md:px-6 z-50 gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-4 shrink-0">
+               <div className="flex items-center gap-1">
+                  <span className="text-gray-500 text-[8px] sm:text-[10px] font-black uppercase tracking-widest hidden xs:inline">ID:</span>
+                  <span className="text-white font-mono font-bold tracking-widest text-[10px] sm:text-sm">{id}</span>
                </div>
-               <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full" title="Connected Users">
-                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                  <span className="text-[10px] font-black text-gray-300">{currentAuction?.players?.length || 1}/10</span>
+               <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded-full" title="Connected Users">
+                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shrink-0" />
+                  <span className="text-[9px] font-black text-gray-300">{currentAuction?.players?.length || 1}/10</span>
                </div>
-               <div className="flex items-center gap-2 border-l border-white/10 pl-4 sm:pl-6 h-6">
-                  <button onClick={copyRoomId} className="p-1.5 bg-white/5 text-gray-400 rounded-lg hover:bg-white/10 transition-colors cursor-pointer">
-                     {copied ? <CheckCircle2 size={14} className="text-green-500" /> : <Copy size={14} />}
+               <div className="flex items-center border-l border-white/10 pl-1.5 sm:pl-3">
+                  <button onClick={copyRoomId} className="p-1 sm:p-1.5 bg-white/5 text-gray-400 rounded-lg hover:bg-white/10 transition-colors cursor-pointer" title="Copy Room ID">
+                     {copied ? <CheckCircle2 size={13} className="text-green-500" /> : <Copy size={13} />}
                   </button>
                </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 sm:gap-3 shrink-0">
                {isAdmin && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 sm:gap-2">
                      {displayAuctionState?.status === 'paused' ? (
                         <button
                            onClick={() => resumeAuction(id)}
-                           className="flex items-center gap-1.5 sm:gap-2 bg-white/5 border border-white/10 px-2 sm:px-3 py-1.5 rounded-lg text-gray-300 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer"
+                           className="p-1 sm:px-2.5 sm:py-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-300 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1"
+                           title="Resume Auction"
                         >
-                           <PlayCircle size={12} /> <span className="hidden sm:inline">Resume</span>
+                           <PlayCircle size={13} /> <span className="hidden md:inline">Resume</span>
                         </button>
                      ) : (
                         <button
                            onClick={() => pauseAuction(id)}
-                           className="flex items-center gap-1.5 sm:gap-2 bg-white/5 border border-white/10 px-2 sm:px-3 py-1.5 rounded-lg text-gray-300 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer"
+                           className="p-1 sm:px-2.5 sm:py-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-300 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1"
+                           title="Pause Auction"
                         >
-                           <Pause size={12} /> <span className="hidden sm:inline">Pause</span>
+                           <Pause size={13} /> <span className="hidden md:inline">Pause</span>
                         </button>
                      )}
                      <button
                         onClick={() => endAuction(id)}
-                        className="flex items-center gap-1.5 sm:gap-2 bg-white/5 border border-white/10 px-2 sm:px-3 py-1.5 rounded-lg text-gray-300 text-[10px] font-black uppercase tracking-widest hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/20 transition-all cursor-pointer"
+                        className="p-1 sm:px-2.5 sm:py-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-300 text-[10px] font-black uppercase tracking-widest hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/20 transition-all cursor-pointer flex items-center gap-1"
+                        title="End Auction"
                      >
-                        <XCircle size={12} /> <span className="hidden sm:inline">End</span>
+                        <XCircle size={13} /> <span className="hidden md:inline">End</span>
                      </button>
                      <button
                         onClick={() => setShowParticipantsOverlay(true)}
-                        className="flex items-center gap-1.5 sm:gap-2 bg-white/5 border border-white/10 px-2 sm:px-3 py-1.5 rounded-lg text-gray-300 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer"
+                        className="p-1 sm:px-2.5 sm:py-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-300 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1"
+                        title="Active Participants"
                      >
-                        <Users size={12} /> <span className="hidden sm:inline">Participants</span>
+                        <Users size={13} /> <span className="hidden md:inline">Participants</span>
                      </button>
                   </div>
                )}
-               <div className="flex items-center gap-1.5 border-l border-white/10 pl-6 h-6">
+               <div className="flex items-center gap-1 border-l border-white/10 pl-1.5 sm:pl-3">
                   <button
                      onClick={() => {
                         const newTtsVal = !isTtsEnabled;
@@ -843,20 +847,19 @@ const AuctionRoom = () => {
                            speak("Voice Auctioneer enabled.");
                         }
                      }}
-                     className={`p-1.5 rounded-lg border transition-all cursor-pointer ${isTtsEnabled ? 'bg-white/10 border-white/20 text-white shadow-sm' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}
+                     className={`p-1 sm:p-1.5 rounded-lg border transition-all cursor-pointer ${isTtsEnabled ? 'bg-white/10 border-white/20 text-white shadow-sm' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}
                      title={isTtsEnabled ? "Mute Voice Auctioneer" : "Enable Voice Auctioneer"}
                   >
-                     <Gavel size={16} />
+                     <Gavel size={14} />
                   </button>
                   <button
                      onClick={() => setShowSettings(!showSettings)}
-                     className={`p-1.5 rounded-lg border transition-all cursor-pointer ${showSettings ? 'bg-white/10 border-white/20 text-white shadow-sm' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}
+                     className={`p-1 sm:p-1.5 rounded-lg border transition-all cursor-pointer ${showSettings ? 'bg-white/10 border-white/20 text-white shadow-sm' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}
                      title="Local & Room Settings"
                   >
-                     <SettingsIcon size={16} />
+                     <SettingsIcon size={14} />
                   </button>
-                  <button onClick={() => navigate('/')} className="p-1.5 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition-colors cursor-pointer"><Home size={16} /></button>
-                  <button onClick={logout} className="p-1.5 hover:bg-red-500/20 rounded-lg text-gray-400 hover:text-red-400 cursor-pointer transition-colors" title="Logout"><LogOut size={16} /></button>
+                  <button onClick={() => navigate('/')} className="p-1 sm:p-1.5 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition-colors cursor-pointer" title="Back to Home"><Home size={14} /></button>
                </div>
             </div>
          </header>
