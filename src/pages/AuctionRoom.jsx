@@ -836,23 +836,6 @@ const AuctionRoom = () => {
                )}
                <div className="flex items-center gap-1 border-l border-white/10 pl-1.5 sm:pl-3">
                   <button
-                     onClick={() => {
-                        const newTtsVal = !isTtsEnabled;
-                        setIsTtsEnabled(newTtsVal);
-                        if (!newTtsVal) {
-                           if ('speechSynthesis' in window) {
-                              window.speechSynthesis.cancel();
-                           }
-                        } else {
-                           speak("Voice Auctioneer enabled.");
-                        }
-                     }}
-                     className={`p-1 sm:p-1.5 rounded-lg border transition-all cursor-pointer ${isTtsEnabled ? 'bg-white/10 border-white/20 text-white shadow-sm' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}
-                     title={isTtsEnabled ? "Mute Voice Auctioneer" : "Enable Voice Auctioneer"}
-                  >
-                     <Gavel size={14} />
-                  </button>
-                  <button
                      onClick={() => setShowSettings(!showSettings)}
                      className={`p-1 sm:p-1.5 rounded-lg border transition-all cursor-pointer ${showSettings ? 'bg-white/10 border-white/20 text-white shadow-sm' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}
                      title="Local & Room Settings"
@@ -992,20 +975,24 @@ const AuctionRoom = () => {
             <div className={`${mobileTab === 'arena' ? 'flex' : 'hidden'} md:flex flex-col flex-1 h-full overflow-hidden`}>
                {/* Center Fixed Header */}
                <div className="min-h-12 border-b border-white/5 bg-white/[0.01] flex items-center px-3 sm:px-6 md:px-8 w-full shrink-0 py-2 md:py-0">
-                  <div className="w-full max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-2 md:gap-4">
-                     <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4">
+                  <div className="w-full max-w-4xl mx-auto flex items-center justify-between gap-2 md:gap-4">
+                     <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
                         <div className="px-2.5 py-0.5 bg-yellow-500/10 border border-yellow-500/20 rounded-full shrink-0 flex items-center">
                            <span className="text-[8px] sm:text-[9px] font-extrabold text-yellow-400/90 uppercase tracking-widest">{currentPlayer?.set}</span>
                         </div>
+                        <div className="w-px h-3.5 sm:h-4 bg-white/10 shrink-0" />
                         <div className="flex items-center gap-1.5 shrink-0">
                            <span className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-wider">Base Price:</span>
                            <span className="text-xs sm:text-sm md:text-base font-black text-white">₹{currentPlayer?.basePrice?.toFixed(2)} Cr</span>
                         </div>
                      </div>
-                     <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-wider">High Bidder:</span>
-                        <div className="bg-green-500/20 border border-green-500/30 px-2 py-0.5 rounded-md max-w-[120px] sm:max-w-[180px] truncate">
-                           <span className="text-[8px] sm:text-[9px] font-black text-green-400 uppercase tracking-wider truncate block">{displayAuctionState?.highBidderName}</span>
+                     <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="w-px h-3.5 sm:h-4 bg-white/10 shrink-0" />
+                        <div className="flex items-center gap-1.5 shrink-0">
+                           <span className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-wider">High Bidder:</span>
+                           <div className="bg-green-500/20 border border-green-500/30 px-2 py-0.5 rounded-md max-w-[120px] sm:max-w-[180px] truncate">
+                              <span className="text-[8px] sm:text-[9px] font-black text-green-400 uppercase tracking-wider truncate block">{displayAuctionState?.highBidderName}</span>
+                           </div>
                         </div>
                      </div>
                   </div>
@@ -1098,18 +1085,53 @@ const AuctionRoom = () => {
                                        </div>
                                     </div>
                                  </div>
-                                 <div className="bg-black/20 border-t border-white/5 p-3 sm:p-4 md:p-6 flex gap-3 md:gap-4">
-                                    <button
-                                       onClick={handleBid}
-                                       disabled={timeLeft === 0 || displayAuctionState?.status !== 'bidding' || displayAuctionState?.highBidderId === user?.uid}
-                                       className={`flex-1 h-12 sm:h-14 md:h-18 font-black text-sm sm:text-base md:text-xl rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale cursor-pointer ${displayAuctionState?.highBidderId === user?.uid
-                                          ? 'bg-white/5 text-green-500 border border-green-500/20 shadow-inner'
-                                          : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-[#050505] shadow-[0_4px_20px_rgba(34,197,94,0.2)] hover:shadow-[0_8px_30px_rgba(34,197,94,0.3)]'
-                                          }`}
-                                    >
-                                       {displayAuctionState?.status === 'paused' ? 'PAUSED' : displayAuctionState?.highBidderId === user?.uid ? "LEADING BIDDER" : `PLACE BID: ₹${nextBidAmount.toFixed(2)} Cr`}
-                                    </button>
-                                    <button onClick={() => setShowPlayersOverlay(true)} className="w-12 h-12 sm:w-14 sm:h-14 md:w-18 md:h-18 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-all"><List size={20} /></button>
+                                 <div className="bg-black/20 border-t border-white/5 p-3 sm:p-4 md:p-6 flex flex-col gap-3">
+                                    {/* Franchise Quick Stats Bar right above Bid button (Mobile view only) */}
+                                    {team && (() => {
+                                       const osCount = (team.squad || []).filter(s => {
+                                          const pid = typeof s === 'string' ? s : s.id;
+                                          return IPL_PLAYERS.find(pl => pl.id === pid)?.country !== 'IND';
+                                       }).length;
+                                       const totalBudget = currentAuction?.settings?.budget || 120;
+
+                                       return (
+                                          <div className="flex md:hidden items-center justify-between bg-white/[0.03] border border-white/10 px-2.5 sm:px-4 py-2 rounded-xl text-[9px] sm:text-xs font-bold text-gray-300">
+                                             <div className="flex items-center gap-1" title="Squad Count">
+                                                <span className="text-gray-500 uppercase font-black text-[8px] sm:text-[10px]">Squad:</span>
+                                                <span className="text-blue-400 font-extrabold">{team.squad?.length || 0}/{currentAuction?.squadLimit || 25}</span>
+                                             </div>
+                                             <div className="w-px h-3 bg-white/10" />
+                                             <div className="flex items-center gap-1" title="Overseas Players">
+                                                <span className="text-gray-500 uppercase font-black text-[8px] sm:text-[10px]">OS:</span>
+                                                <span className="text-purple-400 font-extrabold">{osCount}/{currentAuction?.overseasLimit || 8}</span>
+                                             </div>
+                                             <div className="w-px h-3 bg-white/10" />
+                                             <div className="flex items-center gap-1" title="Purse Left out of Total Budget">
+                                                <span className="text-gray-500 uppercase font-black text-[8px] sm:text-[10px]">Purse:</span>
+                                                <span className="text-green-400 font-extrabold">₹{(team.budgetRemaining || 0).toFixed(1)}/{totalBudget}Cr</span>
+                                             </div>
+                                             <div className="w-px h-3 bg-white/10 hidden xs:block" />
+                                             <div className="items-center gap-1 hidden xs:flex" title="Total Spent">
+                                                <span className="text-gray-500 uppercase font-black text-[8px] sm:text-[10px]">Spent:</span>
+                                                <span className="text-yellow-400 font-extrabold">₹{(team.spent || 0).toFixed(1)}Cr</span>
+                                             </div>
+                                          </div>
+                                       );
+                                    })()}
+
+                                    <div className="flex gap-3 md:gap-4">
+                                       <button
+                                          onClick={handleBid}
+                                          disabled={timeLeft === 0 || displayAuctionState?.status !== 'bidding' || displayAuctionState?.highBidderId === user?.uid}
+                                          className={`flex-1 h-12 sm:h-14 md:h-18 font-black text-sm sm:text-base md:text-xl rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale cursor-pointer ${displayAuctionState?.highBidderId === user?.uid
+                                             ? 'bg-white/5 text-green-500 border border-green-500/20 shadow-inner'
+                                             : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-[#050505] shadow-[0_4px_20px_rgba(34,197,94,0.2)] hover:shadow-[0_8px_30px_rgba(34,197,94,0.3)]'
+                                             }`}
+                                       >
+                                          {displayAuctionState?.status === 'paused' ? 'PAUSED' : displayAuctionState?.highBidderId === user?.uid ? "LEADING BIDDER" : `PLACE BID: ₹${nextBidAmount.toFixed(2)} Cr`}
+                                       </button>
+                                       <button onClick={() => setShowPlayersOverlay(true)} className="w-12 h-12 sm:w-14 sm:h-14 md:w-18 md:h-18 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-all"><List size={20} /></button>
+                                    </div>
                                  </div>
                               </div>
                            </motion.div>
@@ -1394,54 +1416,91 @@ const AuctionRoom = () => {
 
          <AnimatePresence>
             {showSettings && (
-               <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="fixed top-20 right-6 z-[100] bg-[#181818] border border-white/10 p-6 rounded-[2rem] shadow-2xl w-80 backdrop-blur-3xl">
-                  <div className="flex items-center justify-between mb-6"><h3 className="text-sm font-black text-gray-400 uppercase tracking-widest">Settings</h3><button onClick={() => setShowSettings(false)} className="hover:text-white transition-colors"><X size={16} /></button></div>
-                  <div className="space-y-6">
-                     {/* Host settings: Bid Timer */}
+               <motion.div initial={{ opacity: 0, scale: 0.95, y: -10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: -10 }} className="fixed top-16 right-3 sm:right-6 z-[100] bg-[#0c0d12]/95 border border-white/10 p-5 sm:p-6 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] w-80 sm:w-96 backdrop-blur-2xl">
+                  <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
+                     <div className="flex items-center gap-2.5">
+                       
+                        <div>
+                           <h3 className="text-xs font-black text-white uppercase tracking-wider">Room & Voice Settings</h3>
+                           <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest leading-none">Customize Experience</p>
+                        </div>
+                     </div>
+                     <button onClick={() => setShowSettings(false)} className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"><X size={15} /></button>
+                  </div>
+
+                  <div className="space-y-4 max-h-[75vh] overflow-y-auto pr-1 custom-scrollbar">
+                     {/* Host Settings Section */}
                      {isAdmin && (
-                        <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl">
-                           <label className="block text-[9px] font-black text-blue-500 uppercase tracking-widest mb-3">Bid Countdown (Host)</label>
-                           <div className="flex items-center gap-4">
-                              <input type="range" min="5" max="60" value={newTimerValue} onChange={(e) => setNewTimerValue(parseInt(e.target.value))} className="flex-1 accent-blue-500" />
-                              <span className="text-xl font-black w-10 text-center">{newTimerValue}s</span>
+                        <div className="bg-gradient-to-b from-blue-500/5 to-transparent border border-blue-500/20 p-4 rounded-2xl relative overflow-hidden">
+                           <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-1.5">
+                                 <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest">Bid Timer (Host)</span>
+                              </div>
+                              <span className="text-xs font-black text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">{newTimerValue} Seconds</span>
                            </div>
-                           <button onClick={async () => { await updateRoomSettings(id, { ...currentAuction.settings, bidTimer: newTimerValue }); }} className="w-full bg-blue-600 hover:bg-blue-500 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all mt-3">Sync Countdown</button>
+                           <input type="range" min="5" max="60" value={newTimerValue} onChange={(e) => setNewTimerValue(parseInt(e.target.value))} className="w-full accent-blue-500 bg-white/10 h-1.5 rounded-lg cursor-pointer" />
+                           <button onClick={async () => { await updateRoomSettings(id, { ...currentAuction.settings, bidTimer: newTimerValue }); }} className="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all mt-3 shadow-lg shadow-blue-500/20 active:scale-95 cursor-pointer">
+                              Apply Timer Settings
+                           </button>
                         </div>
                      )}
 
-                     {/* Client Local settings: TTS */}
-                     <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl">
-                        <h4 className="text-[9px] font-black text-yellow-500 uppercase tracking-widest mb-4">Voice Auctioneer (Local)</h4>
-
-                        {/* TTS Speed */}
-                        <div className="mb-4">
-                           <label className="block text-[8px] font-bold text-gray-500 uppercase tracking-widest mb-2">Speaking Pace</label>
-                           <div className="flex items-center gap-3">
-                              <input type="range" min="0.70" max="1.80" step="0.05" value={ttsSpeed} onChange={(e) => setTtsSpeed(parseFloat(e.target.value))} className="flex-1 accent-yellow-500" />
-                              <span className="text-xs font-black w-12 text-center text-yellow-500">{ttsSpeed.toFixed(2)}x</span>
+                     {/* Voice Auctioneer Settings Section */}
+                     <div className="bg-white/[0.02] border border-white/10 p-4 rounded-2xl space-y-4">
+                        <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                           <div className="flex items-center gap-2">
+                             
+                              <span className="text-[10px] font-black text-yellow-400 uppercase tracking-wider">Voice Auctioneer</span>
                            </div>
+
+                           {/* Toggle Switch */}
+                           <button
+                              onClick={() => {
+                                 const newTtsVal = !isTtsEnabled;
+                                 setIsTtsEnabled(newTtsVal);
+                                 if (!newTtsVal) {
+                                    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                                 } else {
+                                    speak("Voice Auctioneer enabled.");
+                                 }
+                              }}
+                              className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-300 cursor-pointer ${isTtsEnabled ? 'bg-yellow-500' : 'bg-white/10'}`}
+                           >
+                              <motion.div
+                                 layout
+                                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                 className={`w-4 h-4 rounded-full bg-black shadow-md ${isTtsEnabled ? 'ml-5' : 'ml-0'}`}
+                              />
+                           </button>
                         </div>
 
-                        {/* TTS Pitch */}
-                        <div className="mb-4">
-                           <label className="block text-[8px] font-bold text-gray-500 uppercase tracking-widest mb-2">Vocal Pitch</label>
-                           <div className="flex items-center gap-3">
-                              <input type="range" min="0.60" max="1.40" step="0.05" value={ttsPitch} onChange={(e) => setTtsPitch(parseFloat(e.target.value))} className="flex-1 accent-yellow-500" />
-                              <span className="text-xs font-black w-12 text-center text-yellow-500">{ttsPitch.toFixed(2)}</span>
+                        {/* Speed Slider */}
+                        <div className={isTtsEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}>
+                           <div className="flex justify-between items-center mb-1.5">
+                              <label className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Speaking Speed</label>
+                              <span className="text-[10px] font-black text-yellow-400">{ttsSpeed.toFixed(2)}x</span>
                            </div>
+                           <input type="range" min="0.70" max="1.80" step="0.05" value={ttsSpeed} onChange={(e) => setTtsSpeed(parseFloat(e.target.value))} className="w-full accent-yellow-500 bg-white/10 h-1.5 rounded-lg cursor-pointer" />
+                        </div>
+
+                        {/* Pitch Slider */}
+                        <div className={isTtsEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}>
+                           <div className="flex justify-between items-center mb-1.5">
+                              <label className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Voice Pitch</label>
+                              <span className="text-[10px] font-black text-yellow-400">{ttsPitch.toFixed(2)}</span>
+                           </div>
+                           <input type="range" min="0.60" max="1.40" step="0.05" value={ttsPitch} onChange={(e) => setTtsPitch(parseFloat(e.target.value))} className="w-full accent-yellow-500 bg-white/10 h-1.5 rounded-lg cursor-pointer" />
                         </div>
 
                         {/* Voice Selector */}
                         {availableVoices.length > 0 && (
-                           <div>
-                              <label className="block text-[8px] font-bold text-gray-500 uppercase tracking-widest mb-2">Select Voice</label>
+                           <div className={isTtsEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}>
+                              <label className="block text-[8px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Select Voice</label>
                               <select
                                  value={selectedVoiceName}
                                  onChange={(e) => {
                                     const newVoiceName = e.target.value;
                                     setSelectedVoiceName(newVoiceName);
-
-                                    // Brief preview of the selected voice
                                     setTimeout(() => {
                                        if ('speechSynthesis' in window) {
                                           window.speechSynthesis.cancel();
@@ -1455,10 +1514,10 @@ const AuctionRoom = () => {
                                        }
                                     }, 100);
                                  }}
-                                 className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-[10px] text-gray-300 font-semibold focus:outline-none focus:border-yellow-500/50 transition-colors"
+                                 className="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-[10px] text-gray-200 font-bold focus:outline-none focus:border-yellow-500/50 transition-colors cursor-pointer"
                               >
                                  {availableVoices.map(v => (
-                                    <option key={v.name} value={v.name} className="bg-[#181818] text-white">
+                                    <option key={v.name} value={v.name} className="bg-[#0c0d12] text-white">
                                        {getVoiceLabel(v.name)}
                                     </option>
                                  ))}
