@@ -32,6 +32,7 @@
       <ul>
         <li><b>Firebase Sync:</b> Sub-second latency powered by Firebase Realtime Database.</li>
         <li><b>Universal Clock Offset:</b> Automated synchronization of bid timers across all client machines using RTDB offset.</li>
+        <li><b>AI Bidding Bots:</b> Host-controlled AI franchise bots with dynamic, timer-adaptive bidding strategies (rapid openers vs. last 5-sec snipers).</li>
         <li><b>Flexible Auction Formats:</b>
           <ul>
             <li><b>Mega:</b> 25 squad limit, 8 overseas limit, 120 Cr budget.</li>
@@ -54,15 +55,17 @@
     <td width="50%" valign="top">
       <h3>📺 Premium Broadcast UI/UX</h3>
       <ul>
-        <li><b>Sophisticated Design:</b> Sleek dark mode styling using Tailwind CSS v4 and glassmorphism.</li>
+        <li><b>Sophisticated Mobile UI:</b> Single-row responsive header bar, touch-scrollable participants overlay, and auto-scroll to top on navigation.</li>
+        <li><b>Dynamic Squad Image Export:</b> Export and share custom high-res squad poster graphics (`html-to-image`) on WhatsApp, Instagram, or download as PNG.</li>
         <li><b>Micro-Animations:</b> Smoothed with Framer Motion, including confetti and animated "SOLD"/"UNSOLD" cards.</li>
-        <li><b>Interactive Lobby:</b> Features team assignment tools, live chat, and kick/ban controls.</li>
+        <li><b>Interactive Lobby:</b> Features team assignment tools, bot fill options, live chat, and kick/ban controls.</li>
       </ul>
     </td>
     <td width="50%" valign="top">
-      <h3>🔌 CricAPI Live Scorecard Sync</h3>
+      <h3>🔌 CricAPI & Database Architecture</h3>
       <ul>
         <li><b>CricAPI Integration:</b> Automated fetchers pull real scorecard stats.</li>
+        <li><b>Zero-Cost In-Game Reads/Writes:</b> Realtime Database drives active bidding loops; single batch writes register sessions in Firestore for the Recent/History tab.</li>
         <li><b>Automatic Point Calculator:</b> Converts runs, wickets, catches, and strike rates into fantasy points.</li>
         <li><b>Backfill Tools:</b> Scripts to seed and update database with historical IPL data.</li>
       </ul>

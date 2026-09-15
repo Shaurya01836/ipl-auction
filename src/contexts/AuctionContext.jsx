@@ -131,6 +131,42 @@ export const AuctionProvider = ({ children }) => {
         squad: []
       });
     }
+
+    // Single write to Firestore when room is created so it shows up in history with 0 extra bid-level writes
+    try {
+      const batch = writeBatch(db);
+      batch.set(doc(db, 'auctions', roomId), {
+        hostId: userId,
+        status: 'waiting',
+        auctionType,
+        players: [{
+          id: userId,
+          name: playerDetails.name,
+          team: playerDetails.team,
+          teamName: teamDetails?.name || 'Unknown',
+          isHost: true
+        }],
+        settings: { bidTimer: 10, budget },
+        bannedPlayers: [],
+        createdAt: serverTimestamp()
+      }, { merge: true });
+
+      if (playerDetails.team) {
+        batch.set(doc(db, 'teams', `${roomId}_${userId}`), {
+          auctionId: roomId,
+          userId: userId,
+          teamId: playerDetails.team,
+          teamName: teamDetails?.name || 'Unknown',
+          budgetRemaining: budget,
+          spent: 0,
+          squad: [],
+          createdAt: serverTimestamp()
+        }, { merge: true });
+      }
+      await batch.commit();
+    } catch (e) {
+      // Non-blocking fallback
+    }
   }, []);
   
   // Helper to flush complete room & teams data from RTDB to Firestore in 1 single batch call
@@ -147,13 +183,16 @@ export const AuctionProvider = ({ children }) => {
       const batch = writeBatch(db);
       
       const roomRef = doc(db, 'auctions', roomId);
-      batch.update(roomRef, {
+      batch.set(roomRef, {
+        hostId: roomData.hostId || '',
         status: roomData.status || 'waiting',
+        auctionType: roomData.auctionType || 'mega',
         players: roomData.players || [],
         settings: roomData.settings || {},
         bannedPlayers: roomData.bannedPlayers || [],
-        ...(roomData.playerOrder ? { playerOrder: roomData.playerOrder } : {})
-      });
+        ...(roomData.playerOrder ? { playerOrder: roomData.playerOrder } : {}),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
 
       Object.entries(teamsData).forEach(([docId, teamVal]) => {
         if (!teamVal) return;
@@ -219,7 +258,8 @@ export const AuctionProvider = ({ children }) => {
       type: 'log',
       timestamp: serverTimestampRtdb()
     });
-  }, [getSyncedTime, flushAuctionToFirestore]);
+
+  }, [getSyncedTime]);
 
   const endPlayerAuction = useCallback(async (roomId) => {
     // Prevent duplicate calls from the timer interval
