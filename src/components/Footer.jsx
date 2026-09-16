@@ -26,7 +26,7 @@ const Footer = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-12 gap-10 md:gap-8 pb-12">
         {/* Brand / Intro */}
-        <div className="col-span-1 sm:col-span-12 md:col-span-6 space-y-4">
+        <div className="col-span-1 sm:col-span-12 md:col-span-4 space-y-4">
           <div className="flex items-center gap-2">
        
             <span className="text-sm font-black tracking-[0.2em] uppercase text-white bg-clip-text">
@@ -55,6 +55,21 @@ const Footer = () => {
           </div>
         </div>
 
+        {/* Useful Links */}
+        <div className="col-span-1 sm:col-span-6 md:col-span-3 space-y-4">
+          <h4 className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em]">Game Rules</h4>
+          <ul className="space-y-2">
+            <li>
+              <a
+                href="/guide"
+                className="text-xs text-gray-500 hover:text-white font-black uppercase tracking-wider transition-colors duration-200 flex items-center gap-1 group"
+              >
+                Game Guide & Rules ➔
+              </a>
+            </li>
+          </ul>
+        </div>
+
         {/* Tech Stack */}
         <div className="col-span-1 sm:col-span-6 md:col-span-3 space-y-4">
           <h4 className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em]">Built With</h4>
@@ -76,7 +91,7 @@ const Footer = () => {
         </div>
 
         {/* Developer Info */}
-        <div className="col-span-1 sm:col-span-6 md:col-span-3 space-y-4">
+        <div className="col-span-1 sm:col-span-6 md:col-span-2 space-y-4">
           <h4 className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em]">Developer</h4>
           <div className="space-y-2">
             <a

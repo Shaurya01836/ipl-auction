@@ -22,7 +22,8 @@ import {
   Wallet,
   Wifi,
   Globe,
-  GitBranchPlusIcon
+  GitBranchPlusIcon,
+  BookOpen
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GithubStarButton from '../components/GithubStarButton';
