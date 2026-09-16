@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquarePlus, X, Send, Star, CheckCircle2, Loader2 } from 'lucide-react';
 import { db } from '../lib/firebase';
@@ -12,6 +13,7 @@ const CATEGORIES = [
 ];
 
 const FeedbackModal = () => {
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -21,6 +23,9 @@ const FeedbackModal = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(null);
+
+  // Show feedback button strictly on landing page only
+  if (location.pathname !== '/') return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();

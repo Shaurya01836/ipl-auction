@@ -11,6 +11,7 @@ import AuctionSummary from './pages/AuctionSummary'
 import './index.css'
 import Lobby from './pages/Lobby'
 import FantasyAdmin from './pages/FantasyAdmin'
+import GameGuide from './pages/GameGuide'
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
               <FeedbackModal />
               <Routes>
                 <Route path="/" element={<LandingPage />} />
+                <Route path="/guide" element={<GameGuide />} />
                 <Route path="/lobby/:id" element={<Lobby />} />
                 <Route path="/auction/:id" element={<AuctionRoom />} />
                 <Route path="/summary/:id" element={<AuctionSummary />} />
