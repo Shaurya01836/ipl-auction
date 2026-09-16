@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import { AuctionProvider } from './contexts/AuctionContext'
 import { QuotaProvider } from './contexts/QuotaContext'
 import QuotaExceededModal from './components/QuotaExceededModal'
+import FeedbackModal from './components/FeedbackModal'
 import LandingPage from './pages/LandingPage'
 import AuctionRoom from './pages/AuctionRoom'
 import AuctionSummary from './pages/AuctionSummary'
@@ -19,6 +20,7 @@ function App() {
           <AuctionProvider>
             <div className="min-h-screen bg-ipl-dark text-white">
               <QuotaExceededModal />
+              <FeedbackModal />
               <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/lobby/:id" element={<Lobby />} />
