@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAuction } from '../contexts/AuctionContext';
 import { db, rtdb } from '../lib/firebase';
+import { supabase } from '../lib/supabase';
 import { ref, onValue, get } from 'firebase/database';
-import { collection, query, where, getDocs, doc, getDoc, documentId } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, documentId, limit, orderBy } from 'firebase/firestore';
 import { IPL_PLAYERS } from '../data/players';
 import { TEAMS } from '../data/teams';
 import {
@@ -13,18 +14,18 @@ import {
   KeyRound,
   Loader2,
   Users,
+  Trophy,
   ChevronRight,
   ChevronDown,
-  CheckCircle2,
+  ShieldCheck,
   Check,
   Star,
-  History,
-  Trophy,
   Wallet,
   Wifi,
   Globe,
   GitBranchPlusIcon,
-  BookOpen
+  BookOpen,
+  History
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GithubStarButton from '../components/GithubStarButton';
@@ -136,172 +137,123 @@ const LandingPage = () => {
     }
   }, []);
 
-  // Fetch / Subscribe to Public Lobbies from RTDB & Firestore continuously when signed in
+  // Fetch Public Lobbies directly from Supabase (0 RTDB bandwidth download cost)
   useEffect(() => {
     if (!user) return;
 
     setLobbiesLoading(true);
 
-    const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
-    const cutoffTime = Date.now() - TWELVE_HOURS_MS;
-
-    const fetchFirestoreFallback = async () => {
+    const fetchPublicLobbies = async () => {
       try {
-        const q = query(
-          collection(db, 'auctions'),
-          where('status', '==', 'waiting')
-        );
-        const snap = await getDocs(q);
-        const list = [];
+        if (supabase) {
+          const { data: supabaseRooms, error } = await supabase
+            .from('auctions')
+            .select('*')
+            .eq('status', 'waiting')
+            .eq('is_public', true)
+            .order('created_at', { ascending: false })
+            .limit(30);
 
-        snap.forEach(docSnap => {
-          const d = docSnap.data();
-          // Strictly show only explicitly public rooms (isPublic === true)
-          if (d.isPublic === true) {
-            const createdAtMs = d.createdAt?.toMillis ? d.createdAt.toMillis() 
-              : d.createdAt?.seconds ? d.createdAt.seconds * 1000 
-              : Date.now();
-
-            // Filter rooms created within last 12 hours
-            if (createdAtMs >= cutoffTime) {
-              const players = d.players || [];
+          if (!error && supabaseRooms && supabaseRooms.length > 0) {
+            const list = supabaseRooms.map(r => {
+              const players = r.players || [];
               const host = players.find(p => p.isHost) || players[0];
-              list.push({
-                roomId: docSnap.id,
-                hostName: d.hostName || host?.name || 'Manager',
-                status: d.status,
-                auctionType: d.auctionType || 'mega',
+              return {
+                roomId: r.id,
+                hostName: r.host_name || host?.name || 'Manager',
+                status: r.status,
+                auctionType: r.auction_type || 'mega',
                 playerCount: players.length,
                 players,
-                squadLimit: d.squadLimit || 25,
-                settings: d.settings || {},
-                createdAtMs
-              });
-            }
+                squadLimit: r.squad_limit || 25,
+                settings: r.settings || {}
+              };
+            });
+            setPublicRooms(list);
+            setLobbiesLoading(false);
+            return;
           }
-        });
-
-        list.sort((a, b) => b.createdAtMs - a.createdAtMs);
-        setPublicRooms(list);
-      } catch (e) {
+        }
+        setPublicRooms([]);
+      } catch (sErr) {
         setPublicRooms([]);
       } finally {
         setLobbiesLoading(false);
       }
     };
 
-    const auctionsRef = ref(rtdb, 'auctions');
-    
-    const unsub = onValue(auctionsRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const activeList = [];
-
-        Object.entries(data).forEach(([roomId, roomObj]) => {
-          if (!roomObj?.room) return;
-          const r = roomObj.room;
-          
-          // Strictly show only explicitly public rooms (isPublic === true) in waiting state
-          if (r.isPublic === true && r.status === 'waiting') {
-            const players = r.players || [];
-            const host = players.find(p => p.isHost) || players[0];
-
-            activeList.push({
-              roomId,
-              hostName: r.hostName || host?.name || 'Manager',
-              status: r.status,
-              auctionType: r.auctionType || 'mega',
-              playerCount: players.length,
-              players,
-              squadLimit: r.squadLimit || 25,
-              settings: r.settings || {}
-            });
-          }
-        });
-
-        if (activeList.length > 0) {
-          setPublicRooms(activeList);
-          setLobbiesLoading(false);
-        } else {
-          fetchFirestoreFallback();
-        }
-      } else {
-        fetchFirestoreFallback();
-      }
-    }, () => {
-      fetchFirestoreFallback();
-    });
-
-    return () => unsub();
+    fetchPublicLobbies();
+    // Poll every 10 seconds for open rooms without holding heavy listeners
+    const interval = setInterval(fetchPublicLobbies, 10000);
+    return () => clearInterval(interval);
   }, [user]);
 
-  // Fetch auction history when user switches to history tab
+  // Fetch auction history directly from Supabase
+  // Fetch auction history directly from Supabase
   useEffect(() => {
     if (activeTab !== 'history' || !user?.uid || historyData.length > 0) return;
-
 
     const fetchHistory = async () => {
       setHistoryLoading(true);
       try {
-        const teamsQuery = query(
-          collection(db, 'teams'),
-          where('userId', '==', user.uid)
-        );
-        const snapshot = await getDocs(teamsQuery);
+        if (supabase) {
+          const { data: supabaseTeams, error: tErr } = await supabase
+            .from('teams')
+            .select('*')
+            .eq('user_id', user.uid)
+            .order('created_at', { ascending: false });
 
-        // Extract unique auction IDs
-        const teamDocsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        const auctionIds = [...new Set(teamDocsData.map(t => t.auctionId))].filter(Boolean);
+          if (!tErr && supabaseTeams && supabaseTeams.length > 0) {
+            const auctionIds = [...new Set(supabaseTeams.map(t => t.auction_id))].filter(Boolean);
 
-        // Fetch auction room metadata in batches of 30
-        const auctionDataMap = {};
-        for (let i = 0; i < auctionIds.length; i += 30) {
-          const chunk = auctionIds.slice(i, i + 30);
-          const auctionsQuery = query(
-            collection(db, 'auctions'),
-            where(documentId(), 'in', chunk)
-          );
-          const auctionsSnap = await getDocs(auctionsQuery);
-          auctionsSnap.forEach(d => {
-            auctionDataMap[d.id] = d.data();
-          });
+            const { data: supabaseAuctions } = await supabase
+              .from('auctions')
+              .select('*')
+              .in('id', auctionIds);
+
+            const auctionMap = {};
+            (supabaseAuctions || []).forEach(a => {
+              auctionMap[a.id] = a;
+            });
+
+            const sessions = supabaseTeams.map(teamData => {
+              const auctionData = auctionMap[teamData.auction_id];
+              const totalBudget = auctionData?.settings?.budget || 120;
+              const spent = teamData.spent || (totalBudget - (teamData.budget_remaining || totalBudget));
+
+              return {
+                id: teamData.id,
+                roomId: teamData.auction_id,
+                teamId: teamData.team_id,
+                teamName: teamData.team_name,
+                budgetRemaining: teamData.budget_remaining,
+                spent,
+                squad: (teamData.squad || []).map(s => {
+                  const pid = typeof s === 'string' ? s : s.id;
+                  const bid = typeof s === 'string' ? 0 : s.bid;
+                  const playerInfo = IPL_PLAYERS.find(p => p.id === pid);
+                  return {
+                    id: pid,
+                    name: playerInfo?.name || pid,
+                    role: playerInfo?.role || 'Player',
+                    image: playerInfo?.image || '',
+                    bid: bid || playerInfo?.basePrice || 0
+                  };
+                }),
+                date: teamData.created_at ? new Date(teamData.created_at).toLocaleDateString('en-IN', {
+                  day: 'numeric', month: 'short', year: 'numeric'
+                }) : 'Recent Session'
+              };
+            });
+
+            setHistoryData(sessions);
+            setHistoryLoading(false);
+            return;
+          }
         }
-
-        // Map team documents with pre-fetched auction metadata
-        const sessions = teamDocsData.map((teamData) => {
-          const auctionData = auctionDataMap[teamData.auctionId];
-          const totalBudget = auctionData?.settings?.budget || 120;
-          const spent = totalBudget - (teamData.budgetRemaining || totalBudget);
-
-          return {
-            id: teamData.id,
-            roomId: teamData.auctionId,
-            teamId: teamData.teamId,
-            teamName: teamData.teamName,
-            budgetRemaining: teamData.budgetRemaining,
-            spent,
-            squad: (teamData.squad || []).map(s => {
-              const pid = typeof s === 'string' ? s : s.id;
-              const bid = typeof s === 'string' ? 0 : s.bid;
-              const playerInfo = IPL_PLAYERS.find(p => p.id === pid);
-              return { ...playerInfo, bid };
-            }),
-            status: auctionData?.status || 'unknown',
-            mode: auctionData?.auctionType || 'mega',
-            playerCount: auctionData?.players?.length || 0,
-            createdAt: teamData.createdAt || auctionData?.createdAt || null
-          };
-        });
-
-        // Sorting: Strictly Time (latest first)
-        sessions.sort((a, b) => {
-          const timeA = a.createdAt?.seconds || a.createdAt?._seconds || 0;
-          const timeB = b.createdAt?.seconds || b.createdAt?._seconds || 0;
-          return timeB - timeA;
-        });
-        setHistoryData(sessions);
+        setHistoryData([]);
       } catch (err) {
-        // Failed to fetch history
+        setHistoryData([]);
       } finally {
         setHistoryLoading(false);
       }
