@@ -8,6 +8,7 @@
   [![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
   [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4.0-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
   [![Firebase](https://img.shields.io/badge/Firebase-12.11-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
+  [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
   [![CricAPI](https://img.shields.io/badge/CricAPI-Integration-red?style=for-the-badge&logo=cricket&logoColor=white)](https://cricapi.com/)
 
   <p align="center">
@@ -58,16 +59,16 @@
         <li><b>Sophisticated Mobile UI:</b> Single-row responsive header bar, touch-scrollable participants overlay, and auto-scroll to top on navigation.</li>
         <li><b>Dynamic Squad Image Export:</b> Export and share custom high-res squad poster graphics (`html-to-image`) on WhatsApp, Instagram, or download as PNG.</li>
         <li><b>Micro-Animations:</b> Smoothed with Framer Motion, including confetti and animated "SOLD"/"UNSOLD" cards.</li>
-        <li><b>Interactive Lobby:</b> Features team assignment tools, bot fill options, live chat, and kick/ban controls.</li>
+        <li><b>Interactive Lobby:</b> Features team assignment tools, bot fill options, live chat, public room directory, and kick/ban controls.</li>
       </ul>
     </td>
     <td width="50%" valign="top">
-      <h3>🔌 CricAPI & Database Architecture</h3>
+      <h3>🔌 Hybrid Database Architecture</h3>
       <ul>
-        <li><b>CricAPI Integration:</b> Automated fetchers pull real scorecard stats.</li>
-        <li><b>Zero-Cost In-Game Reads/Writes:</b> Realtime Database drives active bidding loops; single batch writes register sessions in Firestore for the Recent/History tab.</li>
-        <li><b>Automatic Point Calculator:</b> Converts runs, wickets, catches, and strike rates into fantasy points.</li>
-        <li><b>Backfill Tools:</b> Scripts to seed and update database with historical IPL data.</li>
+        <li><b>Firebase RTDB:</b> Ultra-fast live bidding ticks, clock offsets, and real-time chat with zero document-read costs.</li>
+        <li><b>Supabase PostgreSQL:</b> High-capacity index powering the Public Lobbies Directory and User Session History with 0 quota bottlenecks.</li>
+        <li><b>Automatic RTDB Cleanup:</b> Finished rooms are flushed to Supabase and automatically purged from RTDB to maintain a lightweight database footprint.</li>
+        <li><b>CricAPI Integration:</b> Automated fetchers pull real scorecard stats to calculate fantasy points.</li>
       </ul>
     </td>
   </tr>
@@ -79,10 +80,9 @@
 
 - **Frontend Core:** `React 19.2` + `Vite 6` (Ultra-fast Hot Module Replacement)
 - **Styling:** `Tailwind CSS v4` + `Framer Motion` (Smooth animations)
-- **Backend & Database:** `Firebase` (Authentication, Cloud Firestore, Realtime Database)
+- **Backend & Database:** `Firebase Realtime Database` + `Supabase PostgreSQL`
 - **Live Stats Integration:** `CricAPI` (Match data and real-world scoreboard points)
 - **Icons & Utilities:** `Lucide React`, `Canvas Confetti`, `html-to-image`
-- **Future Integrations:** Prepared for `@google/generative-ai` (Gemini API) and Agora Voice Chat.
 
 ---
 
@@ -95,18 +95,19 @@ ipl-auction/
 │   ├── autoUpdateFantasy.js      # Auto-calculates points from live CricAPI matches
 │   ├── backfillIPL2026.js        # Imports IPL series scorecards
 │   ├── deployDatabaseRules.js    # Syncs rules to Firebase RTDB
+│   ├── supabase_schema.sql       # PostgreSQL schema definition for Supabase
 │   └── uploadConsolidatedPoints.js
 ├── src/
 │   ├── components/         # Reusable widgets (Activity feed, Chat, Footer, etc.)
 │   │   └── fantasy/        # Fantasy team editor and squad preview components
 │   ├── contexts/           # State management (Auction and Authentication)
 │   ├── data/               # Seed data (Players list, franchises details)
-│   ├── lib/                # Firebase connection helpers and config
+│   ├── lib/                # Database connection helpers (Firebase & Supabase)
 │   ├── pages/              # Main routing pages
 │   │   ├── AuctionRoom.jsx       # Interactive bidding screen
 │   │   ├── AuctionSummary.jsx    # Post-auction summary and Fantasy Arena
 │   │   ├── FantasyAdmin.jsx      # Admin panel for score calculations
-│   │   ├── LandingPage.jsx       # Franchise marquee & Room selector
+│   │   ├── LandingPage.jsx       # Franchise marquee & Public Room selector
 │   │   └── Lobby.jsx             # Pre-auction franchise lobby
 │   ├── App.jsx             # Router and layout definitions
 │   └── main.jsx            # React root mount
@@ -121,7 +122,8 @@ ipl-auction/
 
 ### Prerequisites
 - Node.js (v18+)
-- Firebase account and setup project
+- Firebase account (Realtime Database & Authentication)
+- Supabase account (PostgreSQL project)
 - CricAPI key (optional, required to run point synchronizer scripts)
 
 ### Installation
@@ -136,6 +138,7 @@ ipl-auction/
 2. **Configure Environment Variables**
    Create a `.env` file in the root of the project:
    ```env
+   # Firebase Credentials
    VITE_FIREBASE_API_KEY=your_firebase_api_key
    VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
    VITE_FIREBASE_DATABASE_URL=https://your_project-default-rtdb.firebaseio.com
@@ -145,10 +148,13 @@ ipl-auction/
    VITE_FIREBASE_APP_ID=your_app_id
    VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
    
+   # Supabase Credentials (for Public Directory & History)
+   VITE_SUPABASE_URL=https://your_project_ref.supabase.co
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
    # Optional: Administrative and Integration keys
    VITE_ADMIN_EMAIL=your_admin_email_to_access_fantasy_admin
    VITE_CRICKET_API_KEY=your_cricapi_key
-   VITE_GEMINI_API_KEY=your_gemini_api_key
    ```
 
 3. **Start the Development Server**

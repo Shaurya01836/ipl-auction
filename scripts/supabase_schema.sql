@@ -5,6 +5,8 @@
 CREATE TABLE IF NOT EXISTS public.auctions (
     id TEXT PRIMARY KEY,
     host_id TEXT,
+    host_name TEXT DEFAULT 'Manager',
+    is_public BOOLEAN DEFAULT true,
     status TEXT DEFAULT 'waiting',
     auction_type TEXT DEFAULT 'mega',
     squad_limit INTEGER DEFAULT 25,
@@ -13,7 +15,8 @@ CREATE TABLE IF NOT EXISTS public.auctions (
     banned_players JSONB DEFAULT '[]'::jsonb,
     settings JSONB DEFAULT '{}'::jsonb,
     player_order JSONB DEFAULT '[]'::jsonb,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- 2. TEAMS TABLE
@@ -50,15 +53,36 @@ CREATE TABLE IF NOT EXISTS public.fantasy_config (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ─── ENABLE ROW LEVEL SECURITY (RLS) & PUBLIC READ/WRITE POLICIES ───
+-- ─── ENABLE ROW LEVEL SECURITY (RLS) & SECURE POLICIES ───
 
 ALTER TABLE public.auctions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.teams ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_squads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.fantasy_config ENABLE ROW LEVEL SECURITY;
 
--- Allow public read/write access (matching anon access permissions)
-CREATE POLICY "Allow public all access on auctions" ON public.auctions FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow public all access on teams" ON public.teams FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow public all access on user_squads" ON public.user_squads FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow public all access on fantasy_config" ON public.fantasy_config FOR ALL USING (true) WITH CHECK (true);
+-- 1. AUCTIONS POLICIES
+DROP POLICY IF EXISTS "Allow public all access on auctions" ON public.auctions;
+CREATE POLICY "Allow public read access on auctions" ON public.auctions FOR SELECT USING (true);
+CREATE POLICY "Allow public insert access on auctions" ON public.auctions FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update access on auctions" ON public.auctions FOR UPDATE USING (true) WITH CHECK (true);
+
+-- 2. TEAMS POLICIES
+DROP POLICY IF EXISTS "Allow public all access on teams" ON public.teams;
+CREATE POLICY "Allow public read access on teams" ON public.teams FOR SELECT USING (true);
+CREATE POLICY "Allow public insert access on teams" ON public.teams FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update access on teams" ON public.teams FOR UPDATE USING (true) WITH CHECK (true);
+
+-- 3. USER SQUADS POLICIES
+DROP POLICY IF EXISTS "Allow public all access on user_squads" ON public.user_squads;
+CREATE POLICY "Allow public read access on user_squads" ON public.user_squads FOR SELECT USING (true);
+CREATE POLICY "Allow public insert access on user_squads" ON public.user_squads FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update access on user_squads" ON public.user_squads FOR UPDATE USING (true) WITH CHECK (true);
+
+-- 4. FANTASY CONFIG POLICIES
+DROP POLICY IF EXISTS "Allow public all access on fantasy_config" ON public.fantasy_config;
+CREATE POLICY "Allow public read access on fantasy_config" ON public.fantasy_config FOR SELECT USING (true);
+CREATE POLICY "Allow public insert access on fantasy_config" ON public.fantasy_config FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update access on fantasy_config" ON public.fantasy_config FOR UPDATE USING (true) WITH CHECK (true);
+
+-- ─── CLEANUP UNWANTED/PERMISSIVE SECURITY DEFINER FUNCTIONS ───
+DROP FUNCTION IF EXISTS public.rls_auto_enable();

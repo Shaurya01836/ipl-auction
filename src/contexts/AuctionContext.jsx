@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { db, getServerTime, rtdb } from '../lib/firebase';
+import { supabase } from '../lib/supabase';
 import { IPL_PLAYERS } from '../data/players';
 import { evaluateBotBid } from '../lib/botEngine';
 import { 
   ref, 
   set, 
   get, 
+  remove,
   update as updateRtdb, 
   onValue, 
   onDisconnect,
@@ -82,7 +84,7 @@ export const AuctionProvider = ({ children }) => {
     return getServerTime();
   }, []);
 
-  // Create a new room in DB (RTDB only - 0 Firestore writes)
+  // Create a new room in DB (RTDB + Supabase index, zero Firestore load)
   const createRoom = useCallback(async (roomId, userId, playerDetails, auctionType = 'mega', isPublic = true) => {
     const teamDetails = TEAMS.find(t => t.id === playerDetails.team);
     
@@ -141,46 +143,47 @@ export const AuctionProvider = ({ children }) => {
       });
     }
 
-    // Single write to Firestore when room is created so it shows up in history & public directory
+    // Write to Supabase (primary database index, 0 Firestore cost)
     try {
-      const batch = writeBatch(db);
-      batch.set(doc(db, 'auctions', roomId), {
-        hostId: userId,
-        hostName: playerDetails.name,
-        status: 'waiting',
-        auctionType,
-        isPublic: !!isPublic,
-        players: [{
-          id: userId,
-          name: playerDetails.name,
-          team: playerDetails.team,
-          teamName: teamDetails?.name || 'Unknown',
-          isHost: true
-        }],
-        settings: { bidTimer: 10, budget },
-        bannedPlayers: [],
-        createdAt: serverTimestamp()
-      }, { merge: true });
+      if (supabase) {
+        await supabase.from('auctions').upsert({
+          id: roomId,
+          host_id: userId,
+          host_name: playerDetails.name,
+          is_public: !!isPublic,
+          status: 'waiting',
+          auction_type: auctionType,
+          squad_limit: squadLimit,
+          overseas_limit: overseasLimit,
+          players: [{
+            id: userId,
+            name: playerDetails.name,
+            team: playerDetails.team,
+            teamName: teamDetails?.name || 'Unknown',
+            isHost: true
+          }],
+          settings: { bidTimer: 10, budget }
+        });
 
-      if (playerDetails.team) {
-        batch.set(doc(db, 'teams', `${roomId}_${userId}`), {
-          auctionId: roomId,
-          userId: userId,
-          teamId: playerDetails.team,
-          teamName: teamDetails?.name || 'Unknown',
-          budgetRemaining: budget,
-          spent: 0,
-          squad: [],
-          createdAt: serverTimestamp()
-        }, { merge: true });
+        if (playerDetails.team) {
+          await supabase.from('teams').upsert({
+            id: `${roomId}_${userId}`,
+            auction_id: roomId,
+            user_id: userId,
+            team_id: playerDetails.team,
+            team_name: teamDetails?.name || 'Unknown',
+            budget_remaining: budget,
+            spent: 0,
+            squad: []
+          });
+        }
       }
-      await batch.commit();
-    } catch (e) {
-      // Non-blocking fallback
+    } catch (sErr) {
+      // Non-blocking Supabase fallback
     }
   }, []);
   
-  // Helper to flush complete room & teams data from RTDB to Firestore in 1 single batch call
+  // Helper to flush complete room & teams data from RTDB to Supabase in single batch call
   const flushAuctionToFirestore = useCallback(async (roomId) => {
     try {
       const roomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
@@ -191,36 +194,36 @@ export const AuctionProvider = ({ children }) => {
       const roomData = roomSnap.val();
       const teamsData = teamsSnap.exists() ? teamsSnap.val() : {};
 
-      const batch = writeBatch(db);
-      
-      const roomRef = doc(db, 'auctions', roomId);
-      batch.set(roomRef, {
-        hostId: roomData.hostId || '',
-        status: roomData.status || 'waiting',
-        auctionType: roomData.auctionType || 'mega',
-        players: roomData.players || [],
-        settings: roomData.settings || {},
-        bannedPlayers: roomData.bannedPlayers || [],
-        ...(roomData.playerOrder ? { playerOrder: roomData.playerOrder } : {}),
-        updatedAt: serverTimestamp()
-      }, { merge: true });
+      // Flush to Supabase (0 Firestore cost)
+      if (supabase) {
+        await supabase.from('auctions').upsert({
+          id: roomId,
+          host_id: roomData.hostId || '',
+          host_name: roomData.hostName || 'Manager',
+          is_public: roomData.isPublic !== false,
+          status: roomData.status || 'waiting',
+          auction_type: roomData.auctionType || 'mega',
+          players: roomData.players || [],
+          settings: roomData.settings || {},
+          banned_players: roomData.bannedPlayers || [],
+          ...(roomData.playerOrder ? { player_order: roomData.playerOrder } : {})
+        });
 
-      Object.entries(teamsData).forEach(([docId, teamVal]) => {
-        if (!teamVal) return;
-        const teamRef = doc(db, 'teams', docId);
-        batch.set(teamRef, {
-          auctionId: roomId,
-          userId: teamVal.userId,
-          teamId: teamVal.teamId || '',
-          teamName: teamVal.teamName || 'Unknown',
-          budgetRemaining: teamVal.budgetRemaining ?? 120.0,
+        const supabaseTeams = Object.entries(teamsData).map(([docId, teamVal]) => ({
+          id: docId,
+          auction_id: roomId,
+          user_id: teamVal.userId,
+          team_id: teamVal.teamId || '',
+          team_name: teamVal.teamName || 'Unknown',
+          budget_remaining: teamVal.budgetRemaining ?? 120.0,
           spent: teamVal.spent ?? 0,
-          squad: teamVal.squad || [],
-          createdAt: serverTimestamp()
-        }, { merge: true });
-      });
+          squad: teamVal.squad || []
+        }));
 
-      await batch.commit();
+        if (supabaseTeams.length > 0) {
+          await supabase.from('teams').upsert(supabaseTeams);
+        }
+      }
     } catch (err) {
       // Graceful error handling
     }
@@ -399,9 +402,18 @@ export const AuctionProvider = ({ children }) => {
             status: 'bidding'
           });
         } else {
-          // Flush final completed status & all teams to Firestore once at end of auction!
+          // Flush final completed status & all teams to Supabase once at end of auction!
           await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { status: 'completed' });
           await flushAuctionToFirestore(roomId);
+
+          // Optimization 4: Clean up completed room from RTDB after 30 seconds to keep RTDB size near 0MB
+          setTimeout(async () => {
+            try {
+              await remove(ref(rtdb, `auctions/${roomId}`));
+            } catch (cleanErr) {
+              // Ignore cleanup error if already removed
+            }
+          }, 30000);
         }
         endingPlayerRef.current = false;
       }, waitTime);
