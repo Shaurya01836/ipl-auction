@@ -28,7 +28,7 @@ const Footer = () => {
         {/* Brand / Intro */}
         <div className="col-span-1 sm:col-span-12 md:col-span-4 space-y-4">
           <div className="flex items-center gap-2">
-       
+
             <span className="text-sm font-black tracking-[0.2em] uppercase text-white bg-clip-text">
               IPL Auction Hub
             </span>

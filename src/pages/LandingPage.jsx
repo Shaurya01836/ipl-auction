@@ -25,7 +25,8 @@ import {
   Globe,
   GitBranchPlusIcon,
   BookOpen,
-  History
+  History,
+  Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GithubStarButton from '../components/GithubStarButton';
@@ -146,13 +147,18 @@ const LandingPage = () => {
     const fetchPublicLobbies = async () => {
       try {
         if (supabase) {
+          const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
+          const threeHoursAgoISO = new Date(Date.now() - THREE_HOURS_MS).toISOString();
+
           const { data: supabaseRooms, error } = await supabase
             .from('auctions')
             .select('*')
             .eq('status', 'waiting')
             .eq('is_public', true)
+            .eq('host_online', true)
+            .gte('created_at', threeHoursAgoISO)
             .order('created_at', { ascending: false })
-            .limit(30);
+            .limit(100);
 
           if (!error && supabaseRooms && supabaseRooms.length > 0) {
             const list = supabaseRooms.map(r => {
@@ -271,6 +277,35 @@ const LandingPage = () => {
       return matchesSearch && matchesMode;
     });
   }, [publicRooms, searchQuery, filterMode]);
+
+  // Delete individual session from Supabase history & public list
+  const handleDeleteHistory = async (e, session) => {
+    e.stopPropagation(); // Prevent accordion toggle
+    if (!window.confirm(`Are you sure you want to delete room "${session.roomId}"?`)) return;
+
+    const roomId = session.roomId;
+    const teamDocId = session.id;
+
+    try {
+      if (supabase) {
+        // 1. Delete user's team row from Supabase
+        await supabase.from('teams').delete().eq('id', teamDocId);
+        // 2. Delete the auction room itself from Supabase
+        await supabase.from('auctions').delete().eq('id', roomId);
+      }
+
+      // 3. Remove room from Realtime Database if still sitting in waiting state
+      try {
+        await remove(ref(rtdb, `auctions/${roomId}`));
+      } catch (rErr) { }
+
+      // 4. Immediately update local state for both History and Public Rooms
+      setHistoryData(prev => prev.filter(item => item.id !== teamDocId));
+      setPublicRooms(prev => prev.filter(room => room.roomId !== roomId));
+    } catch (err) {
+      // Graceful delete failure
+    }
+  };
 
   // Computed stats
   const historyStats = useMemo(() => {
@@ -577,7 +612,7 @@ const LandingPage = () => {
         <div className="bg-[#0c0c0c] rounded-[2.2rem] border border-white/5 grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch divide-y lg:divide-y-0 lg:divide-x divide-white/5 overflow-hidden">
           {/* Left Side: Live signings */}
           <div className="lg:col-span-5 w-full flex flex-col p-6 md:p-8 relative">
-            <AuctionActivityFeed />
+            <AuctionActivityFeed activeCount={publicRooms.length} />
           </div>
 
           {/* Right Side: Create/Join/History form */}
@@ -766,9 +801,8 @@ const LandingPage = () => {
                     <button
                       type="button"
                       onClick={() => setIsPublicRoom(!isPublicRoom)}
-                      className={`w-12 h-6 rounded-full transition-colors p-1 flex items-center cursor-pointer ${
-                        isPublicRoom ? 'bg-orange-600 justify-end' : 'bg-white/10 justify-start'
-                      }`}
+                      className={`w-12 h-6 rounded-full transition-colors p-1 flex items-center cursor-pointer ${isPublicRoom ? 'bg-orange-600 justify-end' : 'bg-white/10 justify-start'
+                        }`}
                     >
                       <motion.div
                         layout
@@ -829,7 +863,7 @@ const LandingPage = () => {
                   <div className="relative py-2 flex items-center justify-center">
                     <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5" /></div>
                     <span className="relative bg-[#0c0c0c] px-4 text-[9px] font-black text-gray-600 uppercase tracking-widest flex items-center gap-1.5">
-                       Or join a public lobby
+                      Or join a public lobby
                     </span>
                   </div>
 
@@ -846,7 +880,7 @@ const LandingPage = () => {
                           className="w-full bg-white/[0.03] border border-white/10 focus:border-orange-500/50 rounded-xl px-3 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs text-white placeholder:text-gray-600 focus:outline-none transition-all font-medium"
                         />
                       </div>
-                      
+
                       <div className="flex items-center gap-1 w-full sm:w-auto overflow-x-auto custom-scrollbar no-scrollbar py-0.5">
                         {[
                           { id: 'all', label: 'All' },
@@ -858,11 +892,10 @@ const LandingPage = () => {
                             key={mode.id}
                             type="button"
                             onClick={() => setFilterMode(mode.id)}
-                            className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[8px] sm:text-[9px] font-bold uppercase tracking-wider transition-all cursor-pointer shrink-0 ${
-                              filterMode === mode.id
+                            className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[8px] sm:text-[9px] font-bold uppercase tracking-wider transition-all cursor-pointer shrink-0 ${filterMode === mode.id
                                 ? 'bg-white/10 text-white border border-white/20'
                                 : 'bg-transparent text-gray-500 hover:text-gray-300 border border-transparent'
-                            }`}
+                              }`}
                           >
                             {mode.label}
                           </button>
@@ -904,7 +937,7 @@ const LandingPage = () => {
 
                                 <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] text-gray-500 font-medium mt-0.5 truncate">
                                   <span className="flex items-center gap-0.5 sm:gap-1 text-gray-400 font-bold shrink-0">
-                                    <Users size={10} className="text-orange-500/80" />
+                                    <Users size={10} className="" />
                                     {room.playerCount}/10
                                   </span>
                                   <span className="shrink-0">•</span>
@@ -1001,6 +1034,14 @@ const LandingPage = () => {
                                     <span className="text-[10px] sm:text-xs font-black italic text-yellow-500 block">₹{session.spent.toFixed(1)} Cr</span>
                                     <span className="block text-[7px] sm:text-[8px] font-bold text-gray-500">{session.squad.length} players</span>
                                   </div>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleDeleteHistory(e, session)}
+                                    title="Delete History"
+                                    className="p-1.5 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
                                   <ChevronDown size={14} className={`text-gray-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                                 </div>
                               </button>

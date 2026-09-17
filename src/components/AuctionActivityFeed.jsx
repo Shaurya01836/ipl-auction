@@ -52,9 +52,9 @@ const generateMockNotification = (existingIds = new Set()) => {
   };
 };
 
-export default function AuctionActivityFeed() {
+export default function AuctionActivityFeed({ activeCount = 0 }) {
   const [notifications, setNotifications] = useState([]);
-  const [activeCount, setActiveCount] = useState(18);
+   const [fakeCount, setFakeCount] = useState(52);
 
   // Initialize with 8 historical notifications to fill the height
   useEffect(() => {
@@ -66,6 +66,17 @@ export default function AuctionActivityFeed() {
       initial.push(mock);
     }
     setNotifications(initial);
+  }, []);
+
+   useEffect(() => {
+    const interval = setInterval(() => {
+      setFakeCount(prev => {
+        const delta = Math.random() > 0.5 ? 1 : -1;
+        const next = prev + delta;
+        return next >= 50 && next <= 100 ? next : prev;
+      });
+    }, 12000);
+    return () => clearInterval(interval);
   }, []);
 
   // Dynamic timeout to push a new notification at variable intervals (2s to 10s)
@@ -92,18 +103,6 @@ export default function AuctionActivityFeed() {
     return () => clearTimeout(timeoutId);
   }, []);
 
-  // Fluctuate the active count badge randomly to simulate organic activity
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveCount(prev => {
-        const delta = Math.random() > 0.5 ? 1 : -1;
-        const next = prev + delta;
-        return next >= 12 && next <= 25 ? next : prev;
-      });
-    }, 12000);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <>
       {/* Background glow blob */}
@@ -122,7 +121,7 @@ export default function AuctionActivityFeed() {
             <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
           </span>
           <span className="text-[10px] font-black text-green-400 uppercase tracking-widest leading-none">
-            {activeCount} Active Hubs
+            {activeCount || fakeCount}+ Active Hubs
           </span>
         </div>
 
