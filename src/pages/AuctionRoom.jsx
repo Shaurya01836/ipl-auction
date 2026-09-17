@@ -974,24 +974,24 @@ const AuctionRoom = () => {
 
             <div className={`${mobileTab === 'arena' ? 'flex' : 'hidden'} md:flex flex-col flex-1 h-full overflow-hidden`}>
                {/* Center Fixed Header */}
-               <div className="min-h-12 border-b border-white/5 bg-white/[0.01] flex items-center px-3 sm:px-6 md:px-8 w-full shrink-0 py-2 md:py-0">
-                  <div className="w-full max-w-4xl mx-auto flex items-center justify-between gap-2 md:gap-4">
-                     <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-                        <div className="px-2.5 py-0.5 bg-yellow-500/10 border border-yellow-500/20 rounded-full shrink-0 flex items-center">
-                           <span className="text-[8px] sm:text-[9px] font-extrabold text-yellow-400/90 uppercase tracking-widest">{currentPlayer?.set}</span>
+               <div className="min-h-12 border-b border-white/5 bg-white/[0.01] flex items-center px-2.5 sm:px-6 md:px-8 w-full shrink-0 py-2 md:py-0 overflow-x-auto no-scrollbar">
+                  <div className="w-full max-w-4xl mx-auto flex items-center justify-between gap-1.5 sm:gap-3 md:gap-4 min-w-0">
+                     <div className="flex items-center gap-1.5 sm:gap-3 md:gap-4 min-w-0 flex-1">
+                        <div className="px-2 sm:px-2.5 py-0.5 bg-yellow-500/10 border border-yellow-500/20 rounded-full shrink-0 flex items-center">
+                           <span className="text-[7.5px] sm:text-[9px] font-extrabold text-yellow-400/90 uppercase tracking-widest whitespace-nowrap">{currentPlayer?.set}</span>
                         </div>
                         <div className="w-px h-3.5 sm:h-4 bg-white/10 shrink-0" />
-                        <div className="flex items-center gap-1.5 shrink-0">
-                           <span className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-wider">Base Price:</span>
-                           <span className="text-xs sm:text-sm md:text-base font-black text-white">₹{currentPlayer?.basePrice?.toFixed(2)} Cr</span>
+                        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+                           <span className="text-[7.5px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Base:</span>
+                           <span className="text-[11px] sm:text-sm md:text-base font-black text-white whitespace-nowrap">₹{currentPlayer?.basePrice?.toFixed(2)} Cr</span>
                         </div>
                      </div>
-                     <div className="flex items-center gap-2 sm:gap-3">
+                     <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
                         <div className="w-px h-3.5 sm:h-4 bg-white/10 shrink-0" />
-                        <div className="flex items-center gap-1.5 shrink-0">
-                           <span className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-wider">High Bidder:</span>
-                           <div className="bg-green-500/20 border border-green-500/30 px-2 py-0.5 rounded-md max-w-[120px] sm:max-w-[180px] truncate">
-                              <span className="text-[8px] sm:text-[9px] font-black text-green-400 uppercase tracking-wider truncate block">{displayAuctionState?.highBidderName}</span>
+                        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+                           <span className="text-[7.5px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Bidder:</span>
+                           <div className="bg-green-500/20 border border-green-500/30 px-1.5 sm:px-2 py-0.5 rounded-md max-w-[85px] xs:max-w-[120px] sm:max-w-[180px] truncate">
+                              <span className="text-[7.5px] sm:text-[9px] font-black text-green-400 uppercase tracking-wider truncate block">{displayAuctionState?.highBidderName}</span>
                            </div>
                         </div>
                      </div>

@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAuction } from '../contexts/AuctionContext';
-import { db } from '../lib/firebase';
+import { db, rtdb } from '../lib/firebase';
+import { ref, onValue, get } from 'firebase/database';
 import { collection, query, where, getDocs, doc, getDoc, documentId } from 'firebase/firestore';
 import { IPL_PLAYERS } from '../data/players';
 import { TEAMS } from '../data/teams';
@@ -102,9 +103,16 @@ const LandingPage = () => {
   const [selectedTeam, setSelectedTeam] = useState('MI');
   const [activeTab, setActiveTab] = useState('new');
   const [auctionType, setAuctionType] = useState('mega'); // 'mega' or 'sprint5'
+  const [isPublicRoom, setIsPublicRoom] = useState(true);
   const [roomCode, setRoomCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  // Public Lobbies state
+  const [publicRooms, setPublicRooms] = useState([]);
+  const [lobbiesLoading, setLobbiesLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterMode, setFilterMode] = useState('all');
 
   // History state
   const [historyData, setHistoryData] = useState([]);
@@ -127,6 +135,105 @@ const LandingPage = () => {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
+
+  // Fetch / Subscribe to Public Lobbies from RTDB & Firestore continuously when signed in
+  useEffect(() => {
+    if (!user) return;
+
+    setLobbiesLoading(true);
+
+    const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+    const cutoffTime = Date.now() - TWELVE_HOURS_MS;
+
+    const fetchFirestoreFallback = async () => {
+      try {
+        const q = query(
+          collection(db, 'auctions'),
+          where('status', '==', 'waiting')
+        );
+        const snap = await getDocs(q);
+        const list = [];
+
+        snap.forEach(docSnap => {
+          const d = docSnap.data();
+          // Strictly show only explicitly public rooms (isPublic === true)
+          if (d.isPublic === true) {
+            const createdAtMs = d.createdAt?.toMillis ? d.createdAt.toMillis() 
+              : d.createdAt?.seconds ? d.createdAt.seconds * 1000 
+              : Date.now();
+
+            // Filter rooms created within last 12 hours
+            if (createdAtMs >= cutoffTime) {
+              const players = d.players || [];
+              const host = players.find(p => p.isHost) || players[0];
+              list.push({
+                roomId: docSnap.id,
+                hostName: d.hostName || host?.name || 'Manager',
+                status: d.status,
+                auctionType: d.auctionType || 'mega',
+                playerCount: players.length,
+                players,
+                squadLimit: d.squadLimit || 25,
+                settings: d.settings || {},
+                createdAtMs
+              });
+            }
+          }
+        });
+
+        list.sort((a, b) => b.createdAtMs - a.createdAtMs);
+        setPublicRooms(list);
+      } catch (e) {
+        setPublicRooms([]);
+      } finally {
+        setLobbiesLoading(false);
+      }
+    };
+
+    const auctionsRef = ref(rtdb, 'auctions');
+    
+    const unsub = onValue(auctionsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const activeList = [];
+
+        Object.entries(data).forEach(([roomId, roomObj]) => {
+          if (!roomObj?.room) return;
+          const r = roomObj.room;
+          
+          // Strictly show only explicitly public rooms (isPublic === true) in waiting state
+          if (r.isPublic === true && r.status === 'waiting') {
+            const players = r.players || [];
+            const host = players.find(p => p.isHost) || players[0];
+
+            activeList.push({
+              roomId,
+              hostName: r.hostName || host?.name || 'Manager',
+              status: r.status,
+              auctionType: r.auctionType || 'mega',
+              playerCount: players.length,
+              players,
+              squadLimit: r.squadLimit || 25,
+              settings: r.settings || {}
+            });
+          }
+        });
+
+        if (activeList.length > 0) {
+          setPublicRooms(activeList);
+          setLobbiesLoading(false);
+        } else {
+          fetchFirestoreFallback();
+        }
+      } else {
+        fetchFirestoreFallback();
+      }
+    }, () => {
+      fetchFirestoreFallback();
+    });
+
+    return () => unsub();
+  }, [user]);
 
   // Fetch auction history when user switches to history tab
   useEffect(() => {
@@ -203,6 +310,16 @@ const LandingPage = () => {
     fetchHistory();
   }, [activeTab, user?.uid]);
 
+  // Filtered public rooms
+  const filteredPublicRooms = useMemo(() => {
+    return publicRooms.filter(room => {
+      const matchesSearch = room.roomId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        room.hostName.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesMode = filterMode === 'all' || room.auctionType === filterMode;
+      return matchesSearch && matchesMode;
+    });
+  }, [publicRooms, searchQuery, filterMode]);
+
   // Computed stats
   const historyStats = useMemo(() => {
     if (historyData.length === 0) return null;
@@ -252,7 +369,7 @@ const LandingPage = () => {
 
       if (activeTab === 'new') {
         const newRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
-        await createRoom(newRoomId, user.uid, { name: displayName, team: selectedTeam }, auctionType);
+        await createRoom(newRoomId, user.uid, { name: displayName, team: selectedTeam }, auctionType, isPublicRoom);
         navigate(`/lobby/${newRoomId}`);
       } else if (activeTab === 'join') {
         if (!roomCode) {
@@ -530,12 +647,17 @@ const LandingPage = () => {
                 <button
                   type="button"
                   onClick={() => setActiveTab('join')}
-                  className={`pb-3.5 px-6 font-black text-[11px] uppercase tracking-wider transition-all duration-200 border-b-2 relative ${activeTab === 'join'
+                  className={`pb-3.5 px-6 font-black text-[11px] uppercase tracking-wider transition-all duration-200 border-b-2 relative flex items-center gap-1.5 ${activeTab === 'join'
                     ? 'border-[#ff5500] text-[#ff5500]'
                     : 'border-transparent text-gray-500 hover:text-gray-300'
                     }`}
                 >
-                  Join
+                  <span>Join</span>
+                  {publicRooms.length > 0 && (
+                    <span className="bg-[#ff5500]/20 text-[#ff5500] text-[9px] px-1.5 py-0.2 rounded-full font-extrabold ml-0.5">
+                      {publicRooms.length}
+                    </span>
+                  )}
                 </button>
                 <button
                   type="button"
@@ -573,7 +695,7 @@ const LandingPage = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="space-y-8"
+                  className="space-y-6"
                 >
                   <div>
                     <div className="mb-4 ml-1">
@@ -679,7 +801,32 @@ const LandingPage = () => {
                     </div>
                   </div>
 
-                  <div className="pt-4 mt-6">
+                  {/* Room Visibility Toggle */}
+                  <div className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl flex items-center justify-between">
+                    <div>
+                      <h4 className="text-[11px] font-black uppercase text-white tracking-wider flex items-center gap-1.5">
+                        Public Room Visibility
+                      </h4>
+                      <p className="text-[9px] text-gray-500 font-medium">
+                        {isPublicRoom ? 'Listed in the Public Rooms Directory for anyone to join' : 'Private room — accessible only via Room Code link'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsPublicRoom(!isPublicRoom)}
+                      className={`w-12 h-6 rounded-full transition-colors p-1 flex items-center cursor-pointer ${
+                        isPublicRoom ? 'bg-orange-600 justify-end' : 'bg-white/10 justify-start'
+                      }`}
+                    >
+                      <motion.div
+                        layout
+                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                        className="w-4 h-4 rounded-full bg-white shadow-md"
+                      />
+                    </button>
+                  </div>
+
+                  <div className="pt-2">
                     <button
                       type="submit"
                       disabled={isSubmitting}
@@ -696,37 +843,144 @@ const LandingPage = () => {
 
               {/* ─── JOIN TAB ─── */}
               {activeTab === 'join' && (
-                <motion.form
+                <motion.div
                   key="join-tab"
-                  onSubmit={handleFormSubmit}
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                   className="space-y-6"
                 >
-                  <div className="relative group">
-                    <label className="block text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2 ml-1">Access Token</label>
-                    <input
-                      type="text"
-                      value={roomCode}
-                      onChange={(e) => setRoomCode(e.target.value)}
-                      className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-4 focus:outline-none focus:border-orange-500/50 transition-all text-white font-black uppercase tracking-[0.5em] text-center text-lg placeholder:tracking-normal placeholder:text-xs placeholder:text-gray-700"
-                      placeholder="Enter Room Code"
-                      required
-                    />
+                  <form onSubmit={handleFormSubmit} className="space-y-4">
+                    <div className="relative group">
+                      <label className="block text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2 ml-1">Access Token / Room Code</label>
+                      <input
+                        type="text"
+                        value={roomCode}
+                        onChange={(e) => setRoomCode(e.target.value)}
+                        className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3.5 focus:outline-none focus:border-orange-500/50 transition-all text-white font-black uppercase tracking-[0.5em] text-center text-lg placeholder:tracking-normal placeholder:text-xs placeholder:text-gray-700"
+                        placeholder="Enter Room Code"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isSubmitting || !roomCode.trim()}
+                      className="w-full h-12 relative overflow-hidden group/submit rounded-xl shadow-[0_10px_30px_rgba(255,85,0,0.2)] disabled:opacity-50 cursor-pointer"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] transition-transform duration-500 group-hover/submit:scale-105" />
+                      <div className="relative flex items-center justify-center gap-3 text-white font-black uppercase tracking-[0.2em] text-xs">
+                        {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <><span>Join by Code</span><ChevronRight size={16} className="group-hover/submit:translate-x-1 transition-transform" /></>}
+                      </div>
+                    </button>
+                  </form>
+
+                  <div className="relative py-2 flex items-center justify-center">
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5" /></div>
+                    <span className="relative bg-[#0c0c0c] px-4 text-[9px] font-black text-gray-600 uppercase tracking-widest flex items-center gap-1.5">
+                       Or join a public lobby
+                    </span>
                   </div>
 
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full h-14 relative overflow-hidden group/submit rounded-xl shadow-[0_10px_30px_rgba(255,85,0,0.2)] disabled:opacity-50 cursor-pointer"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] transition-transform duration-500 group-hover/submit:scale-105" />
-                    <div className="relative flex items-center justify-center gap-3 text-white font-black uppercase tracking-[0.2em] text-sm">
-                      {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <><span>Join Auction</span><ChevronRight size={18} className="group-hover/submit:translate-x-1 transition-transform" /></>}
+                  {/* Public Lobbies Directory Section */}
+                  <div className="space-y-3 pt-1">
+                    {/* Responsive Search & Filter Bar */}
+                    <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center justify-between">
+                      <div className="relative w-full sm:flex-1">
+                        <input
+                          type="text"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          placeholder="Search room code or manager..."
+                          className="w-full bg-white/[0.03] border border-white/10 focus:border-orange-500/50 rounded-xl px-3 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs text-white placeholder:text-gray-600 focus:outline-none transition-all font-medium"
+                        />
+                      </div>
+                      
+                      <div className="flex items-center gap-1 w-full sm:w-auto overflow-x-auto custom-scrollbar no-scrollbar py-0.5">
+                        {[
+                          { id: 'all', label: 'All' },
+                          { id: 'mega', label: 'Mega' },
+                          { id: 'sprint11', label: '11-Classic' },
+                          { id: 'sprint5', label: '5-Sprint' }
+                        ].map(mode => (
+                          <button
+                            key={mode.id}
+                            type="button"
+                            onClick={() => setFilterMode(mode.id)}
+                            className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[8px] sm:text-[9px] font-bold uppercase tracking-wider transition-all cursor-pointer shrink-0 ${
+                              filterMode === mode.id
+                                ? 'bg-white/10 text-white border border-white/20'
+                                : 'bg-transparent text-gray-500 hover:text-gray-300 border border-transparent'
+                            }`}
+                          >
+                            {mode.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </button>
-                </motion.form>
+
+                    {/* Responsive Lobbies Directory List */}
+                    {lobbiesLoading ? (
+                      <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+                        <Loader2 size={18} className="animate-spin mb-2 text-orange-500" />
+                        <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-500">Scanning active rooms...</p>
+                      </div>
+                    ) : filteredPublicRooms.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-6 sm:py-8 text-center bg-white/[0.01] border border-white/5 rounded-2xl p-4">
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">No Active Public Lobbies</p>
+                        <p className="text-[9px] sm:text-[10px] text-gray-600 font-medium">No open public rooms right now. Create one to get started!</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 max-h-[260px] sm:max-h-[310px] overflow-y-auto custom-scrollbar pr-0.5">
+                        {filteredPublicRooms.map((room) => (
+                          <div
+                            key={room.roomId}
+                            className="p-2.5 sm:p-3 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 hover:border-white/10 rounded-xl transition-all duration-200 flex flex-row items-center justify-between gap-2 sm:gap-3 group"
+                          >
+                            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                              {/* Clean Room Code Pill */}
+                              <div className="px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-400 font-mono font-black text-[10px] sm:text-xs tracking-wider shrink-0">
+                                {room.roomId}
+                              </div>
+
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5">
+                                  <h4 className="text-[11px] sm:text-xs font-bold text-white tracking-tight truncate max-w-[110px] xs:max-w-[160px] sm:max-w-none">
+                                    {room.hostName}'s Arena
+                                  </h4>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" title="Lobby Open" />
+                                </div>
+
+                                <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] text-gray-500 font-medium mt-0.5 truncate">
+                                  <span className="flex items-center gap-0.5 sm:gap-1 text-gray-400 font-bold shrink-0">
+                                    <Users size={10} className="text-orange-500/80" />
+                                    {room.playerCount}/10
+                                  </span>
+                                  <span className="shrink-0">•</span>
+                                  <span className="text-gray-400 truncate">
+                                    {room.auctionType === 'sprint5' ? '5-Sprint' : room.auctionType === 'sprint11' ? '11-Classic' : 'Mega'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const displayName = user.displayName || 'Manager';
+                                joinRoomDb(room.roomId, user.uid, { name: displayName, team: '' });
+                                navigate(`/lobby/${room.roomId}`);
+                              }}
+                              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-orange-500 hover:bg-orange-600 text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider rounded-lg transition-all active:scale-95 flex items-center gap-1 shrink-0 cursor-pointer shadow-md"
+                            >
+                              <span>Join</span>
+                              <ChevronRight size={12} className="sm:w-3.5 sm:h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
               )}
 
               {/* ─── HISTORY TAB ─── */}

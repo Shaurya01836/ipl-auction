@@ -83,7 +83,7 @@ export const AuctionProvider = ({ children }) => {
   }, []);
 
   // Create a new room in DB (RTDB only - 0 Firestore writes)
-  const createRoom = useCallback(async (roomId, userId, playerDetails, auctionType = 'mega') => {
+  const createRoom = useCallback(async (roomId, userId, playerDetails, auctionType = 'mega', isPublic = true) => {
     const teamDetails = TEAMS.find(t => t.id === playerDetails.team);
     
     // Mode-specific configurations
@@ -97,12 +97,21 @@ export const AuctionProvider = ({ children }) => {
     const liveRef = ref(rtdb, `auctions/${roomId}/live`);
     await set(liveRef, { status: 'waiting' });
 
+    // Instantly set host online presence in RTDB
+    const hostPresenceRef = ref(rtdb, `auctions/${roomId}/presence/${userId}`);
+    await set(hostPresenceRef, {
+      online: true,
+      lastSeen: serverTimestampRtdb()
+    });
+
     // Sync to RTDB for real-time reads
     const rtdbRoomRef = ref(rtdb, `auctions/${roomId}/room`);
     await set(rtdbRoomRef, {
       hostId: userId,
+      hostName: playerDetails.name,
       status: 'waiting',
       auctionType,
+      isPublic: !!isPublic,
       squadLimit,
       overseasLimit,
       players: [{
@@ -132,13 +141,15 @@ export const AuctionProvider = ({ children }) => {
       });
     }
 
-    // Single write to Firestore when room is created so it shows up in history with 0 extra bid-level writes
+    // Single write to Firestore when room is created so it shows up in history & public directory
     try {
       const batch = writeBatch(db);
       batch.set(doc(db, 'auctions', roomId), {
         hostId: userId,
+        hostName: playerDetails.name,
         status: 'waiting',
         auctionType,
+        isPublic: !!isPublic,
         players: [{
           id: userId,
           name: playerDetails.name,
