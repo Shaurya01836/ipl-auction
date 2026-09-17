@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS public.auctions (
     id TEXT PRIMARY KEY,
     host_id TEXT,
     host_name TEXT DEFAULT 'Manager',
+    host_online BOOLEAN DEFAULT true,
     is_public BOOLEAN DEFAULT true,
     status TEXT DEFAULT 'waiting',
     auction_type TEXT DEFAULT 'mega',

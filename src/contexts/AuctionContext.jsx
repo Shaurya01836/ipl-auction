@@ -150,6 +150,7 @@ export const AuctionProvider = ({ children }) => {
           id: roomId,
           host_id: userId,
           host_name: playerDetails.name,
+          host_online: true,
           is_public: !!isPublic,
           status: 'waiting',
           auction_type: auctionType,
@@ -463,6 +464,15 @@ export const AuctionProvider = ({ children }) => {
     // Update RTDB (0 Firestore cost in lobby!)
     await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { players: updatedPlayers });
 
+    // Sync updated player count/list to Supabase so Public Lobbies show live player counts
+    try {
+      if (supabase) {
+        await supabase.from('auctions').update({ players: updatedPlayers }).eq('id', roomId);
+      }
+    } catch (sErr) {
+      // Non-blocking sync error
+    }
+
     // Create/Update team in RTDB if team is provided
     if (playerDetails.team) {
       const rtdbTeamSnap = await get(ref(rtdb, `auctions/${roomId}/teams/${roomId}_${userId}`));
@@ -505,6 +515,13 @@ export const AuctionProvider = ({ children }) => {
         players: updatedPlayers,
         bannedPlayers: updatedBanned 
       });
+
+      // Sync player removal to Supabase
+      try {
+        if (supabase) {
+          await supabase.from('auctions').update({ players: updatedPlayers, banned_players: updatedBanned }).eq('id', roomId);
+        }
+      } catch (sErr) {}
 
       // 3. Delete team in RTDB
       await set(ref(rtdb, `auctions/${roomId}/teams/${roomId}_${playerObj.id}`), null);
@@ -549,7 +566,7 @@ export const AuctionProvider = ({ children }) => {
     const connectedRef = ref(rtdb, '.info/connected');
     
     // Set presence status on connect/disconnect
-    const unsubConnected = onValue(connectedRef, (snap) => {
+    const unsubConnected = onValue(connectedRef, async (snap) => {
       if (snap.val() === true) {
         // We're connected (or reconnected)! Do something and set onDisconnect
         set(myPresenceRef, { 
@@ -562,6 +579,15 @@ export const AuctionProvider = ({ children }) => {
           online: false, 
           lastSeen: serverTimestampRtdb() 
         });
+
+        // Sync host online presence to Supabase if current user is the host
+        if (currentRoomData && currentRoomData.hostId === userId) {
+          try {
+            if (supabase) {
+              await supabase.from('auctions').update({ host_online: true }).eq('id', auctionId);
+            }
+          } catch (sErr) {}
+        }
       }
     });
 
@@ -577,6 +603,12 @@ export const AuctionProvider = ({ children }) => {
           isOnline: !!currentPresences[p.id]?.online,
           lastSeen: currentPresences[p.id]?.lastSeen || null
         }));
+
+        // Sync host online state to Supabase when presences update
+        const isHostCurrentlyOnline = !!currentPresences[currentRoomData.hostId]?.online;
+        if (currentRoomData.hostId === userId && supabase) {
+          supabase.from('auctions').update({ host_online: isHostCurrentlyOnline }).eq('id', auctionId).then(() => {}).catch(() => {});
+        }
 
         setCurrentAuction({ 
           id: auctionId, 
@@ -734,6 +766,12 @@ export const AuctionProvider = ({ children }) => {
       unsubMessages();
       // Set offline on component unmount
       set(myPresenceRef, { online: false, lastSeen: serverTimestampRtdb() });
+
+      // Sync host offline status to Supabase if host left room
+      if (currentRoomData && currentRoomData.hostId === userId && supabase) {
+        supabase.from('auctions').update({ host_online: false }).eq('id', auctionId).then(() => {}).catch(() => {});
+      }
+
       setCurrentAuction(null);
       setTeam(null);
       setRoomTeams([]);
@@ -832,6 +870,12 @@ export const AuctionProvider = ({ children }) => {
       p.id === userId ? { ...p, team: newTeamId, teamName: teamDetails?.name || 'Unknown' } : p
     );
     await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { players: updatedPlayers });
+
+    try {
+      if (supabase) {
+        await supabase.from('auctions').update({ players: updatedPlayers }).eq('id', roomId);
+      }
+    } catch (sErr) {}
 
     // Update RTDB team node (0 Firestore cost in lobby!)
     const rtdbTeamSnap = await get(ref(rtdb, `auctions/${roomId}/teams/${roomId}_${userId}`));
@@ -972,6 +1016,12 @@ export const AuctionProvider = ({ children }) => {
 
     await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { players: updatedPlayers });
 
+    try {
+      if (supabase) {
+        await supabase.from('auctions').update({ players: updatedPlayers }).eq('id', roomId);
+      }
+    } catch (sErr) {}
+
     const teamDataToSet = {
       auctionId: roomId,
       userId: botUserId,
@@ -991,6 +1041,13 @@ export const AuctionProvider = ({ children }) => {
 
     const updatedPlayers = (data.players || []).filter(p => p.id !== botUserId);
     await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { players: updatedPlayers });
+
+    try {
+      if (supabase) {
+        await supabase.from('auctions').update({ players: updatedPlayers }).eq('id', roomId);
+      }
+    } catch (sErr) {}
+
     await set(ref(rtdb, `auctions/${roomId}/teams/${roomId}_${botUserId}`), null);
   }, []);
 
@@ -1030,6 +1087,13 @@ export const AuctionProvider = ({ children }) => {
     });
 
     await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { players: updatedPlayers });
+
+    try {
+      if (supabase) {
+        await supabase.from('auctions').update({ players: updatedPlayers }).eq('id', roomId);
+      }
+    } catch (sErr) {}
+
     if (Object.keys(teamsToSet).length > 0) {
       await updateRtdb(ref(rtdb, `auctions/${roomId}/teams`), teamsToSet);
     }
