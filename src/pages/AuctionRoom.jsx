@@ -355,6 +355,7 @@ const AuctionRoom = () => {
 
       playerOrder.forEach((idx, i) => {
          const p = IPL_PLAYERS[idx];
+         if (!p) return;
          if (soldIds.has(p.id)) {
             sold.push({ ...p, ...soldWithBids[p.id] });
          } else if (i < currentPlayerIndexInOrder) {
@@ -422,9 +423,16 @@ const AuctionRoom = () => {
       }
    }, [currentAuction, user]);
 
+   const audioCtxRef = useRef(null);
    const playBeep = (freq = 440, duration = 0.1) => {
       try {
-         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+         if (!audioCtxRef.current) {
+            audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+         }
+         const audioCtx = audioCtxRef.current;
+         if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+         }
          const oscillator = audioCtx.createOscillator();
          const gainNode = audioCtx.createGain();
 
@@ -579,7 +587,9 @@ const AuctionRoom = () => {
             clearInterval(interval);
             if (isAdmin && displayAuctionState.status === 'bidding' && !endTriggeredRef.current) {
                endTriggeredRef.current = true;
-               endPlayerAuction(id);
+               setTimeout(() => {
+                  endPlayerAuction(id);
+               }, 300);
             }
          }
       }, 200);

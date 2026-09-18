@@ -1,92 +1,85 @@
-import React, { useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowLeft, Scale, AlertTriangle, HelpCircle, Gavel, ShieldCheck } from 'lucide-react'
-import { motion } from 'framer-motion'
-import useDocumentTitle from '../hooks/useDocumentTitle'
-import Footer from '../components/Footer'
+import React, { useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Home, Scale, AlertTriangle, HelpCircle } from 'lucide-react';
+import Footer from '../components/Footer';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
-export default function TermsConditions() {
-  useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [])
-
+const TermsConditions = () => {
   useDocumentTitle(
     'Terms & Conditions | IPL Auction Simulator & Game',
     'Review the Terms and Conditions of IPL Auction Simulator. Rules, fair play guidelines, IP disclaimers, and virtual currency policies.'
-  )
+  );
 
-  const containerVariants = {
-    hidden: { opacity: 0, y: 15 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, staggerChildren: 0.1 } }
-  }
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-[#ff5500] selection:text-black relative overflow-x-hidden">
-      {/* Dynamic Background Glows */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-orange-600/15 blur-[120px] rounded-full" />
-        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03]" />
+    <div className="relative min-h-screen bg-[#050505] flex flex-col items-center py-8 px-4 font-sans text-white overflow-x-hidden">
+      {/* Subtle Background Orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-[10%] -left-[10%] w-[45%] h-[45%] bg-blue-600/10 blur-[140px] rounded-full" />
+        <div className="absolute top-[40%] -right-[10%] w-[40%] h-[40%] bg-[#ff5500]/5 blur-[140px] rounded-full" />
       </div>
 
-      {/* Minimal Header with Back Button & Title */}
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="relative pt-6 sm:pt-10 pb-8 text-center max-w-4xl mx-auto px-4"
-      >
-        <div className="flex items-center justify-start mb-6">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/[0.03] border border-white/10 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-white hover:bg-white/10 transition-all group"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 text-[#ff5500] group-hover:-translate-x-1 transition-transform" />
-            <span>Back</span>
-          </Link>
-        </div>
+      {/* Navigation Header (Matching Game Guide) */}
+      <header className="w-full max-w-5xl flex items-center justify-between gap-3 mb-8 sm:mb-12 z-20 px-1 sm:px-4">
+        <button
+          onClick={() => navigate('/')}
+          className="p-2 sm:px-4 sm:py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl sm:rounded-2xl transition-all group flex items-center gap-2 cursor-pointer"
+        >
+          <Home size={14} className="text-gray-400 group-hover:text-white transition-colors sm:w-[16px] sm:h-[16px]" />
+          <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">Home</span>
+        </button>
 
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-black uppercase tracking-[0.2em] mb-4">
-          <Scale className="w-4 h-4" /> Platform Usage & Gameplay Agreement
-        </div>
+        <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-gray-400 text-center truncate px-2">
+          IPL Hub Terms of Service
+        </span>
 
-        <h1 className="text-4xl sm:text-6xl font-black uppercase tracking-tight text-white mb-4">
-          Terms & <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-teal-400">Conditions</span>
+        <div className="w-[60px] sm:w-[85px]" />
+      </header>
+
+      {/* Hero Section */}
+      <div className="w-full max-w-4xl text-center space-y-4 mb-8 sm:mb-12 z-10">
+        <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tight text-white">
+          Terms & Conditions
         </h1>
-
-        <p className="text-gray-400 text-sm sm:text-base font-medium max-w-2xl mx-auto leading-relaxed">
+        <p className="text-gray-400 text-xs sm:text-sm font-medium leading-relaxed max-w-2xl mx-auto">
           Please review the rules of conduct, virtual purse guidelines, and fan-made IP disclaimers before hosting live IPL Mega Auctions on our platform.
         </p>
-      </motion.div>
+      </div>
 
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 pb-16 space-y-8 relative z-10">
+      {/* Main Content Container */}
+      <main className="w-full max-w-4xl space-y-6 sm:space-y-8 z-10 mb-16">
         {/* Important Disclaimer Card */}
-        <div className="bg-amber-500/10 border border-amber-500/30 rounded-[2rem] p-6 sm:p-8 flex flex-col sm:flex-row items-start gap-4 shadow-2xl backdrop-blur-xl">
-          <AlertTriangle className="w-8 h-8 text-amber-400 shrink-0 mt-1" />
-          <div className="space-y-2">
-            <h3 className="font-black uppercase tracking-wider text-amber-300 text-sm sm:text-base">Fan-Made Simulation & Non-Affiliation Disclaimer</h3>
-            <p className="text-xs sm:text-sm text-gray-300 font-medium leading-relaxed">
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl sm:rounded-[2rem] p-5 sm:p-7 flex flex-col sm:flex-row items-start gap-3.5 sm:gap-4 shadow-2xl backdrop-blur-xl">
+          <AlertTriangle className="w-6 h-6 sm:w-7 sm:h-7 text-amber-400 shrink-0 mt-0.5" />
+          <div className="space-y-1.5">
+            <h3 className="font-black uppercase tracking-wider text-amber-300 text-xs sm:text-sm">Fan-Made Simulation & Non-Affiliation Disclaimer</h3>
+            <p className="text-xs text-gray-300 font-medium leading-relaxed">
               IPL Auction Simulator (crickauction.in) is a free, non-commercial fan simulation game created purely for entertainment and strategy practice. We are <strong>not affiliated with, endorsed by, or associated with</strong> the Board of Control for Cricket in India (BCCI), the Indian Premier League (IPL), or any official franchise team. All team names, logos, and trademarks belong to their respective owners.
             </p>
           </div>
         </div>
 
         {/* Terms Sections */}
-        <div className="space-y-6">
-          <section className="bg-[#0a0a0b] border border-white/10 rounded-[2rem] p-6 sm:p-8 space-y-4 shadow-2xl">
-            <h2 className="text-lg sm:text-xl font-black uppercase tracking-wider text-white flex items-center gap-3">
-              <span className="w-8 h-8 rounded-xl bg-blue-500/20 text-cyan-400 border border-blue-500/30 flex items-center justify-center text-xs font-black">01</span>
-              Acceptance of Platform Terms
+        <div className="space-y-4 sm:space-y-6">
+          <section className="bg-[#0a0a0b] border border-white/10 rounded-2xl sm:rounded-[2rem] p-5 sm:p-8 space-y-3 shadow-2xl">
+            <h2 className="text-base sm:text-lg font-black uppercase tracking-wider text-white flex items-center gap-3">
+              <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-blue-500/20 text-cyan-400 border border-blue-500/30 flex items-center justify-center text-xs font-black shrink-0">01</span>
+              Acceptance of Terms
             </h2>
             <p className="text-gray-300 text-xs sm:text-sm font-medium leading-relaxed">
               By accessing or playing IPL Auction Simulator, you agree to comply with and be bound by these Terms and Conditions. If you do not agree to these terms, please do not use the service.
             </p>
           </section>
 
-          <section className="bg-[#0a0a0b] border border-white/10 rounded-[2rem] p-6 sm:p-8 space-y-4 shadow-2xl">
-            <h2 className="text-lg sm:text-xl font-black uppercase tracking-wider text-white flex items-center gap-3">
-              <span className="w-8 h-8 rounded-xl bg-blue-500/20 text-cyan-400 border border-blue-500/30 flex items-center justify-center text-xs font-black">02</span>
+          <section className="bg-[#0a0a0b] border border-white/10 rounded-2xl sm:rounded-[2rem] p-5 sm:p-8 space-y-3 shadow-2xl">
+            <h2 className="text-base sm:text-lg font-black uppercase tracking-wider text-white flex items-center gap-3">
+              <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-blue-500/20 text-cyan-400 border border-blue-500/30 flex items-center justify-center text-xs font-black shrink-0">02</span>
               Virtual Purse & No Real Money Policy
             </h2>
             <p className="text-gray-300 text-xs sm:text-sm font-medium leading-relaxed">
@@ -94,14 +87,14 @@ export default function TermsConditions() {
             </p>
           </section>
 
-          <section className="bg-[#0a0a0b] border border-white/10 rounded-[2rem] p-6 sm:p-8 space-y-4 shadow-2xl">
-            <h2 className="text-lg sm:text-xl font-black uppercase tracking-wider text-white flex items-center gap-3">
-              <span className="w-8 h-8 rounded-xl bg-blue-500/20 text-cyan-400 border border-blue-500/30 flex items-center justify-center text-xs font-black">03</span>
+          <section className="bg-[#0a0a0b] border border-white/10 rounded-2xl sm:rounded-[2rem] p-5 sm:p-8 space-y-3 shadow-2xl">
+            <h2 className="text-base sm:text-lg font-black uppercase tracking-wider text-white flex items-center gap-3">
+              <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-blue-500/20 text-cyan-400 border border-blue-500/30 flex items-center justify-center text-xs font-black shrink-0">03</span>
               Fair Play & User Conduct
             </h2>
-            <div className="text-gray-300 text-xs sm:text-sm font-medium leading-relaxed space-y-3">
+            <div className="text-gray-300 text-xs sm:text-sm font-medium leading-relaxed space-y-2 sm:space-y-3">
               <p>To keep the platform competitive and fun for all players, users agree not to:</p>
-              <ul className="list-disc list-inside space-y-2 text-gray-400 pl-2">
+              <ul className="list-disc list-inside space-y-1.5 text-gray-400 pl-1">
                 <li>Use automated scripts, bots, or browser hacks to bypass bidding countdown timers.</li>
                 <li>Enter offensive, abusive, or hate speech into custom room names or manager handles.</li>
                 <li>Attempt to overload, DDOS, or reverse-engineer real-time backend database endpoints.</li>
@@ -110,17 +103,17 @@ export default function TermsConditions() {
             </div>
           </section>
 
-          <section className="bg-[#0a0a0b] border border-white/10 rounded-[2rem] p-6 sm:p-8 space-y-4 shadow-2xl">
-            <h2 className="text-lg sm:text-xl font-black uppercase tracking-wider text-white flex items-center gap-3">
-              <span className="w-8 h-8 rounded-xl bg-blue-500/20 text-cyan-400 border border-blue-500/30 flex items-center justify-center text-xs font-black">04</span>
+          <section className="bg-[#0a0a0b] border border-white/10 rounded-2xl sm:rounded-[2rem] p-5 sm:p-8 space-y-3 shadow-2xl">
+            <h2 className="text-base sm:text-lg font-black uppercase tracking-wider text-white flex items-center gap-3">
+              <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-blue-500/20 text-cyan-400 border border-blue-500/30 flex items-center justify-center text-xs font-black shrink-0">04</span>
               Service Availability & Support
             </h2>
             <p className="text-gray-300 text-xs sm:text-sm font-medium leading-relaxed">
               We reserve the right to modify or update game parameters at any time. For questions regarding terms or licensing concerns, please contact:
             </p>
-            <div className="inline-flex items-center gap-3 px-5 py-3 bg-white/[0.03] border border-white/10 rounded-xl text-cyan-400 text-xs font-black uppercase tracking-widest">
-              <HelpCircle className="w-4 h-4" />
-              <a href="mailto:support@crickauction.in" className="hover:underline">support@crickauction.in</a>
+            <div className="inline-flex flex-wrap items-center gap-2.5 px-4 py-2.5 bg-white/[0.03] border border-white/10 rounded-xl text-cyan-400 text-xs font-black uppercase tracking-wider">
+              <HelpCircle className="w-4 h-4 shrink-0" />
+              <a href="mailto:shaurya01836@gmail.com" className="hover:underline break-all">shaurya01836@gmail.com</a>
             </div>
           </section>
         </div>
@@ -128,5 +121,7 @@ export default function TermsConditions() {
 
       <Footer />
     </div>
-  )
-}
+  );
+};
+
+export default TermsConditions;

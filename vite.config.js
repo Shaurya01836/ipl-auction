@@ -8,4 +8,16 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'firebase-vendor': ['firebase/app', 'firebase/auth', 'firebase/database', 'firebase/firestore'],
+          'icons-motion': ['lucide-react', 'framer-motion'],
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000
+  }
 })
