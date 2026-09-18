@@ -289,7 +289,14 @@ export const AuctionProvider = ({ children }) => {
         if (!currentData) return currentData;
         // Only proceed if still in bidding state
         if (currentData.status !== 'bidding') return; // abort
-        
+
+        // Ensure timer has ACTUALLY expired (with 300ms network sync buffer)
+        // If a new bid was placed, timerEndsAt was extended into the future, so abort sale!
+        const now = getSyncedTime();
+        if (currentData.timerEndsAt && now < currentData.timerEndsAt - 300) {
+          return; // abort transaction
+        }
+
         const isSold = !!currentData.highBidderId;
         currentData.status = isSold ? 'sold' : 'unsold';
         return currentData;
@@ -392,7 +399,7 @@ export const AuctionProvider = ({ children }) => {
         const currentPlayerIndexInOrder = order.findIndex(idx => IPL_PLAYERS[idx] && IPL_PLAYERS[idx].id === currentPlayerId);
         const nextIndexInOrder = currentPlayerIndexInOrder !== -1 ? order[currentPlayerIndexInOrder + 1] : order[0];
         
-        if (nextIndexInOrder !== undefined) {
+        if (nextIndexInOrder !== undefined && IPL_PLAYERS[nextIndexInOrder]) {
           const nextPlayer = IPL_PLAYERS[nextIndexInOrder];
           await set(liveRef, {
             playerId: nextPlayer.id,
@@ -458,7 +465,7 @@ export const AuctionProvider = ({ children }) => {
       isHost: playerExists ? playerExists.isHost : false
     };
 
-    const updatedPlayers = existingPlayers.filter(p => p.id !== userId);
+    const updatedPlayers = existingPlayers.filter(p => p && p.id !== userId && p.userId !== userId);
     updatedPlayers.push(updatedPlayer);
 
     // Update RTDB (0 Firestore cost in lobby!)
@@ -832,6 +839,12 @@ export const AuctionProvider = ({ children }) => {
       if (currentData.status !== 'bidding') return; // abort
       if (currentData.highBidderId === user.uid) return; // abort
       
+      const now = getSyncedTime();
+      // Server-side guard: Reject late bids if timer has already expired on server
+      if (currentData.timerEndsAt && now >= currentData.timerEndsAt) {
+        return; // abort transaction
+      }
+
       const cBid = currentData.currentBid || 0;
       const inc = cBid < 5 ? 0.20 : 0.25;
       const nAmount = cBid === 0 ? IPL_PLAYERS.find(p => p.id === currentData.playerId)?.basePrice || 0 : cBid + inc;
@@ -843,7 +856,7 @@ export const AuctionProvider = ({ children }) => {
       currentData.highBidderId = user.uid;
       currentData.highBidderName = user.displayName || 'Manager';
       currentData.highBidderTeamId = team.teamId;
-      currentData.timerEndsAt = getSyncedTime() + (currentAuction.settings?.bidTimer || 10) * 1000;
+      currentData.timerEndsAt = now + (currentAuction.settings?.bidTimer || 10) * 1000;
       
       return currentData;
     });

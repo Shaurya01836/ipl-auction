@@ -168,14 +168,25 @@ const LandingPage = () => {
           if (!error && supabaseRooms && supabaseRooms.length > 0) {
             const list = supabaseRooms.map(r => {
               const players = r.players || [];
-              const host = players.find(p => p.isHost) || players[0];
+              const uniquePlayers = [];
+              const seenIds = new Set();
+              players.forEach(p => {
+                const pid = p?.id || p?.userId;
+                if (pid && !seenIds.has(pid)) {
+                  seenIds.add(pid);
+                  uniquePlayers.push(p);
+                }
+              });
+
+              const displayCount = Math.min(uniquePlayers.length, 10);
+              const host = uniquePlayers.find(p => p.isHost) || uniquePlayers[0];
               return {
                 roomId: r.id,
                 hostName: r.host_name || host?.name || 'Manager',
                 status: r.status,
                 auctionType: r.auction_type || 'mega',
-                playerCount: players.length,
-                players,
+                playerCount: displayCount,
+                players: uniquePlayers,
                 squadLimit: r.squad_limit || 25,
                 settings: r.settings || {}
               };
@@ -935,9 +946,9 @@ const LandingPage = () => {
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1.5">
                                   <h4 className="text-[11px] sm:text-xs font-bold text-white tracking-tight truncate max-w-[110px] xs:max-w-[160px] sm:max-w-none">
-                                    {room.hostName}'s Arena
+                                    {room.hostName}'s Room
                                   </h4>
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" title="Lobby Open" />
+                              
                                 </div>
 
                                 <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] text-gray-500 font-medium mt-0.5 truncate">
