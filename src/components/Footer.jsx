@@ -1,6 +1,7 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowUpRight, ShieldCheck, Mail, Cpu, Award } from 'lucide-react';
+import { ArrowUpRight, ShieldCheck, Mail, Cpu, Shield, FileText } from 'lucide-react';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -28,10 +29,9 @@ const Footer = () => {
         {/* Brand / Intro */}
         <div className="col-span-1 sm:col-span-12 md:col-span-4 space-y-4">
           <div className="flex items-center gap-2">
-
-            <span className="text-sm font-black tracking-[0.2em] uppercase text-white bg-clip-text">
+            <Link to="/" className="text-sm font-black tracking-[0.2em] uppercase text-white bg-clip-text hover:text-ipl-gold transition-colors">
               IPL Auction Hub
-            </span>
+            </Link>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed font-medium pr-4">
             The ultimate real-time multiplayer IPL auction simulator. Build your dream franchise squad, manage team budget and overseas slots, and compete dynamically in live bidding wars.
@@ -55,17 +55,33 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Useful Links */}
+        {/* Useful & Legal Links */}
         <div className="col-span-1 sm:col-span-6 md:col-span-3 space-y-4">
-          <h4 className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em]">Game Rules</h4>
-          <ul className="space-y-2">
+          <h4 className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em]">Navigation & Legal</h4>
+          <ul className="space-y-2.5">
             <li>
-              <a
-                href="/guide"
-                className="text-xs text-gray-500 hover:text-white font-black uppercase tracking-wider transition-colors duration-200 flex items-center gap-1 group"
+              <Link
+                to="/guide"
+                className="text-xs text-gray-500 hover:text-white font-bold uppercase tracking-wider transition-colors duration-200 flex items-center gap-1.5"
               >
                 Game Guide & Rules ➔
-              </a>
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/privacy"
+                className="text-xs text-gray-500 hover:text-ipl-gold font-bold uppercase tracking-wider transition-colors duration-200 flex items-center gap-1.5"
+              >
+                <Shield size={12} className="text-ipl-gold" /> Privacy Policy
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/terms"
+                className="text-xs text-gray-500 hover:text-blue-400 font-bold uppercase tracking-wider transition-colors duration-200 flex items-center gap-1.5"
+              >
+                <FileText size={12} className="text-blue-400" /> Terms & Conditions
+              </Link>
             </li>
           </ul>
         </div>

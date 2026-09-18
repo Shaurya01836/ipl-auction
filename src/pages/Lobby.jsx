@@ -348,7 +348,7 @@ const Lobby = () => {
                     }`}
                 >
                   <div className="w-20 h-20 bg-white/5 border border-white/5 rounded-2xl p-2 flex items-center justify-center">
-                    {isSelectingTeam === team.id ? <Loader2 className="animate-spin text-orange-500" /> : <img src={team.logo} alt="" className="w-full h-full object-contain" />}
+                    {isSelectingTeam === team.id ? <Loader2 className="animate-spin text-orange-500" /> : <img src={team.logo} alt={`${team.name || team.id} Logo`} className="w-full h-full object-contain" />}
                   </div>
                   <div className="text-center">
                     <p className="text-[10px] font-black uppercase tracking-widest text-white">{team.id}</p>
@@ -515,7 +515,7 @@ const Lobby = () => {
                       )}
 
                       <div className={`w-9 h-9 rounded-xl bg-white/5 border border-white/5 p-1.5 flex items-center justify-center mb-2 transition-all duration-300 ${isMine ? 'scale-105 border-white/[0.12] shadow-lg' : 'group-hover/team:scale-105'}`}>
-                        {isSelectingTeam === team.id ? <Loader2 size={14} className="animate-spin text-white" /> : <img src={team.logo} alt="" className="w-full h-full object-contain" />}
+                        {isSelectingTeam === team.id ? <Loader2 size={14} className="animate-spin text-white" /> : <img src={team.logo} alt={`${team.name || team.id} Logo`} className="w-full h-full object-contain" />}
                       </div>
 
                       <span className={`text-[8px] font-black uppercase text-center tracking-tighter truncate w-full ${isMine ? 'text-white' : 'text-gray-500'}`}>
@@ -620,7 +620,7 @@ const Lobby = () => {
                             <div className="w-11 h-11 sm:w-12 sm:h-12 shrink-0 rounded-2xl border border-white/10 flex items-center justify-center shadow-2xl relative overflow-hidden bg-white/5 p-1.5">
                               <div className="absolute inset-x-0 bottom-0 top-1/2 bg-black/5 pointer-events-none" />
                               {playerTeam ? (
-                                <img src={playerTeam.logo} alt="" className="w-full h-full object-contain relative z-10" />
+                                <img src={playerTeam.logo} alt={`${playerTeam.name || playerTeam.id} Logo`} className="w-full h-full object-contain relative z-10" />
                               ) : (
                                 <span className="text-gray-500 relative z-10 text-xs">?</span>
                               )}

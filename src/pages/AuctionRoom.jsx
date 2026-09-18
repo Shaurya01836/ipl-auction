@@ -515,7 +515,7 @@ const AuctionRoom = () => {
             const unsoldAudios = ['/unsold1.mpeg'];
             const randomAudio = unsoldAudios[Math.floor(Math.random() * unsoldAudios.length)];
             const audio = celebrationAudioRef.current;
-            
+
             if (audio) {
                try {
                   audio.pause();
@@ -744,7 +744,7 @@ const AuctionRoom = () => {
                                     }`}
                               >
                                  <div className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/5 border border-white/10 p-1.5 flex items-center justify-center ${isJoining ? 'animate-pulse' : ''}`}>
-                                    <img src={t.logo} alt="" className="w-full h-full object-contain" />
+                                    <img src={t.logo} alt={`${t.name} Logo`} className="w-full h-full object-contain" />
                                  </div>
                                  <span className={`text-[9px] md:text-[10px] font-black uppercase tracking-tight ${isJoining ? 'text-yellow-400' : isTaken ? 'text-gray-600' : 'text-gray-400 group-hover:text-white'}`}>
                                     {isJoining ? 'Joining...' : isTaken ? 'Taken' : t.id}
@@ -868,7 +868,7 @@ const AuctionRoom = () => {
                            >
                               <div className="flex items-center gap-3">
                                  <div className="w-9 h-9 rounded-lg bg-white/5 p-1 flex items-center justify-center">
-                                    <img src={t.logo} alt="" className="w-full h-full object-contain" />
+                                    <img src={t.logo} alt={`${t.name} Logo`} className="w-full h-full object-contain" />
                                  </div>
                                  <div className="overflow-hidden">
                                     <h5 className="text-[11px] font-bold text-white leading-tight truncate max-w-[110px]">{t.name}</h5>
@@ -942,7 +942,7 @@ const AuctionRoom = () => {
                                                          {playersInRole.map((p, sidx) => (
                                                             <div key={sidx} className="py-1 flex items-center justify-between group hover:bg-white/[0.01] rounded-lg px-1 transition-all">
                                                                <div className="flex items-center gap-2">
-                                                                  <img src={p?.image} className="w-5 h-5 object-contain rounded bg-white/5" />
+                                                                  <img src={p?.image} alt={p?.name || 'Player'} className="w-5 h-5 object-contain rounded bg-white/5" />
                                                                   <div className="overflow-hidden">
                                                                      <h5 className="text-[10px] font-semibold text-gray-200 truncate max-w-[90px]">{p?.name}</h5>
                                                                   </div>
@@ -1028,7 +1028,7 @@ const AuctionRoom = () => {
                                        </div>
                                        <div className="bg-white/10 backdrop-blur-md px-8 py-3 rounded-2xl border border-white/20 flex items-center gap-3">
                                           <div className={`w-10 h-10 rounded-xl bg-white/5 border border-white/10 p-1.5 flex items-center justify-center`}>
-                                             <img src={TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.logo} alt="" className="w-full h-full object-contain" />
+                                             <img src={TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.logo} alt="High Bidder Team Logo" className="w-full h-full object-contain" />
                                           </div>
                                           <span className="text-base sm:text-lg md:text-xl font-black uppercase text-white tracking-widest">{TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.name || 'Franchise'}</span>
                                        </div>
@@ -1068,7 +1068,7 @@ const AuctionRoom = () => {
                                                 {displayAuctionState?.highBidderTeamId && (
                                                    <div className="flex items-center gap-1.5 sm:gap-2 bg-white/5 border border-white/10 px-2 py-1 rounded-xl">
                                                       <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-white/5 border border-white/10 p-0.5 flex items-center justify-center">
-                                                         <img src={TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.logo} alt="" className="w-full h-full object-contain" />
+                                                         <img src={TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.logo} alt="High Bidder Team Logo" className="w-full h-full object-contain" />
                                                       </div>
                                                       <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold text-gray-300 uppercase tracking-widest">{displayAuctionState.highBidderTeamId}</span>
                                                    </div>
@@ -1419,7 +1419,7 @@ const AuctionRoom = () => {
                <motion.div initial={{ opacity: 0, scale: 0.95, y: -10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: -10 }} className="fixed top-16 right-3 sm:right-6 z-[100] bg-[#0c0d12]/95 border border-white/10 p-5 sm:p-6 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] w-80 sm:w-96 backdrop-blur-2xl">
                   <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
                      <div className="flex items-center gap-2.5">
-                       
+
                         <div>
                            <h3 className="text-xs font-black text-white uppercase tracking-wider">Room & Voice Settings</h3>
                            <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest leading-none">Customize Experience</p>
@@ -1449,7 +1449,7 @@ const AuctionRoom = () => {
                      <div className="bg-white/[0.02] border border-white/10 p-4 rounded-2xl space-y-4">
                         <div className="flex items-center justify-between pb-3 border-b border-white/5">
                            <div className="flex items-center gap-2">
-                             
+
                               <span className="text-[10px] font-black text-yellow-400 uppercase tracking-wider">Voice Auctioneer</span>
                            </div>
 
@@ -1545,7 +1545,7 @@ const AuctionRoom = () => {
                            <div key={player.id} className="bg-white/5 border border-white/5 p-4 rounded-3xl flex items-center justify-between group">
                               <div className="flex items-center gap-4">
                                  <div className={`w-12 h-12 rounded-2xl bg-white/5 border border-white/10 p-1.5 flex items-center justify-center`}>
-                                    <img src={TEAMS.find(t => t.id === player.team)?.logo} alt="" className="w-full h-full object-contain" />
+                                    <img src={TEAMS.find(t => t.id === player.team)?.logo} alt="Player Team Logo" className="w-full h-full object-contain" />
                                  </div>
                                  <div><h5 className="text-sm font-black uppercase flex items-center gap-2">{player.name}{player.isHost && <span className="px-1.5 py-0.5 bg-yellow-500/20 text-yellow-500 text-[8px] rounded-md">HOST</span>}</h5><p className="text-[10px] font-bold text-gray-500 uppercase">{player.teamName}</p></div>
                               </div>
@@ -1572,9 +1572,9 @@ const SoldCard = ({ msg }) => {
    const handleSave = async () => {
       if (cardRef.current === null) return;
       try {
-         const dataUrl = await toPng(cardRef.current, { 
-            cacheBust: false, 
-            pixelRatio: 2, 
+         const dataUrl = await toPng(cardRef.current, {
+            cacheBust: false,
+            pixelRatio: 2,
             skipFonts: true,
             imagePlaceholder: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
          });
@@ -1596,7 +1596,7 @@ const SoldCard = ({ msg }) => {
             <div className="relative h-full flex flex-col p-4 sm:p-6 z-10 justify-between">
                <div className="flex justify-between items-start mb-2 sm:mb-4">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl p-1.5 sm:p-2 border border-white/10">
-                     <img src={team?.logo} alt="" className="w-full h-full object-contain " />
+                     <img src={team?.logo} alt={`${team?.name || 'Franchise'} Logo`} className="w-full h-full object-contain " />
                   </div>
                   <div className="text-right uppercase tracking-[0.15em] sm:tracking-[0.2em]">
                      <p className="text-[7px] sm:text-[8px] font-black text-blue-500 mb-0.5">IPL Auction</p>
@@ -1608,10 +1608,10 @@ const SoldCard = ({ msg }) => {
                <div className="flex-1 flex flex-col justify-center items-center py-2 sm:py-4">
                   <div className="relative w-28 h-28 sm:w-40 sm:h-40 group">
                      <div className={`absolute inset-0 rounded-full blur-3xl opacity-30 ${team?.color}`} />
-                     <img 
-                        src={player?.image} 
-                        className="relative w-full h-full object-contain z-10 drop-shadow-[0_0_20px_rgba(0,0,0,0.5)]" 
-                        alt="" 
+                     <img
+                        src={player?.image}
+                        className="relative w-full h-full object-contain z-10 drop-shadow-[0_0_20px_rgba(0,0,0,0.5)]"
+                        alt={player?.name || 'Sold Player'}
                         onError={(e) => {
                            e.target.onerror = null;
                            e.target.src = 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(player?.name || 'Player');

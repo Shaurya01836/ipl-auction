@@ -33,6 +33,7 @@ import GithubStarButton from '../components/GithubStarButton';
 import BuyMeACoffee from '../components/BuyMeACoffee';
 import AuctionActivityFeed from '../components/AuctionActivityFeed';
 import Footer from '../components/Footer';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const LogoMarquee = () => {
   const marqueeTeams = [...TEAMS, ...TEAMS]; // Double for seamless loop
@@ -102,6 +103,10 @@ const scaleVariants = {
 };
 
 const LandingPage = () => {
+  useDocumentTitle(
+    'IPL Auction Simulator & Game | Live IPL Mega Auction 2026',
+    'Play the ultimate multiplayer IPL Auction Simulator online. Host live IPL Mega Auctions with friends, manage purse budgets, bid on top T20 players, and build championship squads!'
+  );
   const [selectedTeam, setSelectedTeam] = useState('MI');
   const [activeTab, setActiveTab] = useState('new');
   const [auctionType, setAuctionType] = useState('mega'); // 'mega' or 'sprint5'

@@ -311,12 +311,12 @@ const AuctionSummary = () => {
                     >
                       {/* Massive Background Logo */}
                       <div className="absolute -right-8 -bottom-8 w-40 sm:w-64 h-40 sm:h-64 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity pointer-events-none grayscale">
-                         <img src={t.logo} alt="" decoding="async" loading="lazy" className="w-full h-full object-contain" />
+                         <img src={t.logo} alt={`${t.name} Watermark Logo`} decoding="async" loading="lazy" className="w-full h-full object-contain" />
                       </div>
 
                       <div className="flex items-center gap-3 sm:gap-6 relative z-10">
                         <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 p-1.5 sm:p-2 flex items-center justify-center shadow-2xl shrink-0">
-                           <img src={t.logo} alt="" decoding="async" loading="lazy" className="w-full h-full object-contain" />
+                           <img src={t.logo} alt={`${t.name} Logo`} decoding="async" loading="lazy" className="w-full h-full object-contain" />
                         </div>
                         <div className="text-left min-w-0">
                           <h3 className="text-lg sm:text-2xl font-black uppercase tracking-tighter group-hover:text-orange-500 transition-colors truncate">{t.name}</h3>
@@ -362,7 +362,7 @@ const AuctionSummary = () => {
                           >
                              {/* Watermark Logo for Exported Image */}
                              <div className="absolute right-4 top-4 w-32 h-32 opacity-5 pointer-events-none grayscale">
-                                <img src={t.logo} alt="" className="w-full h-full object-contain" />
+                                <img src={t.logo} alt={`${t.name} Logo Watermark`} className="w-full h-full object-contain" />
                              </div>
 
                              {['Batsman', 'Wicket-Keeper', 'All-Rounder', 'Bowler'].map(role => {
