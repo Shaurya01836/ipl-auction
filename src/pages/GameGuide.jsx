@@ -3,8 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, ChevronDown } from 'lucide-react';
 import Footer from '../components/Footer';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const GameGuide = () => {
+  useDocumentTitle(
+    'Game Guide & Auction Rules | IPL Auction Simulator',
+    'Comprehensive guide on how to host and play IPL Mega Auctions, manage budgets, bid on players, RTM rules, and squad limits.'
+  );
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [openFaq, setOpenFaq] = useState(null);
