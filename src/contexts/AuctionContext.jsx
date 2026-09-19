@@ -448,10 +448,33 @@ export const AuctionProvider = ({ children }) => {
     if (rtdbRoomSnap.exists()) {
       data = rtdbRoomSnap.val();
     } else {
-      // Fallback: Fetch from Firestore only if RTDB room node does not exist yet
-      const roomSnap = await getDoc(doc(db, 'auctions', roomId));
-      if (!roomSnap.exists()) throw new Error("Room not found!");
-      data = roomSnap.data();
+      let supabaseFound = false;
+      if (supabase) {
+        try {
+          const { data: sData } = await supabase.from('auctions').select('*').eq('id', roomId).maybeSingle();
+          if (sData) {
+            data = {
+              id: sData.id,
+              hostId: sData.host_id,
+              hostName: sData.host_name,
+              status: sData.status,
+              auctionType: sData.auction_type || 'mega',
+              squadLimit: sData.squad_limit || 25,
+              overseasLimit: sData.overseas_limit || 8,
+              players: sData.players || [],
+              bannedPlayers: sData.banned_players || [],
+              settings: sData.settings || { bidTimer: 10, budget: 120 }
+            };
+            supabaseFound = true;
+          }
+        } catch (sErr) {}
+      }
+
+      if (!supabaseFound) {
+        const roomSnap = await getDoc(doc(db, 'auctions', roomId));
+        if (!roomSnap.exists()) throw new Error("Room not found!");
+        data = roomSnap.data();
+      }
     }
 
     if (data.bannedPlayers && data.bannedPlayers.includes(userId)) {
@@ -670,13 +693,35 @@ export const AuctionProvider = ({ children }) => {
         checkLoaded();
       } else if (!didFallbackFetch) {
         didFallbackFetch = true;
-        // Wait 1.5s grace period before hitting Firestore to allow RTDB initialization to complete
+        // Wait 500ms grace period before hitting persistent store fallback
         setTimeout(async () => {
           if (auctionLoaded) return;
           try {
-            const fsDoc = await getDoc(doc(db, 'auctions', auctionId));
-            if (fsDoc.exists()) {
-              const data = fsDoc.data();
+            let data = null;
+            if (supabase) {
+              const { data: sData } = await supabase.from('auctions').select('*').eq('id', auctionId).maybeSingle();
+              if (sData) {
+                data = {
+                  id: sData.id,
+                  hostId: sData.host_id,
+                  hostName: sData.host_name,
+                  status: sData.status,
+                  auctionType: sData.auction_type || 'mega',
+                  squadLimit: sData.squad_limit || 25,
+                  overseasLimit: sData.overseas_limit || 8,
+                  players: sData.players || [],
+                  bannedPlayers: sData.banned_players || [],
+                  settings: sData.settings || { bidTimer: 10, budget: 120 }
+                };
+              }
+            }
+
+            if (!data) {
+              const fsDoc = await getDoc(doc(db, 'auctions', auctionId));
+              if (fsDoc.exists()) data = fsDoc.data();
+            }
+
+            if (data) {
               if (data.bannedPlayers && data.bannedPlayers.includes(userId)) {
                  window.location.href = '/?error=kicked';
                  return;
@@ -686,9 +731,12 @@ export const AuctionProvider = ({ children }) => {
               checkAndSet();
               checkLoaded();
               await updateRtdb(ref(rtdb, `auctions/${auctionId}/room`), data);
+            } else {
+              // Room not found in any store
+              setLoading(false);
             }
           } catch(e) { handleFirebaseError(e); }
-        }, 1500);
+        }, 500);
       }
     }, (error) => {
       setLoading(false);
@@ -718,38 +766,53 @@ export const AuctionProvider = ({ children }) => {
         checkLoaded();
       } else if (!didTeamsFallback) {
         didTeamsFallback = true;
-        // Wait 1.5s grace period before hitting Firestore
         setTimeout(async () => {
           if (teamsLoaded) return;
           try {
-            const tq = query(collection(db, 'teams'), where('auctionId', '==', auctionId));
-            const tSnap = await getDocs(tq);
-            if (!tSnap.empty) {
-              teamsLoaded = true;
-              const teamsArr = tSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-              setRoomTeams(teamsArr);
-              
-              if (userId) {
-                const myTeam = teamsArr.find(t => t.id === `${auctionId}_${userId}`);
-                if (myTeam) setTeam(myTeam);
-                else setTeam(null);
+            let teamsArr = [];
+            if (supabase) {
+              const { data: sTeams } = await supabase.from('teams').select('*').eq('auction_id', auctionId);
+              if (sTeams && sTeams.length > 0) {
+                teamsArr = sTeams.map(t => ({
+                  id: t.id,
+                  auctionId: t.auction_id,
+                  userId: t.user_id,
+                  teamId: t.team_id,
+                  teamName: t.team_name,
+                  budgetRemaining: t.budget_remaining ?? 120,
+                  spent: t.spent || 0,
+                  squad: t.squad || []
+                }));
               }
-              checkLoaded();
-              
+            }
+
+            if (teamsArr.length === 0) {
+              const tq = query(collection(db, 'teams'), where('auctionId', '==', auctionId));
+              const tSnap = await getDocs(tq);
+              if (!tSnap.empty) {
+                teamsArr = tSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+              }
+            }
+
+            teamsLoaded = true;
+            setRoomTeams(teamsArr);
+
+            if (userId) {
+              const myTeam = teamsArr.find(t => t.id === `${auctionId}_${userId}` || t.userId === userId);
+              if (myTeam) setTeam(myTeam);
+              else setTeam(null);
+            }
+            checkLoaded();
+
+            if (teamsArr.length > 0) {
               const teamsToSync = {};
-              tSnap.docs.forEach(doc => {
-                teamsToSync[doc.id] = doc.data();
+              teamsArr.forEach(t => {
+                teamsToSync[t.id] = t;
               });
               await updateRtdb(ref(rtdb, `auctions/${auctionId}/teams`), teamsToSync);
-            } else {
-               // no teams yet
-               teamsLoaded = true;
-               setRoomTeams([]);
-               setTeam(null);
-               checkLoaded();
             }
           } catch(e) { handleFirebaseError(e); }
-        }, 1500);
+        }, 500);
       }
     }, (error) => {
       setLoading(false);
