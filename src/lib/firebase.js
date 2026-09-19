@@ -2,7 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
-import { getDatabase, ref, onValue } from "firebase/database";
+import { getDatabase, ref, onValue, goOffline, goOnline } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -27,15 +27,13 @@ export const analytics = getAnalytics(app);
 
 
 // ─── Server Time Sync via Firebase RTDB ───
-// Firebase RTDB provides `.info/serverTimeOffset` which is the ms difference
-// between the client's clock and Firebase's server clock.
-// This is the official Firebase mechanism for clock synchronization.
-// All clients will agree on the same absolute time (±50ms).
 let _serverTimeOffset = 0;
 
 export const rtdb = getDatabase(app);
 
 try {
+  // Start offline by default until entering an active room session
+  goOffline(rtdb);
   const offsetRef = ref(rtdb, '.info/serverTimeOffset');
   onValue(offsetRef, (snap) => {
     _serverTimeOffset = snap.val() || 0;

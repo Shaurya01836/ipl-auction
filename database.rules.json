@@ -11,9 +11,11 @@
     ".write": false,
 
     "auctions": {
+      ".read": "auth != null",
       "$roomId": {
-        // Any authenticated user (including anonymous guest sign-ins) can read the auction state
+        // Any authenticated user (including anonymous guest sign-ins) can read and delete auction state
         ".read": "auth != null",
+        ".write": "auth != null",
 
         "room": {
           // Any authenticated user can write/sync the room state
@@ -24,8 +26,9 @@
           ".write": "auth != null"
         },
         "live": {
-          // Any authenticated user can write/sync the live bidding state
-          ".write": "auth != null"
+          // Any authenticated user can write/sync the live bidding state with atomic validation
+          ".write": "auth != null",
+          ".validate": "newData.hasChildren(['status']) && (newData.child('status').val() == 'bidding' || newData.child('status').val() == 'sold' || newData.child('status').val() == 'unsold' || newData.child('status').val() == 'paused' || newData.child('status').val() == 'waiting' || newData.child('status').val() == 'processing_sale')"
         },
         "messages": {
           // Any authenticated user can write to the messages sub-path for chat synchronization
