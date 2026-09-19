@@ -38,7 +38,7 @@ import PageLoader from '../components/PageLoader';
 const Lobby = () => {
   const { id } = useParams();
   const { user, loginWithGoogle, loginAsGuest, logout, loading: authLoading } = useAuth();
-  const { joinAuction, currentAuction, kickPlayer, updatePlayerTeam, updateRoomSettings, startAuction, joinRoomDb, addBotTeam, removeBotTeam, fillEmptyTeamsWithBots } = useAuction();
+  const { joinAuction, currentAuction, loading: auctionLoading, kickPlayer, updatePlayerTeam, updateRoomSettings, startAuction, joinRoomDb, addBotTeam, removeBotTeam, fillEmptyTeamsWithBots } = useAuction();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('players');
@@ -215,7 +215,7 @@ const Lobby = () => {
     );
   }
 
-  if (authLoading) {
+  if (authLoading || auctionLoading || !currentAuction) {
     return (
       <PageLoader />
     );
