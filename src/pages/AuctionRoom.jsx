@@ -87,6 +87,7 @@ const AuctionRoom = () => {
    const [optimisticState, setOptimisticState] = useState(null);
    const [joiningTeam, setJoiningTeam] = useState(null);
    const [banError, setBanError] = useState(null);
+   const [isBiddingInFlight, setIsBiddingInFlight] = useState(false);
 
    // Clear optimistic state when DB catches up
    useEffect(() => {
@@ -598,6 +599,7 @@ const AuctionRoom = () => {
    }, [displayAuctionState?.timerEndsAt, displayAuctionState?.status, currentAuction?.status, isAdmin, id, endPlayerAuction, getSyncedTime]);
 
    const handleBid = async () => {
+      if (isBiddingInFlight) return;
       if (displayAuctionState?.highBidderId === user?.uid) return;
 
       // Budget Guard
@@ -637,6 +639,7 @@ const AuctionRoom = () => {
 
       playBeep(660, 0.1);
       setError('');
+      setIsBiddingInFlight(true);
 
       setOptimisticState({
          ...displayAuctionState,
@@ -653,6 +656,8 @@ const AuctionRoom = () => {
          setOptimisticState(null);
          setError(err.message);
          setTimeout(() => setError(''), 3000);
+      } finally {
+         setIsBiddingInFlight(false);
       }
    };
 

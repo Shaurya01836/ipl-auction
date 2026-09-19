@@ -15,7 +15,9 @@ import {
   push,
   serverTimestamp as serverTimestampRtdb,
   query as queryRtdb,
-  limitToLast
+  limitToLast,
+  goOnline,
+  goOffline
 } from 'firebase/database';
 import { 
   doc, 
@@ -551,6 +553,9 @@ export const AuctionProvider = ({ children }) => {
   const joinAuction = useCallback((auctionId, userId) => {
     if (!userId) return () => {};
     
+    // Explicitly open RTDB WebSocket connection for active auction session
+    try { goOnline(rtdb); } catch (e) {}
+
     setLoading(true);
     let auctionLoaded = false;
     let teamsLoaded = false;
@@ -745,7 +750,7 @@ export const AuctionProvider = ({ children }) => {
       handleFirebaseError(error);
     });
 
-    const msgQuery = queryRtdb(ref(rtdb, `auctions/${auctionId}/messages`), limitToLast(25));
+    const msgQuery = queryRtdb(ref(rtdb, `auctions/${auctionId}/messages`), limitToLast(10));
     const unsubMessages = onValue(msgQuery, (snapshot) => {
       messagesLoaded = true;
       if (snapshot.exists()) {
@@ -783,6 +788,9 @@ export const AuctionProvider = ({ children }) => {
       setTeam(null);
       setRoomTeams([]);
       setMessages([]);
+
+      // Immediately close RTDB connection when leaving auction room/lobby to free up connection quota
+      try { goOffline(rtdb); } catch (e) {}
     };
   }, [user]);
 
@@ -834,7 +842,7 @@ export const AuctionProvider = ({ children }) => {
     let finalAmount = amount;
 
     const liveRef = ref(rtdb, `auctions/${currentAuction.id}/live`);
-    await runTransactionRtdb(liveRef, (currentData) => {
+    const txResult = await runTransactionRtdb(liveRef, (currentData) => {
       if (!currentData) return currentData;
       if (currentData.status !== 'bidding') return; // abort
       if (currentData.highBidderId === user.uid) return; // abort
@@ -851,7 +859,6 @@ export const AuctionProvider = ({ children }) => {
       
       if (team.budgetRemaining < nAmount) return; // abort
 
-      finalAmount = nAmount;
       currentData.currentBid = nAmount;
       currentData.highBidderId = user.uid;
       currentData.highBidderName = user.displayName || 'Manager';
@@ -861,16 +868,10 @@ export const AuctionProvider = ({ children }) => {
       return currentData;
     });
 
-    // Add to messages collection for chronological sorting
-    const msgRef = ref(rtdb, `auctions/${currentAuction.id}/messages`);
-    await push(msgRef, {
-      userId: 'system',
-      userName: 'System',
-      text: `New bid: ₹${finalAmount.toFixed(2)} Cr by ${user.displayName || 'Manager'} (${team.teamId})`,
-      type: 'log',
-      timestamp: serverTimestampRtdb()
-    });
-  }, [currentAuction, user, team]);
+    if (!txResult.committed) {
+      throw new Error("Bid failed: Another manager placed a higher bid or timer expired.");
+    }
+  }, [currentAuction, user, team, getSyncedTime]);
 
   const updatePlayerTeam = useCallback(async (roomId, userId, newTeamId) => {
     const rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
@@ -968,13 +969,19 @@ export const AuctionProvider = ({ children }) => {
       type: 'log',
       timestamp: serverTimestampRtdb()
     });
+
+    // Clean up completed room node from RTDB after 5 seconds to keep RTDB size at 0MB
+    setTimeout(async () => {
+      try {
+        await remove(ref(rtdb, `auctions/${roomId}`));
+      } catch (cleanErr) {}
+    }, 5000);
   }, [user, currentAuction, flushAuctionToFirestore]);
 
   // ─── Bot Management & Bidding Engine ───
   const placeBotBid = useCallback(async (roomId, botUserId, botTeamId, botName, amount) => {
     if (!roomId) return;
     const liveRef = ref(rtdb, `auctions/${roomId}/live`);
-    let finalAmount = amount;
 
     await runTransactionRtdb(liveRef, (currentData) => {
       if (!currentData) return currentData;
@@ -985,7 +992,6 @@ export const AuctionProvider = ({ children }) => {
       const inc = cBid < 5 ? 0.20 : 0.25;
       const nAmount = cBid === 0 ? IPL_PLAYERS.find(p => p.id === currentData.playerId)?.basePrice || 0 : cBid + inc;
 
-      finalAmount = nAmount;
       currentData.currentBid = nAmount;
       currentData.highBidderId = botUserId;
       currentData.highBidderName = botName;
@@ -993,15 +999,6 @@ export const AuctionProvider = ({ children }) => {
       currentData.timerEndsAt = getSyncedTime() + 10000;
       
       return currentData;
-    });
-
-    const msgRef = ref(rtdb, `auctions/${roomId}/messages`);
-    await push(msgRef, {
-      userId: 'system',
-      userName: 'System',
-      text: `New bid: ₹${finalAmount.toFixed(2)} Cr by ${botName} (${botTeamId})`,
-      type: 'log',
-      timestamp: serverTimestampRtdb()
     });
   }, [getSyncedTime]);
 
