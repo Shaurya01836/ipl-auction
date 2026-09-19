@@ -5,6 +5,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { IPL_PLAYERS } from '../data/players';
 import { TEAMS } from '../data/teams';
 import { toPng } from 'html-to-image';
+import { supabase } from '../lib/supabase';
+import { db } from '../lib/firebase';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import {
   Trophy,
   Users,
@@ -32,6 +35,10 @@ const AuctionSummary = () => {
   const [expandedTeam, setExpandedTeam] = useState(null);
   const [sharingTeamId, setSharingTeamId] = useState(null);
   const [copiedTeamId, setCopiedTeamId] = useState(null);
+
+  const [dbAuction, setDbAuction] = useState(null);
+  const [dbTeams, setDbTeams] = useState([]);
+  const [summaryLoading, setSummaryLoading] = useState(true);
 
   const teamCardRefs = React.useRef({});
 
@@ -89,9 +96,75 @@ const AuctionSummary = () => {
     }
   }, [id, user?.uid, joinAuction]);
 
+  useEffect(() => {
+    if (!id) return;
+    let isMounted = true;
+
+    const fetchSummaryFromPersistentStore = async () => {
+      setSummaryLoading(true);
+      try {
+        if (supabase) {
+          const { data: aData } = await supabase.from('auctions').select('*').eq('id', id).maybeSingle();
+          const { data: tData } = await supabase.from('teams').select('*').eq('auction_id', id);
+
+          if (aData && isMounted) {
+            setDbAuction({
+              id: aData.id,
+              hostId: aData.host_id,
+              hostName: aData.host_name,
+              status: aData.status || 'completed',
+              auctionType: aData.auction_type || 'mega',
+              squadLimit: aData.squad_limit || 25,
+              overseasLimit: aData.overseas_limit || 8,
+              players: aData.players || [],
+              settings: aData.settings || { budget: 120, bidTimer: 10 }
+            });
+
+            if (tData && tData.length > 0) {
+              setDbTeams(tData.map(t => ({
+                id: t.id,
+                auctionId: t.auction_id,
+                userId: t.user_id,
+                teamId: t.team_id,
+                teamName: t.team_name,
+                budgetRemaining: t.budget_remaining ?? 120,
+                spent: t.spent || 0,
+                squad: t.squad || []
+              })));
+            }
+            setSummaryLoading(false);
+            return;
+          }
+        }
+
+        const roomDoc = await getDoc(doc(db, 'auctions', id));
+        if (roomDoc.exists() && isMounted) {
+          setDbAuction({ id: roomDoc.id, ...roomDoc.data() });
+
+          const tq = query(collection(db, 'teams'), where('auctionId', '==', id));
+          const tSnap = await getDocs(tq);
+          if (!tSnap.empty && isMounted) {
+            setDbTeams(tSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+          }
+        }
+      } catch (err) {
+        // Fallback error handling
+      } finally {
+        if (isMounted) setSummaryLoading(false);
+      }
+    };
+
+    fetchSummaryFromPersistentStore();
+
+    return () => { isMounted = false; };
+  }, [id]);
+
+  const activeAuction = currentAuction || dbAuction;
+  const activeTeams = (roomTeams && roomTeams.length > 0) ? roomTeams : dbTeams;
+
   // Derived Data
   const allSoldPlayers = useMemo(() => {
-    return roomTeams.flatMap(rt => 
+    return activeTeams.flatMap(rt => 
       (rt.squad || []).map(s => {
         const pid = typeof s === 'string' ? s : s.id;
         const bidVal = typeof s === 'string' ? 0 : s.bid;
@@ -107,13 +180,11 @@ const AuctionSummary = () => {
         };
       }).filter(p => p && p.id)
     ).sort((a, b) => b.bidVal - a.bidVal);
-  }, [roomTeams]);
+  }, [activeTeams]);
 
   const topPlayers = allSoldPlayers.slice(0, 5);
 
-
-
-  if (loading || !currentAuction) {
+  if ((loading && !activeAuction) || (!activeAuction && summaryLoading)) {
     return (
       <div className="h-screen bg-[#050505] text-white flex flex-col items-center justify-center p-8 text-center">
         <div className="w-20 h-20 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin mb-8" />
@@ -271,8 +342,8 @@ const AuctionSummary = () => {
               <FantasyDashboard 
                 auctionId={id} 
                 user={user} 
-                roomTeams={roomTeams}
-                currentAuction={currentAuction}
+                roomTeams={activeTeams}
+                currentAuction={activeAuction}
               />
             </motion.section>
           ) : (
@@ -284,8 +355,8 @@ const AuctionSummary = () => {
               className="max-w-5xl mx-auto space-y-3 sm:space-y-4"
             >
               {TEAMS.map((t, idx) => {
-                const teamDoc = roomTeams.find(doc => doc.teamId === t.id);
-                const manager = currentAuction?.players?.find(p => p.team === t.id);
+                const teamDoc = activeTeams.find(doc => doc.teamId === t.id);
+                const manager = activeAuction?.players?.find(p => p.team === t.id);
                 const isExpanded = expandedTeam === t.id;
                 
                 const squad = (teamDoc?.squad || []).map(s => {
@@ -297,7 +368,7 @@ const AuctionSummary = () => {
                 if (squad.length === 0) return null;
 
                 const osCount = squad.filter(p => p.country !== 'IND').length;
-                const totalBudget = currentAuction?.settings?.budget || 120;
+                const totalBudget = activeAuction?.settings?.budget || 120;
                 const totalSpent = totalBudget - (teamDoc?.budgetRemaining || totalBudget);
 
                 return (
