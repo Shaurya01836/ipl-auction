@@ -88,6 +88,9 @@ export const AuctionProvider = ({ children }) => {
 
   // Create a new room in DB (RTDB + Supabase index, zero Firestore load)
   const createRoom = useCallback(async (roomId, userId, playerDetails, auctionType = 'mega', isPublic = true) => {
+    // Explicitly connect RTDB WebSocket for room creation
+    try { goOnline(rtdb); } catch (e) {}
+
     const teamDetails = TEAMS.find(t => t.id === playerDetails.team);
     
     // Mode-specific configurations
@@ -433,6 +436,9 @@ export const AuctionProvider = ({ children }) => {
   }, [getSyncedTime, flushAuctionToFirestore]);
 
   const joinRoomDb = useCallback(async (roomId, userId, playerDetails) => {
+    // Explicitly connect RTDB WebSocket when joining a room
+    try { goOnline(rtdb); } catch (e) {}
+
     const teamDetails = TEAMS.find(t => t.id === playerDetails.team);
     
     // Fetch current room state from RTDB (0 Firestore cost!)
