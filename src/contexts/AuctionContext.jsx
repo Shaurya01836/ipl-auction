@@ -344,7 +344,7 @@ export const AuctionProvider = ({ children }) => {
           });
         }
 
-        // Get current team data from RTDB to update RTDB team node (0 Firestore cost!)
+        // Get current team data from RTDB to update RTDB team node
         const rtdbTeamSnap = await get(ref(rtdb, `auctions/${roomId}/teams/${teamDocId}`));
         const tData = rtdbTeamSnap.exists() ? rtdbTeamSnap.val() : {};
         const defaultBudget = 120.0;
@@ -357,6 +357,22 @@ export const AuctionProvider = ({ children }) => {
           spent: (tData.spent || 0) + auctionState.currentBid,
           squad: [...(tData.squad || []), { id: auctionState.playerId, bid: auctionState.currentBid }]
         };
+
+        // Real-time incremental sync to Supabase teams table on every player sale
+        if (supabase) {
+          try {
+            await supabase.from('teams').upsert({
+              id: teamDocId,
+              auction_id: roomId,
+              user_id: auctionState.highBidderId,
+              team_id: auctionState.highBidderTeamId || tData.teamId || '',
+              team_name: teamDetails?.name || auctionState.highBidderName || tData.teamName || 'Unknown',
+              budget_remaining: newTeamData.budgetRemaining,
+              spent: newTeamData.spent,
+              squad: newTeamData.squad
+            });
+          } catch (sErr) {}
+        }
       }
 
       // Sync live state to RTDB in parallel (0 Firestore cost!)

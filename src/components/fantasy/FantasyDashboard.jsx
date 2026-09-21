@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db, rtdb } from '../../lib/firebase';
+import { supabase } from '../../lib/supabase';
 import { ref, onValue, update as updateRtdb, set as setRtdb, get as getRtdb } from 'firebase/database';
 import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
@@ -182,77 +183,97 @@ const FantasyDashboard = ({ auctionId, user, roomTeams = [], currentAuction }) =
       }
     };
 
-    // 1. Current user's own squad (from RTDB)
-    const mySquadRef = ref(rtdb, `auctions/${auctionId}/userSquads/${user.uid}`);
-    const unsubMySquad = onValue(mySquadRef, (snap) => {
-      if (snap.exists() && snap.val()?.players?.length > 0) {
-        setUserSquad(snap.val());
-        setIsEditing(false);
-      } else {
-        scanLegacySquads();
-      }
-    }, (err) => handleFirebaseError(err));
-
-    // 2. ALL squads in this auction room (from RTDB)
-    const allSquadsRef = ref(rtdb, `auctions/${auctionId}/userSquads`);
-    const unsubAllSquads = onValue(allSquadsRef, (snap) => {
-      if (snap.exists()) {
-        const val = snap.val();
-        setAllSquads(Object.entries(val).map(([uid, squad]) => ({ id: `${auctionId}_${uid}`, ...squad })));
-      } else {
-        scanLegacySquads();
-      }
-    }, (err) => handleFirebaseError(err));
-
-    // 3. Player points & stats from Firestore (cached single getDoc)
-    if (cachedPlayerPoints) {
-      setPlayerPoints(cachedPlayerPoints);
-    } else {
-      const ppRef = doc(db, 'fantasyConfig', 'playerPoints');
-      getDoc(ppRef).then(snap => {
-        if (snap.exists()) {
-          cachedPlayerPoints = snap.data();
-          setPlayerPoints(cachedPlayerPoints);
+    // 1. Current user's own squad & ALL squads in this room from Supabase
+    const fetchSquadsFromSupabase = async () => {
+      try {
+        if (!supabase) return;
+        const { data: sSquads } = await supabase.from('user_squads').select('*').eq('auction_id', auctionId);
+        if (sSquads) {
+          const squadsArr = sSquads.map(s => ({
+            id: s.id || `${s.auction_id}_${s.user_id}`,
+            userId: s.user_id,
+            userName: s.user_name,
+            teamId: s.team_id,
+            auctionId: s.auction_id,
+            players: s.players || [],
+            captain: s.captain,
+            viceCaptain: s.vice_captain,
+            impactPlayer: s.impact_player
+          }));
+          setAllSquads(squadsArr);
+          const mySq = squadsArr.find(s => s.userId === user.uid);
+          if (mySq && mySq.players?.length > 0) {
+            setUserSquad(mySq);
+            setIsEditing(false);
+          }
         }
-      }).catch(handleFirebaseError);
+      } catch (err) {}
+    };
+
+    fetchSquadsFromSupabase();
+
+    // Subscribe to real-time changes on user_squads in Supabase
+    let squadChannel = null;
+    if (supabase) {
+      squadChannel = supabase.channel(`public:user_squads:auction_id=eq.${auctionId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'user_squads', filter: `auction_id=eq.${auctionId}` }, () => {
+          fetchSquadsFromSupabase();
+        })
+        .subscribe();
     }
 
-    if (cachedPlayerStats) {
-      setPlayerStats(cachedPlayerStats);
-    } else {
-      const statsRef = doc(db, 'fantasyConfig', 'playerStats');
-      getDoc(statsRef).then(snap => {
-        if (snap.exists()) {
-          cachedPlayerStats = snap.data();
-          setPlayerStats(cachedPlayerStats);
+    // 2. Player points & stats from Supabase fantasy_config table
+    const fetchFantasyConfigFromSupabase = async () => {
+      try {
+        if (!supabase) return;
+        const { data: fcData } = await supabase.from('fantasy_config').select('*');
+        if (fcData) {
+          const pointsRow = fcData.find(r => r.key === 'playerPoints' || r.id === 'playerPoints');
+          const matchesRow = fcData.find(r => r.key === 'playerMatches' || r.id === 'playerMatches');
+          const statsRow = fcData.find(r => r.key === 'playerStats' || r.id === 'playerStats');
+
+          if (pointsRow?.data) setPlayerPoints(pointsRow.data);
+          if (statsRow?.data) setPlayerStats(statsRow.data);
+          else if (pointsRow?.data) setPlayerStats(pointsRow.data);
         }
-      }).catch(handleFirebaseError);
-    }
+      } catch (e) {}
+    };
+
+    fetchFantasyConfigFromSupabase();
 
     return () => {
-      unsubMySquad();
-      unsubAllSquads();
+      if (squadChannel) squadChannel.unsubscribe();
     };
 
   }, [auctionId, user, handleFirebaseError]);
 
-  // Save squad handler (RTDB - 0 Firestore write cost)
+  // Save squad handler (Stores directly to Supabase user_squads table)
   const handleSaveSquad = async (squadData) => {
     if (!user?.uid || !auctionId) return;
     setIsSaving(true);
     try {
-      const squadRef = ref(rtdb, `auctions/${auctionId}/userSquads/${user.uid}`);
-      await setRtdb(squadRef, {
+      if (supabase) {
+        await supabase.from('user_squads').upsert({
+          id: `${auctionId}_${user.uid}`,
+          auction_id: auctionId,
+          user_id: user.uid,
+          user_name: user.displayName || 'Manager',
+          team_id: userTeamDoc?.teamId || 'N/A',
+          players: squadData.players || []
+        });
+      }
+
+      setUserSquad({
         userId: user.uid,
         userName: user.displayName || 'Manager',
         teamId: userTeamDoc?.teamId || 'N/A',
         auctionId,
         ...squadData
       });
+
       setIsEditing(false);
     } catch (err) {
-      handleFirebaseError(err);
-      alert("Error saving squad.");
+      alert("Error saving squad to database.");
     } finally {
       setIsSaving(false);
     }

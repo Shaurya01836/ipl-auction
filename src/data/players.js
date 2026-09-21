@@ -9,12 +9,10 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/9.png",
     "stats": {
-      "matches": 133,
-      "wickets": 165,
-      "econ": 7.3,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "matches": 145,
+      "wickets": 183,
+      "econ": 7.25,
+      "avg": 22.03
     }
   },
   {
@@ -27,12 +25,11 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/415500/415592.jpg",
     "stats": {
-      "matches": 165,
-      "runs": 4912,
-      "sr": 147.96,
-      "avg": 32.51,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 166,
+      "runs": 4311,
+      "sr": 148.66,
+      "avg": 35.05,
+      "econ": 8
     }
   },
   {
@@ -45,12 +42,10 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/125.png",
     "stats": {
-      "matches": 141,
-      "wickets": 164,
-      "econ": 8.36,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "matches": 65,
+      "wickets": 76,
+      "econ": 9.03,
+      "avg": 27
     }
   },
   {
@@ -63,12 +58,12 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/110.png",
     "stats": {
-      "sr": 133.99,
-      "avg": 22.02,
-      "econ": 7.35,
-      "runs": 1916,
       "matches": 162,
-      "wickets": 128
+      "runs": 1916,
+      "sr": 133.99,
+      "wickets": 128,
+      "econ": 7.35,
+      "avg": 31.61
     }
   },
   {
@@ -81,12 +76,11 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/15.png",
     "stats": {
-      "matches": 215,
-      "wickets": 156,
-      "econ": 7.58,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "matches": 190,
+      "wickets": 198,
+      "econ": 7.69,
+      "avg": 27.33,
+      "runs": 320
     }
   },
   {
@@ -99,12 +93,12 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/54.png",
     "stats": {
-      "matches": 131,
-      "runs": 4648,
-      "sr": 141.91,
-      "avg": 28.87,
-      "wickets": 171,
-      "econ": 8.39
+      "matches": 152,
+      "runs": 2749,
+      "sr": 146.93,
+      "wickets": 78,
+      "econ": 9.18,
+      "avg": 31.95
     }
   },
   {
@@ -117,12 +111,10 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/202.png",
     "stats": {
-      "matches": 225,
-      "runs": 6291,
-      "sr": 137.1,
-      "avg": 29.73,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 49,
+      "runs": 1480,
+      "sr": 169.73,
+      "avg": 40
     }
   },
   {
@@ -135,12 +127,10 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/164.png",
     "stats": {
-      "matches": 237,
-      "runs": 5267,
-      "sr": 149.72,
-      "avg": 32.3,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 119,
+      "runs": 2998,
+      "sr": 137.65,
+      "avg": 29.11
     }
   },
   {
@@ -153,12 +143,12 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/181.png",
     "stats": {
-      "matches": 148,
-      "wickets": 160,
-      "econ": 7.94,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "matches": 52,
+      "wickets": 59,
+      "econ": 7.89,
+      "avg": 27.15,
+      "runs": 262,
+      "sr": 147.2
     }
   },
   {
@@ -171,12 +161,10 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/01/Jos_Buttler_in_2023.jpg",
     "stats": {
-      "matches": 107,
-      "runs": 5795,
-      "sr": 141.31,
-      "avg": 29.49,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 121,
+      "runs": 4120,
+      "sr": 149.39,
+      "avg": 40
     }
   },
   {
@@ -189,12 +177,10 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/36.png",
     "stats": {
-      "matches": 238,
-      "wickets": 154,
-      "econ": 7.89,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "matches": 39,
+      "wickets": 57,
+      "econ": 8.28,
+      "avg": 20.98
     }
   },
   {
@@ -207,12 +193,12 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/116.png",
     "stats": {
-      "matches": 191,
-      "wickets": 116,
-      "econ": 8.22,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "matches": 84,
+      "wickets": 119,
+      "econ": 8.62,
+      "avg": 22.96,
+      "runs": 215,
+      "sr": 106.97
     }
   },
   {
@@ -225,12 +211,10 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/19.png",
     "stats": {
-      "sr": 135.98,
-      "avg": 45.58,
-      "econ": "-",
-      "runs": 5242,
-      "matches": 150,
-      "wickets": 0
+      "matches": 145,
+      "runs": 5222,
+      "sr": 136.03,
+      "avg": 46.21
     }
   },
   {
@@ -243,12 +227,11 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/14.png",
     "stats": {
-      "sr": 86.64,
-      "avg": 13.4,
-      "econ": 8.04,
-      "runs": 201,
       "matches": 98,
-      "wickets": 102
+      "wickets": 102,
+      "econ": 8.04,
+      "avg": 26.95,
+      "runs": 201
     }
   },
   {
@@ -261,12 +244,12 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/586.png",
     "stats": {
-      "matches": 228,
-      "runs": 3262,
-      "sr": 137.57,
-      "avg": 30.2,
-      "wickets": 126,
-      "econ": 7.8
+      "matches": 35,
+      "wickets": 36,
+      "econ": 9.41,
+      "runs": 141,
+      "avg": 31.92,
+      "sr": 109.31
     }
   },
   {
@@ -279,12 +262,12 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/40.png",
     "stats": {
-      "matches": 232,
-      "runs": 4179,
-      "sr": 144.15,
-      "avg": 37.24,
-      "wickets": 182,
-      "econ": 8.25
+      "matches": 55,
+      "runs": 1292,
+      "sr": 142.93,
+      "wickets": 37,
+      "econ": 8.52,
+      "avg": 21.49
     }
   },
   {
@@ -297,12 +280,11 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/31.png",
     "stats": {
-      "sr": 93.28,
-      "avg": 10.09,
+      "matches": 51,
+      "wickets": 65,
       "econ": 8.61,
-      "runs": 111,
-      "matches": 52,
-      "wickets": 65
+      "avg": 23.12,
+      "runs": 111
     }
   },
   {
@@ -315,12 +297,10 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/01/Mohammed_Shami_Arjuna_Award_%28cropped%29.jpg",
     "stats": {
-      "matches": 124,
-      "wickets": 172,
-      "econ": 8.05,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "matches": 110,
+      "wickets": 127,
+      "econ": 8.44,
+      "avg": 26.87
     }
   },
   {
@@ -333,12 +313,10 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/63.png",
     "stats": {
-      "matches": 198,
-      "wickets": 200,
-      "econ": 7.44,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "matches": 93,
+      "wickets": 93,
+      "econ": 8.65,
+      "avg": 29.83
     }
   },
   {
@@ -351,12 +329,10 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/57.png",
     "stats": {
-      "matches": 216,
-      "runs": 3707,
-      "sr": 130.45,
-      "avg": 28.51,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 278,
+      "runs": 5439,
+      "sr": 137.46,
+      "avg": 38.3
     }
   },
   {
@@ -369,12 +345,10 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/136.png",
     "stats": {
-      "matches": 130,
-      "runs": 5020,
-      "sr": 154.03,
-      "avg": 41.07,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 90,
+      "runs": 2293,
+      "sr": 168.98,
+      "avg": 34.22
     }
   },
   {
@@ -387,12 +361,10 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/975.png",
     "stats": {
-      "matches": 168,
-      "wickets": 145,
-      "econ": 7.38,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "matches": 37,
+      "wickets": 48,
+      "econ": 8.08,
+      "avg": 22.23
     }
   },
   {
@@ -405,12 +377,12 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/417500/417526.jpg",
     "stats": {
-      "matches": 221,
-      "wickets": 193,
-      "econ": 8.19,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "matches": 72,
+      "wickets": 79,
+      "econ": 8.81,
+      "avg": 30.04,
+      "runs": 612,
+      "sr": 152.24
     }
   },
   {
@@ -423,12 +395,10 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/1220.png",
     "stats": {
-      "matches": 169,
-      "runs": 4776,
-      "sr": 130.86,
-      "avg": 39.76,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 21,
+      "runs": 653,
+      "sr": 175.54,
+      "avg": 34.37
     }
   },
   {
@@ -441,12 +411,7 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/218.png",
     "stats": {
-      "matches": 182,
-      "wickets": 197,
-      "econ": 8.34,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "matches": 0
     }
   },
   {
@@ -459,12 +424,12 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/46.png",
     "stats": {
-      "matches": 210,
-      "runs": 4332,
-      "sr": 141.18,
-      "avg": 43.57,
-      "wickets": 118,
-      "econ": 7.23
+      "matches": 254,
+      "runs": 3260,
+      "sr": 130.25,
+      "wickets": 170,
+      "econ": 7.67,
+      "avg": 30.52
     }
   },
   {
@@ -477,12 +442,10 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/152.png",
     "stats": {
-      "matches": 226,
-      "runs": 4722,
-      "sr": 145.22,
-      "avg": 36.65,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 58,
+      "runs": 1099,
+      "sr": 145.18,
+      "avg": 30.53
     }
   },
   {
@@ -495,12 +458,10 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/18.png",
     "stats": {
-      "matches": 223,
-      "runs": 6887,
-      "sr": 136.13,
-      "avg": 36.22,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 125,
+      "runs": 3553,
+      "sr": 147.62,
+      "avg": 34.16
     }
   },
   {
@@ -513,12 +474,10 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/6.png",
     "stats": {
-      "matches": 234,
-      "runs": 4021,
-      "sr": 145.03,
-      "avg": 39.62,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 257,
+      "runs": 6628,
+      "sr": 131.14,
+      "avg": 29.72
     }
   },
   {
@@ -531,12 +490,10 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://upload.wikimedia.org/wikipedia/commons/2/27/Ruturaj_Gaikwad.jpeg",
     "stats": {
-      "matches": 156,
-      "runs": 4233,
-      "sr": 137.88,
-      "avg": 37.26,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 71,
+      "runs": 2502,
+      "sr": 137.48,
+      "avg": 40.35
     }
   },
   {
@@ -549,12 +506,10 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/190.png",
     "stats": {
-      "matches": 187,
-      "runs": 3888,
-      "sr": 142.74,
-      "avg": 39.8,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 176,
+      "runs": 4704,
+      "sr": 139.05,
+      "avg": 30.75
     }
   },
   {
@@ -567,12 +522,12 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/211.png",
     "stats": {
-      "matches": 177,
-      "runs": 5919,
-      "sr": 149.13,
-      "avg": 38.55,
-      "wickets": 123,
-      "econ": 8.37
+      "matches": 79,
+      "runs": 1859,
+      "sr": 143.67,
+      "avg": 42.6,
+      "wickets": 5,
+      "econ": 10.31
     }
   },
   {
@@ -585,12 +540,11 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/12.png",
     "stats": {
-      "matches": 167,
-      "runs": 4301,
-      "sr": 133.89,
-      "avg": 37.67,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 132,
+      "runs": 3731,
+      "sr": 133.35,
+      "avg": 34.23,
+      "econ": 7
     }
   },
   {
@@ -603,12 +557,10 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/62.png",
     "stats": {
-      "matches": 101,
-      "runs": 5842,
-      "sr": 145.27,
-      "avg": 30.65,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 118,
+      "runs": 3866,
+      "sr": 138.72,
+      "avg": 39.45
     }
   },
   {
@@ -621,12 +573,12 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/156.png",
     "stats": {
-      "matches": 110,
-      "runs": 5664,
-      "sr": 147.42,
-      "avg": 39.45,
-      "wickets": 194,
-      "econ": 7.42
+      "matches": 188,
+      "runs": 1780,
+      "sr": 166.52,
+      "wickets": 192,
+      "econ": 6.8,
+      "avg": 25.64
     }
   },
   {
@@ -639,12 +591,10 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/636.png",
     "stats": {
-      "matches": 229,
-      "runs": 4468,
-      "sr": 140,
-      "avg": 40.55,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 50,
+      "runs": 846,
+      "sr": 173.37,
+      "avg": 32.54
     }
   },
   {
@@ -657,12 +607,12 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/415900/415979.jpg",
     "stats": {
-      "matches": 222,
-      "runs": 3214,
-      "sr": 154.96,
-      "avg": 41.01,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 38,
+      "runs": 1146,
+      "sr": 170.03,
+      "avg": 34.73,
+      "wickets": 2,
+      "econ": 11.69
     }
   },
   {
@@ -675,12 +625,11 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/66.png",
     "stats": {
-      "matches": 183,
-      "wickets": 142,
-      "econ": 8.25,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "matches": 119,
+      "wickets": 143,
+      "econ": 8.38,
+      "avg": 26.2,
+      "sr": 104.94
     }
   },
   {
@@ -693,12 +642,10 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/140.png",
     "stats": {
-      "matches": 161,
-      "wickets": 191,
+      "matches": 71,
+      "wickets": 83,
       "econ": 7.56,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "avg": 25.13
     }
   },
   {
@@ -711,12 +658,12 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/2.png",
     "stats": {
-      "matches": 153,
-      "runs": 6887,
-      "sr": 142.5,
-      "avg": 42.92,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 267,
+      "runs": 8661,
+      "sr": 132.86,
+      "avg": 39.55,
+      "wickets": 4,
+      "econ": 8.8
     }
   },
   {
@@ -729,12 +676,10 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/533.png",
     "stats": {
-      "matches": 141,
-      "runs": 4597,
-      "sr": 133.87,
-      "avg": 39.12,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 52,
+      "runs": 1608,
+      "sr": 150.84,
+      "avg": 32.16
     }
   },
   {
@@ -747,12 +692,10 @@ export const IPL_PLAYERS = [
     "set": "Marquee Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/10.png",
     "stats": {
-      "matches": 249,
-      "wickets": 193,
-      "econ": 8.37,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "matches": 160,
+      "wickets": 205,
+      "econ": 7.84,
+      "avg": 22.45
     }
   },
   {
@@ -768,9 +711,7 @@ export const IPL_PLAYERS = [
       "matches": 138,
       "runs": 4425,
       "sr": 131.51,
-      "avg": 30.3,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 30.3
     }
   },
   {
@@ -785,10 +726,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 204,
       "wickets": 188,
-      "econ": 7.66,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.66
     }
   },
   {
@@ -801,12 +739,10 @@ export const IPL_PLAYERS = [
     "set": "Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/23.png",
     "stats": {
-      "matches": 118,
-      "runs": 6490,
-      "sr": 136.64,
-      "avg": 39.36,
-      "wickets": 152,
-      "econ": 7.48
+      "matches": 96,
+      "runs": 1866,
+      "sr": 142.11,
+      "avg": 28.27
     }
   },
   {
@@ -819,12 +755,11 @@ export const IPL_PLAYERS = [
     "set": "Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/138.png",
     "stats": {
-      "matches": 169,
-      "runs": 5430,
-      "sr": 150.47,
-      "avg": 39.65,
-      "wickets": 196,
-      "econ": 7.7
+      "matches": 59,
+      "runs": 880,
+      "sr": 137.93,
+      "wickets": 58,
+      "econ": 9.48
     }
   },
   {
@@ -840,9 +775,7 @@ export const IPL_PLAYERS = [
       "matches": 168,
       "runs": 6345,
       "sr": 144.98,
-      "avg": 38.72,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 38.72
     }
   },
   {
@@ -873,12 +806,11 @@ export const IPL_PLAYERS = [
     "set": "Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/550.png",
     "stats": {
-      "matches": 236,
-      "runs": 3387,
-      "sr": 144.24,
-      "avg": 28.88,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 29,
+      "runs": 707,
+      "sr": 153.7,
+      "wickets": 16,
+      "econ": 9.05
     }
   },
   {
@@ -894,9 +826,7 @@ export const IPL_PLAYERS = [
       "matches": 133,
       "runs": 5474,
       "sr": 134.19,
-      "avg": 43.17,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 43.17
     }
   },
   {
@@ -912,9 +842,7 @@ export const IPL_PLAYERS = [
       "matches": 167,
       "runs": 3517,
       "sr": 137.17,
-      "avg": 28.74,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 28.74
     }
   },
   {
@@ -927,12 +855,10 @@ export const IPL_PLAYERS = [
     "set": "Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/183.png",
     "stats": {
-      "matches": 128,
-      "runs": 3388,
-      "sr": 154.44,
-      "avg": 34.37,
-      "wickets": 200,
-      "econ": 7.49
+      "matches": 39,
+      "runs": 939,
+      "sr": 162.45,
+      "avg": 28.45
     }
   },
   {
@@ -966,9 +892,7 @@ export const IPL_PLAYERS = [
       "matches": 137,
       "runs": 1412,
       "sr": 150.09,
-      "avg": 29.61,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 29.61
     }
   },
   {
@@ -981,12 +905,10 @@ export const IPL_PLAYERS = [
     "set": "Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/212.png",
     "stats": {
-      "matches": 126,
-      "runs": 1792,
-      "sr": 154,
-      "avg": 44.89,
-      "wickets": 103,
-      "econ": 8.44
+      "matches": 63,
+      "runs": 1377,
+      "sr": 155.24,
+      "avg": 25.5
     }
   },
   {
@@ -1002,9 +924,7 @@ export const IPL_PLAYERS = [
       "matches": 78,
       "runs": 1522,
       "sr": 137.11,
-      "avg": 39.8,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 39.8
     }
   },
   {
@@ -1020,9 +940,7 @@ export const IPL_PLAYERS = [
       "matches": 62,
       "runs": 1908,
       "sr": 131.21,
-      "avg": 29.57,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 29.57
     }
   },
   {
@@ -1053,12 +971,10 @@ export const IPL_PLAYERS = [
     "set": "Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/976.png",
     "stats": {
-      "matches": 61,
-      "runs": 1419,
-      "sr": 132.49,
-      "avg": 31.45,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 25,
+      "runs": 1034,
+      "sr": 139.16,
+      "avg": 47
     }
   },
   {
@@ -1071,12 +987,10 @@ export const IPL_PLAYERS = [
     "set": "Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/993.png",
     "stats": {
-      "matches": 81,
-      "runs": 1366,
-      "sr": 150.73,
-      "avg": 32.25,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 38,
+      "runs": 1156,
+      "sr": 146.32,
+      "avg": 39.86
     }
   },
   {
@@ -1107,12 +1021,10 @@ export const IPL_PLAYERS = [
     "set": "Set 1",
     "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/412800/412865.jpg",
     "stats": {
-      "matches": 244,
-      "wickets": 188,
-      "econ": 8.38,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "matches": 20,
+      "wickets": 34,
+      "econ": 7.88,
+      "avg": 17.44
     }
   },
   {
@@ -1125,12 +1037,10 @@ export const IPL_PLAYERS = [
     "set": "Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/520.png",
     "stats": {
-      "matches": 200,
-      "wickets": 181,
-      "econ": 7.96,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "matches": 66,
+      "wickets": 63,
+      "econ": 7.83,
+      "avg": 29.57
     }
   },
   {
@@ -1146,9 +1056,7 @@ export const IPL_PLAYERS = [
       "matches": 39,
       "runs": 717,
       "sr": 139.21,
-      "avg": 30.72,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 30.72
     }
   },
   {
@@ -1163,10 +1071,8 @@ export const IPL_PLAYERS = [
     "stats": {
       "sr": 163.75,
       "avg": 28.07,
-      "econ": "-",
       "runs": 393,
-      "matches": 24,
-      "wickets": 0
+      "matches": 24
     }
   },
   {
@@ -1200,9 +1106,7 @@ export const IPL_PLAYERS = [
       "matches": 67,
       "runs": 869,
       "sr": 141.37,
-      "avg": 31.34,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 31.34
     }
   },
   {
@@ -1218,9 +1122,7 @@ export const IPL_PLAYERS = [
       "matches": 27,
       "runs": 348,
       "sr": 150.28,
-      "avg": 44.71,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 44.71
     }
   },
   {
@@ -1233,12 +1135,11 @@ export const IPL_PLAYERS = [
     "set": "Set 1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/1944.png",
     "stats": {
-      "matches": 79,
-      "runs": 771,
-      "sr": 140.11,
-      "avg": 43.51,
-      "wickets": 40,
-      "econ": 7.45
+      "matches": 13,
+      "runs": 303,
+      "sr": 142.92,
+      "wickets": 3,
+      "econ": 10.42
     }
   },
   {
@@ -1254,9 +1155,7 @@ export const IPL_PLAYERS = [
       "matches": 66,
       "runs": 698,
       "sr": 149.2,
-      "avg": 44.01,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 44.01
     }
   },
   {
@@ -1269,12 +1168,10 @@ export const IPL_PLAYERS = [
     "set": "Set 2",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/584.png",
     "stats": {
-      "matches": 239,
-      "runs": 4555,
-      "sr": 132.24,
-      "avg": 44.6,
-      "wickets": 171,
-      "econ": 7.71
+      "matches": 50,
+      "runs": 1326,
+      "sr": 137.12,
+      "avg": 31.57
     }
   },
   {
@@ -1290,9 +1187,7 @@ export const IPL_PLAYERS = [
       "matches": 135,
       "runs": 4642,
       "sr": 144.92,
-      "avg": 29.58,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 29.58
     }
   },
   {
@@ -1308,9 +1203,7 @@ export const IPL_PLAYERS = [
       "matches": 55,
       "runs": 2036,
       "sr": 145.89,
-      "avg": 35.84,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 35.84
     }
   },
   {
@@ -1323,12 +1216,10 @@ export const IPL_PLAYERS = [
     "set": "Set 2",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/109.png",
     "stats": {
-      "matches": 71,
-      "wickets": 106,
-      "econ": 7.3,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "matches": 63,
+      "wickets": 74,
+      "econ": 8.86,
+      "avg": 27.32
     }
   },
   {
@@ -1361,10 +1252,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 80,
       "wickets": 69,
-      "econ": 7.41,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.41
     }
   },
   {
@@ -1380,9 +1268,7 @@ export const IPL_PLAYERS = [
       "matches": 120,
       "runs": 1050,
       "sr": 135.26,
-      "avg": 43.97,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 43.97
     }
   },
   {
@@ -1395,12 +1281,10 @@ export const IPL_PLAYERS = [
     "set": "Set 2",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/114.png",
     "stats": {
-      "matches": 51,
-      "wickets": 57,
-      "econ": 8.33,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "matches": 106,
+      "wickets": 135,
+      "econ": 8.6,
+      "avg": 23.47
     }
   },
   {
@@ -1414,11 +1298,9 @@ export const IPL_PLAYERS = [
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/8.png",
     "stats": {
       "matches": 58,
-      "wickets": 84,
-      "econ": 8.05,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "wickets": 74,
+      "econ": 8.78,
+      "avg": 25.32
     }
   },
   {
@@ -1431,12 +1313,11 @@ export const IPL_PLAYERS = [
     "set": "Set 2",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/17.png",
     "stats": {
-      "matches": 105,
-      "runs": 1092,
-      "sr": 140.97,
-      "avg": 37.77,
-      "wickets": 52,
-      "econ": 8.46
+      "matches": 127,
+      "runs": 1647,
+      "sr": 132.82,
+      "wickets": 76,
+      "econ": 7.37
     }
   },
   {
@@ -1451,10 +1332,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 101,
       "wickets": 53,
-      "econ": 7.72,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.72
     }
   },
   {
@@ -1485,12 +1363,10 @@ export const IPL_PLAYERS = [
     "set": "Set 2",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/150.png",
     "stats": {
-      "matches": 75,
-      "wickets": 67,
-      "econ": 7.22,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "matches": 51,
+      "wickets": 49,
+      "econ": 8.92,
+      "avg": 34.75
     }
   },
   {
@@ -1521,12 +1397,10 @@ export const IPL_PLAYERS = [
     "set": "Set 2",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/329.png",
     "stats": {
-      "matches": 97,
-      "runs": 2577,
-      "sr": 147.79,
-      "avg": 43.27,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 26,
+      "runs": 360,
+      "sr": 146.34,
+      "avg": 21.18
     }
   },
   {
@@ -1542,9 +1416,7 @@ export const IPL_PLAYERS = [
       "matches": 139,
       "runs": 2703,
       "sr": 133.03,
-      "avg": 33.01,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 33.01
     }
   },
   {
@@ -1557,10 +1429,8 @@ export const IPL_PLAYERS = [
     "set": "Set 2",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/224.png",
     "stats": {
-      "sr": 60,
       "avg": 3,
       "econ": 8.94,
-      "runs": 3,
       "matches": 63,
       "wickets": 67
     }
@@ -1575,12 +1445,11 @@ export const IPL_PLAYERS = [
     "set": "Set 2",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/20.png",
     "stats": {
-      "matches": 52,
-      "runs": 1553,
-      "sr": 137.39,
-      "avg": 39.16,
-      "wickets": 83,
-      "econ": 7.91
+      "matches": 60,
+      "runs": 378,
+      "sr": 116.31,
+      "wickets": 37,
+      "econ": 7.54
     }
   },
   {
@@ -1593,12 +1462,10 @@ export const IPL_PLAYERS = [
     "set": "Set 2",
     "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/413700/413768.jpg",
     "stats": {
-      "matches": 179,
-      "wickets": 128,
-      "econ": 8.02,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "matches": 46,
+      "wickets": 60,
+      "econ": 8.96,
+      "avg": 26.15
     }
   },
   {
@@ -1613,10 +1480,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 244,
       "wickets": 103,
-      "econ": 7.29,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.29
     }
   },
   {
@@ -1629,12 +1493,10 @@ export const IPL_PLAYERS = [
     "set": "Set 2",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/629.png",
     "stats": {
-      "matches": 248,
-      "wickets": 172,
-      "econ": 8.44,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "matches": 27,
+      "wickets": 25,
+      "econ": 7.66,
+      "avg": 32.12
     }
   },
   {
@@ -1649,10 +1511,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 101,
       "wickets": 51,
-      "econ": 7.14,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.14
     }
   },
   {
@@ -1683,12 +1542,10 @@ export const IPL_PLAYERS = [
     "set": "Set 2",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/1462.png",
     "stats": {
-      "sr": 55.56,
-      "avg": 10,
-      "econ": 10.4,
-      "runs": 10,
-      "matches": 32,
-      "wickets": 36
+      "matches": 22,
+      "wickets": 24,
+      "econ": 10.2,
+      "avg": 31.42
     }
   },
   {
@@ -1704,9 +1561,7 @@ export const IPL_PLAYERS = [
       "matches": 55,
       "runs": 663,
       "sr": 142.51,
-      "avg": 39.48,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 39.48
     }
   },
   {
@@ -1740,9 +1595,7 @@ export const IPL_PLAYERS = [
       "matches": 70,
       "runs": 403,
       "sr": 152.26,
-      "avg": 40.59,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 40.59
     }
   },
   {
@@ -1757,10 +1610,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 62,
       "wickets": 16,
-      "econ": 8.42,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.42
     }
   },
   {
@@ -1776,9 +1626,7 @@ export const IPL_PLAYERS = [
       "matches": 40,
       "runs": 324,
       "sr": 149.95,
-      "avg": 31.57,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 31.57
     }
   },
   {
@@ -1794,9 +1642,7 @@ export const IPL_PLAYERS = [
       "matches": 66,
       "runs": 802,
       "sr": 137.01,
-      "avg": 36.48,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 36.48
     }
   },
   {
@@ -1809,12 +1655,10 @@ export const IPL_PLAYERS = [
     "set": "Set 2",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/44.png",
     "stats": {
-      "matches": 58,
-      "runs": 102,
-      "sr": 147.93,
-      "avg": 34.17,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 185,
+      "runs": 4642,
+      "sr": 123.42,
+      "avg": 30.54
     }
   },
   {
@@ -1827,12 +1671,10 @@ export const IPL_PLAYERS = [
     "set": "Set 2",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/200.png",
     "stats": {
-      "matches": 54,
-      "runs": 884,
-      "sr": 146.33,
-      "avg": 33.2,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 61,
+      "runs": 1560,
+      "sr": 123.71,
+      "avg": 26.89
     }
   },
   {
@@ -1847,10 +1689,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 63,
       "wickets": 43,
-      "econ": 8.18,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.18
     }
   },
   {
@@ -1865,10 +1704,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 34,
       "wickets": 28,
-      "econ": 7.28,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.28
     }
   },
   {
@@ -1901,10 +1737,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 74,
       "wickets": 8,
-      "econ": 7.99,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.99
     }
   },
   {
@@ -1920,9 +1753,7 @@ export const IPL_PLAYERS = [
       "matches": 33,
       "runs": 499,
       "sr": 137.67,
-      "avg": 29.5,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 29.5
     }
   },
   {
@@ -1937,10 +1768,8 @@ export const IPL_PLAYERS = [
     "stats": {
       "sr": 140.98,
       "avg": 24.57,
-      "econ": "-",
       "runs": 172,
-      "matches": 13,
-      "wickets": 0
+      "matches": 13
     }
   },
   {
@@ -1953,12 +1782,10 @@ export const IPL_PLAYERS = [
     "set": "Set 3",
     "image": "https://upload.wikimedia.org/wikipedia/commons/a/a8/Prithvi_shaw.png",
     "stats": {
-      "matches": 53,
-      "runs": 860,
-      "sr": 153.19,
-      "avg": 31.75,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 79,
+      "runs": 1892,
+      "sr": 147.46,
+      "avg": 23.95
     }
   },
   {
@@ -1974,9 +1801,7 @@ export const IPL_PLAYERS = [
       "matches": 51,
       "runs": 427,
       "sr": 140.12,
-      "avg": 33.27,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 33.27
     }
   },
   {
@@ -2027,10 +1852,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 94,
       "wickets": 80,
-      "econ": 8.49,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.49
     }
   },
   {
@@ -2045,10 +1867,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 42,
       "wickets": 34,
-      "econ": 7.55,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.55
     }
   },
   {
@@ -2064,9 +1883,7 @@ export const IPL_PLAYERS = [
       "matches": 52,
       "runs": 368,
       "sr": 133.86,
-      "avg": 44.62,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 44.62
     }
   },
   {
@@ -2082,9 +1899,7 @@ export const IPL_PLAYERS = [
       "matches": 76,
       "runs": 990,
       "sr": 143.77,
-      "avg": 38.86,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 38.86
     }
   },
   {
@@ -2100,9 +1915,7 @@ export const IPL_PLAYERS = [
       "matches": 70,
       "runs": 888,
       "sr": 143.93,
-      "avg": 35.3,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 35.3
     }
   },
   {
@@ -2117,10 +1930,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 80,
       "wickets": 51,
-      "econ": 7.41,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.41
     }
   },
   {
@@ -2136,9 +1946,7 @@ export const IPL_PLAYERS = [
       "matches": 19,
       "runs": 389,
       "sr": 131.15,
-      "avg": 35.25,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 35.25
     }
   },
   {
@@ -2153,10 +1961,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 23,
       "wickets": 28,
-      "econ": 7.1,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.1
     }
   },
   {
@@ -2169,12 +1974,10 @@ export const IPL_PLAYERS = [
     "set": "Set 3",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/637.png",
     "stats": {
-      "matches": 12,
-      "wickets": 60,
-      "econ": 7.32,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "matches": 26,
+      "wickets": 29,
+      "econ": 9.38,
+      "avg": 28.34
     }
   },
   {
@@ -2189,10 +1992,8 @@ export const IPL_PLAYERS = [
     "stats": {
       "sr": 149.89,
       "avg": 25.42,
-      "econ": "-",
       "runs": 661,
-      "matches": 31,
-      "wickets": 0
+      "matches": 31
     }
   },
   {
@@ -2225,10 +2026,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 59,
       "wickets": 56,
-      "econ": 7.34,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.34
     }
   },
   {
@@ -2261,10 +2059,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 57,
       "wickets": 16,
-      "econ": 7.29,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.29
     }
   },
   {
@@ -2279,10 +2074,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 238,
       "wickets": 172,
-      "econ": 8.09,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.09
     }
   },
   {
@@ -2298,9 +2090,7 @@ export const IPL_PLAYERS = [
       "matches": 12,
       "runs": 341,
       "sr": 133.26,
-      "avg": 35.92,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 35.92
     }
   },
   {
@@ -2315,10 +2105,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 77,
       "wickets": 56,
-      "econ": 7.27,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.27
     }
   },
   {
@@ -2333,10 +2120,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 58,
       "wickets": 60,
-      "econ": 8.08,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.08
     }
   },
   {
@@ -2370,9 +2154,7 @@ export const IPL_PLAYERS = [
       "matches": 76,
       "runs": 912,
       "sr": 135.08,
-      "avg": 38.45,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 38.45
     }
   },
   {
@@ -2388,9 +2170,7 @@ export const IPL_PLAYERS = [
       "matches": 217,
       "runs": 5319,
       "sr": 140.95,
-      "avg": 29.07,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 29.07
     }
   },
   {
@@ -2405,10 +2185,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 235,
       "wickets": 105,
-      "econ": 7.73,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.73
     }
   },
   {
@@ -2423,10 +2200,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 115,
       "wickets": 132,
-      "econ": 7.83,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.83
     }
   },
   {
@@ -2441,10 +2215,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 51,
       "wickets": 49,
-      "econ": 7.46,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.46
     }
   },
   {
@@ -2496,7 +2267,6 @@ export const IPL_PLAYERS = [
       "sr": 126.19,
       "avg": 13.25,
       "econ": 9.73,
-      "runs": 53,
       "matches": 19,
       "wickets": 13
     }
@@ -2531,10 +2301,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 53,
       "wickets": 29,
-      "econ": 7.86,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.86
     }
   },
   {
@@ -2568,9 +2335,7 @@ export const IPL_PLAYERS = [
       "matches": 61,
       "runs": 315,
       "sr": 147.75,
-      "avg": 31.67,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 31.67
     }
   },
   {
@@ -2586,9 +2351,7 @@ export const IPL_PLAYERS = [
       "matches": 79,
       "runs": 946,
       "sr": 145.24,
-      "avg": 41.12,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 41.12
     }
   },
   {
@@ -2603,10 +2366,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 54,
       "wickets": 25,
-      "econ": 8.12,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.12
     }
   },
   {
@@ -2621,10 +2381,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 43,
       "wickets": 32,
-      "econ": 8.44,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.44
     }
   },
   {
@@ -2639,10 +2396,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 78,
       "wickets": 11,
-      "econ": 7.28,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.28
     }
   },
   {
@@ -2657,10 +2411,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 75,
       "wickets": 56,
-      "econ": 7.85,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.85
     }
   },
   {
@@ -2693,10 +2444,8 @@ export const IPL_PLAYERS = [
     "stats": {
       "sr": 131.73,
       "avg": 23.86,
-      "econ": "-",
       "runs": 1694,
-      "matches": 84,
-      "wickets": 0
+      "matches": 84
     }
   },
   {
@@ -2729,10 +2478,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 78,
       "wickets": 24,
-      "econ": 7.67,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.67
     }
   },
   {
@@ -2745,12 +2491,7 @@ export const IPL_PLAYERS = [
     "set": "Set 4",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/1931.png",
     "stats": {
-      "sr": "-",
-      "avg": "-",
-      "econ": "-",
-      "runs": "-",
-      "matches": 0,
-      "wickets": "-"
+      "matches": 0
     }
   },
   {
@@ -2765,10 +2506,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 61,
       "wickets": 56,
-      "econ": 7.78,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.78
     }
   },
   {
@@ -2784,9 +2522,7 @@ export const IPL_PLAYERS = [
       "matches": 43,
       "runs": 575,
       "sr": 131.25,
-      "avg": 34.93,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 34.93
     }
   },
   {
@@ -2801,10 +2537,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 57,
       "wickets": 51,
-      "econ": 7.94,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.94
     }
   },
   {
@@ -2820,9 +2553,7 @@ export const IPL_PLAYERS = [
       "matches": 61,
       "runs": 463,
       "sr": 149.93,
-      "avg": 28.38,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 28.38
     }
   },
   {
@@ -2891,10 +2622,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 76,
       "wickets": 54,
-      "econ": 7.23,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.23
     }
   },
   {
@@ -2907,12 +2635,8 @@ export const IPL_PLAYERS = [
     "set": "Set 4",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/2033.png",
     "stats": {
-      "sr": 64.29,
       "avg": 3,
-      "econ": "-",
-      "runs": 9,
-      "matches": 3,
-      "wickets": 0
+      "matches": 3
     }
   },
   {
@@ -2927,10 +2651,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 49,
       "wickets": 24,
-      "econ": 7.53,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.53
     }
   },
   {
@@ -2945,10 +2666,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 16,
       "wickets": 5,
-      "econ": 8.11,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.11
     }
   },
   {
@@ -2963,10 +2681,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 61,
       "wickets": 57,
-      "econ": 7.95,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.95
     }
   },
   {
@@ -2982,9 +2697,7 @@ export const IPL_PLAYERS = [
       "matches": 69,
       "runs": 825,
       "sr": 151.19,
-      "avg": 39.25,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 39.25
     }
   },
   {
@@ -2999,10 +2712,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 47,
       "wickets": 39,
-      "econ": 7.56,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.56
     }
   },
   {
@@ -3018,9 +2728,7 @@ export const IPL_PLAYERS = [
       "matches": 37,
       "runs": 410,
       "sr": 152.75,
-      "avg": 32.9,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 32.9
     }
   },
   {
@@ -3036,9 +2744,7 @@ export const IPL_PLAYERS = [
       "matches": 76,
       "runs": 386,
       "sr": 133.1,
-      "avg": 37.49,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 37.49
     }
   },
   {
@@ -3053,10 +2759,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 50,
       "wickets": 28,
-      "econ": 7.18,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.18
     }
   },
   {
@@ -3089,10 +2792,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 60,
       "wickets": 27,
-      "econ": 8.27,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.27
     }
   },
   {
@@ -3107,10 +2807,8 @@ export const IPL_PLAYERS = [
     "stats": {
       "sr": 75,
       "avg": 3,
-      "econ": "-",
       "runs": 3,
-      "matches": 1,
-      "wickets": 0
+      "matches": 1
     }
   },
   {
@@ -3125,10 +2823,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 11,
       "wickets": 39,
-      "econ": 8,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8
     }
   },
   {
@@ -3143,10 +2838,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 16,
       "wickets": 13,
-      "econ": 8.06,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.06
     }
   },
   {
@@ -3161,10 +2853,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 54,
       "wickets": 52,
-      "econ": 8.45,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.45
     }
   },
   {
@@ -3215,10 +2904,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 42,
       "wickets": 22,
-      "econ": 7.62,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.62
     }
   },
   {
@@ -3234,9 +2920,7 @@ export const IPL_PLAYERS = [
       "matches": 36,
       "runs": 104,
       "sr": 147.77,
-      "avg": 35.97,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 35.97
     }
   },
   {
@@ -3251,10 +2935,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 56,
       "wickets": 34,
-      "econ": 7.68,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.68
     }
   },
   {
@@ -3288,9 +2969,7 @@ export const IPL_PLAYERS = [
       "matches": 66,
       "runs": 787,
       "sr": 137.85,
-      "avg": 42.7,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 42.7
     }
   },
   {
@@ -3305,10 +2984,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 62,
       "wickets": 17,
-      "econ": 8.29,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.29
     }
   },
   {
@@ -3324,9 +3000,7 @@ export const IPL_PLAYERS = [
       "matches": 42,
       "runs": 417,
       "sr": 140.38,
-      "avg": 37.4,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 37.4
     }
   },
   {
@@ -3341,10 +3015,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 10,
       "wickets": 55,
-      "econ": 8.35,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.35
     }
   },
   {
@@ -3360,9 +3031,7 @@ export const IPL_PLAYERS = [
       "matches": 45,
       "runs": 499,
       "sr": 147.72,
-      "avg": 44.99,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 44.99
     }
   },
   {
@@ -3378,9 +3047,7 @@ export const IPL_PLAYERS = [
       "matches": 64,
       "runs": 873,
       "sr": 143.99,
-      "avg": 39.96,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 39.96
     }
   },
   {
@@ -3411,12 +3078,7 @@ export const IPL_PLAYERS = [
     "set": "Set 4",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/3563.png",
     "stats": {
-      "sr": "-",
-      "avg": "-",
-      "econ": "-",
-      "runs": "-",
-      "matches": 0,
-      "wickets": "-"
+      "matches": 0
     }
   },
   {
@@ -3431,10 +3093,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 47,
       "wickets": 40,
-      "econ": 7.97,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.97
     }
   },
   {
@@ -3468,9 +3127,7 @@ export const IPL_PLAYERS = [
       "matches": 34,
       "runs": 806,
       "sr": 130.21,
-      "avg": 36.72,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 36.72
     }
   },
   {
@@ -3485,10 +3142,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 31,
       "wickets": 16,
-      "econ": 7.77,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.77
     }
   },
   {
@@ -3521,10 +3175,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 66,
       "wickets": 56,
-      "econ": 7.2,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.2
     }
   },
   {
@@ -3594,9 +3245,7 @@ export const IPL_PLAYERS = [
       "matches": 210,
       "runs": 4028,
       "sr": 150.43,
-      "avg": 36.19,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 36.19
     }
   },
   {
@@ -3612,9 +3261,7 @@ export const IPL_PLAYERS = [
       "matches": 175,
       "runs": 4211,
       "sr": 137.4,
-      "avg": 30.81,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 30.81
     }
   },
   {
@@ -3630,9 +3277,7 @@ export const IPL_PLAYERS = [
       "matches": 65,
       "runs": 2273,
       "sr": 142.52,
-      "avg": 32.01,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 32.01
     }
   },
   {
@@ -3648,9 +3293,7 @@ export const IPL_PLAYERS = [
       "matches": 32,
       "runs": 632,
       "sr": 139.74,
-      "avg": 38.78,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 38.78
     }
   },
   {
@@ -3665,10 +3308,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 121,
       "wickets": 120,
-      "econ": 8.36,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.36
     }
   },
   {
@@ -3681,12 +3321,10 @@ export const IPL_PLAYERS = [
     "set": "FA1",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/2535.png",
     "stats": {
-      "matches": 130,
-      "wickets": 138,
-      "econ": 7.52,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "matches": 10,
+      "wickets": 13,
+      "econ": 10.18,
+      "avg": 26.23
     }
   },
   {
@@ -3701,10 +3339,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 79,
       "wickets": 33,
-      "econ": 8.43,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.43
     }
   },
   {
@@ -3719,10 +3354,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 63,
       "wickets": 68,
-      "econ": 7.37,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.37
     }
   },
   {
@@ -3738,9 +3370,7 @@ export const IPL_PLAYERS = [
       "matches": 70,
       "runs": 800,
       "sr": 148.92,
-      "avg": 34.16,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 34.16
     }
   },
   {
@@ -3756,9 +3386,7 @@ export const IPL_PLAYERS = [
       "matches": 77,
       "runs": 422,
       "sr": 147.99,
-      "avg": 28.79,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 28.79
     }
   },
   {
@@ -3774,9 +3402,7 @@ export const IPL_PLAYERS = [
       "matches": 51,
       "runs": 759,
       "sr": 140.58,
-      "avg": 32.21,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 32.21
     }
   },
   {
@@ -3792,9 +3418,7 @@ export const IPL_PLAYERS = [
       "matches": 76,
       "runs": 977,
       "sr": 133.57,
-      "avg": 29.38,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 29.38
     }
   },
   {
@@ -3810,9 +3434,7 @@ export const IPL_PLAYERS = [
       "matches": 25,
       "runs": 649,
       "sr": 149.48,
-      "avg": 29.68,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 29.68
     }
   },
   {
@@ -3828,9 +3450,7 @@ export const IPL_PLAYERS = [
       "matches": 79,
       "runs": 924,
       "sr": 142.44,
-      "avg": 44.97,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 44.97
     }
   },
   {
@@ -4026,9 +3646,7 @@ export const IPL_PLAYERS = [
       "matches": 40,
       "runs": 830,
       "sr": 139.31,
-      "avg": 39.51,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 39.51
     }
   },
   {
@@ -4044,9 +3662,7 @@ export const IPL_PLAYERS = [
       "matches": 76,
       "runs": 960,
       "sr": 143.52,
-      "avg": 42.43,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 42.43
     }
   },
   {
@@ -4062,9 +3678,7 @@ export const IPL_PLAYERS = [
       "matches": 60,
       "runs": 535,
       "sr": 142.1,
-      "avg": 43.94,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 43.94
     }
   },
   {
@@ -4080,9 +3694,7 @@ export const IPL_PLAYERS = [
       "matches": 64,
       "runs": 187,
       "sr": 146.9,
-      "avg": 44.22,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 44.22
     }
   },
   {
@@ -4098,9 +3710,7 @@ export const IPL_PLAYERS = [
       "matches": 71,
       "runs": 193,
       "sr": 139.59,
-      "avg": 32.28,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 32.28
     }
   },
   {
@@ -4116,9 +3726,7 @@ export const IPL_PLAYERS = [
       "matches": 19,
       "runs": 987,
       "sr": 152.99,
-      "avg": 36.32,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 36.32
     }
   },
   {
@@ -4133,10 +3741,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 58,
       "wickets": 11,
-      "econ": 8.45,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.45
     }
   },
   {
@@ -4151,10 +3756,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 75,
       "wickets": 7,
-      "econ": 7.31,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.31
     }
   },
   {
@@ -4169,10 +3771,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 22,
       "wickets": 38,
-      "econ": 7.44,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.44
     }
   },
   {
@@ -4187,10 +3786,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 79,
       "wickets": 9,
-      "econ": 8.49,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.49
     }
   },
   {
@@ -4205,10 +3801,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 75,
       "wickets": 31,
-      "econ": 7.99,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.99
     }
   },
   {
@@ -4223,10 +3816,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 60,
       "wickets": 6,
-      "econ": 7.8,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.8
     }
   },
   {
@@ -4241,10 +3831,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 78,
       "wickets": 19,
-      "econ": 8.2,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.2
     }
   },
   {
@@ -4259,10 +3846,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 43,
       "wickets": 8,
-      "econ": 7.16,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.16
     }
   },
   {
@@ -4277,10 +3861,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 23,
       "wickets": 31,
-      "econ": 7.6,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.6
     }
   },
   {
@@ -4295,10 +3876,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 52,
       "wickets": 41,
-      "econ": 7.23,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.23
     }
   },
   {
@@ -4313,10 +3891,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 63,
       "wickets": 38,
-      "econ": 8.07,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.07
     }
   },
   {
@@ -4331,10 +3906,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 71,
       "wickets": 31,
-      "econ": 7.85,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.85
     }
   },
   {
@@ -4349,10 +3921,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 20,
       "wickets": 41,
-      "econ": 7.47,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.47
     }
   },
   {
@@ -4367,10 +3936,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 31,
       "wickets": 41,
-      "econ": 7.91,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.91
     }
   },
   {
@@ -4386,9 +3952,7 @@ export const IPL_PLAYERS = [
       "matches": 78,
       "runs": 398,
       "sr": 152.23,
-      "avg": 41.23,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 41.23
     }
   },
   {
@@ -4404,9 +3968,7 @@ export const IPL_PLAYERS = [
       "matches": 50,
       "runs": 144,
       "sr": 154.21,
-      "avg": 38.97,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 38.97
     }
   },
   {
@@ -4422,9 +3984,7 @@ export const IPL_PLAYERS = [
       "matches": 28,
       "runs": 997,
       "sr": 137.47,
-      "avg": 41.46,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 41.46
     }
   },
   {
@@ -4437,12 +3997,10 @@ export const IPL_PLAYERS = [
     "set": "BA2",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/188.png",
     "stats": {
-      "matches": 55,
-      "runs": 237,
-      "sr": 145.78,
-      "avg": 42.08,
-      "wickets": "-",
-      "econ": "-"
+      "matches": 95,
+      "runs": 2226,
+      "sr": 138.43,
+      "avg": 27.15
     }
   },
   {
@@ -4458,9 +4016,7 @@ export const IPL_PLAYERS = [
       "matches": 63,
       "runs": 1411,
       "sr": 141.4,
-      "avg": 28.65,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 28.65
     }
   },
   {
@@ -4475,10 +4031,8 @@ export const IPL_PLAYERS = [
     "stats": {
       "sr": 137.5,
       "avg": 22,
-      "econ": "-",
       "runs": 22,
-      "matches": 1,
-      "wickets": 0
+      "matches": 1
     }
   },
   {
@@ -4494,9 +4048,7 @@ export const IPL_PLAYERS = [
       "matches": 247,
       "runs": 4540,
       "sr": 139.43,
-      "avg": 44.47,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 44.47
     }
   },
   {
@@ -4512,9 +4064,7 @@ export const IPL_PLAYERS = [
       "matches": 38,
       "runs": 690,
       "sr": 145.48,
-      "avg": 31.98,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 31.98
     }
   },
   {
@@ -4692,9 +4242,7 @@ export const IPL_PLAYERS = [
       "matches": 70,
       "runs": 242,
       "sr": 146.67,
-      "avg": 35.91,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 35.91
     }
   },
   {
@@ -4710,9 +4258,7 @@ export const IPL_PLAYERS = [
       "matches": 19,
       "runs": 100,
       "sr": 148.33,
-      "avg": 33.07,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 33.07
     }
   },
   {
@@ -4728,9 +4274,7 @@ export const IPL_PLAYERS = [
       "matches": 215,
       "runs": 5048,
       "sr": 148.28,
-      "avg": 33.58,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 33.58
     }
   },
   {
@@ -4746,9 +4290,7 @@ export const IPL_PLAYERS = [
       "matches": 35,
       "runs": 176,
       "sr": 147.48,
-      "avg": 36.19,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 36.19
     }
   },
   {
@@ -4764,9 +4306,7 @@ export const IPL_PLAYERS = [
       "matches": 92,
       "runs": 2205,
       "sr": 153.03,
-      "avg": 35.77,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 35.77
     }
   },
   {
@@ -4782,9 +4322,7 @@ export const IPL_PLAYERS = [
       "matches": 158,
       "runs": 3346,
       "sr": 150.55,
-      "avg": 30.35,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 30.35
     }
   },
   {
@@ -4800,9 +4338,7 @@ export const IPL_PLAYERS = [
       "matches": 120,
       "runs": 2223,
       "sr": 146.58,
-      "avg": 41.76,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 41.76
     }
   },
   {
@@ -4818,9 +4354,7 @@ export const IPL_PLAYERS = [
       "matches": 243,
       "runs": 3981,
       "sr": 142.06,
-      "avg": 41.08,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 41.08
     }
   },
   {
@@ -4835,10 +4369,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 183,
       "wickets": 182,
-      "econ": 8.14,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.14
     }
   },
   {
@@ -4853,10 +4384,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 26,
       "wickets": 49,
-      "econ": 8.12,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.12
     }
   },
   {
@@ -4871,10 +4399,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 48,
       "wickets": 46,
-      "econ": 7.48,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.48
     }
   },
   {
@@ -4889,10 +4414,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 109,
       "wickets": 155,
-      "econ": 7.64,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.64
     }
   },
   {
@@ -4907,10 +4429,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 126,
       "wickets": 104,
-      "econ": 7.91,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.91
     }
   },
   {
@@ -4923,10 +4442,8 @@ export const IPL_PLAYERS = [
     "set": "FA2",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/258.png",
     "stats": {
-      "sr": 54.17,
       "avg": 6.5,
       "econ": 8.13,
-      "runs": 13,
       "matches": 60,
       "wickets": 65
     }
@@ -4943,10 +4460,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 51,
       "wickets": 66,
-      "econ": 7.87,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.87
     }
   },
   {
@@ -4961,10 +4475,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 123,
       "wickets": 73,
-      "econ": 7.88,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.88
     }
   },
   {
@@ -4979,10 +4490,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 161,
       "wickets": 196,
-      "econ": 8.27,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.27
     }
   },
   {
@@ -4997,10 +4505,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 73,
       "wickets": 81,
-      "econ": 8.42,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.42
     }
   },
   {
@@ -5015,10 +4520,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 40,
       "wickets": 29,
-      "econ": 7.62,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.62
     }
   },
   {
@@ -5033,10 +4535,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 34,
       "wickets": 42,
-      "econ": 8.44,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.44
     }
   },
   {
@@ -5051,10 +4550,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 23,
       "wickets": 34,
-      "econ": 8.03,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.03
     }
   },
   {
@@ -5070,9 +4566,7 @@ export const IPL_PLAYERS = [
       "matches": 54,
       "runs": 978,
       "sr": 132.86,
-      "avg": 32.34,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 32.34
     }
   },
   {
@@ -5088,9 +4582,7 @@ export const IPL_PLAYERS = [
       "matches": 46,
       "runs": 463,
       "sr": 141.85,
-      "avg": 33.06,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 33.06
     }
   },
   {
@@ -5106,9 +4598,7 @@ export const IPL_PLAYERS = [
       "matches": 30,
       "runs": 556,
       "sr": 153.82,
-      "avg": 41.86,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 41.86
     }
   },
   {
@@ -5124,9 +4614,7 @@ export const IPL_PLAYERS = [
       "matches": 35,
       "runs": 711,
       "sr": 152.97,
-      "avg": 40.76,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 40.76
     }
   },
   {
@@ -5142,9 +4630,7 @@ export const IPL_PLAYERS = [
       "matches": 78,
       "runs": 387,
       "sr": 154.02,
-      "avg": 43.08,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 43.08
     }
   },
   {
@@ -5160,9 +4646,7 @@ export const IPL_PLAYERS = [
       "matches": 12,
       "runs": 246,
       "sr": 136.22,
-      "avg": 32.49,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 32.49
     }
   },
   {
@@ -5178,9 +4662,7 @@ export const IPL_PLAYERS = [
       "matches": 57,
       "runs": 275,
       "sr": 146.81,
-      "avg": 40.44,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 40.44
     }
   },
   {
@@ -5196,9 +4678,7 @@ export const IPL_PLAYERS = [
       "matches": 59,
       "runs": 737,
       "sr": 136.23,
-      "avg": 44.14,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 44.14
     }
   },
   {
@@ -5232,7 +4712,6 @@ export const IPL_PLAYERS = [
       "sr": 100,
       "avg": 6,
       "econ": 10.57,
-      "runs": 12,
       "matches": 6,
       "wickets": 6
     }
@@ -5394,9 +4873,7 @@ export const IPL_PLAYERS = [
       "matches": 51,
       "runs": 518,
       "sr": 154.71,
-      "avg": 34.81,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 34.81
     }
   },
   {
@@ -5412,9 +4889,7 @@ export const IPL_PLAYERS = [
       "matches": 30,
       "runs": 716,
       "sr": 134.92,
-      "avg": 30.94,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 30.94
     }
   },
   {
@@ -5430,9 +4905,7 @@ export const IPL_PLAYERS = [
       "matches": 75,
       "runs": 662,
       "sr": 151.19,
-      "avg": 36.54,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 36.54
     }
   },
   {
@@ -5448,9 +4921,7 @@ export const IPL_PLAYERS = [
       "matches": 54,
       "runs": 845,
       "sr": 140.16,
-      "avg": 32.61,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 32.61
     }
   },
   {
@@ -5466,9 +4937,7 @@ export const IPL_PLAYERS = [
       "matches": 47,
       "runs": 223,
       "sr": 146.6,
-      "avg": 34.28,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 34.28
     }
   },
   {
@@ -5484,9 +4953,7 @@ export const IPL_PLAYERS = [
       "matches": 44,
       "runs": 961,
       "sr": 133.18,
-      "avg": 43.52,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 43.52
     }
   },
   {
@@ -5502,9 +4969,7 @@ export const IPL_PLAYERS = [
       "matches": 26,
       "runs": 891,
       "sr": 152.89,
-      "avg": 33.88,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 33.88
     }
   },
   {
@@ -5520,9 +4985,7 @@ export const IPL_PLAYERS = [
       "matches": 73,
       "runs": 624,
       "sr": 131.06,
-      "avg": 37.57,
-      "wickets": "-",
-      "econ": "-"
+      "avg": 37.57
     }
   },
   {
@@ -5537,10 +5000,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 18,
       "wickets": 42,
-      "econ": 7.82,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.82
     }
   },
   {
@@ -5555,10 +5015,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 13,
       "wickets": 52,
-      "econ": 7.43,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.43
     }
   },
   {
@@ -5573,10 +5030,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 51,
       "wickets": 32,
-      "econ": 7.75,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.75
     }
   },
   {
@@ -5591,10 +5045,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 45,
       "wickets": 14,
-      "econ": 7.9,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.9
     }
   },
   {
@@ -5609,10 +5060,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 71,
       "wickets": 57,
-      "econ": 7.19,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.19
     }
   },
   {
@@ -5627,10 +5075,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 54,
       "wickets": 6,
-      "econ": 8.34,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.34
     }
   },
   {
@@ -5645,10 +5090,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 79,
       "wickets": 30,
-      "econ": 7.1,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.1
     }
   },
   {
@@ -5663,10 +5105,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 70,
       "wickets": 41,
-      "econ": 7.17,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 7.17
     }
   },
   {
@@ -5681,10 +5120,7 @@ export const IPL_PLAYERS = [
     "stats": {
       "matches": 48,
       "wickets": 9,
-      "econ": 8.14,
-      "runs": "-",
-      "sr": "-",
-      "avg": "-"
+      "econ": 8.14
     }
   }
 ];
