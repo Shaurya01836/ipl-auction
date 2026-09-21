@@ -273,9 +273,7 @@ const AuctionSummary = () => {
               className="max-w-4xl mx-auto space-y-4 sm:space-y-6"
             >
               <div className="flex items-center gap-4 sm:gap-6 mb-6 sm:mb-10">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#ff5500] rounded-2xl flex items-center justify-center text-white shadow-2xl shrink-0">
-                    <Trophy size={22} />
-                </div>
+               
                 <div>
                   <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tighter">Leaderboard</h2>
                   <p className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] sm:tracking-[0.3em]">The Most Expensive Signings</p>
@@ -522,26 +520,7 @@ const AuctionSummary = () => {
           )}
         </AnimatePresence>
 
-        {/* Global Footer Buttons */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-12 sm:mt-20 flex flex-col items-center gap-6 sm:gap-8"
-        >
-          <div className="flex items-center gap-3 text-gray-600 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] sm:tracking-[0.5em]">
-            <History size={14} /> End of Session
-          </div>
-          <button 
-            onClick={() => navigate('/')}
-            className="group relative px-10 sm:px-16 py-4 sm:py-6 bg-white text-black font-black uppercase text-xs sm:text-sm tracking-[0.2em] sm:tracking-[0.3em] rounded-2xl sm:rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.5)] active:scale-95 transition-all overflow-hidden touch-manipulation"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-600 to-orange-500 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
-            <div className="relative flex items-center gap-3 sm:gap-4 group-hover:text-white transition-colors">
-              <Home size={18} /> Exit to Main Menu
-            </div>
-          </button>
-        </motion.div>
+    
 
       </div>
     </div>

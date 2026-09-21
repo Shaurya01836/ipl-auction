@@ -1071,9 +1071,24 @@ const AuctionRoom = () => {
                                        </div>
                                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 bg-white/[0.02] p-2.5 sm:p-3 md:p-4 rounded-2xl border border-white/[0.04] backdrop-blur-md">
                                           <div className="text-center"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Matches</span><span className="text-lg sm:text-xl font-bold text-gray-100">{currentPlayer.stats?.matches || 0}</span></div>
-                                          {currentPlayer.stats?.runs !== undefined && (<div className="text-center border-l border-white/5"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Runs</span><span className="text-lg sm:text-xl font-bold text-yellow-500">{currentPlayer.stats.runs}</span></div>)}
-                                          {currentPlayer.stats?.sr !== undefined && (<div className="text-center border-l border-white/5"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">S.Rate</span><span className="text-lg sm:text-xl font-bold text-gray-100">{currentPlayer.stats.sr}</span></div>)}
-                                          {currentPlayer.stats?.wickets !== undefined && (<div className="text-center border-l border-white/5"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Wkts</span><span className="text-lg sm:text-xl font-bold text-green-500">{currentPlayer.stats.wickets}</span></div>)}
+                                          
+                                          {currentPlayer.stats?.runs !== undefined && currentPlayer.stats?.runs !== '-' ? (
+                                             <div className="text-center border-l border-white/5"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Runs</span><span className="text-lg sm:text-xl font-bold text-yellow-500">{currentPlayer.stats.runs}</span></div>
+                                          ) : currentPlayer.stats?.wickets !== undefined && currentPlayer.stats?.wickets !== '-' ? (
+                                             <div className="text-center border-l border-white/5"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Wickets</span><span className="text-lg sm:text-xl font-bold text-green-500">{currentPlayer.stats.wickets}</span></div>
+                                          ) : null}
+
+                                          {currentPlayer.stats?.sr !== undefined && currentPlayer.stats?.sr !== '-' ? (
+                                             <div className="text-center border-l border-white/5"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Strike Rate</span><span className="text-lg sm:text-xl font-bold text-gray-100">{currentPlayer.stats.sr}</span></div>
+                                          ) : currentPlayer.stats?.econ !== undefined && currentPlayer.stats?.econ !== '-' ? (
+                                             <div className="text-center border-l border-white/5"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Economy</span><span className="text-lg sm:text-xl font-bold text-cyan-400">{currentPlayer.stats.econ}</span></div>
+                                          ) : null}
+
+                                          {currentPlayer.stats?.avg !== undefined && currentPlayer.stats?.avg !== '-' ? (
+                                             <div className="text-center border-l border-white/5"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Average</span><span className="text-lg sm:text-xl font-bold text-orange-400">{currentPlayer.stats.avg}</span></div>
+                                          ) : currentPlayer.stats?.wickets !== undefined && currentPlayer.stats?.wickets !== '-' && currentPlayer.stats?.econ !== undefined && currentPlayer.stats?.econ !== '-' && (currentPlayer.stats?.sr === undefined || currentPlayer.stats?.sr === '-') ? (
+                                             <div className="text-center border-l border-white/5"><span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Economy</span><span className="text-lg sm:text-xl font-bold text-cyan-400">{currentPlayer.stats.econ}</span></div>
+                                          ) : null}
                                        </div>
                                        <div className="flex items-center justify-between mt-2 md:mt-4">
                                           <div className="text-left">

@@ -11,7 +11,6 @@ import LandingPage from './pages/LandingPage'
 import AuctionRoom from './pages/AuctionRoom'
 import AuctionSummary from './pages/AuctionSummary'
 import Lobby from './pages/Lobby'
-import FantasyAdmin from './pages/FantasyAdmin'
 import GameGuide from './pages/GameGuide'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsConditions from './pages/TermsConditions'
@@ -37,7 +36,6 @@ function App() {
                 <Route path="/lobby/:id" element={<Lobby />} />
                 <Route path="/auction/:id" element={<AuctionRoom />} />
                 <Route path="/summary/:id" element={<AuctionSummary />} />
-                <Route path="/admin/fantasy" element={<FantasyAdmin />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </div>
