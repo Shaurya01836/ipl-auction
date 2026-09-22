@@ -295,10 +295,10 @@ export const AuctionProvider = ({ children }) => {
         // Only proceed if still in bidding state
         if (currentData.status !== 'bidding') return; // abort
 
-        // Ensure timer has ACTUALLY expired (with 300ms network sync buffer)
+        // Ensure timer has ACTUALLY expired server-side
         // If a new bid was placed, timerEndsAt was extended into the future, so abort sale!
         const now = getSyncedTime();
-        if (currentData.timerEndsAt && now < currentData.timerEndsAt - 300) {
+        if (currentData.timerEndsAt && now < currentData.timerEndsAt) {
           return; // abort transaction
         }
 
@@ -319,19 +319,22 @@ export const AuctionProvider = ({ children }) => {
       const teamDetails = TEAMS.find(t => t.id === auctionState.highBidderTeamId);
 
       const playerNameStr = player?.name || 'Player';
-      const logText = `${playerNameStr} ${isSold ? `SOLD to ${teamDetails?.name || auctionState.highBidderName} for ₹${auctionState.currentBid} Cr` : 'UNSOLD'}`;
+      const logText = `${playerNameStr} ${isSold ? `SOLD to ${teamDetails?.name || auctionState.highBidderName} for \u20b9${auctionState.currentBid} Cr` : 'UNSOLD'}`;
 
       let updatedPlayers = null;
       let teamDocId = null;
       let newTeamData = null;
 
+      // ── Bug Fix 5: Single get(room) call — eliminates TOCTOU window and halves RTDB reads ──
+      // Fetch room data once up front; reuse for both player-update and player-order logic.
+      const rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
+      const roomData = rtdbRoomSnap.exists() ? rtdbRoomSnap.val() : {};
+
       if (isSold) {
         teamDocId = `${roomId}_${auctionState.highBidderId}`;
 
-        // Get current room players from RTDB to update squadCount & spent in RTDB live state (0 Firestore cost!)
-        const rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
+        // Update room.players spent/squadCount from the single snapshot already fetched
         if (rtdbRoomSnap.exists()) {
-          const roomData = rtdbRoomSnap.val();
           updatedPlayers = (roomData.players || []).map(p => {
             if (p.id === auctionState.highBidderId) {
               return {
@@ -347,7 +350,7 @@ export const AuctionProvider = ({ children }) => {
         // Get current team data from RTDB to update RTDB team node
         const rtdbTeamSnap = await get(ref(rtdb, `auctions/${roomId}/teams/${teamDocId}`));
         const tData = rtdbTeamSnap.exists() ? rtdbTeamSnap.val() : {};
-        const defaultBudget = 120.0;
+        const defaultBudget = roomData.settings?.budget || 120.0;
         newTeamData = {
           auctionId: roomId,
           userId: auctionState.highBidderId,
@@ -401,52 +404,56 @@ export const AuctionProvider = ({ children }) => {
 
       const waitTime = isSold ? 5000 : 2000;
 
-      // Get player order and settings directly from RTDB snapshot
-      const rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
-      const roomData = rtdbRoomSnap.exists() ? rtdbRoomSnap.val() : {};
-
+      // Player order from the single room snapshot already fetched above
       let playerOrder = roomData.playerOrder;
       if (!playerOrder) {
         const orderSnap = await get(ref(rtdb, `auctions/${roomId}/playerOrder`));
         if (orderSnap.exists()) playerOrder = orderSnap.val();
       }
 
-      setTimeout(async () => {
-        if (roomData.status !== 'active') return;
+      // ── Bug Fix 2: Always release endingPlayerRef via finally inside the timeout callback ──
+      // Previously, component unmount before timeout fired left the ref stuck at true forever.
+      const advanceToNextPlayer = async () => {
+        try {
+          if (roomData.status !== 'active') return;
 
-        const settings = roomData.settings;
-        const currentPlayerId = auctionState.playerId;
-        const order = playerOrder || Array.from({ length: IPL_PLAYERS.length }, (_, i) => i);
-        const currentPlayerIndexInOrder = order.findIndex(idx => IPL_PLAYERS[idx] && IPL_PLAYERS[idx].id === currentPlayerId);
-        const nextIndexInOrder = currentPlayerIndexInOrder !== -1 ? order[currentPlayerIndexInOrder + 1] : order[0];
-        
-        if (nextIndexInOrder !== undefined && IPL_PLAYERS[nextIndexInOrder]) {
-          const nextPlayer = IPL_PLAYERS[nextIndexInOrder];
-          await set(liveRef, {
-            playerId: nextPlayer.id,
-            currentBid: 0,
-            highBidderId: '',
-            highBidderName: 'No Bids',
-            timerEndsAt: getSyncedTime() + (settings?.bidTimer || 10) * 1000,
-            status: 'bidding'
-          });
-        } else {
-          // Flush final completed status & all teams to Supabase once at end of auction!
-          await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { status: 'completed' });
-          await flushAuctionToFirestore(roomId);
+          const settings = roomData.settings;
+          const currentPlayerId = auctionState.playerId;
+          const order = playerOrder || Array.from({ length: IPL_PLAYERS.length }, (_, i) => i);
+          const currentPlayerIndexInOrder = order.findIndex(idx => IPL_PLAYERS[idx] && IPL_PLAYERS[idx].id === currentPlayerId);
+          const nextIndexInOrder = currentPlayerIndexInOrder !== -1 ? order[currentPlayerIndexInOrder + 1] : order[0];
 
-          // Optimization 4: Clean up completed room from RTDB after 30 seconds to keep RTDB size near 0MB
-          setTimeout(async () => {
-            try {
-              await remove(ref(rtdb, `auctions/${roomId}`));
-            } catch (cleanErr) {
-              // Ignore cleanup error if already removed
-            }
-          }, 30000);
+          if (nextIndexInOrder !== undefined && IPL_PLAYERS[nextIndexInOrder]) {
+            const nextPlayer = IPL_PLAYERS[nextIndexInOrder];
+            await set(liveRef, {
+              playerId: nextPlayer.id,
+              currentBid: 0,
+              highBidderId: '',
+              highBidderName: 'No Bids',
+              timerEndsAt: getSyncedTime() + (settings?.bidTimer || 10) * 1000,
+              status: 'bidding'
+            });
+          } else {
+            // Flush final completed status & all teams to Supabase once at end of auction!
+            await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { status: 'completed' });
+            await flushAuctionToFirestore(roomId);
+
+            // Clean up completed room from RTDB after 30 seconds
+            setTimeout(async () => {
+              try {
+                await remove(ref(rtdb, `auctions/${roomId}`));
+              } catch (cleanErr) {}
+            }, 30000);
+          }
+        } finally {
+          // Always release the lock — even if any async step above throws or component unmounts
+          endingPlayerRef.current = false;
         }
-        endingPlayerRef.current = false;
-      }, waitTime);
+      };
+
+      setTimeout(advanceToNextPlayer, waitTime);
     } catch (err) {
+      // Release the lock on any outer error so future players can be ended
       endingPlayerRef.current = false;
     }
   }, [getSyncedTime, flushAuctionToFirestore]);
@@ -622,6 +629,14 @@ export const AuctionProvider = ({ children }) => {
     const myPresenceRef = ref(rtdb, `auctions/${auctionId}/presence/${userId}`);
     const connectedRef = ref(rtdb, '.info/connected');
     
+    // ── Bug Fix: Declare shared state vars BEFORE any onValue subscriptions that reference them ──
+    // Previously currentRoomData was declared at line 658 but referenced inside the onValue(connectedRef)
+    // callback above at line 648. JavaScript 'let' is in the TDZ until its declaration line runs,
+    // so if the callback fired before that point it threw: "Cannot access before initialization".
+    let currentRoomData = null;
+    let currentRtdbData = null;
+    let currentPresences = {};
+
     // Set presence status on connect/disconnect
     const unsubConnected = onValue(connectedRef, async (snap) => {
       if (snap.val() === true) {
@@ -648,9 +663,6 @@ export const AuctionProvider = ({ children }) => {
       }
     });
 
-    let currentRoomData = null;
-    let currentRtdbData = null;
-    let currentPresences = {};
 
     const checkAndSet = () => {
       if (currentRoomData) {
@@ -900,7 +912,7 @@ export const AuctionProvider = ({ children }) => {
     }
     if (currentAuction.currentAuction?.status !== 'bidding') throw new Error("Auction is not accepting bids right now.");
     if (currentAuction.currentAuction?.highBidderId === user.uid) throw new Error("You are already the highest bidder!");
-    
+
     // Squad limit check
     const squadLimit = currentAuction.squadLimit || 25;
     if (team.squad && team.squad.length >= squadLimit) {
@@ -911,45 +923,57 @@ export const AuctionProvider = ({ children }) => {
     const player = IPL_PLAYERS.find(p => p.id === currentAuction.currentAuction?.playerId);
     const isOverseas = player && player.country !== 'IND';
     const overseasLimit = currentAuction.overseasLimit || 8;
-    
     if (isOverseas && team.squad) {
       const currentOverseasCount = team.squad.reduce((count, s) => {
         const pInfo = IPL_PLAYERS.find(p => p.id === (typeof s === 'string' ? s : s.id));
         return pInfo && pInfo.country !== 'IND' ? count + 1 : count;
       }, 0);
-      
       if (currentOverseasCount >= overseasLimit) {
         throw new Error(`You have reached the overseas quota of ${overseasLimit} players for this mode!`);
       }
     }
 
-    const auctionDoc = doc(db, 'auctions', currentAuction.id);
-    let finalAmount = amount;
+    // ── Bug Fix 1: Budget pre-flight check OUTSIDE the transaction ──
+    // The transaction update function is retried by Firebase on conflicts — using team.budgetRemaining
+    // inside it reads a stale React closure each retry, not the live DB value. We do the check here
+    // (from the most recent RTDB-synced team state) and rely on the server to enforce it atomically.
+    const cBidSnapshot = currentAuction.currentAuction?.currentBid || 0;
+    const incSnapshot = cBidSnapshot < 5 ? 0.20 : 0.25;
+    const nextBidSnapshot = cBidSnapshot === 0
+      ? (player?.basePrice || 0)
+      : parseFloat((cBidSnapshot + incSnapshot).toFixed(2));
+    const myBudget = team.budgetRemaining || 0;
+    if (myBudget < nextBidSnapshot) {
+      throw new Error('Insufficient budget to place this bid.');
+    }
 
     const liveRef = ref(rtdb, `auctions/${currentAuction.id}/live`);
     const txResult = await runTransactionRtdb(liveRef, (currentData) => {
       if (!currentData) return currentData;
       if (currentData.status !== 'bidding') return; // abort
       if (currentData.highBidderId === user.uid) return; // abort
-      
+
       const now = getSyncedTime();
-      // Server-side guard: Reject late bids if timer has already expired on server
+      // Server-side guard: Reject late bids if timer has already expired
       if (currentData.timerEndsAt && now >= currentData.timerEndsAt) {
         return; // abort transaction
       }
 
       const cBid = currentData.currentBid || 0;
       const inc = cBid < 5 ? 0.20 : 0.25;
-      const nAmount = cBid === 0 ? IPL_PLAYERS.find(p => p.id === currentData.playerId)?.basePrice || 0 : cBid + inc;
-      
-      if (team.budgetRemaining < nAmount) return; // abort
+      const nAmount = cBid === 0
+        ? (IPL_PLAYERS.find(p => p.id === currentData.playerId)?.basePrice || 0)
+        : parseFloat((cBid + inc).toFixed(2));
+
+      // Guard: Abort retried transaction if updated bid exceeds user's budget
+      if (nAmount > myBudget) return;
 
       currentData.currentBid = nAmount;
       currentData.highBidderId = user.uid;
       currentData.highBidderName = user.displayName || 'Manager';
       currentData.highBidderTeamId = team.teamId;
       currentData.timerEndsAt = now + (currentAuction.settings?.bidTimer || 10) * 1000;
-      
+
       return currentData;
     });
 
@@ -1064,7 +1088,7 @@ export const AuctionProvider = ({ children }) => {
   }, [user, currentAuction, flushAuctionToFirestore]);
 
   // ─── Bot Management & Bidding Engine ───
-  const placeBotBid = useCallback(async (roomId, botUserId, botTeamId, botName, timerSeconds = 10) => {
+  const placeBotBid = useCallback(async (roomId, botUserId, botTeamId, botName, timerSeconds = 10, maxValuation = Infinity, botBudget = Infinity) => {
     if (!roomId) return;
     const liveRef = ref(rtdb, `auctions/${roomId}/live`);
 
@@ -1080,6 +1104,9 @@ export const AuctionProvider = ({ children }) => {
       const cBid = currentData.currentBid || 0;
       const inc = cBid < 5 ? 0.20 : 0.25;
       const nAmount = cBid === 0 ? IPL_PLAYERS.find(p => p.id === currentData.playerId)?.basePrice || 0 : parseFloat((cBid + inc).toFixed(2));
+
+      // Guard: Abort retried transaction if updated bid exceeds bot's max valuation or remaining budget
+      if (nAmount > maxValuation || nAmount > botBudget) return;
 
       currentData.currentBid = nAmount;
       currentData.highBidderId = botUserId;
@@ -1287,8 +1314,16 @@ export const AuctionProvider = ({ children }) => {
 
         if (bidDecision && bidDecision.shouldBid) {
           try {
-            // Pass room timer setting — fixes 5s timer being ignored by bots
-            await placeBotBid(currentAuction.id, botP.id, botP.team, botP.name, timerSec);
+            // Pass room timer setting, maxValuation, and budgetRemaining to enforce bounds on retries
+            await placeBotBid(
+              currentAuction.id,
+              botP.id,
+              botP.team,
+              botP.name,
+              timerSec,
+              bidDecision.maxValuation,
+              botTeam.budgetRemaining ?? initialBudget
+            );
           } catch (e) {
             // Graceful bot bid fail
           }

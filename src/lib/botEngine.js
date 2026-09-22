@@ -189,12 +189,13 @@ export function evaluateBotBid({
   }
 
   // 4. Role Balance Check — soft caps to avoid over-stacking one role
+  const slotsRemaining = squadLimit - currentSquad.length;
   const currentRoleCount = currentSquad.reduce((acc, s) => {
     const pInfo = IPL_PLAYERS.find(p => p.id === (typeof s === 'string' ? s : s.id));
     return pInfo && pInfo.role === player.role ? acc + 1 : acc;
   }, 0);
-  const maxPerRole = squadLimit <= 5 ? 2 : squadLimit <= 11 ? 4 : 8;
-  if (currentRoleCount >= maxPerRole) return null;
+  const maxPerRole = squadLimit <= 5 ? 3 : squadLimit <= 11 ? 5 : 9;
+  if (currentRoleCount >= maxPerRole && slotsRemaining > 1) return null;
 
   // 5. Calculate the next incremental bid amount
   const cBid = currentBid || 0;
@@ -206,7 +207,6 @@ export function evaluateBotBid({
   if (budgetRemaining < nextBid) return null;
 
   // Reserve budget safety: ensure enough average budget for remaining slots
-  const slotsRemaining = squadLimit - currentSquad.length;
   const remainingAfterBid = budgetRemaining - nextBid;
   if (slotsRemaining > 1 && (remainingAfterBid / (slotsRemaining - 1)) < 0.30) {
     return null; // protect purse for remaining squad slots
