@@ -1064,7 +1064,7 @@ export const AuctionProvider = ({ children }) => {
   }, [user, currentAuction, flushAuctionToFirestore]);
 
   // ─── Bot Management & Bidding Engine ───
-  const placeBotBid = useCallback(async (roomId, botUserId, botTeamId, botName, amount) => {
+  const placeBotBid = useCallback(async (roomId, botUserId, botTeamId, botName, timerSeconds = 10) => {
     if (!roomId) return;
     const liveRef = ref(rtdb, `auctions/${roomId}/live`);
 
@@ -1072,16 +1072,21 @@ export const AuctionProvider = ({ children }) => {
       if (!currentData) return currentData;
       if (currentData.status !== 'bidding') return; // abort
       if (currentData.highBidderId === botUserId) return; // abort
+
+      const now = getSyncedTime();
+      // Reject if timer has already expired server-side
+      if (currentData.timerEndsAt && now >= currentData.timerEndsAt) return;
       
       const cBid = currentData.currentBid || 0;
       const inc = cBid < 5 ? 0.20 : 0.25;
-      const nAmount = cBid === 0 ? IPL_PLAYERS.find(p => p.id === currentData.playerId)?.basePrice || 0 : cBid + inc;
+      const nAmount = cBid === 0 ? IPL_PLAYERS.find(p => p.id === currentData.playerId)?.basePrice || 0 : parseFloat((cBid + inc).toFixed(2));
 
       currentData.currentBid = nAmount;
       currentData.highBidderId = botUserId;
       currentData.highBidderName = botName;
       currentData.highBidderTeamId = botTeamId;
-      currentData.timerEndsAt = getSyncedTime() + 10000;
+      // Use the room's configured timer, NOT a hardcoded 10 seconds
+      currentData.timerEndsAt = now + (timerSeconds * 1000);
       
       return currentData;
     });
@@ -1194,6 +1199,11 @@ export const AuctionProvider = ({ children }) => {
     }
   }, []);
 
+  // Guard ref: track the last timer cycle (timerEndsAt) that a bot bid was queued for.
+  // Prevents multiple bot bids from being scheduled when currentAuction re-renders
+  // multiple times during the same countdown cycle.
+  const lastBotBidCycleRef = React.useRef(null);
+
   // Host Bidding Bot Loop Effect
   useEffect(() => {
     if (!currentAuction || !user || currentAuction.hostId !== user.uid) return;
@@ -1208,14 +1218,24 @@ export const AuctionProvider = ({ children }) => {
     const player = IPL_PLAYERS.find(p => p.id === live.playerId);
     if (!player) return;
 
+    // ─── Deduplicate: skip if we already queued a bot bid for this exact timer cycle ───
+    // A timer cycle is identified by the timerEndsAt value.
+    // When a bid is placed (human or bot), timerEndsAt changes → new cycle → new bid allowed.
+    const cycleKey = `${live.playerId}_${live.timerEndsAt}`;
+    if (lastBotBidCycleRef.current === cycleKey) return;
+    lastBotBidCycleRef.current = cycleKey;
+
     const now = getSyncedTime();
     const timerSec = currentAuction.settings?.bidTimer || 10;
     const timerMs = timerSec * 1000;
     const remainingMs = Math.max(0, (live.timerEndsAt || 0) - now);
     const cBid = live.currentBid || 0;
 
+    // If timer has already expired, don't schedule anything
+    if (remainingMs <= 0) return;
+
     // ─── Timer-Adaptive & Mixed Pacing Engine ───
-    // Dynamically scales to host's timer setting (5s, 10s, 15s, 20s)
+    // Dynamically scales to host's configured timer (5s, 10s, 15s, 20s)
     let delayMs = 400;
     const randMode = Math.random();
 
@@ -1235,21 +1255,21 @@ export const AuctionProvider = ({ children }) => {
         // Mid-Timer Re-evaluation
         delayMs = timerMs * (0.30 + Math.random() * 0.25);
       } else {
-        // Late Clutch Sniping (Target final 15% - 30% of countdown)
+        // Late Clutch Sniping (final 15–30% of countdown)
         const targetRemainMs = timerMs * (0.15 + Math.random() * 0.15);
-        if (remainingMs > targetRemainMs) {
-          delayMs = remainingMs - targetRemainMs;
-        } else {
-          delayMs = 500 + Math.random() * 500;
-        }
+        delayMs = remainingMs > targetRemainMs
+          ? remainingMs - targetRemainMs
+          : 300 + Math.random() * 400;
       }
     }
 
-    // Ensure delay is bounded safely between 350ms and remainingMs - 300ms
-    delayMs = Math.max(350, Math.min(delayMs, Math.max(350, remainingMs - 300)));
+    // Bound delay safely: minimum 300ms, maximum (remainingMs - 300ms)
+    delayMs = Math.max(300, Math.min(delayMs, Math.max(300, remainingMs - 300)));
+
+    const initialBudget = currentAuction.settings?.budget || 120.0;
 
     const timer = setTimeout(async () => {
-      // Pick suitable bot team that is not the current high bidder
+      // Pick a suitable bot team that is not the current high bidder
       const eligibleBots = shuffleArray(botPlayers.filter(p => p.id !== live.highBidderId));
       for (const botP of eligibleBots) {
         const botTeam = roomTeams.find(t => t.userId === botP.id);
@@ -1261,12 +1281,14 @@ export const AuctionProvider = ({ children }) => {
           highBidderId: live.highBidderId,
           botTeam,
           squadLimit: currentAuction.squadLimit || 25,
-          overseasLimit: currentAuction.overseasLimit || 8
+          overseasLimit: currentAuction.overseasLimit || 8,
+          initialBudget,
         });
 
         if (bidDecision && bidDecision.shouldBid) {
           try {
-            await placeBotBid(currentAuction.id, botP.id, botP.team, botP.name, bidDecision.nextBid);
+            // Pass room timer setting — fixes 5s timer being ignored by bots
+            await placeBotBid(currentAuction.id, botP.id, botP.team, botP.name, timerSec);
           } catch (e) {
             // Graceful bot bid fail
           }
