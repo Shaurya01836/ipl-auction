@@ -561,10 +561,13 @@ const AuctionRoom = () => {
    const lastBeepedSecRef = useRef(-1);
    const endTriggeredRef = useRef(false);
 
-   // Reset the end-trigger lock whenever a new player starts or timer resets (new bid)
+   // Reset the end-trigger lock ONLY when a genuinely new player comes up for auction.
+   // Bug Fix 3: Previously this also reset on timerEndsAt changes, which happens on every bid
+   // (including optimistic UI updates). That re-armed the trigger mid-countdown and could cause
+   // endPlayerAuction to fire twice in quick succession under aggressive bidding.
    useEffect(() => {
       endTriggeredRef.current = false;
-   }, [displayAuctionState?.playerId, displayAuctionState?.timerEndsAt]);
+   }, [displayAuctionState?.playerId]);
 
    useEffect(() => {
       if (currentAuction?.status !== 'active' || !displayAuctionState?.timerEndsAt || displayAuctionState?.status !== 'bidding') {
@@ -585,9 +588,12 @@ const AuctionRoom = () => {
 
          setTimeLeft(diff);
          if (diff === 0) {
-            clearInterval(interval);
-            if (isAdmin && displayAuctionState.status === 'bidding' && !endTriggeredRef.current) {
+            // Primary trigger: Admin/Host triggers end immediately when timer expires
+            // Fallback trigger: Non-host client triggers end if timer has expired by >1.5s (host tab closed/lagged)
+            const shouldTrigger = (isAdmin || rawMs < -1500) && displayAuctionState.status === 'bidding' && !endTriggeredRef.current;
+            if (shouldTrigger) {
                endTriggeredRef.current = true;
+               clearInterval(interval);
                setTimeout(() => {
                   endPlayerAuction(id);
                }, 300);

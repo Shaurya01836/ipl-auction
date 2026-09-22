@@ -1017,8 +1017,12 @@ const LandingPage = () => {
 
                           return (
                             <div key={session.id} className="space-y-1">
-                              <button
+                              {/* Outer row: div acts as the expand toggle — avoids nested <button> HTML violation */}
+                              <div
+                                role="button"
+                                tabIndex={0}
                                 onClick={() => setExpandedSession(isExpanded ? null : session.id)}
+                                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setExpandedSession(isExpanded ? null : session.id)}
                                 className={`w-full text-left p-3 sm:p-4 rounded-2xl border transition-all flex items-center justify-between group cursor-pointer ${isExpanded ? 'bg-white/10 border-white/20 shadow-lg' : 'bg-white/[0.03] border-white/5 hover:bg-white/5'
                                   }`}
                               >
@@ -1060,7 +1064,7 @@ const LandingPage = () => {
                                   </button>
                                   <ChevronDown size={14} className={`text-gray-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                                 </div>
-                              </button>
+                              </div>
 
                               {/* Expanded Squad */}
                               <AnimatePresence>
