@@ -1,10 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowUpRight, ShieldCheck, Mail, Cpu, Shield, FileText } from 'lucide-react';
+import { ArrowUpRight, ShieldCheck, Mail, Cpu, Shield, FileText, Lock } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const { user } = useAuth();
+  const isAdmin = user && user.email && user.email.trim().toLowerCase() === import.meta.env.VITE_ADMIN_EMAIL?.trim().toLowerCase();
 
   const socialLinks = [
     { icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>, href: "https://github.com/Shaurya01836", label: "GitHub" },
@@ -83,6 +86,16 @@ const Footer = () => {
                 <FileText size={12} className="text-blue-400" /> Terms & Conditions
               </Link>
             </li>
+            {isAdmin && (
+              <li>
+                <Link
+                  to="/admin"
+                  className="text-xs text-[#ff5500] hover:text-[#ff8c00] font-black uppercase tracking-wider transition-colors duration-200 flex items-center gap-1.5 bg-[#ff5500]/10 border border-[#ff5500]/20 px-2 py-1 rounded-lg w-fit"
+                >
+                  <Lock size={12} /> Admin Dashboard
+                </Link>
+              </li>
+            )}
           </ul>
         </div>
 

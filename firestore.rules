@@ -1,0 +1,29 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 1. Feedbacks Collection:
+    // Anyone (including anonymous site visitors) can submit feedback from the landing page.
+    // ONLY the admin email (shaurya01836@gmail.com) can read, query, or delete feedback entries.
+    match /feedbacks/{feedbackId} {
+      allow create: if true;
+      allow read, delete: if request.auth != null && 
+                             request.auth.token.email != null && 
+                             request.auth.token.email.lower() == "shaurya01836@gmail.com";
+      allow update: if false;
+    }
+
+    // 2. Auctions Collection:
+    // Authenticated users (host, players, guests) can read and update auction room state.
+    match /auctions/{auctionId} {
+      allow read, write: if request.auth != null; 
+    }
+
+    // 3. Teams Collection:
+    // Authenticated users can read and write team roster data and AI summary analysis.
+    match /teams/{teamId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

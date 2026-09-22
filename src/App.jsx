@@ -14,6 +14,7 @@ import Lobby from './pages/Lobby'
 import GameGuide from './pages/GameGuide'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsConditions from './pages/TermsConditions'
+import AdminPanel from './pages/AdminPanel'
 import NotFound from './pages/NotFound'
 import './index.css'
 
@@ -30,6 +31,7 @@ function App() {
               <CookieConsent />
               <Routes>
                 <Route path="/" element={<LandingPage />} />
+                <Route path="/admin" element={<AdminPanel />} />
                 <Route path="/guide" element={<GameGuide />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/terms" element={<TermsConditions />} />
