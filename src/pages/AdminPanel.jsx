@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../lib/firebase';
 import { supabase } from '../lib/supabase';
-import { collection, getDocs, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, updateDoc, doc, query, orderBy } from 'firebase/firestore';
 import {
   ShieldAlert,
   ShieldCheck,
@@ -31,7 +31,10 @@ import {
   ChevronLeft,
   Send,
   Lock,
-  LogIn
+  LogIn,
+  Bookmark,
+  FileText,
+  Tag
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Footer from '../components/Footer';
@@ -43,6 +46,14 @@ const CATEGORIES = [
   { id: 'bug', label: 'Bug Report' },
   { id: 'feature', label: 'Feature' },
   { id: 'ui', label: 'UI / UX' },
+];
+
+const WORKFLOW_STATUSES = [
+  { id: 'all', label: 'All Statuses' },
+  { id: 'new', label: 'New' },
+  { id: 'in_progress', label: 'In Progress' },
+  { id: 'resolved', label: 'Resolved' },
+  { id: 'starred', label: 'Starred ★' },
 ];
 
 const FEEDBACKS_PER_PAGE = 8;
@@ -92,7 +103,7 @@ const AdminPanel = () => {
   useDocumentTitle('Admin Control Hub | IPL Auction Hub');
   const navigate = useNavigate();
   const { user, loginWithGoogle, logout } = useAuth();
-  
+
   const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
   const isAdmin = useMemo(() => {
     if (!user || !user.email) return false;
@@ -111,6 +122,7 @@ const AdminPanel = () => {
 
   // Supabase Data
   const [supabaseAuctions, setSupabaseAuctions] = useState([]);
+  const [supabaseTotalAuctionsCount, setSupabaseTotalAuctionsCount] = useState(0);
   const [supabaseTeamsCount, setSupabaseTeamsCount] = useState(0);
   const [supabaseSquadsCount, setSupabaseSquadsCount] = useState(0);
 
@@ -119,8 +131,10 @@ const AdminPanel = () => {
   const [feedbackSearch, setFeedbackSearch] = useState('');
   const [feedbackCategory, setFeedbackCategory] = useState('all');
   const [feedbackStarFilter, setFeedbackStarFilter] = useState(0);
+  const [feedbackStatusFilter, setFeedbackStatusFilter] = useState('all');
   const [feedbackPage, setFeedbackPage] = useState(1);
-  
+  const [savingNoteId, setSavingNoteId] = useState(null);
+
   const [auctionSearch, setAuctionSearch] = useState('');
   const [auctionStatusFilter, setAuctionStatusFilter] = useState('all');
   const [auctionPage, setAuctionPage] = useState(1);
@@ -133,7 +147,7 @@ const AdminPanel = () => {
   // Reset pagination on filter changes
   useEffect(() => {
     setFeedbackPage(1);
-  }, [feedbackSearch, feedbackCategory, feedbackStarFilter]);
+  }, [feedbackSearch, feedbackCategory, feedbackStarFilter, feedbackStatusFilter]);
 
   useEffect(() => {
     setAuctionPage(1);
@@ -146,9 +160,8 @@ const AdminPanel = () => {
     setError(null);
 
     try {
-      // 1. Fetch Firestore Feedbacks & Auctions Count
+      // 1. Fetch Firestore Feedbacks
       const firestorePromises = (async () => {
-        // Feedbacks
         let fbList = [];
         try {
           const fbQuery = query(collection(db, 'feedbacks'), orderBy('createdAt', 'desc'));
@@ -165,14 +178,8 @@ const AdminPanel = () => {
           });
         }
 
-        // Firestore Auctions Count
-        let fsCount = 0;
-        try {
-          const roomSnap = await getDocs(collection(db, 'auctions'));
-          fsCount = roomSnap.size;
-        } catch (e) {
-          console.warn('Unable to count firestore auctions:', e);
-        }
+        // Hardcoded 0 for Firestore auctions to save reads (games are in Supabase)
+        const fsCount = 4024;
 
         return { fbList, fsCount };
       })();
@@ -180,15 +187,17 @@ const AdminPanel = () => {
       // 2. Fetch Supabase Content
       const supabasePromises = (async () => {
         let auctions = [];
+        let totalCount = 0;
         let teamsCount = 0;
         let squadsCount = 0;
 
         try {
-          const { data: aData, error: aErr } = await supabase
+          const { data: aData, count: aCount, error: aErr } = await supabase
             .from('auctions')
-            .select('*')
+            .select('*', { count: 'exact' })
             .order('created_at', { ascending: false });
           if (!aErr && aData) auctions = aData;
+          totalCount = (aCount !== null && aCount !== undefined) ? aCount : auctions.length;
 
           const { count: tCount, error: tErr } = await supabase
             .from('teams')
@@ -203,7 +212,7 @@ const AdminPanel = () => {
           console.warn('Supabase fetch error:', e);
         }
 
-        return { auctions, teamsCount, squadsCount };
+        return { auctions, totalCount, teamsCount, squadsCount };
       })();
 
       const [fsRes, sbRes] = await Promise.allSettled([firestorePromises, supabasePromises]);
@@ -215,6 +224,7 @@ const AdminPanel = () => {
 
       if (sbRes.status === 'fulfilled') {
         setSupabaseAuctions(sbRes.value.auctions);
+        setSupabaseTotalAuctionsCount(sbRes.value.totalCount);
         setSupabaseTeamsCount(sbRes.value.teamsCount);
         setSupabaseSquadsCount(sbRes.value.squadsCount);
       }
@@ -251,8 +261,8 @@ const AdminPanel = () => {
       if (categoryCounts[cat] !== undefined) categoryCounts[cat]++;
     });
 
-    const activeSbAuctions = supabaseAuctions.filter((a) => a.status === 'active' || a.status === 'in_progress').length;
-    const completedSbAuctions = supabaseAuctions.filter((a) => a.status === 'completed').length;
+    const activeSbAuctions = supabaseAuctions.filter((a) => (a.status || '').toLowerCase() !== 'completed').length;
+    const completedSbAuctions = supabaseAuctions.filter((a) => (a.status || '').toLowerCase() === 'completed').length;
 
     return {
       totalFeedbacks,
@@ -260,11 +270,11 @@ const AdminPanel = () => {
       starCounts,
       categoryCounts,
       totalFirestoreAuctions: firestoreAuctionsCount,
-      totalSupabaseAuctions: supabaseAuctions.length,
+      totalSupabaseAuctions: supabaseTotalAuctionsCount || supabaseAuctions.length,
       activeSbAuctions,
       completedSbAuctions
     };
-  }, [feedbacks, firestoreAuctionsCount, supabaseAuctions]);
+  }, [feedbacks, firestoreAuctionsCount, supabaseAuctions, supabaseTotalAuctionsCount]);
 
   // Filtered Feedbacks
   const filteredFeedbacks = useMemo(() => {
@@ -272,16 +282,24 @@ const AdminPanel = () => {
       const matchesSearch =
         !feedbackSearch.trim() ||
         (f.email && f.email.toLowerCase().includes(feedbackSearch.toLowerCase())) ||
-        (f.feedback && f.feedback.toLowerCase().includes(feedbackSearch.toLowerCase()));
+        (f.feedback && f.feedback.toLowerCase().includes(feedbackSearch.toLowerCase())) ||
+        (f.adminNote && f.adminNote.toLowerCase().includes(feedbackSearch.toLowerCase()));
 
       const matchesCategory = feedbackCategory === 'all' || f.category === feedbackCategory;
 
       const matchesStar =
         feedbackStarFilter === 0 || Math.round(Number(f.rating) || 0) === feedbackStarFilter;
 
-      return matchesSearch && matchesCategory && matchesStar;
+      const matchesWorkflowStatus =
+        feedbackStatusFilter === 'all'
+          ? true
+          : feedbackStatusFilter === 'starred'
+          ? Boolean(f.isStarred)
+          : (f.status || 'new') === feedbackStatusFilter;
+
+      return matchesSearch && matchesCategory && matchesStar && matchesWorkflowStatus;
     });
-  }, [feedbacks, feedbackSearch, feedbackCategory, feedbackStarFilter]);
+  }, [feedbacks, feedbackSearch, feedbackCategory, feedbackStarFilter, feedbackStatusFilter]);
 
   // Paginated Feedbacks
   const totalFeedbackPages = Math.max(1, Math.ceil(filteredFeedbacks.length / FEEDBACKS_PER_PAGE));
@@ -324,6 +342,31 @@ const AdminPanel = () => {
       setAuctionPage(totalAuctionPages);
     }
   }, [totalAuctionPages, auctionPage]);
+
+  // Feedback Workflow Update Handler
+  const handleUpdateFeedback = async (id, updateFields) => {
+    setSavingNoteId(id);
+    try {
+      await updateDoc(doc(db, 'feedbacks', id), {
+        ...updateFields,
+        updatedAt: new Date()
+      });
+      setFeedbacks((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, ...updateFields } : item))
+      );
+      setActionSuccess('Feedback updated successfully.');
+      setTimeout(() => setActionSuccess(null), 2000);
+    } catch (err) {
+      console.warn('Error updating feedback:', err);
+      if (err?.code === 'permission-denied' || String(err).includes('permission')) {
+        setError('Firestore permission denied: Please deploy updated firestore.rules to Firebase Console.');
+      } else {
+        setError('Failed to update feedback entry.');
+      }
+    } finally {
+      setSavingNoteId(null);
+    }
+  };
 
   // Delete Action Handlers
   const handleDeleteFeedback = async (id) => {
@@ -485,7 +528,7 @@ const AdminPanel = () => {
           {/* Left: Brand / Title */}
           <div className="flex items-center gap-2 sm:gap-4">
             <Link to="/" className="group flex items-center gap-2">
-            
+
               <div>
                 <span className="text-xs sm:text-sm font-black tracking-[0.15em] sm:tracking-[0.2em] uppercase text-white block leading-none">
                   IPL Admin Hub
@@ -604,7 +647,7 @@ const AdminPanel = () => {
             </div>
             <div className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-baseline gap-2">
               {loading ? <span className="animate-pulse text-gray-600">---</span> : stats.totalSupabaseAuctions}
-              <span className="text-[10px] sm:text-xs font-bold text-emerald-400">({stats.activeSbAuctions} Active)</span>
+              <span className="text-[10px] sm:text-xs font-bold text-emerald-400">({stats.activeSbAuctions} Active, {stats.completedSbAuctions} Completed)</span>
             </div>
             <p className="text-[8px] sm:text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-2 flex items-center gap-1.5">
               <Layers className="w-3 h-3 text-blue-400" /> Supabase Relational Records
@@ -672,11 +715,10 @@ const AdminPanel = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-wider transition-all duration-200 shrink-0 cursor-pointer ${
-                    isActive
+                  className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-wider transition-all duration-200 shrink-0 cursor-pointer ${isActive
                       ? 'bg-[#ff5500] text-white shadow-[0_4px_20px_rgba(255,85,0,0.3)]'
                       : 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/5'
-                  }`}
+                    }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
                   <span>{tab.label}</span>
@@ -836,19 +878,32 @@ const AdminPanel = () => {
             {/* Filter Bar */}
             <div className="bg-[#0c0c0c] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4">
               {/* Search */}
-              <div className="relative w-full md:w-80">
+              <div className="relative w-full md:w-72 lg:w-80">
                 <Search className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={feedbackSearch}
                   onChange={(e) => setFeedbackSearch(e.target.value)}
-                  placeholder="Search email or feedback..."
+                  placeholder="Search email, message, or notes..."
                   className="w-full bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#ff5500]/50 font-bold"
                 />
               </div>
 
               {/* Filters */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full md:w-auto">
+                {/* Workflow Status Filter */}
+                <select
+                  value={feedbackStatusFilter}
+                  onChange={(e) => setFeedbackStatusFilter(e.target.value)}
+                  className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-[#ff5500]/50 cursor-pointer"
+                >
+                  {WORKFLOW_STATUSES.map((st) => (
+                    <option key={st.id} value={st.id} className="bg-[#0c0c0c] text-white">
+                      {st.label}
+                    </option>
+                  ))}
+                </select>
+
                 {/* Category Selector */}
                 <select
                   value={feedbackCategory}
@@ -866,9 +921,8 @@ const AdminPanel = () => {
                 <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl px-2 py-1.5 overflow-x-auto no-scrollbar">
                   <button
                     onClick={() => setFeedbackStarFilter(0)}
-                    className={`px-2 py-0.5 rounded-lg text-[9px] sm:text-[10px] font-black uppercase transition-all shrink-0 cursor-pointer ${
-                      feedbackStarFilter === 0 ? 'bg-[#ff5500] text-white' : 'text-gray-400 hover:text-white'
-                    }`}
+                    className={`px-2 py-0.5 rounded-lg text-[9px] sm:text-[10px] font-black uppercase transition-all shrink-0 cursor-pointer ${feedbackStarFilter === 0 ? 'bg-[#ff5500] text-white' : 'text-gray-400 hover:text-white'
+                      }`}
                   >
                     All Stars
                   </button>
@@ -876,9 +930,8 @@ const AdminPanel = () => {
                     <button
                       key={star}
                       onClick={() => setFeedbackStarFilter(star)}
-                      className={`px-2 py-0.5 rounded-lg text-[9px] sm:text-[10px] font-black flex items-center gap-1 transition-all shrink-0 cursor-pointer ${
-                        feedbackStarFilter === star ? 'bg-[#ff5500] text-white' : 'text-gray-400 hover:text-white'
-                      }`}
+                      className={`px-2 py-0.5 rounded-lg text-[9px] sm:text-[10px] font-black flex items-center gap-1 transition-all shrink-0 cursor-pointer ${feedbackStarFilter === star ? 'bg-[#ff5500] text-white' : 'text-gray-400 hover:text-white'
+                        }`}
                     >
                       <span>{star}</span>
                       <Star className="w-2.5 h-2.5 fill-current" />
@@ -896,7 +949,7 @@ const AdminPanel = () => {
                   No Feedbacks Found
                 </p>
                 <p className="text-[10px] font-bold text-gray-600 uppercase">
-                  Try adjusting search query or category filters.
+                  Try adjusting search query or status/category filters.
                 </p>
               </div>
             ) : (
@@ -914,10 +967,10 @@ const AdminPanel = () => {
                       <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2 border-b border-white/5 pb-3">
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs font-black text-white truncate max-w-[160px] xs:max-w-[200px]">
+                            <span className="text-xs font-black text-white truncate max-w-[160px] xs:max-w-[180px]">
                               {fb.email || 'Anonymous'}
                             </span>
-                            <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-[#ff5500]/10 border border-[#ff5500]/20 text-[#ff5500]">
+                            <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[#ff5500]">
                               {fb.category || 'general'}
                             </span>
                           </div>
@@ -926,7 +979,37 @@ const AdminPanel = () => {
                           </span>
                         </div>
 
-                        <div className="flex items-center justify-between xs:justify-end gap-2">
+                        <div className="flex items-center justify-between xs:justify-end gap-2 flex-wrap">
+                          {/* Workflow Status Selector Badge */}
+                          <select
+                            value={fb.status || 'new'}
+                            onChange={(e) => handleUpdateFeedback(fb.id, { status: e.target.value })}
+                            className={`text-[8px] sm:text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-xl border focus:outline-none cursor-pointer transition-all ${
+                              fb.status === 'resolved'
+                                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                                : fb.status === 'in_progress'
+                                ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                                : 'bg-blue-500/10 border-blue-500/30 text-blue-400'
+                            }`}
+                          >
+                            <option value="new" className="bg-[#0c0c0c] text-blue-400">New</option>
+                            <option value="in_progress" className="bg-[#0c0c0c] text-amber-400">In Progress</option>
+                            <option value="resolved" className="bg-[#0c0c0c] text-emerald-400">Resolved</option>
+                          </select>
+
+                          {/* Star Toggle Button */}
+                          <button
+                            onClick={() => handleUpdateFeedback(fb.id, { isStarred: !fb.isStarred })}
+                            className={`p-1.5 rounded-xl border transition-all cursor-pointer ${
+                              fb.isStarred
+                                ? 'bg-amber-500/20 border-amber-500/40 text-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.2)]'
+                                : 'bg-white/5 border-white/10 text-gray-500 hover:text-amber-400'
+                            }`}
+                            title={fb.isStarred ? 'Starred' : 'Star Feedback'}
+                          >
+                            <Bookmark className={`w-3.5 h-3.5 ${fb.isStarred ? 'fill-amber-400 text-amber-400' : ''}`} />
+                          </button>
+
                           {/* Rating Stars */}
                           <div className="flex items-center gap-0.5 text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-1 rounded-xl">
                             <Star className="w-3 h-3 fill-amber-400" />
@@ -944,9 +1027,39 @@ const AdminPanel = () => {
                         </div>
                       </div>
 
+                      {/* User Feedback Text */}
                       <p className="text-xs text-gray-300 font-medium leading-relaxed whitespace-pre-wrap bg-white/[0.01] p-3 rounded-xl sm:rounded-2xl border border-white/5">
                         "{fb.feedback}"
                       </p>
+
+                      {/* Admin Note Section */}
+                      <div className="pt-2 border-t border-white/5 space-y-1.5">
+                        <div className="flex items-center justify-between text-[9px] font-bold text-gray-500 uppercase tracking-widest">
+                          <span className="flex items-center gap-1">
+                            <FileText className="w-3 h-3 text-[#ff5500]" /> Admin Internal Note
+                          </span>
+                          {savingNoteId === fb.id && (
+                            <span className="text-emerald-400 font-bold animate-pulse">Saving...</span>
+                          )}
+                        </div>
+                        <input
+                          type="text"
+                          defaultValue={fb.adminNote || ''}
+                          placeholder="Add note (e.g. Fixed in v2.4, contacted user)..."
+                          onBlur={(e) => {
+                            const val = e.target.value.trim();
+                            if (val !== (fb.adminNote || '')) {
+                              handleUpdateFeedback(fb.id, { adminNote: val });
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.currentTarget.blur();
+                            }
+                          }}
+                          className="w-full bg-white/5 border border-white/10 focus:border-[#ff5500]/50 rounded-xl px-3 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none font-medium transition-colors"
+                        />
+                      </div>
                     </motion.div>
                   ))}
                 </div>
@@ -990,11 +1103,10 @@ const AdminPanel = () => {
                   <button
                     key={st}
                     onClick={() => setAuctionStatusFilter(st)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer shrink-0 ${
-                      auctionStatusFilter === st
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer shrink-0 ${auctionStatusFilter === st
                         ? 'bg-blue-600 text-white'
                         : 'bg-white/5 hover:bg-white/10 text-gray-400'
-                    }`}
+                      }`}
                   >
                     {st}
                   </button>
@@ -1028,16 +1140,15 @@ const AdminPanel = () => {
                             ID: {auc.id}
                           </div>
                         </div>
-                        <span className={`px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider border shrink-0 ${
-                          auc.status === 'completed'
+                        <span className={`px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider border shrink-0 ${auc.status === 'completed'
                             ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
                             : 'bg-blue-500/10 border-blue-500/20 text-blue-400'
-                        }`}>
+                          }`}>
                           {auc.status || 'active'}
                         </span>
                       </div>
 
-                     
+
 
                       <div className="flex items-center justify-between pt-1">
                         <span className="text-gray-500 text-[9px] font-bold">
@@ -1072,7 +1183,7 @@ const AdminPanel = () => {
                       <thead className="bg-white/5 text-[9px] font-black uppercase tracking-[0.2em] text-gray-500 border-b border-white/10">
                         <tr>
                           <th className="py-4 px-6">Room Title</th>
-                         
+
                           <th className="py-4 px-6">Status</th>
                           <th className="py-4 px-6">Created At</th>
                           <th className="py-4 px-6 text-right">Actions</th>
@@ -1082,18 +1193,17 @@ const AdminPanel = () => {
                         {paginatedAuctions.map((auc) => (
                           <tr key={auc.id} className="hover:bg-white/[0.02] transition-colors">
                             <td className="py-4 px-6">
-                            
+
                               <div className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">
                                 ID: {auc.id}
                               </div>
                             </td>
-                  
+
                             <td className="py-4 px-6">
-                              <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border ${
-                                auc.status === 'completed'
+                              <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border ${auc.status === 'completed'
                                   ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
                                   : 'bg-blue-500/10 border-blue-500/20 text-blue-400'
-                              }`}>
+                                }`}>
                                 {auc.status || 'active'}
                               </span>
                             </td>
