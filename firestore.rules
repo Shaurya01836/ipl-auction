@@ -8,10 +8,9 @@ service cloud.firestore {
     // ONLY the admin email (shaurya01836@gmail.com) can read, query, or delete feedback entries.
     match /feedbacks/{feedbackId} {
       allow create: if true;
-      allow read, delete: if request.auth != null && 
+      allow read, update, delete: if request.auth != null && 
                              request.auth.token.email != null && 
                              request.auth.token.email.lower() == "shaurya01836@gmail.com";
-      allow update: if false;
     }
 
     // 2. Auctions Collection:
