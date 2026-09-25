@@ -707,7 +707,12 @@ const AuctionRoom = () => {
       );
    }
 
-   if (loading || !user) {
+   if (!user && !loading) {
+      navigate(`/lobby/${id}`, { replace: true });
+      return <PageLoader />;
+   }
+
+   if (loading) {
       return (
          <PageLoader />
       );
