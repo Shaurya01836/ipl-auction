@@ -215,7 +215,7 @@ const Lobby = () => {
     );
   }
 
-  if (authLoading || auctionLoading || !currentAuction) {
+  if (authLoading) {
     return (
       <PageLoader />
     );
@@ -311,6 +311,39 @@ const Lobby = () => {
         <button onClick={() => navigate('/')} className="mt-8 text-[10px] font-black text-gray-600 hover:text-white uppercase tracking-[0.4em] transition-all flex items-center gap-2">
           <Home size={14} /> Back to Base
         </button>
+      </div>
+    );
+  }
+
+  if (auctionLoading) {
+    return (
+      <PageLoader />
+    );
+  }
+
+  if (!currentAuction) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-6 text-white font-sans">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md w-full bg-white/[0.03] border border-white/10 p-8 rounded-[2.5rem] text-center backdrop-blur-3xl shadow-2xl relative overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 p-8 w-32 h-32 bg-orange-500/10 rounded-full -mr-16 -mt-16 blur-3xl" />
+          <div className="w-20 h-20 bg-orange-500/10 border border-orange-500/20 rounded-3xl flex items-center justify-center mx-auto mb-6 text-orange-500 shadow-2xl">
+            <ShieldAlert size={40} />
+          </div>
+          <h2 className="text-2xl font-black uppercase tracking-tighter mb-2">Room Not Found</h2>
+          <p className="text-gray-400 text-xs font-medium mb-8 leading-relaxed">
+            This auction room code (<span className="text-orange-500 font-mono font-bold">{id}</span>) does not exist, has expired, or was closed by the host.
+          </p>
+          <button
+            onClick={() => navigate('/')}
+            className="w-full py-4 bg-orange-600 hover:bg-orange-500 text-white font-black uppercase tracking-widest text-xs rounded-xl transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer shadow-[0_10px_30px_rgba(255,85,0,0.3)]"
+          >
+            <Home size={16} /> Back to Base
+          </button>
+        </motion.div>
       </div>
     );
   }
