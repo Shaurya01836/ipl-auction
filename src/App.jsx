@@ -32,6 +32,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/admin" element={<AdminPanel />} />
+                <Route path="/admin/:tab" element={<AdminPanel />} />
                 <Route path="/guide" element={<GameGuide />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/terms" element={<TermsConditions />} />
