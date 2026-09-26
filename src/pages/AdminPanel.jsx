@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../lib/firebase';
 import { supabase } from '../lib/supabase';
 import { collection, getDocs, deleteDoc, updateDoc, doc, query, orderBy } from 'firebase/firestore';
 import {
+  Home,
   ShieldAlert,
   ShieldCheck,
   Gavel,
@@ -127,7 +128,14 @@ const AdminPanel = () => {
   const [supabaseSquadsCount, setSupabaseSquadsCount] = useState(0);
 
   // Filters & Tabs
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'feedbacks' | 'auctions' | 'telemetry'
+  const { tab } = useParams();
+  const activeTab = useMemo(() => {
+    const validTabs = ['overview', 'feedbacks', 'auctions'];
+    if (tab && validTabs.includes(tab.toLowerCase())) {
+      return tab.toLowerCase();
+    }
+    return 'overview';
+  }, [tab]);
   const [feedbackSearch, setFeedbackSearch] = useState('');
   const [feedbackCategory, setFeedbackCategory] = useState('all');
   const [feedbackStarFilter, setFeedbackStarFilter] = useState(0);
@@ -294,8 +302,8 @@ const AdminPanel = () => {
         feedbackStatusFilter === 'all'
           ? true
           : feedbackStatusFilter === 'starred'
-          ? Boolean(f.isStarred)
-          : (f.status || 'new') === feedbackStatusFilter;
+            ? Boolean(f.isStarred)
+            : (f.status || 'new') === feedbackStatusFilter;
 
       return matchesSearch && matchesCategory && matchesStar && matchesWorkflowStatus;
     });
@@ -525,23 +533,23 @@ const AdminPanel = () => {
       {/* Top Header Bar */}
       <header className="sticky top-0 z-50 bg-[#050505]/85 backdrop-blur-2xl border-b border-white/10 px-4 sm:px-6 py-3.5 sm:py-4">
         <div className="max-w-7xl mx-auto flex flex-row items-center justify-between gap-2 sm:gap-4">
-          {/* Left: Brand / Title */}
+          {/* Left: Home Button & Brand / Title */}
           <div className="flex items-center gap-2 sm:gap-4">
-            <Link to="/" className="group flex items-center gap-2">
-
-              <div>
-                <span className="text-xs sm:text-sm font-black tracking-[0.15em] sm:tracking-[0.2em] uppercase text-white block leading-none">
-                  IPL Admin Hub
-                </span>
-              </div>
-            </Link>
+            <button
+              onClick={() => navigate('/')}
+              className="p-2 sm:px-4 sm:py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl sm:rounded-2xl transition-all group flex items-center gap-2 cursor-pointer"
+            >
+              <Home size={14} className="text-gray-400 group-hover:text-white transition-colors sm:w-[16px] sm:h-[16px]" />
+              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">Home</span>
+            </button>
+            <div>
+            </div>
 
             <div className="h-6 w-px bg-white/10 hidden md:block" />
 
             <div className="hidden lg:flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400">
-                Firestore & Supabase Synced
+                Admin Panel
               </span>
             </div>
           </div>
@@ -564,14 +572,6 @@ const AdminPanel = () => {
                 {user.email}
               </span>
             </div>
-
-            <button
-              onClick={logout}
-              title="Logout"
-              className="p-1.5 sm:p-2 rounded-xl bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 text-gray-400 hover:text-red-400 transition-all cursor-pointer"
-            >
-              <LogOut className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
-            </button>
           </div>
         </div>
       </header>
@@ -706,22 +706,21 @@ const AdminPanel = () => {
             {[
               { id: 'overview', label: 'Overview', icon: Activity },
               { id: 'feedbacks', label: `Feedbacks (${feedbacks.length})`, icon: MessageSquare },
-              { id: 'auctions', label: `Supabase Auctions (${supabaseAuctions.length})`, icon: Gavel },
-              { id: 'telemetry', label: 'Telemetry', icon: Database },
-            ].map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
+              { id: 'auctions', label: `Supabase Auctions`, icon: Gavel },
+            ].map((tabItem) => {
+              const Icon = tabItem.icon;
+              const isActive = activeTab === tabItem.id;
               return (
                 <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  key={tabItem.id}
+                  onClick={() => navigate(tabItem.id === 'overview' ? '/admin' : `/admin/${tabItem.id}`)}
                   className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-wider transition-all duration-200 shrink-0 cursor-pointer ${isActive
-                      ? 'bg-[#ff5500] text-white shadow-[0_4px_20px_rgba(255,85,0,0.3)]'
-                      : 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/5'
+                    ? 'bg-[#ff5500] text-white shadow-[0_4px_20px_rgba(255,85,0,0.3)]'
+                    : 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/5'
                     }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
-                  <span>{tab.label}</span>
+                  <span>{tabItem.label}</span>
                 </button>
               );
             })}
@@ -824,7 +823,7 @@ const AdminPanel = () => {
                   Recent User Feedbacks
                 </h3>
                 <button
-                  onClick={() => setActiveTab('feedbacks')}
+                  onClick={() => navigate('/admin/feedbacks')}
                   className="text-[9px] sm:text-[10px] font-bold text-[#ff5500] hover:underline uppercase tracking-wider flex items-center gap-1"
                 >
                   View All ({feedbacks.length}) <ChevronRight className="w-3 h-3" />
@@ -984,13 +983,12 @@ const AdminPanel = () => {
                           <select
                             value={fb.status || 'new'}
                             onChange={(e) => handleUpdateFeedback(fb.id, { status: e.target.value })}
-                            className={`text-[8px] sm:text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-xl border focus:outline-none cursor-pointer transition-all ${
-                              fb.status === 'resolved'
+                            className={`text-[8px] sm:text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-xl border focus:outline-none cursor-pointer transition-all ${fb.status === 'resolved'
                                 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
                                 : fb.status === 'in_progress'
-                                ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-                                : 'bg-blue-500/10 border-blue-500/30 text-blue-400'
-                            }`}
+                                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                                  : 'bg-blue-500/10 border-blue-500/30 text-blue-400'
+                              }`}
                           >
                             <option value="new" className="bg-[#0c0c0c] text-blue-400">New</option>
                             <option value="in_progress" className="bg-[#0c0c0c] text-amber-400">In Progress</option>
@@ -1000,11 +998,10 @@ const AdminPanel = () => {
                           {/* Star Toggle Button */}
                           <button
                             onClick={() => handleUpdateFeedback(fb.id, { isStarred: !fb.isStarred })}
-                            className={`p-1.5 rounded-xl border transition-all cursor-pointer ${
-                              fb.isStarred
+                            className={`p-1.5 rounded-xl border transition-all cursor-pointer ${fb.isStarred
                                 ? 'bg-amber-500/20 border-amber-500/40 text-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.2)]'
                                 : 'bg-white/5 border-white/10 text-gray-500 hover:text-amber-400'
-                            }`}
+                              }`}
                             title={fb.isStarred ? 'Starred' : 'Star Feedback'}
                           >
                             <Bookmark className={`w-3.5 h-3.5 ${fb.isStarred ? 'fill-amber-400 text-amber-400' : ''}`} />
@@ -1104,8 +1101,8 @@ const AdminPanel = () => {
                     key={st}
                     onClick={() => setAuctionStatusFilter(st)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer shrink-0 ${auctionStatusFilter === st
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-white/5 hover:bg-white/10 text-gray-400'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white/5 hover:bg-white/10 text-gray-400'
                       }`}
                   >
                     {st}
@@ -1141,8 +1138,8 @@ const AdminPanel = () => {
                           </div>
                         </div>
                         <span className={`px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider border shrink-0 ${auc.status === 'completed'
-                            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                            : 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                          ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                          : 'bg-blue-500/10 border-blue-500/20 text-blue-400'
                           }`}>
                           {auc.status || 'active'}
                         </span>
@@ -1158,6 +1155,8 @@ const AdminPanel = () => {
                         <div className="flex items-center gap-2">
                           <Link
                             to={`/auction/${auc.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-blue-400 hover:text-white bg-blue-500/10 border border-blue-500/20 px-2.5 py-1.5 rounded-xl transition-all"
                           >
                             View <ExternalLink className="w-3 h-3" />
@@ -1201,8 +1200,8 @@ const AdminPanel = () => {
 
                             <td className="py-4 px-6">
                               <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border ${auc.status === 'completed'
-                                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                                  : 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                : 'bg-blue-500/10 border-blue-500/20 text-blue-400'
                                 }`}>
                                 {auc.status || 'active'}
                               </span>
@@ -1213,6 +1212,8 @@ const AdminPanel = () => {
                             <td className="py-4 px-6 text-right space-x-2">
                               <Link
                                 to={`/auction/${auc.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-blue-400 hover:text-white bg-blue-500/10 border border-blue-500/20 px-2.5 py-1.5 rounded-xl transition-all"
                               >
                                 View <ExternalLink className="w-3 h-3" />
@@ -1247,56 +1248,7 @@ const AdminPanel = () => {
           </motion.div>
         )}
 
-        {/* Tab 4: Telemetry Tab */}
-        {activeTab === 'telemetry' && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
-          >
-            <div className="bg-[#0c0c0c] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl space-y-4">
-              <h3 className="text-[11px] sm:text-xs font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-white flex items-center gap-2 border-b border-white/5 pb-3 sm:pb-4">
-                <Database className="w-4 h-4 text-blue-400" />
-                Supabase Relational Database
-              </h3>
-              <div className="space-y-3 text-xs font-bold text-gray-300">
-                <div className="flex justify-between py-2 border-b border-white/5">
-                  <span className="text-gray-500">Auctions Table Count</span>
-                  <span className="text-white">{supabaseAuctions.length} rows</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-white/5">
-                  <span className="text-gray-500">Teams Table Count</span>
-                  <span className="text-white">{supabaseTeamsCount} rows</span>
-                </div>
-                <div className="flex justify-between py-2">
-                  <span className="text-gray-500">User Squads Count</span>
-                  <span className="text-white">{supabaseSquadsCount} rows</span>
-                </div>
-              </div>
-            </div>
 
-            <div className="bg-[#0c0c0c] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl space-y-4">
-              <h3 className="text-[11px] sm:text-xs font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-white flex items-center gap-2 border-b border-white/5 pb-3 sm:pb-4">
-                <Flame className="w-4 h-4 text-[#ff5500]" />
-                Firebase Realtime & Firestore
-              </h3>
-              <div className="space-y-3 text-xs font-bold text-gray-300">
-                <div className="flex justify-between py-2 border-b border-white/5">
-                  <span className="text-gray-500">Firestore Feedbacks Collection</span>
-                  <span className="text-white">{feedbacks.length} documents</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-white/5">
-                  <span className="text-gray-500">Firestore Auctions Collection</span>
-                  <span className="text-white">{firestoreAuctionsCount} room documents</span>
-                </div>
-                <div className="flex justify-between py-2">
-                  <span className="text-gray-500">RTDB Time Synchronization</span>
-                  <span className="text-emerald-400">Online & Active</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
       </main>
 
       {/* Delete Confirmation Modal */}
