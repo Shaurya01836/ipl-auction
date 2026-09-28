@@ -253,6 +253,12 @@ export const AuctionProvider = ({ children }) => {
       playerOrder: randomizedIndices
     });
 
+    if (supabase) {
+      try {
+        await supabase.from('auctions').update({ status: 'active' }).eq('id', roomId);
+      } catch (sErr) {}
+    }
+
     try {
       await set(playerOrderRef, randomizedIndices);
     } catch (e) {

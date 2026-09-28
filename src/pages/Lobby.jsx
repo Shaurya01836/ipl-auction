@@ -26,7 +26,8 @@ import {
   Brain,
   Sparkles,
   Info,
-  X
+  X,
+  Eye
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -51,6 +52,11 @@ const Lobby = () => {
   const [banError, setBanError] = useState(null);
   const [showBotInfo, setShowBotInfo] = useState(false);
 
+  const [spectateMode, setSpectateMode] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('spectate') === 'true';
+  });
+
   const isAdmin = currentAuction?.hostId === user?.uid;
   const players = currentAuction?.players || [];
 
@@ -70,23 +76,9 @@ const Lobby = () => {
   useEffect(() => {
     if (id && user?.uid) {
       const unsub = joinAuction(id, user.uid);
-
-      // Auto-join record if not present
-      const autoJoin = async () => {
-        try {
-          await joinRoomDb(id, user.uid, { name: user.displayName || 'Manager' });
-        } catch (e) {
-          // Auto-join record if not present
-          if (e.message.includes("kicked")) {
-            setBanError(e.message);
-          }
-        }
-      };
-      autoJoin();
-
       return () => unsub();
     }
-  }, [id, user?.uid, user?.displayName, joinAuction, joinRoomDb]);
+  }, [id, user?.uid, joinAuction]);
 
   useEffect(() => {
     if (currentAuction?.status === 'active') {
@@ -128,7 +120,13 @@ const Lobby = () => {
     if (teamAssignments[teamId] && teamId !== currentUserPlayer?.team) return;
     setIsSelectingTeam(teamId);
     try {
-      await updatePlayerTeam(id, user.uid, teamId);
+      if (!isJoined) {
+        await joinRoomDb(id, user.uid, { name: user.displayName || 'Manager', team: teamId });
+      } else {
+        await updatePlayerTeam(id, user.uid, teamId);
+      }
+    } catch (e) {
+      if (e.message.includes("kicked")) setBanError(e.message);
     } finally {
       setIsSelectingTeam(null);
     }
@@ -232,12 +230,9 @@ const Lobby = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative z-10 w-full max-md bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-3 backdrop-blur-3xl shadow-2xl"
+          className="relative z-10 w-full md:w-xl max-md bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-3 backdrop-blur-3xl shadow-2xl"
         >
           <div className="bg-[#0c0c0c] rounded-[2.2rem] p-8 border border-white/5 flex flex-col items-center text-center">
-            <div className="w-16 h-16 bg-orange-600/10 border border-orange-500/20 rounded-2xl flex items-center justify-center text-orange-500 mb-6 shadow-2xl">
-              <Gavel size={32} strokeWidth={2.5} />
-            </div>
 
             <h2 className="text-2xl font-black tracking-tighter uppercase mb-2">Joining Arena</h2>
             <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.3em] mb-8">Room ID: <span className="text-orange-500">{id}</span></p>
@@ -348,7 +343,7 @@ const Lobby = () => {
     );
   }
 
-  if (!isJoined || !currentUserPlayer?.team) {
+  if (!spectateMode && (!isJoined || !currentUserPlayer?.team)) {
     // ═══ TEAM SELECTION OVERLAY ═══
     return (
       <div className="relative min-h-screen bg-[#050505] flex flex-col items-center py-12 px-4 font-sans text-white overflow-x-hidden">
@@ -392,12 +387,20 @@ const Lobby = () => {
             })}
           </div>
 
-          <button
-            onClick={() => navigate('/')}
-            className="mx-auto mt-16 flex items-center gap-2 text-[10px] font-black text-gray-600 hover:text-white uppercase tracking-[0.4em] transition-all"
-          >
-            ← Cancel & Exit
-          </button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-12">
+            <button
+              onClick={() => setSpectateMode(true)}
+              className="px-6 py-3 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 font-black text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center gap-2"
+            >
+              <Eye size={16} /> Spectate Room Only
+            </button>
+            <button
+              onClick={() => navigate('/')}
+              className="px-6 py-3 text-[10px] font-black text-gray-600 hover:text-white uppercase tracking-[0.4em] transition-all cursor-pointer"
+            >
+              ← Cancel & Exit
+            </button>
+          </div>
         </motion.div>
       </div>
     );
@@ -430,6 +433,12 @@ const Lobby = () => {
             <span className="text-[7px] sm:text-[9px] font-black text-gray-500 uppercase tracking-widest leading-none mb-0.5 sm:mb-1">Room ID</span>
             <span className="text-base sm:text-xl font-black text-white tracking-tight leading-none">{id}</span>
           </div>
+          {spectateMode && (
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 font-black text-[9px] uppercase tracking-widest">
+              <Eye size={12} />
+              <span>SPECTATING</span>
+            </div>
+          )}
         </div>
 
         {isAdmin && (

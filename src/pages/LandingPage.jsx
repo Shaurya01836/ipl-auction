@@ -26,7 +26,8 @@ import {
   GitBranchPlusIcon,
   BookOpen,
   History,
-  Trash2
+  Trash2,
+  Eye
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GithubStarButton from '../components/GithubStarButton';
@@ -145,8 +146,6 @@ const LandingPage = () => {
 
   // Fetch Public Lobbies directly from Supabase (0 RTDB bandwidth download cost)
   useEffect(() => {
-    if (!user) return;
-
     setLobbiesLoading(true);
 
     const fetchPublicLobbies = async () => {
@@ -158,7 +157,7 @@ const LandingPage = () => {
           const { data: supabaseRooms, error } = await supabase
             .from('auctions')
             .select('*')
-            .eq('status', 'waiting')
+            .in('status', ['waiting', 'active'])
             .eq('is_public', true)
             .eq('host_online', true)
             .gte('created_at', threeHoursAgoISO)
@@ -178,7 +177,8 @@ const LandingPage = () => {
                 }
               });
 
-              const displayCount = Math.min(uniquePlayers.length, 10);
+              const teamClaimedPlayers = uniquePlayers.filter(p => p.isHost || (p.team && p.team !== ''));
+              const displayCount = Math.min(teamClaimedPlayers.length, 10);
               const host = uniquePlayers.find(p => p.isHost) || uniquePlayers[0];
               return {
                 roomId: r.id,
@@ -208,7 +208,7 @@ const LandingPage = () => {
     // Poll every 10 seconds for open rooms without holding heavy listeners
     const interval = setInterval(fetchPublicLobbies, 10000);
     return () => clearInterval(interval);
-  }, [user]);
+  }, []);
 
   // Fetch auction history directly from Supabase
   // Fetch auction history directly from Supabase
@@ -457,7 +457,7 @@ const LandingPage = () => {
           <div className="bg-[#0c0c0c] rounded-[2.2rem] border border-white/5 grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch divide-y lg:divide-y-0 lg:divide-x divide-white/5 overflow-hidden">
             {/* Left Side: Live Activity Feed */}
             <div className="lg:col-span-7 w-full flex flex-col p-6 md:p-8 relative">
-              <AuctionActivityFeed />
+              <AuctionActivityFeed activeCount={publicRooms.length} />
             </div>
 
             {/* Right Side: Welcome Login Form */}
@@ -951,7 +951,11 @@ const LandingPage = () => {
                               
                                 </div>
 
-                                <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] text-gray-500 font-medium mt-0.5 truncate">
+                                 <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] text-gray-500 font-medium mt-0.5 truncate">
+                                  <span className={`px-1.5 py-0.2 rounded font-black text-[8px] uppercase tracking-wider ${room.status === 'active' ? 'bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse' : 'bg-green-500/20 text-green-400 border border-green-500/30'}`}>
+                                    {room.status === 'active' ? 'LIVE' : 'WAITING'}
+                                  </span>
+                                  <span className="shrink-0">•</span>
                                   <span className="flex items-center gap-0.5 sm:gap-1 text-gray-400 font-bold shrink-0">
                                     <Users size={10} className="" />
                                     {room.playerCount}/10
@@ -967,8 +971,6 @@ const LandingPage = () => {
                             <button
                               type="button"
                               onClick={() => {
-                                const displayName = user.displayName || 'Manager';
-                                joinRoomDb(room.roomId, user.uid, { name: displayName, team: '' });
                                 navigate(`/lobby/${room.roomId}`);
                               }}
                               className="px-3 sm:px-4 py-1.5 sm:py-2 bg-orange-500 hover:bg-orange-600 text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider rounded-lg transition-all active:scale-95 flex items-center gap-1 shrink-0 cursor-pointer shadow-md"

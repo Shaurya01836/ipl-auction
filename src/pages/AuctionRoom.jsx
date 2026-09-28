@@ -39,7 +39,8 @@ import {
    ShieldAlert,
    Trophy,
    Clock,
-   LogOut
+   LogOut,
+   Eye
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -88,6 +89,10 @@ const AuctionRoom = () => {
    const [joiningTeam, setJoiningTeam] = useState(null);
    const [banError, setBanError] = useState(null);
    const [isBiddingInFlight, setIsBiddingInFlight] = useState(false);
+   const [spectateMode, setSpectateMode] = useState(() => {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('spectate') === 'true';
+   });
 
    // Clear optimistic state when DB catches up
    useEffect(() => {
@@ -734,8 +739,8 @@ const AuctionRoom = () => {
       }
    };
 
-   // Team Selection Guard — show team picker or "room full" error
-   if (!team && !loading && user) {
+   // Team Selection Guard — show team picker or "room full" error (unless in Spectate Mode)
+   if (!spectateMode && !team && !loading && user) {
       const takenTeamIds = new Set(roomTeams.map(t => t.teamId));
       (currentAuction?.players || []).forEach(p => { if (p.team) takenTeamIds.add(p.team); });
       const availableTeams = TEAMS.filter(t => !takenTeamIds.has(t.id));
@@ -780,23 +785,44 @@ const AuctionRoom = () => {
                         })}
                      </div>
 
-                     <p className="mt-6 text-[10px] text-gray-600 font-bold uppercase tracking-widest">{availableTeams.length} franchise{availableTeams.length !== 1 ? 's' : ''} available</p>
+                     <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-8 w-full">
+                        <button
+                           onClick={() => setSpectateMode(true)}
+                           className="w-full sm:w-auto px-5 py-3 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 font-black text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95"
+                        >
+                           <Eye size={16} /> Spectate Room
+                        </button>
+                        <button
+                           onClick={() => navigate('/')}
+                           className="w-full sm:w-auto px-5 py-3 text-[10px] text-gray-500 hover:text-white font-bold uppercase tracking-widest cursor-pointer text-center"
+                        >
+                           Home
+                        </button>
+                     </div>
                   </>
                ) : (
                   <>
-                     <div className="w-24 h-24 bg-red-500/20 border border-red-500/30 rounded-3xl flex items-center justify-center text-red-500 mb-8 shadow-2xl">
-                        <ShieldAlert size={48} strokeWidth={2.5} />
+                     <div className="w-20 h-20 md:w-24 md:h-24 bg-red-500/20 border border-red-500/30 rounded-3xl flex items-center justify-center text-red-500 mb-6 md:mb-8 shadow-2xl">
+                        <ShieldAlert size={40} strokeWidth={2.5} className="md:w-12 md:h-12" />
                      </div>
-                     <h2 className="text-4xl md:text-5xl font-black tracking-tighter uppercase mb-4">Room Full</h2>
-                     <p className="text-gray-400 text-lg font-medium mb-10 leading-relaxed">
-                        All 10 IPL franchises have been claimed. No teams are available to join.
+                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter uppercase mb-3 md:mb-4">Room Full</h2>
+                     <p className="text-gray-400 text-sm sm:text-base md:text-lg font-medium mb-8 md:mb-10 leading-relaxed max-w-md">
+                        All 10 IPL franchises have been claimed. You can spectate the live auction stream!
                      </p>
-                     <button
-                        onClick={() => navigate('/')}
-                        className="px-8 py-4 bg-white/5 border border-white/10 text-gray-400 font-black rounded-2xl hover:bg-white/10 transition-all active:scale-95 uppercase tracking-widest cursor-pointer"
-                     >
-                        Home
-                     </button>
+                     <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full">
+                        <button
+                           onClick={() => setSpectateMode(true)}
+                           className="w-full sm:w-auto px-6 py-3.5 sm:px-8 sm:py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-xs sm:text-sm rounded-xl sm:rounded-2xl hover:scale-105 transition-all active:scale-95 uppercase tracking-widest cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
+                        >
+                           <Eye size={18} /> Spectate Live Auction
+                        </button>
+                        <button
+                           onClick={() => navigate('/')}
+                           className="w-full sm:w-auto px-6 py-3.5 sm:px-8 sm:py-4 bg-white/5 border border-white/10 text-gray-400 font-black text-xs sm:text-sm rounded-xl sm:rounded-2xl hover:bg-white/10 transition-all active:scale-95 uppercase tracking-widest cursor-pointer text-center"
+                        >
+                           Home
+                        </button>
+                     </div>
                   </>
                )}
             </div>
@@ -812,6 +838,12 @@ const AuctionRoom = () => {
                <div className="flex items-center gap-1">
                   <span className="text-gray-500 text-[8px] sm:text-[10px] font-black uppercase tracking-widest hidden xs:inline">ID:</span>
                   <span className="text-white font-mono font-bold tracking-widest text-[10px] sm:text-sm">{id}</span>
+                  {spectateMode && (
+                     <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 font-black text-[8px] sm:text-[9px] uppercase tracking-widest ml-1 shrink-0">
+                        <Eye size={10} />
+                        <span>SPECTATING</span>
+                     </div>
+                  )}
                </div>
                <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded-full" title="Connected Users">
                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shrink-0" />
@@ -1194,13 +1226,19 @@ const AuctionRoom = () => {
                                     <div className="flex gap-3 md:gap-4">
                                        <button
                                           onClick={handleBid}
-                                          disabled={timeLeft === 0 || displayAuctionState?.status !== 'bidding' || displayAuctionState?.highBidderId === user?.uid}
-                                          className={`flex-1 h-12 sm:h-14 md:h-18 font-black text-sm sm:text-base md:text-xl rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale cursor-pointer ${displayAuctionState?.highBidderId === user?.uid
-                                             ? 'bg-white/5 text-green-500 border border-green-500/20 shadow-inner'
-                                             : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-[#050505] shadow-[0_4px_20px_rgba(34,197,94,0.2)] hover:shadow-[0_8px_30px_rgba(34,197,94,0.3)]'
+                                          disabled={spectateMode || !team || timeLeft === 0 || displayAuctionState?.status !== 'bidding' || displayAuctionState?.highBidderId === user?.uid}
+                                          className={`flex-1 h-12 sm:h-14 md:h-18 font-black text-sm sm:text-base md:text-xl rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale cursor-pointer ${spectateMode
+                                             ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                             : displayAuctionState?.highBidderId === user?.uid
+                                                ? 'bg-white/5 text-green-500 border border-green-500/20 shadow-inner'
+                                                : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-[#050505] shadow-[0_4px_20px_rgba(34,197,94,0.2)] hover:shadow-[0_8px_30px_rgba(34,197,94,0.3)]'
                                              }`}
                                        >
-                                          {displayAuctionState?.status === 'paused' ? 'PAUSED' : displayAuctionState?.highBidderId === user?.uid ? "LEADING BIDDER" : `PLACE BID: ₹${nextBidAmount.toFixed(2)} Cr`}
+                                          {spectateMode ? (
+                                             <span className="flex items-center gap-2 text-xs md:text-sm font-black uppercase tracking-widest text-blue-400">
+                                                <Eye size={18} /> Spectator View (Read Only)
+                                             </span>
+                                          ) : displayAuctionState?.status === 'paused' ? 'PAUSED' : displayAuctionState?.highBidderId === user?.uid ? "LEADING BIDDER" : `PLACE BID: ₹${nextBidAmount.toFixed(2)} Cr`}
                                        </button>
                                        <button onClick={() => setShowPlayersOverlay(true)} className="w-12 h-12 sm:w-14 sm:h-14 md:w-18 md:h-18 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-all"><List size={20} /></button>
                                     </div>
