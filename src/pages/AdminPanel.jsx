@@ -840,10 +840,15 @@ const AdminPanel = () => {
                       className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.02] border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3"
                     >
                       <div className="space-y-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-xs font-bold text-white truncate max-w-[180px] sm:max-w-none">
-                            {fb.email || 'Anonymous'}
+                            {fb.userName || fb.email || 'Anonymous'}
                           </span>
+                          {fb.authType && (
+                            <span className={`text-[7px] font-black uppercase px-2 py-0.5 rounded-full border ${fb.authType === 'google' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : fb.authType === 'guest' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-gray-500/10 text-gray-400 border-gray-500/20'}`}>
+                              {fb.authType === 'google' ? 'Google' : fb.authType === 'guest' ? 'Guest' : 'Anon'}
+                            </span>
+                          )}
                           <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[#ff5500]">
                             {fb.category || 'general'}
                           </span>
@@ -964,18 +969,37 @@ const AdminPanel = () => {
                       className="bg-[#0c0c0c] border border-white/10 hover:border-white/20 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl space-y-3 sm:space-y-4 relative group"
                     >
                       <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2 border-b border-white/5 pb-3">
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs font-black text-white truncate max-w-[160px] xs:max-w-[180px]">
-                              {fb.email || 'Anonymous'}
-                            </span>
-                            <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[#ff5500]">
-                              {fb.category || 'general'}
-                            </span>
+                        <div className="flex items-center gap-2.5">
+                          {fb.userPhoto ? (
+                            <img src={fb.userPhoto} alt={fb.userName || 'User'} className="w-7 h-7 rounded-full border border-white/20 shrink-0" />
+                          ) : (
+                            <div className="w-7 h-7 rounded-full bg-[#ff5500]/20 text-[#ff5500] font-black text-xs flex items-center justify-center shrink-0 border border-[#ff5500]/30">
+                              {(fb.userName || fb.email || 'A')[0].toUpperCase()}
+                            </div>
+                          )}
+
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs font-black text-white truncate max-w-[140px] sm:max-w-[180px]">
+                                {fb.userName || fb.email || 'Anonymous'}
+                              </span>
+                              {fb.authType && (
+                                <span className={`text-[7px] font-black uppercase px-2 py-0.5 rounded-full border ${fb.authType === 'google' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : fb.authType === 'guest' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-gray-500/10 text-gray-400 border-gray-500/20'}`}>
+                                  {fb.authType === 'google' ? 'Google' : fb.authType === 'guest' ? 'Guest' : 'Anon'}
+                                </span>
+                              )}
+                              <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[#ff5500]">
+                                {fb.category || 'general'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[9px] font-bold text-gray-500 uppercase mt-0.5">
+                              {fb.email && fb.email !== 'Not provided' && fb.email !== fb.userName && (
+                                <span className="text-gray-400 font-medium normal-case truncate max-w-[160px]">{fb.email}</span>
+                              )}
+                              {fb.email && fb.email !== 'Not provided' && fb.email !== fb.userName && <span>•</span>}
+                              <span>{formatDate(fb.createdAt)}</span>
+                            </div>
                           </div>
-                          <span className="text-[9px] font-bold text-gray-500 uppercase block mt-1">
-                            {formatDate(fb.createdAt)}
-                          </span>
                         </div>
 
                         <div className="flex items-center justify-between xs:justify-end gap-2 flex-wrap">

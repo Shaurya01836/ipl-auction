@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquarePlus, X, Send, Star, CheckCircle2, Loader2 } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useAuth } from '../contexts/AuthContext';
 
 const CATEGORIES = [
   { id: 'general', label: 'General' },
@@ -14,6 +15,7 @@ const CATEGORIES = [
 
 const FeedbackModal = () => {
   const location = useLocation();
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -35,8 +37,17 @@ const FeedbackModal = () => {
     setError(null);
 
     try {
+      const isGuest = user?.isAnonymous || user?.providerData?.length === 0;
+      const authType = user ? (isGuest ? 'guest' : 'google') : 'anonymous';
+      const userEmail = user?.email || email.trim() || 'Not provided';
+      const userName = user?.displayName || (isGuest ? 'Guest Manager' : 'Anonymous');
+
       await addDoc(collection(db, 'feedbacks'), {
-        email: email.trim() || 'Not provided',
+        email: userEmail,
+        userName,
+        authType,
+        userId: user?.uid || null,
+        userPhoto: user?.photoURL || null,
         category,
         rating,
         feedback: feedbackText.trim(),
@@ -207,19 +218,62 @@ const FeedbackModal = () => {
                       </div>
                     </div>
 
-                    {/* Email */}
-                    <div className="space-y-1.5">
-                      <label className="block text-[7.5px] font-black text-gray-600 uppercase tracking-widest ml-1">
-                        Email <span className="text-gray-700 font-bold normal-case">(optional)</span>
-                      </label>
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="your@email.com"
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-[10px] font-black normal-case tracking-normal placeholder:text-gray-800 focus:outline-none focus:border-[#ff5500]/50 transition-all"
-                      />
-                    </div>
+                    {/* Email / Logged-in info */}
+                    {user ? (
+                      <div className="space-y-3">
+                        <div className="p-2.5 bg-white/[0.03] border border-white/10 rounded-xl flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {user.photoURL ? (
+                              <img src={user.photoURL} alt={user.displayName} className="w-5 h-5 rounded-full border border-white/20" />
+                            ) : (
+                              <div className="w-5 h-5 rounded-full bg-[#ff5500]/20 text-[#ff5500] font-black text-[9px] flex items-center justify-center">
+                                {(user.displayName || 'G')[0].toUpperCase()}
+                              </div>
+                            )}
+                            <div>
+                              <span className="text-[9px] font-black text-white block uppercase tracking-wider leading-none">
+                                {user.displayName || 'Guest Manager'}
+                              </span>
+                              <span className="text-[7.5px] font-bold text-gray-500 block leading-none mt-0.5">
+                                {user.email || 'Guest Account'}
+                              </span>
+                            </div>
+                          </div>
+                          <span className={`text-[7px] font-black uppercase px-2 py-0.5 rounded-full border ${user.email ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-orange-500/10 text-orange-400 border-orange-500/20'}`}>
+                            {user.email ? 'Google' : 'Guest'}
+                          </span>
+                        </div>
+
+                        {/* Optional Email field for Guest accounts */}
+                        {!user.email && (
+                          <div className="space-y-1.5">
+                            <label className="block text-[7.5px] font-black text-gray-600 uppercase tracking-widest ml-1">
+                              Contact Email <span className="text-gray-700 font-bold normal-case">(optional)</span>
+                            </label>
+                            <input
+                              type="email"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              placeholder="your@email.com"
+                              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-[10px] font-black normal-case tracking-normal placeholder:text-gray-800 focus:outline-none focus:border-[#ff5500]/50 transition-all"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-1.5">
+                        <label className="block text-[7.5px] font-black text-gray-600 uppercase tracking-widest ml-1">
+                          Email <span className="text-gray-700 font-bold normal-case">(optional)</span>
+                        </label>
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="your@email.com"
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-[10px] font-black normal-case tracking-normal placeholder:text-gray-800 focus:outline-none focus:border-[#ff5500]/50 transition-all"
+                        />
+                      </div>
+                    )}
 
                     {/* Feedback Text */}
                     <div className="space-y-1.5">
