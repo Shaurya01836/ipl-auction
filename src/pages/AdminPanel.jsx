@@ -40,6 +40,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import Footer from '../components/Footer';
 import useDocumentTitle from '../hooks/useDocumentTitle';
+import { IPL_PLAYERS } from '../data/players';
 
 const CATEGORIES = [
   { id: 'all', label: 'All Categories' },
@@ -130,7 +131,7 @@ const AdminPanel = () => {
   // Filters & Tabs
   const { tab } = useParams();
   const activeTab = useMemo(() => {
-    const validTabs = ['overview', 'feedbacks', 'auctions'];
+    const validTabs = ['overview', 'feedbacks', 'auctions', 'players'];
     if (tab && validTabs.includes(tab.toLowerCase())) {
       return tab.toLowerCase();
     }
@@ -147,6 +148,10 @@ const AdminPanel = () => {
   const [auctionStatusFilter, setAuctionStatusFilter] = useState('all');
   const [auctionPage, setAuctionPage] = useState(1);
 
+  const [playerSearch, setPlayerSearch] = useState('');
+  const [playerRoleFilter, setPlayerRoleFilter] = useState('all');
+  const [playerPage, setPlayerPage] = useState(1);
+
   // Modal / Action states
   const [deleteTarget, setDeleteTarget] = useState(null); // { type: 'feedback'|'auction', id, title }
   const [isDeleting, setIsDeleting] = useState(false);
@@ -160,6 +165,10 @@ const AdminPanel = () => {
   useEffect(() => {
     setAuctionPage(1);
   }, [auctionSearch, auctionStatusFilter]);
+
+  useEffect(() => {
+    setPlayerPage(1);
+  }, [playerSearch, playerRoleFilter]);
 
   // Fetch all admin data
   const fetchData = useCallback(async (showRefreshingSpinner = false) => {
@@ -707,6 +716,7 @@ const AdminPanel = () => {
               { id: 'overview', label: 'Overview', icon: Activity },
               { id: 'feedbacks', label: `Feedbacks (${feedbacks.length})`, icon: MessageSquare },
               { id: 'auctions', label: `Supabase Auctions`, icon: Gavel },
+              { id: 'players', label: `Players (${IPL_PLAYERS.length})`, icon: Users },
             ].map((tabItem) => {
               const Icon = tabItem.icon;
               const isActive = activeTab === tabItem.id;
@@ -1272,6 +1282,134 @@ const AdminPanel = () => {
           </motion.div>
         )}
 
+        {/* Tab 4: Players Tab */}
+        {activeTab === 'players' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+          >
+            {/* Search & Filters */}
+            <div className="bg-[#0c0c0c] border border-white/10 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row gap-3 sm:gap-4 shadow-2xl">
+              {/* Search */}
+              <div className="flex-1 relative group">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-gray-500 group-focus-within:text-[#ff5500] transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Search by Player Name or Country..."
+                  value={playerSearch}
+                  onChange={(e) => setPlayerSearch(e.target.value)}
+                  className="w-full bg-[#151515] border border-white/10 rounded-xl pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-white placeholder-gray-600 focus:outline-none focus:border-[#ff5500]/50 focus:ring-1 focus:ring-[#ff5500]/50 transition-all"
+                />
+              </div>
+
+              {/* Role Filter */}
+              <div className="flex items-center gap-2 overflow-x-auto custom-scrollbar no-scrollbar py-1">
+                {['all', 'Batter', 'Bowler', 'All-Rounder', 'Wicket-Keeper'].map((role) => (
+                  <button
+                    key={role}
+                    onClick={() => setPlayerRoleFilter(role)}
+                    className={`px-4 py-2.5 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
+                      playerRoleFilter === role
+                        ? 'bg-[#ff5500] text-white'
+                        : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    {role === 'all' ? 'All Roles' : role}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {(() => {
+              // Apply Filters
+              let filtered = IPL_PLAYERS;
+
+              if (playerSearch.trim()) {
+                const term = playerSearch.toLowerCase().trim();
+                filtered = filtered.filter((p) =>
+                  p.name.toLowerCase().includes(term) ||
+                  p.country.toLowerCase().includes(term)
+                );
+              }
+
+              if (playerRoleFilter !== 'all') {
+                filtered = filtered.filter((p) => p.role === playerRoleFilter);
+              }
+
+              const PLAYERS_PER_PAGE = 12;
+              const totalPages = Math.max(1, Math.ceil(filtered.length / PLAYERS_PER_PAGE));
+              const currentPlayers = filtered.slice((playerPage - 1) * PLAYERS_PER_PAGE, playerPage * PLAYERS_PER_PAGE);
+
+              return (
+                <>
+                  {filtered.length === 0 ? (
+                    <div className="bg-[#0c0c0c] border border-white/10 rounded-3xl p-8 sm:p-12 text-center shadow-2xl">
+                      <Users className="w-10 sm:w-12 h-10 sm:h-12 text-gray-700 mx-auto mb-4" />
+                      <h3 className="text-sm sm:text-base font-black uppercase tracking-widest text-white mb-2">
+                        No Players Found
+                      </h3>
+                      <p className="text-xs text-gray-500 font-medium max-w-md mx-auto">
+                        We couldn't find any players matching your search criteria.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {currentPlayers.map((player) => (
+                        <motion.div
+                          key={player.id}
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="bg-[#0c0c0c] border border-white/10 rounded-2xl p-4 flex flex-col gap-3 shadow-xl relative overflow-hidden group hover:border-white/20 transition-colors"
+                        >
+                          <div className="absolute top-0 right-0 p-2">
+                            <span className="bg-white/5 border border-white/10 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest text-gray-400">
+                              {player.country}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="w-24 h-24 shrink-0 rounded-xl bg-gradient-to-br from-gray-800 to-black overflow-hidden border border-white/10 shadow-lg">
+                              <img src={player.image || 'https://documents.iplt20.com/ipl/IPLHeadshot2026/default.png'} alt={player.name} className="w-full h-full object-cover" loading="lazy" />
+                            </div>
+                            <div className="flex flex-col flex-1 overflow-hidden">
+                              <span className="text-white font-bold text-lg leading-tight mb-1 truncate" title={player.name}>{player.name}</span>
+                              <span className="text-[#ff5500] font-black text-xs uppercase tracking-wider">{player.role}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-2 mt-1">
+                            <div className="bg-white/5 rounded-lg p-2 flex flex-col items-center justify-center text-center border border-white/5">
+                              <span className="text-gray-500 text-[9px] font-black uppercase tracking-widest">Base</span>
+                              <span className="text-white font-bold text-xs">{player.basePrice} Cr</span>
+                            </div>
+                            <div className="bg-white/5 rounded-lg p-2 flex flex-col items-center justify-center text-center border border-white/5">
+                              <span className="text-gray-500 text-[9px] font-black uppercase tracking-widest">Type</span>
+                              <span className="text-white font-bold text-xs">{player.type}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-white/5 rounded-lg p-2 text-center border border-white/5 w-full mt-auto">
+                            <span className="text-gray-400 text-[10px] font-bold truncate block">{player.set}</span>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Player Pagination */}
+                  <PaginationControls
+                    currentPage={playerPage}
+                    totalPages={totalPages}
+                    totalItems={filtered.length}
+                    itemsPerPage={PLAYERS_PER_PAGE}
+                    onPageChange={setPlayerPage}
+                    label="players"
+                  />
+                </>
+              );
+            })()}
+          </motion.div>
+        )}
 
       </main>
 

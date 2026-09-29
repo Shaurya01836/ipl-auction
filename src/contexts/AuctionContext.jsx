@@ -236,15 +236,62 @@ export const AuctionProvider = ({ children }) => {
   }, []);
 
   const startAuction = useCallback(async (roomId) => {
-    // Generate randomized order within sets
+    // Fetch room data to determine auction type
+    const rtdbRoomRef = ref(rtdb, `auctions/${roomId}/room`);
+    const roomSnap = await get(rtdbRoomRef);
+    const roomData = roomSnap.exists() ? roomSnap.val() : {};
+    const auctionType = roomData.auctionType || 'mega';
+
+    // Calculate target players
+    let targetPlayers = IPL_PLAYERS.length;
+    if (auctionType === 'sprint11') targetPlayers = 150;
+    else if (auctionType === 'sprint5') targetPlayers = 75;
+
+    // 1. Identify Marquee vs Non-Marquee players
+    const marqueeIndices = [];
+    const nonMarqueeIndicesByRole = {};
+    
+    IPL_PLAYERS.forEach((p, i) => {
+      if (p.set.includes('Marquee')) {
+        marqueeIndices.push(i);
+      } else {
+        if (!nonMarqueeIndicesByRole[p.role]) nonMarqueeIndicesByRole[p.role] = [];
+        nonMarqueeIndicesByRole[p.role].push(i);
+      }
+    });
+
+    // Always keep all Marquee players
+    const selectedPlayersByRole = new Set(marqueeIndices);
+
+    // Calculate fraction based on target players for NON-MARQUEE only
+    const nonMarqueeTarget = Math.max(0, targetPlayers - marqueeIndices.length);
+    const nonMarqueeTotal = IPL_PLAYERS.length - marqueeIndices.length;
+    const fraction = nonMarqueeTotal > 0 ? (nonMarqueeTarget / nonMarqueeTotal) : 1;
+
+    // 2. Select NON-MARQUEE players proportionally by ROLE
+    Object.keys(nonMarqueeIndicesByRole).forEach(roleName => {
+      const roleIndices = nonMarqueeIndicesByRole[roleName];
+      const shuffledRole = shuffleArray(roleIndices);
+      
+      const limit = auctionType === 'mega' 
+        ? shuffledRole.length 
+        : Math.max(1, Math.ceil(shuffledRole.length * fraction));
+        
+      shuffledRole.slice(0, limit).forEach(idx => selectedPlayersByRole.add(idx));
+    });
+
+    // 2. Build the final auction order maintaining the realistic SET order (Marquee -> Set 1 -> etc.)
     const sets = [...new Set(IPL_PLAYERS.map(p => p.set))];
     let randomizedIndices = [];
     sets.forEach(setName => {
-      const setIndices = IPL_PLAYERS.map((p, i) => p.set === setName ? i : -1).filter(i => i !== -1);
+      // Only include players from this set who were selected in the role balancing phase
+      const setIndices = IPL_PLAYERS
+        .map((p, i) => (p.set === setName && selectedPlayersByRole.has(i)) ? i : -1)
+        .filter(i => i !== -1);
+        
       randomizedIndices = [...randomizedIndices, ...shuffleArray(setIndices)];
     });
 
-    const rtdbRoomRef = ref(rtdb, `auctions/${roomId}/room`);
     const playerOrderRef = ref(rtdb, `auctions/${roomId}/playerOrder`);
     
     // Store playerOrder in room node (matching RTDB rules) and attempt subnode update
