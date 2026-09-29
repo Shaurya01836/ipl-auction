@@ -254,7 +254,7 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_116",
-    "name": "Mitchell Marsh",
+    "name": "Mitch Marsh",
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
@@ -289,7 +289,7 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_118",
-    "name": "Mohammad Shami",
+    "name": "Mohammed Shami",
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
@@ -305,7 +305,7 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_119",
-    "name": "Mohammad Siraj",
+    "name": "Mohammed Siraj",
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
@@ -321,7 +321,7 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_120",
-    "name": "MS Dhoni",
+    "name": "Mahendra Singh Dhoni",
     "role": "Wicket-Keeper",
     "type": "Indian",
     "country": "IND",
@@ -634,7 +634,7 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_141",
-    "name": "Varun Chakravarthy",
+    "name": "Varun Chakaravarthy",
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
@@ -827,22 +827,6 @@ export const IPL_PLAYERS = [
       "runs": 5474,
       "sr": 134.19,
       "avg": 43.17
-    }
-  },
-  {
-    "id": "p_274",
-    "name": "Jake Fraser-McGurk",
-    "role": "Batsman",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 2,
-    "set": "Set 1",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/8/89/Jake_Fraser_McGurk_2024_clip.png",
-    "stats": {
-      "matches": 167,
-      "runs": 3517,
-      "sr": 137.17,
-      "avg": 28.74
     }
   },
   {
@@ -1191,22 +1175,6 @@ export const IPL_PLAYERS = [
     }
   },
   {
-    "id": "p_290",
-    "name": "Rahmanullah Gurbaz",
-    "role": "Wicket-Keeper",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 1.5,
-    "set": "Set 2",
-    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/418200/418223.jpg",
-    "stats": {
-      "matches": 55,
-      "runs": 2036,
-      "sr": 145.89,
-      "avg": 35.84
-    }
-  },
-  {
     "id": "p_147",
     "name": "Avesh Khan",
     "role": "Bowler",
@@ -1279,7 +1247,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 1,
     "set": "Set 2",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/114.png",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/399800/399836.jpg",
     "stats": {
       "matches": 106,
       "wickets": 135,
@@ -1337,7 +1305,7 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_156",
-    "name": "Mitchell Santner",
+    "name": "Mitch Santner",
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
@@ -1421,7 +1389,7 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_165",
-    "name": "T. Natarajan",
+    "name": "Thangarasu Natarajan",
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
@@ -1600,7 +1568,7 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_220",
-    "name": "Digvesh Rathi",
+    "name": "Digvesh Singh Rathi",
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
@@ -1920,7 +1888,7 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_197",
-    "name": "R. Sai Kishore",
+    "name": "Sai Kishore",
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
@@ -1982,7 +1950,7 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_206",
-    "name": "Abhishek Porel",
+    "name": "Abishek Porel",
     "role": "Wicket-Keeper",
     "type": "Indian",
     "country": "IND",
@@ -2158,22 +2126,6 @@ export const IPL_PLAYERS = [
     }
   },
   {
-    "id": "p_273",
-    "name": "Devon Conway",
-    "role": "Batsman",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 2,
-    "set": "Set 4",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/601.png",
-    "stats": {
-      "matches": 217,
-      "runs": 5319,
-      "sr": 140.95,
-      "avg": 29.07
-    }
-  },
-  {
     "id": "p_297",
     "name": "Matt Henry",
     "role": "Bowler",
@@ -2189,23 +2141,8 @@ export const IPL_PLAYERS = [
     }
   },
   {
-    "id": "p_302",
-    "name": "Mujeeb Rahman",
-    "role": "Bowler",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 2,
-    "set": "Set 4",
-    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1280,q_80/lsci/db/PICTURES/CMS/395300/395324.jpg",
-    "stats": {
-      "matches": 115,
-      "wickets": 132,
-      "econ": 7.83
-    }
-  },
-  {
     "id": "p_169",
-    "name": "Allah Ghazanfar",
+    "name": "AM Ghazanfar",
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
@@ -2340,7 +2277,7 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_179",
-    "name": "Mitchell Owen",
+    "name": "Mitch Owen",
     "role": "Batsman",
     "type": "Overseas",
     "country": "OS",
@@ -2686,7 +2623,7 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_225",
-    "name": "Harnoor Pannu",
+    "name": "Harnoor Singh",
     "role": "Batsman",
     "type": "Indian",
     "country": "IND",
@@ -2708,7 +2645,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "Set 4",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/1494.png",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1280,q_80/lsci/db/PICTURES/CMS/415900/415997.jpg",
     "stats": {
       "matches": 47,
       "wickets": 39,
@@ -2764,7 +2701,7 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_231",
-    "name": "Lhuan-Dre Pretorious",
+    "name": "Lhuan-dré Pretorius",
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
@@ -2782,7 +2719,7 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_232",
-    "name": "M. Siddharth",
+    "name": "Manimaran Siddharth",
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
@@ -2828,7 +2765,7 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_236",
-    "name": "Mohd. Arshad Khan",
+    "name": "Arshad Khan",
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
@@ -2940,7 +2877,7 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_248",
-    "name": "Raj Angad Bawa",
+    "name": "Raj Bawa",
     "role": "All-Rounder",
     "type": "Indian",
     "country": "IND",
@@ -2959,12 +2896,12 @@ export const IPL_PLAYERS = [
   {
     "id": "p_249",
     "name": "Ramakrishna Ghosh",
-    "role": "Wicket-Keeper",
+    "role": "All-Rounder",
     "type": "Indian",
     "country": "IND",
     "basePrice": 0.3,
     "set": "Set 4",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/3559.png",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_wide_w_1280,q_70/lsci/db/PICTURES/CMS/416400/416475.6.jpg",
     "stats": {
       "matches": 66,
       "runs": 787,
@@ -2974,7 +2911,7 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_251",
-    "name": "Rasikh Salam",
+    "name": "Rasikh Dar",
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
@@ -3036,13 +2973,13 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_257",
-    "name": "Smaran Ravichandaran",
+    "name": "Ravichandran Smaran",
     "role": "Batsman",
     "type": "Indian",
     "country": "IND",
     "basePrice": 0.3,
     "set": "Set 4",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=SmaranRavichandaran&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/386300/386303.jpg",
     "stats": {
       "matches": 64,
       "runs": 873,
@@ -3132,7 +3069,7 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_267",
-    "name": "Vyshak Vijaykumar",
+    "name": "Vijaykumar Vyshak",
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
@@ -3147,7 +3084,7 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_269",
-    "name": "Yudhvir Charak",
+    "name": "Yudhvir Singh Charak",
     "role": "All-Rounder",
     "type": "Indian",
     "country": "IND",
@@ -3179,60 +3116,6 @@ export const IPL_PLAYERS = [
     }
   },
   {
-    "id": "p_277",
-    "name": "Deepak Hooda",
-    "role": "All-Rounder",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.75,
-    "set": "AL1",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/215.png",
-    "stats": {
-      "matches": 29,
-      "runs": 365,
-      "sr": 139.27,
-      "avg": 41.42,
-      "wickets": 25,
-      "econ": 7.23
-    }
-  },
-  {
-    "id": "p_278",
-    "name": "Gus Atkinson",
-    "role": "All-Rounder",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 2,
-    "set": "AL1",
-    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/417900/417990.jpg",
-    "stats": {
-      "matches": 213,
-      "runs": 4655,
-      "sr": 147.92,
-      "avg": 34.91,
-      "wickets": 196,
-      "econ": 7.84
-    }
-  },
-  {
-    "id": "p_283",
-    "name": "Wiaan Mulder",
-    "role": "All-Rounder",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 1,
-    "set": "AL1",
-    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/403300/403345.jpg",
-    "stats": {
-      "matches": 103,
-      "runs": 2243,
-      "sr": 147,
-      "avg": 41.86,
-      "wickets": 95,
-      "econ": 7.35
-    }
-  },
-  {
     "id": "p_284",
     "name": "Ben Duckett",
     "role": "Wicket-Keeper",
@@ -3246,69 +3129,6 @@ export const IPL_PLAYERS = [
       "runs": 4028,
       "sr": 150.43,
       "avg": 36.19
-    }
-  },
-  {
-    "id": "p_286",
-    "name": "Jamie Smith",
-    "role": "Wicket-Keeper",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 2,
-    "set": "WK1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=JamieSmith&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 175,
-      "runs": 4211,
-      "sr": 137.4,
-      "avg": 30.81
-    }
-  },
-  {
-    "id": "p_287",
-    "name": "Jonny Bairstow",
-    "role": "Wicket-Keeper",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 1,
-    "set": "WK1",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/4/49/2_05_Bairstow_out.jpg",
-    "stats": {
-      "matches": 65,
-      "runs": 2273,
-      "sr": 142.52,
-      "avg": 32.01
-    }
-  },
-  {
-    "id": "p_288",
-    "name": "K.S. Bharat",
-    "role": "Wicket-Keeper",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.75,
-    "set": "WK1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=K.S.Bharat&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 32,
-      "runs": 632,
-      "sr": 139.74,
-      "avg": 38.78
-    }
-  },
-  {
-    "id": "p_293",
-    "name": "Fazalhaq Farooqi",
-    "role": "Bowler",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 1,
-    "set": "FA1",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/1011.png",
-    "stats": {
-      "matches": 121,
-      "wickets": 120,
-      "econ": 8.36
     }
   },
   {
@@ -3350,59 +3170,11 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 1.5,
     "set": "FA1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=SpencerJohnson&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/417300/417309.jpg",
     "stats": {
       "matches": 63,
       "wickets": 68,
       "econ": 7.37
-    }
-  },
-  {
-    "id": "p_305",
-    "name": "Aarya Desai",
-    "role": "Batsman",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UBA1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=AaryaDesai&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 70,
-      "runs": 800,
-      "sr": 148.92,
-      "avg": 34.16
-    }
-  },
-  {
-    "id": "p_306",
-    "name": "Abhinav Manohar",
-    "role": "Batsman",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UBA1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=AbhinavManohar&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 77,
-      "runs": 422,
-      "sr": 147.99,
-      "avg": 28.79
-    }
-  },
-  {
-    "id": "p_307",
-    "name": "Abhinav Tejrana",
-    "role": "Batsman",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UBA1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=AbhinavTejrana&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 51,
-      "runs": 759,
-      "sr": 140.58,
-      "avg": 32.21
     }
   },
   {
@@ -3429,7 +3201,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "UBA1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=AtharvaTaide&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1280,q_80/lsci/db/PICTURES/CMS/379100/379180.jpg",
     "stats": {
       "matches": 25,
       "runs": 649,
@@ -3445,7 +3217,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "UBA1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=YashDhull&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/380000/380035.jpg",
     "stats": {
       "matches": 79,
       "runs": 924,
@@ -3455,13 +3227,13 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_311",
-    "name": "Auqib Dar",
+    "name": "Auqib Nabi",
     "role": "All-Rounder",
     "type": "Indian",
     "country": "IND",
     "basePrice": 0.3,
     "set": "UAL1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=AuqibDar&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/414100/414160.jpg",
     "stats": {
       "matches": 37,
       "runs": 375,
@@ -3469,42 +3241,6 @@ export const IPL_PLAYERS = [
       "avg": 32.42,
       "wickets": 21,
       "econ": 8.38
-    }
-  },
-  {
-    "id": "p_312",
-    "name": "Edhen Tom",
-    "role": "All-Rounder",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UAL1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=EdhenTom&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 16,
-      "runs": 345,
-      "sr": 131.8,
-      "avg": 42.31,
-      "wickets": 39,
-      "econ": 7.9
-    }
-  },
-  {
-    "id": "p_313",
-    "name": "Kamlesh Nagarkoti",
-    "role": "All-Rounder",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UAL1",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/146.png",
-    "stats": {
-      "matches": 24,
-      "runs": 379,
-      "sr": 145.21,
-      "avg": 43.6,
-      "wickets": 29,
-      "econ": 8.08
     }
   },
   {
@@ -3533,7 +3269,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "UAL1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=PrashantVeer&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/410600/410614.png",
     "stats": {
       "matches": 42,
       "runs": 289,
@@ -3541,24 +3277,6 @@ export const IPL_PLAYERS = [
       "avg": 28.78,
       "wickets": 44,
       "econ": 8.07
-    }
-  },
-  {
-    "id": "p_316",
-    "name": "Rajvardhan Hangargekar",
-    "role": "All-Rounder",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.4,
-    "set": "UAL1",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/783.png",
-    "stats": {
-      "matches": 80,
-      "runs": 150,
-      "sr": 131.05,
-      "avg": 29.63,
-      "wickets": 57,
-      "econ": 8.22
     }
   },
   {
@@ -3598,24 +3316,6 @@ export const IPL_PLAYERS = [
     }
   },
   {
-    "id": "p_319",
-    "name": "Tanush Kotian",
-    "role": "All-Rounder",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UAL1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=TanushKotian&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 29,
-      "runs": 815,
-      "sr": 130.7,
-      "avg": 41.92,
-      "wickets": 41,
-      "econ": 7.63
-    }
-  },
-  {
     "id": "p_320",
     "name": "Vijay Shankar",
     "role": "All-Rounder",
@@ -3641,7 +3341,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "UWK1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=KartikSharma&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/417000/417024.jpg",
     "stats": {
       "matches": 40,
       "runs": 830,
@@ -3657,28 +3357,12 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "UWK1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=MukulChoudhary&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/415400/415461.jpg",
     "stats": {
       "matches": 76,
       "runs": 960,
       "sr": 143.52,
       "avg": 42.43
-    }
-  },
-  {
-    "id": "p_323",
-    "name": "Ruchit Ahir",
-    "role": "Wicket-Keeper",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UWK1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=RuchitAhir&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 60,
-      "runs": 535,
-      "sr": 142.1,
-      "avg": 43.94
     }
   },
   {
@@ -3695,38 +3379,6 @@ export const IPL_PLAYERS = [
       "runs": 187,
       "sr": 146.9,
       "avg": 44.22
-    }
-  },
-  {
-    "id": "p_325",
-    "name": "Tushar Raheja",
-    "role": "Wicket-Keeper",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UWK1",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/4/4e/Tushar_Raheja.JPG",
-    "stats": {
-      "matches": 71,
-      "runs": 193,
-      "sr": 139.59,
-      "avg": 32.28
-    }
-  },
-  {
-    "id": "p_326",
-    "name": "Vansh Bedi",
-    "role": "Wicket-Keeper",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UWK1",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/3558.png",
-    "stats": {
-      "matches": 19,
-      "runs": 987,
-      "sr": 152.99,
-      "avg": 36.32
     }
   },
   {
@@ -3782,26 +3434,11 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "UFA1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=NamanTiwari&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1280,q_80/lsci/db/PICTURES/CMS/374900/374955.jpg",
     "stats": {
       "matches": 79,
       "wickets": 9,
       "econ": 8.49
-    }
-  },
-  {
-    "id": "p_331",
-    "name": "Raj Limbani",
-    "role": "Bowler",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UFA1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=RajLimbani&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 75,
-      "wickets": 31,
-      "econ": 7.99
     }
   },
   {
@@ -3812,7 +3449,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "UFA1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=SimarjeetSingh&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/405400/405445.jpg",
     "stats": {
       "matches": 60,
       "wickets": 6,
@@ -3827,7 +3464,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "UFA1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=SushantMishra&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1280,q_80/lsci/db/PICTURES/CMS/417200/417240.jpg",
     "stats": {
       "matches": 78,
       "wickets": 19,
@@ -3880,21 +3517,6 @@ export const IPL_PLAYERS = [
     }
   },
   {
-    "id": "p_337",
-    "name": "Shivam Shukla",
-    "role": "Bowler",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "USP1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=ShivamShukla&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 63,
-      "wickets": 38,
-      "econ": 8.07
-    }
-  },
-  {
     "id": "p_338",
     "name": "Vignesh Puthur",
     "role": "Bowler",
@@ -3902,7 +3524,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "USP1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=VigneshPuthur&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1280,q_80/lsci/db/PICTURES/CMS/398200/398289.jpg",
     "stats": {
       "matches": 71,
       "wickets": 31,
@@ -3910,23 +3532,8 @@ export const IPL_PLAYERS = [
     }
   },
   {
-    "id": "p_339",
-    "name": "Wahidullah Zadran",
-    "role": "Bowler",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 0.3,
-    "set": "USP1",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Flag_of_Afghanistan_%282013%E2%80%932021%29.svg/960px-Flag_of_Afghanistan_%282013%E2%80%932021%29.svg.png",
-    "stats": {
-      "matches": 20,
-      "wickets": 41,
-      "econ": 7.47
-    }
-  },
-  {
     "id": "p_340",
-    "name": "Yash Raj Punja",
+    "name": "Yash Punja",
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
@@ -3940,38 +3547,6 @@ export const IPL_PLAYERS = [
     }
   },
   {
-    "id": "p_341",
-    "name": "Ackeem Auguste",
-    "role": "Batsman",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 0.75,
-    "set": "BA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=AckeemAuguste&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 78,
-      "runs": 398,
-      "sr": 152.23,
-      "avg": 41.23
-    }
-  },
-  {
-    "id": "p_342",
-    "name": "Mayank Agarawal",
-    "role": "Batsman",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.75,
-    "set": "BA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=MayankAgarawal&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 50,
-      "runs": 144,
-      "sr": 154.21,
-      "avg": 38.97
-    }
-  },
-  {
     "id": "p_343",
     "name": "Pathum Nissanka",
     "role": "Batsman",
@@ -3979,7 +3554,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 0.75,
     "set": "BA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=PathumNissanka&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/416400/416448.jpg",
     "stats": {
       "matches": 28,
       "runs": 997,
@@ -4004,70 +3579,6 @@ export const IPL_PLAYERS = [
     }
   },
   {
-    "id": "p_345",
-    "name": "Reeza Hendricks",
-    "role": "Batsman",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 1,
-    "set": "BA2",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/3/37/REEZA_HENDRICKS_%2815519916117%29.jpg",
-    "stats": {
-      "matches": 63,
-      "runs": 1411,
-      "sr": 141.4,
-      "avg": 28.65
-    }
-  },
-  {
-    "id": "p_346",
-    "name": "Sediqullah Atal",
-    "role": "Batsman",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 0.75,
-    "set": "BA2",
-    "image": "https://documents.iplt20.com/ipl/assets/images/Default-Men.png",
-    "stats": {
-      "sr": 137.5,
-      "avg": 22,
-      "runs": 22,
-      "matches": 1
-    }
-  },
-  {
-    "id": "p_347",
-    "name": "Steve Smith",
-    "role": "Batsman",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 2,
-    "set": "BA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=SteveSmith&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 247,
-      "runs": 4540,
-      "sr": 139.43,
-      "avg": 44.47
-    }
-  },
-  {
-    "id": "p_348",
-    "name": "Tim Robinson",
-    "role": "Batsman",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 0.75,
-    "set": "BA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=TimRobinson&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 38,
-      "runs": 690,
-      "sr": 145.48,
-      "avg": 31.98
-    }
-  },
-  {
     "id": "p_349",
     "name": "Ben Dwarshuis",
     "role": "All-Rounder",
@@ -4075,7 +3586,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 1,
     "set": "AL2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=BenDwarshuis&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_wide_w_1280,q_70/lsci/db/PICTURES/CMS/419900/419986.6.jpg",
     "stats": {
       "matches": 75,
       "runs": 2745,
@@ -4086,24 +3597,6 @@ export const IPL_PLAYERS = [
     }
   },
   {
-    "id": "p_350",
-    "name": "Daniel Sams",
-    "role": "All-Rounder",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 1,
-    "set": "AL2",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/1/1c/Daniel_Sams_Batting.jpg",
-    "stats": {
-      "matches": 97,
-      "runs": 1359,
-      "sr": 154.06,
-      "avg": 28.43,
-      "wickets": 100,
-      "econ": 8.13
-    }
-  },
-  {
     "id": "p_351",
     "name": "Daryl Mitchell",
     "role": "All-Rounder",
@@ -4111,7 +3604,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 2,
     "set": "AL2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=DarylMitchell&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1280,q_80/lsci/db/PICTURES/CMS/356000/356047.jpg",
     "stats": {
       "matches": 208,
       "runs": 6544,
@@ -4159,13 +3652,13 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_354",
-    "name": "Matthew Short",
+    "name": "Matt Short",
     "role": "All-Rounder",
     "type": "Overseas",
     "country": "OS",
     "basePrice": 1.5,
     "set": "AL2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=MatthewShort&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1280,q_80/lsci/db/PICTURES/CMS/410900/410945.jpg",
     "stats": {
       "matches": 89,
       "runs": 2807,
@@ -4176,42 +3669,6 @@ export const IPL_PLAYERS = [
     }
   },
   {
-    "id": "p_355",
-    "name": "Michael Bracewell",
-    "role": "All-Rounder",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 2,
-    "set": "AL2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=MichaelBracewell&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 218,
-      "runs": 3572,
-      "sr": 138.38,
-      "avg": 35.81,
-      "wickets": 100,
-      "econ": 7.33
-    }
-  },
-  {
-    "id": "p_356",
-    "name": "Sean Abbott",
-    "role": "All-Rounder",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 2,
-    "set": "AL2",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/b/bd/Sean_Abbott_playing_for_the_Sydney_Sixers.jpg",
-    "stats": {
-      "matches": 126,
-      "runs": 4201,
-      "sr": 139.42,
-      "avg": 34.9,
-      "wickets": 117,
-      "econ": 8.18
-    }
-  },
-  {
     "id": "p_357",
     "name": "Zak Foulkes",
     "role": "All-Rounder",
@@ -4219,7 +3676,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 0.75,
     "set": "AL2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=ZakFoulkes&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/409300/409352.jpg",
     "stats": {
       "matches": 72,
       "runs": 394,
@@ -4227,22 +3684,6 @@ export const IPL_PLAYERS = [
       "avg": 37.06,
       "wickets": 51,
       "econ": 7.84
-    }
-  },
-  {
-    "id": "p_358",
-    "name": "Benjamin McDermott",
-    "role": "Wicket-Keeper",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 0.75,
-    "set": "WK2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=BenjaminMcDermott&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 70,
-      "runs": 242,
-      "sr": 146.67,
-      "avg": 35.91
     }
   },
   {
@@ -4278,54 +3719,6 @@ export const IPL_PLAYERS = [
     }
   },
   {
-    "id": "p_361",
-    "name": "Kusal Mendis",
-    "role": "Wicket-Keeper",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 0.75,
-    "set": "WK2",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/276.png",
-    "stats": {
-      "matches": 35,
-      "runs": 176,
-      "sr": 147.48,
-      "avg": 36.19
-    }
-  },
-  {
-    "id": "p_362",
-    "name": "Kusal Perera",
-    "role": "Wicket-Keeper",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 1,
-    "set": "WK2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=KusalPerera&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 92,
-      "runs": 2205,
-      "sr": 153.03,
-      "avg": 35.77
-    }
-  },
-  {
-    "id": "p_363",
-    "name": "Shai Hope",
-    "role": "Wicket-Keeper",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 2,
-    "set": "WK2",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Shai_Hope.jpg",
-    "stats": {
-      "matches": 158,
-      "runs": 3346,
-      "sr": 150.55,
-      "avg": 30.35
-    }
-  },
-  {
     "id": "p_364",
     "name": "Tim Seifert",
     "role": "Wicket-Keeper",
@@ -4349,7 +3742,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 2,
     "set": "WK2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=TomBanton&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1280,q_80/lsci/db/PICTURES/CMS/412800/412802.jpg",
     "stats": {
       "matches": 243,
       "runs": 3981,
@@ -4365,26 +3758,11 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 2,
     "set": "FA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=AdamMilne&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/402100/402191.jpg",
     "stats": {
       "matches": 183,
       "wickets": 182,
       "econ": 8.14
-    }
-  },
-  {
-    "id": "p_367",
-    "name": "Chetan Sakariya",
-    "role": "Bowler",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.75,
-    "set": "FA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=ChetanSakariya&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 26,
-      "wickets": 49,
-      "econ": 8.12
     }
   },
   {
@@ -4395,7 +3773,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.75,
     "set": "FA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=KuldeepSen&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/379100/379190.jpg",
     "stats": {
       "matches": 48,
       "wickets": 46,
@@ -4419,7 +3797,7 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_370",
-    "name": "Lungisani Ngidi",
+    "name": "Lungi Ngidi",
     "role": "Bowler",
     "type": "Overseas",
     "country": "OS",
@@ -4449,21 +3827,6 @@ export const IPL_PLAYERS = [
     }
   },
   {
-    "id": "p_372",
-    "name": "Saqib Mahmood",
-    "role": "Bowler",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 1.5,
-    "set": "FA2",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/e/e1/2_20_Saqib_Mahmood.jpg",
-    "stats": {
-      "matches": 51,
-      "wickets": 66,
-      "econ": 7.87
-    }
-  },
-  {
     "id": "p_373",
     "name": "Umesh Yadav",
     "role": "Bowler",
@@ -4476,129 +3839,6 @@ export const IPL_PLAYERS = [
       "matches": 123,
       "wickets": 73,
       "econ": 7.88
-    }
-  },
-  {
-    "id": "p_374",
-    "name": "William Orourke",
-    "role": "Bowler",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 2,
-    "set": "FA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=WilliamOrourke&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 161,
-      "wickets": 196,
-      "econ": 8.27
-    }
-  },
-  {
-    "id": "p_375",
-    "name": "Mohammad Waqar Salamkheil",
-    "role": "Bowler",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 1,
-    "set": "SP2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=MohammadWaqarSalamkheil&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 73,
-      "wickets": 81,
-      "econ": 8.42
-    }
-  },
-  {
-    "id": "p_376",
-    "name": "Qais Ahmad",
-    "role": "Bowler",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 0.75,
-    "set": "SP2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=QaisAhmad&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 40,
-      "wickets": 29,
-      "econ": 7.62
-    }
-  },
-  {
-    "id": "p_377",
-    "name": "Rishad Hossain",
-    "role": "Bowler",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 0.75,
-    "set": "SP2",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/8/84/Rishad_Hossain%2C_2025-02-08_Fortune_Barishal_BPL_2025_Champions_Trophy_Presentation_Dhaka_%28PID-0003668%29_%28cropped%29.jpg",
-    "stats": {
-      "matches": 34,
-      "wickets": 42,
-      "econ": 8.44
-    }
-  },
-  {
-    "id": "p_378",
-    "name": "Viyaskanth Vijayakanth",
-    "role": "Bowler",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 0.75,
-    "set": "SP2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=ViyaskanthVijayakanth&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 23,
-      "wickets": 34,
-      "econ": 8.03
-    }
-  },
-  {
-    "id": "p_379",
-    "name": "Akshat Raghuwanshi",
-    "role": "Batsman",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UBA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=AkshatRaghuwanshi&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 54,
-      "runs": 978,
-      "sr": 132.86,
-      "avg": 32.34
-    }
-  },
-  {
-    "id": "p_380",
-    "name": "Aman Rao Perala",
-    "role": "Batsman",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UBA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=AmanRaoPerala&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 46,
-      "runs": 463,
-      "sr": 141.85,
-      "avg": 33.06
-    }
-  },
-  {
-    "id": "p_381",
-    "name": "Ankit Kumar",
-    "role": "Batsman",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UBA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=AnkitKumar&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 30,
-      "runs": 556,
-      "sr": 153.82,
-      "avg": 41.86
     }
   },
   {
@@ -4618,70 +3858,6 @@ export const IPL_PLAYERS = [
     }
   },
   {
-    "id": "p_383",
-    "name": "Manan Vohra",
-    "role": "Batsman",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UBA2",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/f/f1/MananVohra_Magic_book_of_record.jpg",
-    "stats": {
-      "matches": 78,
-      "runs": 387,
-      "sr": 154.02,
-      "avg": 43.08
-    }
-  },
-  {
-    "id": "p_384",
-    "name": "Pukhraj Mann",
-    "role": "Batsman",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UBA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=PukhrajMann&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 12,
-      "runs": 246,
-      "sr": 136.22,
-      "avg": 32.49
-    }
-  },
-  {
-    "id": "p_385",
-    "name": "Rohan Kunnummal",
-    "role": "Batsman",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UBA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=RohanKunnummal&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 57,
-      "runs": 275,
-      "sr": 146.81,
-      "avg": 40.44
-    }
-  },
-  {
-    "id": "p_386",
-    "name": "Salman Nizar",
-    "role": "Batsman",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UBA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=SalmanNizar&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 59,
-      "runs": 737,
-      "sr": 136.23,
-      "avg": 44.14
-    }
-  },
-  {
     "id": "p_387",
     "name": "Aman Khan",
     "role": "All-Rounder",
@@ -4697,41 +3873,6 @@ export const IPL_PLAYERS = [
       "avg": 40.27,
       "wickets": 25,
       "econ": 8.24
-    }
-  },
-  {
-    "id": "p_388",
-    "name": "Darshan Nalkande",
-    "role": "All-Rounder",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UAL2",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/127.png",
-    "stats": {
-      "sr": 100,
-      "avg": 6,
-      "econ": 10.57,
-      "matches": 6,
-      "wickets": 6
-    }
-  },
-  {
-    "id": "p_389",
-    "name": "Harsh Tyagi",
-    "role": "All-Rounder",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UAL2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=HarshTyagi&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 42,
-      "runs": 507,
-      "sr": 140.04,
-      "avg": 30.51,
-      "wickets": 39,
-      "econ": 8.27
     }
   },
   {
@@ -4771,24 +3912,6 @@ export const IPL_PLAYERS = [
     }
   },
   {
-    "id": "p_392",
-    "name": "Sairaj Patil",
-    "role": "All-Rounder",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UAL2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=SairajPatil&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 24,
-      "runs": 522,
-      "sr": 145.77,
-      "avg": 38.68,
-      "wickets": 27,
-      "econ": 7.23
-    }
-  },
-  {
     "id": "p_393",
     "name": "Satvik Deswal",
     "role": "All-Rounder",
@@ -4804,24 +3927,6 @@ export const IPL_PLAYERS = [
       "avg": 31.81,
       "wickets": 41,
       "econ": 8.2
-    }
-  },
-  {
-    "id": "p_394",
-    "name": "Suyash Prabhudessai",
-    "role": "All-Rounder",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UAL2",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Suyash_Prabhudessai.jpg",
-    "stats": {
-      "matches": 59,
-      "runs": 840,
-      "sr": 140,
-      "avg": 33.86,
-      "wickets": 59,
-      "econ": 7.45
     }
   },
   {
@@ -4843,40 +3948,6 @@ export const IPL_PLAYERS = [
     }
   },
   {
-    "id": "p_396",
-    "name": "Yuvraj Chaudhary",
-    "role": "All-Rounder",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UAL2",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/3564.png",
-    "stats": {
-      "matches": 48,
-      "runs": 278,
-      "sr": 131.65,
-      "avg": 34.77,
-      "wickets": 21,
-      "econ": 7.36
-    }
-  },
-  {
-    "id": "p_397",
-    "name": "Abhishek Pathak",
-    "role": "Wicket-Keeper",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UWK2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=AbhishekPathak&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 51,
-      "runs": 518,
-      "sr": 154.71,
-      "avg": 34.81
-    }
-  },
-  {
     "id": "p_398",
     "name": "Kunal Rathore",
     "role": "Wicket-Keeper",
@@ -4893,22 +3964,6 @@ export const IPL_PLAYERS = [
     }
   },
   {
-    "id": "p_399",
-    "name": "Rahul Buddhi",
-    "role": "Wicket-Keeper",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UWK2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=RahulBuddhi&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 75,
-      "runs": 662,
-      "sr": 151.19,
-      "avg": 36.54
-    }
-  },
-  {
     "id": "p_400",
     "name": "Ravi Singh",
     "role": "Wicket-Keeper",
@@ -4922,22 +3977,6 @@ export const IPL_PLAYERS = [
       "runs": 845,
       "sr": 140.16,
       "avg": 32.61
-    }
-  },
-  {
-    "id": "p_401",
-    "name": "Ricky Bhui",
-    "role": "Wicket-Keeper",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UWK2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=RickyBhui&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 47,
-      "runs": 223,
-      "sr": 146.6,
-      "avg": 34.28
     }
   },
   {
@@ -4989,23 +4028,8 @@ export const IPL_PLAYERS = [
     }
   },
   {
-    "id": "p_405",
-    "name": "K.M Asif",
-    "role": "Bowler",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.4,
-    "set": "UFA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=K.MAsif&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 18,
-      "wickets": 42,
-      "econ": 7.82
-    }
-  },
-  {
     "id": "p_406",
-    "name": "Mohammad Izhar",
+    "name": "Mohammed Izhar",
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
@@ -5035,7 +4059,7 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_408",
-    "name": "Prithviraj Yarra",
+    "name": "Yarra Prithviraj",
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
@@ -5046,21 +4070,6 @@ export const IPL_PLAYERS = [
       "matches": 45,
       "wickets": 14,
       "econ": 7.9
-    }
-  },
-  {
-    "id": "p_409",
-    "name": "PV.Satyanarayana Raju",
-    "role": "Bowler",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UFA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=PV.SatyanarayanaRaju&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 71,
-      "wickets": 57,
-      "econ": 7.19
     }
   },
   {
@@ -5079,36 +4088,6 @@ export const IPL_PLAYERS = [
     }
   },
   {
-    "id": "p_411",
-    "name": "Vidwath Kaverappa",
-    "role": "Bowler",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UFA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=VidwathKaverappa&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 79,
-      "wickets": 30,
-      "econ": 7.1
-    }
-  },
-  {
-    "id": "p_412",
-    "name": "Vidyadhar Patil",
-    "role": "Bowler",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UFA2",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=VidyadharPatil&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
-    "stats": {
-      "matches": 70,
-      "wickets": 41,
-      "econ": 7.17
-    }
-  },
-  {
     "id": "p_413",
     "name": "Vijay Kumar",
     "role": "Bowler",
@@ -5122,5 +4101,325 @@ export const IPL_PLAYERS = [
       "wickets": 9,
       "econ": 8.14
     }
-  }
+  },
+  {
+    "id": "p_901",
+    "name": "Kuldip Yadav",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "Uncapped Fast Bowlers",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_wide_w_1280,q_70/lsci/db/PICTURES/CMS/359600/359665.6.jpg",
+    "stats": {
+      "matches": 15,
+      "wickets": 18,
+      "econ": 8.4,
+      "avg": 24.5
+    }
+  },
+  {
+    "id": "p_902",
+    "name": "Dian Forrester",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "RSA",
+    "basePrice": 0.75,
+    "set": "All-Rounders Set 2",
+    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/default.png",
+    "stats": {
+      "matches": 22,
+      "runs": 340,
+      "wickets": 14,
+      "sr": 135.5
+    }
+  },
+  {
+    "id": "p_903",
+    "name": "Rehan Ahmed",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "ENG",
+    "basePrice": 1.5,
+    "set": "Spinners Set 1",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/422900/422972.jpg",
+    "stats": {
+      "matches": 30,
+      "wickets": 32,
+      "econ": 7.8,
+      "avg": 22.1
+    }
+  },
+  {
+    "id": "p_904",
+    "name": "Sahil Parakh",
+    "role": "Batter",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "Uncapped Batters",
+    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/default.png",
+    "stats": {
+      "matches": 8,
+      "runs": 185,
+      "sr": 128.4,
+      "avg": 26.4
+    }
+  },
+  {
+    "id": "p_906",
+    "name": "Kulwant Khejroliya",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "Uncapped Fast Bowlers",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/274900/274915.jpg",
+    "stats": {
+      "matches": 35,
+      "wickets": 38,
+      "econ": 8.6,
+      "avg": 24.8
+    }
+  },
+  {
+    "id": "p_907",
+    "name": "Saurabh Dubey",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "Uncapped Fast Bowlers",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/417200/417271.jpg",
+    "stats": {
+      "matches": 5,
+      "wickets": 4,
+      "econ": 8.9,
+      "avg": 28.5
+    }
+  },
+  {
+    "id": "p_908",
+    "name": "Blessing Muzarabani",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "ZIM",
+    "basePrice": 0.75,
+    "set": "Fast Bowlers Set 2",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/414100/414129.jpg",
+    "stats": {
+      "matches": 55,
+      "wickets": 64,
+      "econ": 7.9,
+      "avg": 23.4
+    }
+  },
+  {
+    "id": "p_909",
+    "name": "Navdeep Saini",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.75,
+    "set": "Fast Bowlers Set 2",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/360200/360287.jpg",
+    "stats": {
+      "matches": 65,
+      "wickets": 70,
+      "econ": 8.5,
+      "avg": 26.2
+    }
+  },
+  {
+    "id": "p_910",
+    "name": "Luvnith Sisodia",
+    "role": "Wicket-Keeper",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "Uncapped Wicket-Keepers",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/344600/344661.jpg",
+    "stats": {
+      "matches": 15,
+      "runs": 320,
+      "sr": 145.2,
+      "avg": 24.6
+    }
+  },
+  {
+    "id": "p_911",
+    "name": "George Linde",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "RSA",
+    "basePrice": 1,
+    "set": "All-Rounders Set 2",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/411800/411801.jpg",
+    "stats": {
+      "matches": 45,
+      "runs": 510,
+      "wickets": 38,
+      "sr": 138.5
+    }
+  },
+  {
+    "id": "p_912",
+    "name": "Keshav Maharaj",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "RSA",
+    "basePrice": 1.5,
+    "set": "Spinners Set 1",
+    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/default.png",
+    "stats": {
+      "matches": 60,
+      "wickets": 65,
+      "econ": 7.4,
+      "avg": 22.8
+    }
+  },
+  {
+    "id": "p_913",
+    "name": "Cooper Connolly",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 0.75,
+    "set": "All-Rounders Set 2",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/416600/416660.jpg",
+    "stats": {
+      "matches": 20,
+      "runs": 280,
+      "wickets": 10,
+      "sr": 142.1
+    }
+  },
+  {
+    "id": "p_914",
+    "name": "Praveen Dubey",
+    "role": "All-Rounder",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "Uncapped All-Rounders",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/359900/359979.jpg",
+    "stats": {
+      "matches": 25,
+      "runs": 150,
+      "wickets": 22,
+      "sr": 125
+    }
+  },
+  {
+    "id": "p_915",
+    "name": "Brijesh Sharma",
+    "role": "All-Rounder",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "Uncapped All-Rounders",
+    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/default.png",
+    "stats": {
+      "matches": 10,
+      "runs": 110,
+      "wickets": 8,
+      "sr": 130.5
+    }
+  },
+  {
+    "id": "p_916",
+    "name": "Vihaan Malhotra",
+    "role": "Batter",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "Uncapped Batters",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/412500/412519.jpg",
+    "stats": {
+      "matches": 12,
+      "runs": 240,
+      "sr": 135.8,
+      "avg": 26.6
+    }
+  },
+  {
+    "id": "p_917",
+    "name": "Kanishk Chouhan",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "Uncapped Fast Bowlers",
+    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/default.png",
+    "stats": {
+      "matches": 8,
+      "wickets": 10,
+      "econ": 8.1,
+      "avg": 22.4
+    }
+  },
+  {
+    "id": "p_918",
+    "name": "Richard Gleeson",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "ENG",
+    "basePrice": 1,
+    "set": "Fast Bowlers Set 2",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/405000/405034.jpg",
+    "stats": {
+      "matches": 40,
+      "wickets": 48,
+      "econ": 8,
+      "avg": 21.5
+    }
+  },
+  {
+    "id": "p_919",
+    "name": "Praful Hinge",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "Uncapped Fast Bowlers",
+    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/default.png",
+    "stats": {
+      "matches": 6,
+      "wickets": 5,
+      "econ": 8.7,
+      "avg": 27.2
+    }
+  },
+  {
+    "id": "p_920",
+    "name": "David Payne",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "ENG",
+    "basePrice": 0.75,
+    "set": "Fast Bowlers Set 2",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/412400/412425.jpg",
+    "stats": {
+      "matches": 38,
+      "wickets": 42,
+      "econ": 8.3,
+      "avg": 24.1
+    }
+  },
+  {
+    "id": "p_921",
+    "name": "Jack Edwards",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 0.75,
+    "set": "All-Rounders Set 2",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/422800/422839.jpg",
+    "stats": {
+      "matches": 28,
+      "runs": 410,
+      "wickets": 18,
+      "sr": 132.4
+    }
+  },
 ];
