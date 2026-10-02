@@ -110,9 +110,9 @@ export default function AuctionActivityFeed({ activeCount = 0 }) {
 
       {/* Card Header */}
       <div className="flex flex-col flex-shrink-0">
-        <h3 className="text-sm sm:text-base font-black uppercase text-white tracking-wider leading-none flex items-center gap-1.5">
-          🔥 LIVE AUCTION HUB
-        </h3>
+        <h2 className="text-sm sm:text-base font-black uppercase text-white tracking-wider leading-none flex items-center gap-1.5">
+          🔥 LIVE AUCTION ROOMS
+        </h2>
         
         {/* Active Hubs Counter right under title */}
         <div className="flex items-center gap-2 mt-2 select-none">

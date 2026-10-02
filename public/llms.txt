@@ -1,0 +1,10 @@
+# CrickAuction
+
+> A multiplayer IPL auction simulator and game.
+
+Welcome to CrickAuction! This is a real-time multiplayer application that allows you to host and participate in live Indian Premier League (IPL) mega auctions with your friends. 
+
+## Features
+- Real-time multiplayer rooms
+- Squad building with budget constraints
+- Multiple auction modes (Mega, Sprint)

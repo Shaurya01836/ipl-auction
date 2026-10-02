@@ -1018,10 +1018,10 @@ const AdminPanel = () => {
                             value={fb.status || 'new'}
                             onChange={(e) => handleUpdateFeedback(fb.id, { status: e.target.value })}
                             className={`text-[8px] sm:text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-xl border focus:outline-none cursor-pointer transition-all ${fb.status === 'resolved'
-                                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                                : fb.status === 'in_progress'
-                                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-                                  : 'bg-blue-500/10 border-blue-500/30 text-blue-400'
+                              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                              : fb.status === 'in_progress'
+                                ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                                : 'bg-blue-500/10 border-blue-500/30 text-blue-400'
                               }`}
                           >
                             <option value="new" className="bg-[#0c0c0c] text-blue-400">New</option>
@@ -1033,8 +1033,8 @@ const AdminPanel = () => {
                           <button
                             onClick={() => handleUpdateFeedback(fb.id, { isStarred: !fb.isStarred })}
                             className={`p-1.5 rounded-xl border transition-all cursor-pointer ${fb.isStarred
-                                ? 'bg-amber-500/20 border-amber-500/40 text-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.2)]'
-                                : 'bg-white/5 border-white/10 text-gray-500 hover:text-amber-400'
+                              ? 'bg-amber-500/20 border-amber-500/40 text-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.2)]'
+                              : 'bg-white/5 border-white/10 text-gray-500 hover:text-amber-400'
                               }`}
                             title={fb.isStarred ? 'Starred' : 'Star Feedback'}
                           >
@@ -1309,11 +1309,10 @@ const AdminPanel = () => {
                   <button
                     key={role}
                     onClick={() => setPlayerRoleFilter(role)}
-                    className={`px-4 py-2.5 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
-                      playerRoleFilter === role
+                    className={`px-4 py-2.5 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${playerRoleFilter === role
                         ? 'bg-[#ff5500] text-white'
                         : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
-                    }`}
+                      }`}
                   >
                     {role === 'all' ? 'All Roles' : role}
                   </button>
@@ -1376,7 +1375,7 @@ const AdminPanel = () => {
                               <span className="text-[#ff5500] font-black text-xs uppercase tracking-wider">{player.role}</span>
                             </div>
                           </div>
-                          
+
                           <div className="grid grid-cols-2 gap-2 mt-1">
                             <div className="bg-white/5 rounded-lg p-2 flex flex-col items-center justify-center text-center border border-white/5">
                               <span className="text-gray-500 text-[9px] font-black uppercase tracking-widest">Base</span>
@@ -1387,7 +1386,7 @@ const AdminPanel = () => {
                               <span className="text-white font-bold text-xs">{player.type}</span>
                             </div>
                           </div>
-                          
+
                           <div className="bg-white/5 rounded-lg p-2 text-center border border-white/5 w-full mt-auto">
                             <span className="text-gray-400 text-[10px] font-bold truncate block">{player.set}</span>
                           </div>
