@@ -43,63 +43,62 @@ const LogoMarquee = () => {
       <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#050505] to-transparent z-10" />
       <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#050505] to-transparent z-10" />
 
-      <motion.div
-        className="flex gap-12 items-center"
-        animate={{ x: [0, -1920] }}
-        transition={{
-          duration: 40,
-          repeat: Infinity,
-          ease: "linear"
-        }}
-      >
+      {/* Pure CSS marquee — runs off main thread, zero JS jank */}
+      <div className="marquee-track flex gap-12 items-center">
         {marqueeTeams.map((t, idx) => (
           <div key={`${t.id}-${idx}`} className="flex-shrink-0 group">
             <img
               src={t.logo}
               alt={`${t.name} IPL Logo`}
+              loading="lazy"
+              decoding="async"
               className="h-12 md:h-16 w-auto object-contain transition-all duration-500 opacity-40 group-hover:opacity-100 group-hover:scale-110 grayscale group-hover:grayscale-0 filter drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]"
             />
           </div>
         ))}
-      </motion.div>
+      </div>
     </div>
   );
 };
+
+// Detect mobile once at module level to avoid per-render checks
+const isMobileDevice = typeof window !== 'undefined' && window.innerWidth < 768;
+const prefersReducedMotion = typeof window !== 'undefined'
+  && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const shouldReduceMotion = isMobileDevice || prefersReducedMotion;
 
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.15,
-      delayChildren: 0.1
+      // Faster stagger on mobile to reduce perceived delay
+      staggerChildren: shouldReduceMotion ? 0.05 : 0.15,
+      delayChildren: shouldReduceMotion ? 0 : 0.1
     }
   }
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 30 },
+  hidden: { opacity: 0, y: shouldReduceMotion ? 10 : 30 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: {
-      type: "spring",
-      stiffness: 70,
-      damping: 15
-    }
+    transition: shouldReduceMotion
+      // Tween is far cheaper than spring on mobile (no physics iterations)
+      ? { type: 'tween', duration: 0.2, ease: 'easeOut' }
+      : { type: 'spring', stiffness: 70, damping: 15 }
   }
 };
 
 const scaleVariants = {
-  hidden: { opacity: 0, scale: 0.92 },
+  hidden: { opacity: 0, scale: shouldReduceMotion ? 0.98 : 0.92 },
   visible: {
     opacity: 1,
     scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 60,
-      damping: 15
-    }
+    transition: shouldReduceMotion
+      ? { type: 'tween', duration: 0.2, ease: 'easeOut' }
+      : { type: 'spring', stiffness: 60, damping: 15 }
   }
 };
 
