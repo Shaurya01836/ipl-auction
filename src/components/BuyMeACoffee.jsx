@@ -91,7 +91,8 @@ const BuyMeACoffee = () => {
               {/* Close Button */}
               <button
                 onClick={() => setIsOpen(false)}
-                className="absolute top-5 right-5 z-10 text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 p-1.5 rounded-full transition-all duration-200 cursor-pointer"
+                aria-label="Close support modal"
+                className="absolute top-5 right-5 z-10 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 p-1.5 rounded-full transition-all duration-200 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -101,7 +102,7 @@ const BuyMeACoffee = () => {
                 <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white">
                   Support the Dev
                 </h3>
-                <p className="text-[7.5px] font-black text-gray-600 uppercase tracking-widest mt-1">
+                <p className="text-[7.5px] font-black text-gray-400 uppercase tracking-widest mt-1">
                   Keep it running ad-free
                 </p>
               </div>
@@ -110,7 +111,7 @@ const BuyMeACoffee = () => {
               <div className="p-5 space-y-4">
                 {/* Tier Selection */}
                 <div className="space-y-2">
-                  <label className="block text-[7.5px] font-black text-gray-600 uppercase tracking-widest ml-1">
+                  <label className="block text-[7.5px] font-black text-gray-400 uppercase tracking-widest ml-1">
                     Choose Amount
                   </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -127,12 +128,12 @@ const BuyMeACoffee = () => {
                         <div className="flex-shrink-0">{tier.icon}</div>
                         <div className="text-left leading-tight">
                           <span className={`block text-[8px] font-black uppercase tracking-wider ${
-                            selectedTier === key ? 'text-white' : 'text-gray-500'
+                            selectedTier === key ? 'text-white' : 'text-gray-400'
                           }`}>
                             {tier.name}
                           </span>
                           <span className={`text-[9px] font-black italic ${
-                            selectedTier === key ? 'text-[#ff5500]' : 'text-gray-600'
+                            selectedTier === key ? 'text-[#ff5500]' : 'text-gray-400'
                           }`}>
                             ₹{tier.amountINR}
                           </span>
@@ -150,16 +151,16 @@ const BuyMeACoffee = () => {
                       }`}
                     >
                       <Heart className={`w-3.5 h-3.5 flex-shrink-0 ${
-                        selectedTier === 'custom' ? 'text-[#ff5500]' : 'text-gray-600'
+                        selectedTier === 'custom' ? 'text-[#ff5500]' : 'text-gray-400'
                       }`} />
                       <div className="text-left leading-tight">
                         <span className={`block text-[8px] font-black uppercase tracking-wider ${
-                          selectedTier === 'custom' ? 'text-white' : 'text-gray-500'
+                          selectedTier === 'custom' ? 'text-white' : 'text-gray-400'
                         }`}>
                           Custom
                         </span>
                         <span className={`text-[9px] font-black italic ${
-                          selectedTier === 'custom' ? 'text-[#ff5500]' : 'text-gray-600'
+                          selectedTier === 'custom' ? 'text-[#ff5500]' : 'text-gray-400'
                         }`}>
                           ₹{customAmount || 'Any'}
                         </span>
@@ -181,7 +182,7 @@ const BuyMeACoffee = () => {
                           value={customAmount}
                           onChange={(e) => setCustomAmount(e.target.value.replace(/[^0-9]/g, ''))}
                           placeholder="Enter amount (₹)"
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-center text-[10px] font-black text-[#ff5500] placeholder:text-gray-700 focus:outline-none focus:border-[#ff5500]/50 transition-all mt-1"
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-center text-[10px] font-black text-[#ff5500] placeholder:text-gray-400 focus:outline-none focus:border-[#ff5500]/50 transition-all mt-1"
                           min="1"
                           autoFocus
                         />
@@ -191,7 +192,7 @@ const BuyMeACoffee = () => {
                 </div>
 
                 {/* Tagline */}
-                <p className="text-[7.5px] font-black text-gray-600 uppercase tracking-wider text-center bg-white/[0.02] border border-white/5 py-1.5 px-2 rounded-xl">
+                <p className="text-[7.5px] font-black text-gray-400 uppercase tracking-wider text-center bg-white/[0.02] border border-white/5 py-1.5 px-2 rounded-xl">
                   {currentTagline}
                 </p>
 
@@ -204,7 +205,7 @@ const BuyMeACoffee = () => {
                       className="w-32 h-32 object-contain"
                     />
                   </div>
-                  <p className="text-[7.5px] font-black text-gray-600 uppercase tracking-widest text-center">
+                  <p className="text-[7.5px] font-black text-gray-400 uppercase tracking-widest text-center">
                     Scan with any UPI app
                   </p>
 
@@ -228,7 +229,7 @@ const BuyMeACoffee = () => {
 
                 {/* Footer note */}
                 <div className="text-center border-t border-white/5 pt-3">
-                  <p className="text-[7px] font-black text-gray-700 uppercase tracking-[0.25em]">
+                  <p className="text-[7px] font-black text-gray-400 uppercase tracking-[0.25em]">
                     Direct UPI Support — No fees
                   </p>
                 </div>

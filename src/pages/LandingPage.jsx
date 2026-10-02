@@ -393,11 +393,11 @@ const LandingPage = () => {
   // ─── Not Signed In: Show Google / Guest Login ───
   if (!user) {
     return (
-      <motion.div
+      <motion.main
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="relative min-h-screen bg-[#050505] flex flex-col items-center justify-center py-10 px-4 font-sans text-white overflow-x-hidden"
+        className="relative min-h-screen bg-[#050505] flex flex-col items-center justify-center pt-10 px-4 font-sans text-white overflow-x-hidden"
       >
         <GithubStarButton />
         <BuyMeACoffee />
@@ -432,7 +432,7 @@ const LandingPage = () => {
           </p>
 
           {/* Three-step visual story */}
-          <div className="flex items-center justify-center gap-3 sm:gap-6 mt-5 text-[9px] font-black tracking-widest text-gray-600 uppercase select-none">
+          <div className="flex items-center justify-center gap-3 sm:gap-6 mt-5 text-[9px] font-black tracking-widest text-gray-400 uppercase select-none">
             <span className="hover:text-orange-500/80 transition-colors">① Create Room</span>
             <span className="text-gray-800">➔</span>
             <span className="hover:text-orange-500/80 transition-colors">② Invite Friends</span>
@@ -465,7 +465,7 @@ const LandingPage = () => {
               <h2 className="text-xl font-black uppercase tracking-tight mb-1">
                 {isGuestMode ? 'Guest Access' : 'Welcome, Manager'}
               </h2>
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-8">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-8">
                 {isGuestMode ? 'Enter a name to join' : 'Sign in to enter the auction hub'}
               </p>
 
@@ -489,7 +489,7 @@ const LandingPage = () => {
 
                   <div className="relative py-2 flex items-center justify-center">
                     <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5" /></div>
-                    <span className="relative bg-[#0c0c0c] px-4 text-[9px] font-black text-gray-700 uppercase tracking-widest italic">Wait, I'm a guest</span>
+                    <span className="relative bg-[#0c0c0c] px-4 text-[9px] font-black text-gray-400 uppercase tracking-widest italic">Wait, I'm a guest</span>
                   </div>
 
                   <button
@@ -502,7 +502,7 @@ const LandingPage = () => {
               ) : (
                 <form onSubmit={handleGuestSignIn} className="w-full space-y-4">
                   <div className="space-y-2">
-                    <label className="block text-[9px] font-black text-gray-700 uppercase tracking-widest ml-1">Your Manager Name</label>
+                    <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Your Manager Name</label>
                     <input
                       type="text"
                       value={guestName}
@@ -528,7 +528,7 @@ const LandingPage = () => {
                   <button
                     type="button"
                     onClick={() => setIsGuestMode(false)}
-                    className="w-full text-[9px] font-black text-gray-600 hover:text-white uppercase tracking-[0.3em] transition-colors mt-2"
+                    className="w-full text-[9px] font-black text-gray-400 hover:text-white uppercase tracking-[0.3em] transition-colors mt-2"
                   >
                     ← Back to Google Login
                   </button>
@@ -548,24 +548,24 @@ const LandingPage = () => {
         >
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="h-px w-12 bg-white/10" />
-            <span className="text-[10px] font-black text-gray-600 uppercase tracking-[0.4em]">Official Franchises</span>
+            <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Official Franchises</span>
             <div className="h-px w-12 bg-white/10" />
           </div>
           <LogoMarquee />
         </motion.div>
 
         <Footer />
-      </motion.div>
+      </motion.main>
     );
   }
 
   // ─── Signed In: Show Create / Join / History ───
   return (
-    <motion.div
+    <motion.main
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="relative min-h-screen bg-[#050505] flex flex-col items-center justify-center py-10 px-4 font-sans text-white overflow-x-hidden"
+      className="relative min-h-screen bg-[#050505] flex flex-col items-center justify-center pt-10 px-4 font-sans text-white overflow-x-hidden"
     >
       <GithubStarButton />
       <BuyMeACoffee />
@@ -603,7 +603,7 @@ const LandingPage = () => {
 
 
         {/* Three-step visual story */}
-        <div className="flex items-center justify-center gap-3 sm:gap-6 mt-5 text-[9px] font-black tracking-widest text-gray-600 uppercase select-none">
+        <div className="flex items-center justify-center gap-3 sm:gap-6 mt-5 text-[9px] font-black tracking-widest text-gray-400 uppercase select-none">
           <span className="hover:text-orange-500/80 transition-colors">① Create Room</span>
           <span className="text-gray-800">➔</span>
           <span className="hover:text-orange-500/80 transition-colors">② Invite Friends</span>
@@ -642,7 +642,7 @@ const LandingPage = () => {
                   onClick={() => setActiveTab('new')}
                   className={`pb-3.5 px-6 font-black text-[11px] uppercase tracking-wider transition-all duration-200 border-b-2 relative ${activeTab === 'new'
                     ? 'border-[#ff5500] text-[#ff5500]'
-                    : 'border-transparent text-gray-500 hover:text-gray-300'
+                    : 'border-transparent text-gray-400 hover:text-gray-300'
                     }`}
                 >
                   Create
@@ -652,7 +652,7 @@ const LandingPage = () => {
                   onClick={() => setActiveTab('join')}
                   className={`pb-3.5 px-6 font-black text-[11px] uppercase tracking-wider transition-all duration-200 border-b-2 relative flex items-center gap-1.5 ${activeTab === 'join'
                     ? 'border-[#ff5500] text-[#ff5500]'
-                    : 'border-transparent text-gray-500 hover:text-gray-300'
+                    : 'border-transparent text-gray-400 hover:text-gray-300'
                     }`}
                 >
                   <span>Join</span>
@@ -667,7 +667,7 @@ const LandingPage = () => {
                   onClick={() => setActiveTab('history')}
                   className={`pb-3.5 px-6 font-black text-[11px] uppercase tracking-wider transition-all duration-200 border-b-2 relative ${activeTab === 'history'
                     ? 'border-[#ff5500] text-[#ff5500]'
-                    : 'border-transparent text-gray-500 hover:text-gray-300'
+                    : 'border-transparent text-gray-400 hover:text-gray-300'
                     }`}
                 >
                   History
@@ -702,8 +702,8 @@ const LandingPage = () => {
                 >
                   <div>
                     <div className="mb-4 ml-1">
-                      <h4 className="text-[13px] font-black uppercase text-gray-400 tracking-wider">Franchise</h4>
-                      <p className="text-[11px] text-gray-600 font-bold uppercase tracking-wider mt-0.5">Choose the team you'll manage.</p>
+                      <h2 className="text-[13px] font-black uppercase text-gray-400 tracking-wider">Franchise</h2>
+                      <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Choose the team you'll manage.</p>
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -712,6 +712,7 @@ const LandingPage = () => {
                           key={t.id}
                           type="button"
                           onClick={() => setSelectedTeam(t.id)}
+                          aria-label={`Select ${t.name}`}
                           className={`relative group/team flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-200 ${selectedTeam === t.id
                             ? 'bg-[#1b1b1b] border border-white/[0.12] scale-[1.02] shadow-[0_4px_20px_rgba(0,0,0,0.4)]'
                             : 'bg-[#151515] border border-transparent hover:bg-white/[0.04]'
@@ -725,7 +726,7 @@ const LandingPage = () => {
                           <div className={`w-12 h-12 rounded-2xl bg-white/5 p-1.5 flex items-center justify-center mb-2 transition-transform duration-200 ${selectedTeam === t.id ? 'scale-105' : 'group-hover/team:scale-105'}`}>
                             <img src={t.logo} alt={`${t.name} Logo`} className="w-full h-full object-contain filter" />
                           </div>
-                          <span className={`text-[8px] font-black uppercase text-center tracking-tighter truncate w-full ${selectedTeam === t.id ? 'text-white' : 'text-gray-500'}`}>
+                          <span className={`text-[8px] font-black uppercase text-center tracking-tighter truncate w-full ${selectedTeam === t.id ? 'text-white' : 'text-gray-400'}`}>
                             {t.name.split(' ').slice(0, 1)}
                           </span>
                         </button>
@@ -735,7 +736,7 @@ const LandingPage = () => {
 
                   <div>
                     <div className="mb-4 ml-1">
-                      <h4 className="text-[13px] font-black uppercase text-gray-400 tracking-wider">Mode</h4>
+                      <h2 className="text-[13px] font-black uppercase text-gray-400 tracking-wider">Mode</h2>
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-3">
@@ -751,10 +752,10 @@ const LandingPage = () => {
                           <div className="absolute top-3.5 right-3.5 text-white"><Check size={12} strokeWidth={3} /></div>
                         )}
                         <div className="flex items-center gap-2 mb-1.5">
-                          <Trophy size={14} className={auctionType === 'mega' ? 'text-white' : 'text-gray-600'} />
-                          <span className={`text-[10px] font-black uppercase tracking-tight ${auctionType === 'mega' ? 'text-white' : 'text-gray-500'}`}>Mega Auction</span>
+                          <Trophy size={14} className={auctionType === 'mega' ? 'text-white' : 'text-gray-400'} />
+                          <span className={`text-[10px] font-black uppercase tracking-tight ${auctionType === 'mega' ? 'text-white' : 'text-gray-400'}`}>Mega Auction</span>
                         </div>
-                        <div className="space-y-0.5 text-[8px] font-bold text-gray-600 uppercase tracking-wide">
+                        <div className="space-y-0.5 text-[8px] font-bold text-gray-400 uppercase tracking-wide">
                           <div>25 Players</div>
                           <div>₹120 Cr Budget</div>
                         </div>
@@ -772,10 +773,10 @@ const LandingPage = () => {
                           <div className="absolute top-3.5 right-3.5 text-white"><Check size={12} strokeWidth={3} /></div>
                         )}
                         <div className="flex items-center gap-2 mb-1.5">
-                          <Star size={14} className={auctionType === 'sprint11' ? 'text-white' : 'text-gray-600'} />
-                          <span className={`text-[10px] font-black uppercase tracking-tight ${auctionType === 'sprint11' ? 'text-white' : 'text-gray-500'}`}>11-Player Classic</span>
+                          <Star size={14} className={auctionType === 'sprint11' ? 'text-white' : 'text-gray-400'} />
+                          <span className={`text-[10px] font-black uppercase tracking-tight ${auctionType === 'sprint11' ? 'text-white' : 'text-gray-400'}`}>11-Player Classic</span>
                         </div>
-                        <div className="space-y-0.5 text-[8px] font-bold text-gray-600 uppercase tracking-wide">
+                        <div className="space-y-0.5 text-[8px] font-bold text-gray-400 uppercase tracking-wide">
                           <div>11 Players</div>
                           <div>₹90 Cr Budget</div>
                         </div>
@@ -793,10 +794,10 @@ const LandingPage = () => {
                           <div className="absolute top-3.5 right-3.5 text-white"><Check size={12} strokeWidth={3} /></div>
                         )}
                         <div className="flex items-center gap-2 mb-1.5">
-                          <Zap size={14} className={auctionType === 'sprint5' ? 'text-white' : 'text-gray-600'} fill={auctionType === 'sprint5' ? 'currentColor' : 'none'} />
-                          <span className={`text-[10px] font-black uppercase tracking-tight ${auctionType === 'sprint5' ? 'text-white' : 'text-gray-500'}`}>5-Player Sprint</span>
+                          <Zap size={14} className={auctionType === 'sprint5' ? 'text-white' : 'text-gray-400'} fill={auctionType === 'sprint5' ? 'currentColor' : 'none'} />
+                          <span className={`text-[10px] font-black uppercase tracking-tight ${auctionType === 'sprint5' ? 'text-white' : 'text-gray-400'}`}>5-Player Sprint</span>
                         </div>
-                        <div className="space-y-0.5 text-[8px] font-bold text-gray-600 uppercase tracking-wide">
+                        <div className="space-y-0.5 text-[8px] font-bold text-gray-400 uppercase tracking-wide">
                           <div>5 Players</div>
                           <div>₹60 Cr Budget</div>
                         </div>
@@ -807,16 +808,17 @@ const LandingPage = () => {
                   {/* Room Visibility Toggle */}
                   <div className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl flex items-center justify-between">
                     <div>
-                      <h4 className="text-[11px] font-black uppercase text-white tracking-wider flex items-center gap-1.5">
+                      <h2 className="text-[11px] font-black uppercase text-white tracking-wider flex items-center gap-1.5">
                         Public Room Visibility
-                      </h4>
-                      <p className="text-[9px] text-gray-500 font-medium">
+                      </h2>
+                      <p className="text-[9px] text-gray-400 font-medium">
                         {isPublicRoom ? 'Listed in the Public Rooms Directory for anyone to join' : 'Private room — accessible only via Room Code link'}
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setIsPublicRoom(!isPublicRoom)}
+                      aria-label="Toggle public room visibility"
                       className={`w-12 h-6 rounded-full transition-colors p-1 flex items-center cursor-pointer ${isPublicRoom ? 'bg-orange-600 justify-end' : 'bg-white/10 justify-start'
                         }`}
                     >
@@ -854,12 +856,12 @@ const LandingPage = () => {
                 >
                   <form onSubmit={handleFormSubmit} className="space-y-4">
                     <div className="relative group">
-                      <label className="block text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2 ml-1">Access Token / Room Code</label>
+                      <label className="block text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Access Token / Room Code</label>
                       <input
                         type="text"
                         value={roomCode}
                         onChange={(e) => setRoomCode(e.target.value)}
-                        className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3.5 focus:outline-none focus:border-orange-500/50 transition-all text-white font-black uppercase tracking-[0.5em] text-center text-lg placeholder:tracking-normal placeholder:text-xs placeholder:text-gray-700"
+                        className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3.5 focus:outline-none focus:border-orange-500/50 transition-all text-white font-black uppercase tracking-[0.5em] text-center text-lg placeholder:tracking-normal placeholder:text-xs placeholder:text-gray-400"
                         placeholder="Enter Room Code"
                       />
                     </div>
@@ -878,7 +880,7 @@ const LandingPage = () => {
 
                   <div className="relative py-2 flex items-center justify-center">
                     <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5" /></div>
-                    <span className="relative bg-[#0c0c0c] px-4 text-[9px] font-black text-gray-600 uppercase tracking-widest flex items-center gap-1.5">
+                    <span className="relative bg-[#0c0c0c] px-4 text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
                       Or join a public lobby
                     </span>
                   </div>
@@ -893,7 +895,7 @@ const LandingPage = () => {
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                           placeholder="Search room code or manager..."
-                          className="w-full bg-white/[0.03] border border-white/10 focus:border-orange-500/50 rounded-xl px-3 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs text-white placeholder:text-gray-600 focus:outline-none transition-all font-medium"
+                          className="w-full bg-white/[0.03] border border-white/10 focus:border-orange-500/50 rounded-xl px-3 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs text-white placeholder:text-gray-400 focus:outline-none transition-all font-medium"
                         />
                       </div>
 
@@ -909,8 +911,8 @@ const LandingPage = () => {
                             type="button"
                             onClick={() => setFilterMode(mode.id)}
                             className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[8px] sm:text-[9px] font-bold uppercase tracking-wider transition-all cursor-pointer shrink-0 ${filterMode === mode.id
-                                ? 'bg-white/10 text-white border border-white/20'
-                                : 'bg-transparent text-gray-500 hover:text-gray-300 border border-transparent'
+                              ? 'bg-white/10 text-white border border-white/20'
+                              : 'bg-transparent text-gray-400 hover:text-gray-300 border border-transparent'
                               }`}
                           >
                             {mode.label}
@@ -921,14 +923,14 @@ const LandingPage = () => {
 
                     {/* Responsive Lobbies Directory List */}
                     {lobbiesLoading ? (
-                      <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+                      <div className="flex flex-col items-center justify-center py-8 text-gray-400">
                         <Loader2 size={18} className="animate-spin mb-2 text-orange-500" />
-                        <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-500">Scanning active rooms...</p>
+                        <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-400">Scanning active rooms...</p>
                       </div>
                     ) : filteredPublicRooms.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-6 sm:py-8 text-center bg-white/[0.01] border border-white/5 rounded-2xl p-4">
                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">No Active Public Lobbies</p>
-                        <p className="text-[9px] sm:text-[10px] text-gray-600 font-medium">No open public rooms right now. Create one to get started!</p>
+                        <p className="text-[9px] sm:text-[10px] text-gray-400 font-medium">No open public rooms right now. Create one to get started!</p>
                       </div>
                     ) : (
                       <div className="space-y-2 max-h-[260px] sm:max-h-[310px] overflow-y-auto custom-scrollbar pr-0.5">
@@ -945,13 +947,13 @@ const LandingPage = () => {
 
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1.5">
-                                  <h4 className="text-[11px] sm:text-xs font-bold text-white tracking-tight truncate max-w-[110px] xs:max-w-[160px] sm:max-w-none">
+                                  <h2 className="text-[11px] sm:text-xs font-bold text-white tracking-tight truncate max-w-[110px] xs:max-w-[160px] sm:max-w-none">
                                     {room.hostName}'s Room
-                                  </h4>
-                              
+                                  </h2>
+
                                 </div>
 
-                                 <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] text-gray-500 font-medium mt-0.5 truncate">
+                                <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] text-gray-400 font-medium mt-0.5 truncate">
                                   <span className={`px-1.5 py-0.2 rounded font-black text-[8px] uppercase tracking-wider ${room.status === 'active' ? 'bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse' : 'bg-green-500/20 text-green-400 border border-green-500/30'}`}>
                                     {room.status === 'active' ? 'LIVE' : 'WAITING'}
                                   </span>
@@ -998,15 +1000,15 @@ const LandingPage = () => {
                   {historyLoading ? (
                     <div className="flex flex-col items-center justify-center py-16">
                       <Loader2 size={32} className="text-blue-500 animate-spin mb-4" />
-                      <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mt-4">Syncing Database...</p>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-4">Syncing Database...</p>
                     </div>
                   ) : historyData.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 text-center">
                       <div className="w-16 h-16 bg-white/5 border border-dashed border-white/10 rounded-2xl flex items-center justify-center mb-4">
-                        <History size={28} className="text-gray-700" />
+                        <History size={28} className="text-gray-400" />
                       </div>
-                      <h4 className="text-sm font-black text-gray-500 uppercase tracking-widest mb-1">No Auctions Yet</h4>
-                      <p className="text-[10px] text-gray-700 font-bold uppercase tracking-widest">Create or join a room to start bidding!</p>
+                      <h2 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-1">No Auctions Yet</h2>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Create or join a room to start bidding!</p>
                     </div>
                   ) : (
                     <>
@@ -1033,9 +1035,9 @@ const LandingPage = () => {
                                     <img src={teamMeta?.logo} alt={`${teamMeta?.name || 'Team'} Logo`} className="w-full h-full object-contain" />
                                   </div>
                                   <div className="min-w-0 flex-1">
-                                    <h5 className="text-xs sm:text-sm font-black uppercase tracking-tight truncate">{teamMeta?.name || session.teamName}</h5>
+                                    <h3 className="text-xs sm:text-sm font-black uppercase tracking-tight truncate">{teamMeta?.name || session.teamName}</h3>
                                     <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 mt-0.5">
-                                      <span className="text-[8px] font-bold text-gray-500 uppercase tracking-wider shrink-0">Room: {session.roomId}</span>
+                                      <span className="text-[8px] font-bold text-gray-400 uppercase tracking-wider shrink-0">Room: {session.roomId}</span>
                                       <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded shrink-0 ${session.mode === 'mega' ? 'bg-orange-500/10 text-orange-500'
                                         : session.mode === 'sprint11' ? 'bg-yellow-500/10 text-yellow-500'
                                           : 'bg-blue-500/10 text-blue-500'
@@ -1044,7 +1046,7 @@ const LandingPage = () => {
                                       </span>
                                       <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded shrink-0 ${session.status === 'completed' ? 'bg-green-500/10 text-green-500'
                                         : session.status === 'active' ? 'bg-yellow-500/10 text-yellow-500'
-                                          : 'bg-gray-500/10 text-gray-500'
+                                          : 'bg-gray-500/10 text-gray-400'
                                         }`}>
                                         {session.status}
                                       </span>
@@ -1054,17 +1056,18 @@ const LandingPage = () => {
                                 <div className="flex items-center gap-2 sm:gap-4 shrink-0 ml-2">
                                   <div className="text-right">
                                     <span className="text-[10px] sm:text-xs font-black italic text-yellow-500 block">₹{session.spent.toFixed(1)} Cr</span>
-                                    <span className="block text-[7px] sm:text-[8px] font-bold text-gray-500">{session.squad.length} players</span>
+                                    <span className="block text-[7px] sm:text-[8px] font-bold text-gray-400">{session.squad.length} players</span>
                                   </div>
                                   <button
                                     type="button"
                                     onClick={(e) => handleDeleteHistory(e, session)}
                                     title="Delete History"
-                                    className="p-1.5 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                                    aria-label="Delete history"
+                                    className="p-1.5 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
                                   >
                                     <Trash2 size={13} />
                                   </button>
-                                  <ChevronDown size={14} className={`text-gray-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                  <ChevronDown size={14} className={`text-gray-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                                 </div>
                               </div>
 
@@ -1095,7 +1098,7 @@ const LandingPage = () => {
                                             <div className="flex items-center gap-2 px-1 mb-1.5">
                                               <span className="text-[7px] sm:text-[8px] font-black text-blue-500 uppercase tracking-widest">{role}s</span>
                                               <div className="flex-1 h-px bg-white/5" />
-                                              <span className="text-[8px] font-black text-gray-600">{rolePlayers.length}</span>
+                                              <span className="text-[8px] font-black text-gray-400">{rolePlayers.length}</span>
                                             </div>
                                             <div className="space-y-1">
                                               {rolePlayers.map((p, idx) => (
@@ -1103,9 +1106,9 @@ const LandingPage = () => {
                                                   <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
                                                     <img src={p?.image} alt={p?.name} className="w-6 h-6 sm:w-7 sm:h-7 object-contain rounded-md bg-white/5 shrink-0" />
                                                     <div className="min-w-0 flex-1">
-                                                      <h6 className="text-[10px] sm:text-[11px] font-black leading-tight truncate">{p?.name}</h6>
+                                                      <h4 className="text-[10px] sm:text-[11px] font-black leading-tight truncate">{p?.name}</h4>
                                                       <div className="flex items-center gap-1.5">
-                                                        <span className="text-[7px] font-bold text-gray-500 uppercase">{p?.type}</span>
+                                                        <span className="text-[7px] font-bold text-gray-400 uppercase">{p?.type}</span>
                                                         {p?.country !== 'IND' && <Wifi size={8} className="text-purple-400 rotate-90 shrink-0" />}
                                                       </div>
                                                     </div>
@@ -1119,7 +1122,7 @@ const LandingPage = () => {
                                       })}
 
                                       {session.squad.length === 0 && (
-                                        <p className="text-center text-[10px] text-gray-600 font-bold py-4 uppercase">No players acquired in this session</p>
+                                        <p className="text-center text-[10px] text-gray-400 font-bold py-4 uppercase">No players acquired in this session</p>
                                       )}
 
                                       {/* View Full Summary / Resume Auction Button */}
@@ -1160,7 +1163,7 @@ const LandingPage = () => {
       </motion.div>
 
       <Footer />
-    </motion.div>
+    </motion.main>
   );
 };
 

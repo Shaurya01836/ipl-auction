@@ -37,6 +37,7 @@ const GithubStarButton = () => {
       animate={{ opacity: 1, x: 0 }}
       whileHover={{ y: -2, backgroundColor: 'rgba(255, 255, 255, 0.08)' }}
       whileTap={{ scale: 0.98 }}
+      aria-label="View on GitHub"
       className="fixed top-6 right-6 z-[100] flex items-center gap-2.5 bg-white/[0.03] backdrop-blur-xl border border-white/10 px-3 py-1.5 rounded-full transition-[color,border-color,background-color] duration-300 group shadow-2xl scale-90 sm:scale-100"
     >
       <svg viewBox="0 0 24 24" width="16" height="16" className="fill-white/70 group-hover:fill-white transition-colors duration-300">
