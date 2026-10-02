@@ -190,3 +190,85 @@ button, .no-select {
     animation: none !important;
   }
 }
+
+/* ── Pure CSS Marquee (replaces JS-driven framer-motion scroll) ─────────────
+   Runs entirely on the GPU compositor thread — zero main thread cost.        */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.marquee-track {
+  will-change: transform;
+  animation: marquee 40s linear infinite;
+  /* Pause on hover for desktop UX */
+}
+
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+/* Pause marquee on mobile to save battery (user can't hover anyway) */
+@media (max-width: 767px) {
+  .marquee-track:hover {
+    animation-play-state: running;
+  }
+}
+
+/* ── GPU Compositing for animated / fixed elements ──────────────────────────
+   Promotes layers that animate to the GPU so the main thread stays free.     */
+.glass,
+.glass-premium,
+[class*="backdrop-blur"] {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* ── Scroll container optimizations ─────────────────────────────────────────
+   contain:paint limits repaint scope; touch-action speeds up swipe handling  */
+[class*="overflow-y-auto"],
+[class*="overflow-y-scroll"],
+[class*="overflow-auto"],
+[class*="overflow-scroll"] {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* ── Reduce expensive filter effects on low-power mobile screens ─────────── */
+@media (max-width: 767px) {
+  /* Large blur orbs are GPU-expensive on mobile */
+  [class*="blur-[120px]"],
+  [class*="blur-[100px]"],
+  [class*="blur-[80px]"] {
+    filter: blur(40px) !important;
+  }
+
+  /* Drop shadows trigger compositing — reduce radius on mobile */
+  [class*="drop-shadow"] {
+    filter: none;
+  }
+
+  /* backdrop-blur is one of the most expensive CSS ops on mobile */
+  .glass-premium {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(11, 14, 30, 0.95);
+  }
+}
+
+/* ── Prefers reduced motion: strip all transitions globally ─────────────────
+   Respects OS-level "reduce motion" accessibility setting                    */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .marquee-track {
+    animation: none;
+  }
+}

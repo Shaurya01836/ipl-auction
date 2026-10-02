@@ -1,7 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
-import { getAnalytics } from "firebase/analytics";
 import { getDatabase, ref, onValue, goOffline, goOnline } from "firebase/database";
 
 const firebaseConfig = {
@@ -33,7 +32,16 @@ export const db = initializeFirestore(app, {
     tabManager: persistentMultipleTabManager()
   })
 });
-export const analytics = getAnalytics(app);
+// Defer Analytics until after first paint — removes it from the critical path
+let analytics = null;
+if (typeof window !== 'undefined') {
+  window.addEventListener('load', () => {
+    import('firebase/analytics').then(({ getAnalytics }) => {
+      analytics = getAnalytics(app);
+    });
+  }, { once: true });
+}
+export { analytics };
 
 
 // ─── Server Time Sync via Firebase RTDB ───
