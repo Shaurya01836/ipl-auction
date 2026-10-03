@@ -1140,7 +1140,63 @@ export const AuctionProvider = ({ children }) => {
     }, 5000);
   }, [user, currentAuction, flushAuctionToFirestore]);
 
+  // ─── Auto-Pause on Bot Disconnection ───
+
+  const autoPauseCooldownRef = React.useRef(false);
+
+  useEffect(() => {
+    if (!currentAuction || !user) return;
+    // Only the host should trigger this logic
+    if (currentAuction.hostId !== user.uid) return;
+    // Only trigger when auction is actively running
+    if (currentAuction.currentAuction?.status !== 'bidding') {
+      autoPauseCooldownRef.current = false;
+      return;
+    }
+
+    const players = currentAuction.players || [];
+
+    // Find all real human players: non-host AND non-bot
+    const realHumanPlayers = players.filter(
+      p => p.id !== user.uid && !p.isBot && !p.id.startsWith('bot_')
+    );
+
+    // If there are no real human players at all, nothing to watch
+    if (realHumanPlayers.length === 0) return;
+
+    // Are ALL real human players currently offline?
+    const allHumansOffline = realHumanPlayers.every(p => !p.isOnline);
+
+    if (!allHumansOffline) {
+      // At least one human is still online — reset cooldown
+      autoPauseCooldownRef.current = false;
+      return;
+    }
+
+    // Guard: don't fire multiple times for the same disconnect event
+    if (autoPauseCooldownRef.current) return;
+    autoPauseCooldownRef.current = true;
+
+    // All human players offline → auto-pause
+    const liveRef = ref(rtdb, `auctions/${currentAuction.id}/live`);
+    const msgRef = ref(rtdb, `auctions/${currentAuction.id}/messages`);
+
+    Promise.all([
+      updateRtdb(liveRef, { status: 'paused' }),
+      push(msgRef, {
+        userId: 'system',
+        userName: 'System',
+        text: '⚠️ Auction auto-paused: All players went offline. Resume when ready.',
+        type: 'log',
+        timestamp: serverTimestampRtdb()
+      })
+    ]).catch(() => {
+      autoPauseCooldownRef.current = false;
+    });
+  }, [currentAuction, user]);
+
   // ─── Bot Management & Bidding Engine ───
+
   const placeBotBid = useCallback(async (roomId, botUserId, botTeamId, botName, timerSeconds = 10, maxValuation = Infinity, botBudget = Infinity) => {
     if (!roomId) return;
     const liveRef = ref(rtdb, `auctions/${roomId}/live`);

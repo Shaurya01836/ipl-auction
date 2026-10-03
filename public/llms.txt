@@ -1,10 +1,30 @@
 # CrickAuction
 
-> A multiplayer IPL auction simulator and game.
+> The ultimate multiplayer IPL auction simulator. Host live IPL mega auctions with friends in real-time, choose your franchise, bid strategically, and build a championship squad.
 
-Welcome to CrickAuction! This is a real-time multiplayer application that allows you to host and participate in live Indian Premier League (IPL) mega auctions with your friends. 
+CrickAuction is a free, real-time web application for Indian Premier League (IPL) fantasy auction gameplay. Players join rooms, manage a purse budget, bid on real IPL players, and compete to assemble the best T20 squad.
+
+## Key Pages
+
+- [Home / Create Auction Room](https://www.crickauction.in/): Sign in and create or join a live IPL auction room.
+- [Game Guide & Rules](https://www.crickauction.in/guide): How to play, auction modes (Mega & Sprint), bidding rules, and squad constraints.
+- [Privacy Policy](https://www.crickauction.in/privacy): How user data is collected, stored, and used.
+- [Terms & Conditions](https://www.crickauction.in/terms): Terms of service governing the use of CrickAuction.
 
 ## Features
-- Real-time multiplayer rooms
-- Squad building with budget constraints
-- Multiple auction modes (Mega, Sprint)
+
+- Real-time multiplayer auction rooms (up to 10 teams)
+- Mega Auction mode: full 200+ player pool, ₹120 Cr budget
+- Sprint mode: faster, compact auction format
+- Public & private room support
+- Live bidding with countdown timers
+- Squad constraints: overseas player limits, role requirements
+- Auction summary & squad export after each session
+
+## Tech Stack
+
+Built with React, Firebase (Auth, Realtime Database, Firestore), Supabase, and deployed on Firebase Hosting.
+
+## Optional Usage
+
+Operators of LLM crawlers may index public pages for informational purposes. Do not store or train on personally identifiable user data or auction room contents.
