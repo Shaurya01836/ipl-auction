@@ -27,7 +27,8 @@ import {
   BookOpen,
   History,
   Trash2,
-  Eye
+  Eye,
+  RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GithubStarButton from '../components/GithubStarButton';
@@ -144,69 +145,61 @@ const LandingPage = () => {
   }, []);
 
   // Fetch Public Lobbies directly from Supabase (0 RTDB bandwidth download cost)
-  useEffect(() => {
+  const fetchPublicLobbies = async () => {
     setLobbiesLoading(true);
+    try {
+      if (supabase) {
+        const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
+        const threeHoursAgoISO = new Date(Date.now() - THREE_HOURS_MS).toISOString();
 
-    const fetchPublicLobbies = async () => {
-      try {
-        if (supabase) {
-          const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
-          const threeHoursAgoISO = new Date(Date.now() - THREE_HOURS_MS).toISOString();
+        const { data: supabaseRooms, error } = await supabase
+          .from('auctions')
+          .select('*')
+          .in('status', ['waiting', 'active'])
+          .eq('is_public', true)
+          .gte('created_at', threeHoursAgoISO)
+          .order('created_at', { ascending: false })
+          .limit(100);
 
-          const { data: supabaseRooms, error } = await supabase
-            .from('auctions')
-            .select('*')
-            .in('status', ['waiting', 'active'])
-            .eq('is_public', true)
-            .eq('host_online', true)
-            .gte('created_at', threeHoursAgoISO)
-            .order('created_at', { ascending: false })
-            .limit(100);
-
-          if (!error && supabaseRooms && supabaseRooms.length > 0) {
-            const list = supabaseRooms.map(r => {
-              const players = r.players || [];
-              const uniquePlayers = [];
-              const seenIds = new Set();
-              players.forEach(p => {
-                const pid = p?.id || p?.userId;
-                if (pid && !seenIds.has(pid)) {
-                  seenIds.add(pid);
-                  uniquePlayers.push(p);
-                }
-              });
-
-              const teamClaimedPlayers = uniquePlayers.filter(p => p.isHost || (p.team && p.team !== ''));
-              const displayCount = Math.min(teamClaimedPlayers.length, 10);
-              const host = uniquePlayers.find(p => p.isHost) || uniquePlayers[0];
-              return {
-                roomId: r.id,
-                hostName: r.host_name || host?.name || 'Manager',
-                status: r.status,
-                auctionType: r.auction_type || 'mega',
-                playerCount: displayCount,
-                players: uniquePlayers,
-                squadLimit: r.squad_limit || 25,
-                settings: r.settings || {}
-              };
+        if (!error && supabaseRooms && supabaseRooms.length > 0) {
+          const list = supabaseRooms.map(r => {
+            const players = r.players || [];
+            const uniquePlayers = [];
+            const seenIds = new Set();
+            players.forEach(p => {
+              const pid = p?.id || p?.userId;
+              if (pid && !seenIds.has(pid)) {
+                seenIds.add(pid);
+                uniquePlayers.push(p);
+              }
             });
-            setPublicRooms(list);
-            setLobbiesLoading(false);
-            return;
-          }
-        }
-        setPublicRooms([]);
-      } catch (sErr) {
-        setPublicRooms([]);
-      } finally {
-        setLobbiesLoading(false);
-      }
-    };
 
+            const host = uniquePlayers.find(p => p.isHost) || uniquePlayers[0];
+            return {
+              roomId: r.id,
+              hostName: r.host_name || host?.name || 'Manager',
+              status: r.status,
+              auctionType: r.auction_type || 'mega',
+              players: uniquePlayers,
+              squadLimit: r.squad_limit || 25,
+              settings: r.settings || {}
+            };
+          });
+          setPublicRooms(list);
+          setLobbiesLoading(false);
+          return;
+        }
+      }
+      setPublicRooms([]);
+    } catch (sErr) {
+      setPublicRooms([]);
+    } finally {
+      setLobbiesLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchPublicLobbies();
-    // Poll every 10 seconds for open rooms without holding heavy listeners
-    const interval = setInterval(fetchPublicLobbies, 10000);
-    return () => clearInterval(interval);
   }, []);
 
   // Fetch auction history directly from Supabase
@@ -888,7 +881,7 @@ const LandingPage = () => {
                   <div className="space-y-3 pt-1">
                     {/* Responsive Search & Filter Bar */}
                     <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center justify-between">
-                      <div className="relative w-full sm:flex-1">
+                      <div className="relative w-full sm:flex-1 flex gap-2">
                         <input
                           type="text"
                           value={searchQuery}
@@ -896,6 +889,14 @@ const LandingPage = () => {
                           placeholder="Search room code or manager..."
                           className="w-full bg-white/[0.03] border border-white/10 focus:border-orange-500/50 rounded-xl px-3 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs text-white placeholder:text-gray-400 focus:outline-none transition-all font-medium"
                         />
+                        <button
+                          onClick={fetchPublicLobbies}
+                          className="flex items-center justify-center gap-1.5 bg-orange-500/20 hover:bg-orange-500 text-orange-500 hover:text-white border border-orange-500/30 hover:border-orange-500 px-3 py-1.5 sm:py-2 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all active:scale-95 shrink-0"
+                          title="Refresh Lobbies"
+                        >
+                          <RefreshCw size={14} className={lobbiesLoading ? "animate-spin" : ""} />
+                          <span className="hidden sm:inline">Refresh</span>
+                        </button>
                       </div>
 
                       <div className="flex items-center gap-1 w-full sm:w-auto overflow-x-auto custom-scrollbar no-scrollbar py-0.5">
@@ -956,11 +957,7 @@ const LandingPage = () => {
                                   <span className={`px-1.5 py-0.2 rounded font-black text-[8px] uppercase tracking-wider ${room.status === 'active' ? 'bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse' : 'bg-green-500/20 text-green-400 border border-green-500/30'}`}>
                                     {room.status === 'active' ? 'LIVE' : 'WAITING'}
                                   </span>
-                                  <span className="shrink-0">•</span>
-                                  <span className="flex items-center gap-0.5 sm:gap-1 text-gray-400 font-bold shrink-0">
-                                    <Users size={10} className="" />
-                                    {room.playerCount}/10
-                                  </span>
+
                                   <span className="shrink-0">•</span>
                                   <span className="text-gray-400 truncate">
                                     {room.auctionType === 'sprint5' ? '5-Sprint' : room.auctionType === 'sprint11' ? '11-Classic' : 'Mega'}

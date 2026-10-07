@@ -415,6 +415,7 @@ export const AuctionProvider = ({ children }) => {
         };
 
         // Real-time incremental sync to Supabase teams table on every player sale
+        /*
         if (supabase) {
           try {
             await supabase.from('teams').upsert({
@@ -429,6 +430,7 @@ export const AuctionProvider = ({ children }) => {
             });
           } catch (sErr) {}
         }
+        */
       }
 
       // Sync live state to RTDB in parallel (0 Firestore cost!)
@@ -579,6 +581,7 @@ export const AuctionProvider = ({ children }) => {
     await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { players: updatedPlayers });
 
     // Sync updated player count/list to Supabase so Public Lobbies show live player counts
+    /*
     try {
       if (supabase) {
         await supabase.from('auctions').update({ players: updatedPlayers }).eq('id', roomId);
@@ -586,6 +589,7 @@ export const AuctionProvider = ({ children }) => {
     } catch (sErr) {
       // Non-blocking sync error
     }
+    */
 
     // Create/Update team in RTDB if team is provided
     if (playerDetails.team) {
@@ -631,11 +635,13 @@ export const AuctionProvider = ({ children }) => {
       });
 
       // Sync player removal to Supabase
+      /*
       try {
         if (supabase) {
           await supabase.from('auctions').update({ players: updatedPlayers, banned_players: updatedBanned }).eq('id', roomId);
         }
       } catch (sErr) {}
+      */
 
       // 3. Delete team in RTDB
       await set(ref(rtdb, `auctions/${roomId}/teams/${roomId}_${playerObj.id}`), null);
@@ -706,6 +712,7 @@ export const AuctionProvider = ({ children }) => {
         });
 
         // Sync host online presence to Supabase if current user is the host
+        /*
         if (currentRoomData && currentRoomData.hostId === userId) {
           try {
             if (supabase) {
@@ -713,6 +720,7 @@ export const AuctionProvider = ({ children }) => {
             }
           } catch (sErr) {}
         }
+        */
       }
     });
 
@@ -728,9 +736,11 @@ export const AuctionProvider = ({ children }) => {
 
         // Sync host online state to Supabase when presences update
         const isHostCurrentlyOnline = !!currentPresences[currentRoomData.hostId]?.online;
+        /* (Disabled heartbeat to save Supabase limits)
         if (currentRoomData.hostId === userId && supabase) {
           supabase.from('auctions').update({ host_online: isHostCurrentlyOnline }).eq('id', auctionId).then(() => {}).catch(() => {});
         }
+        */
 
         setCurrentAuction({ 
           id: auctionId, 
@@ -1047,11 +1057,13 @@ export const AuctionProvider = ({ children }) => {
     );
     await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { players: updatedPlayers });
 
+    /*
     try {
       if (supabase) {
         await supabase.from('auctions').update({ players: updatedPlayers }).eq('id', roomId);
       }
     } catch (sErr) {}
+    */
 
     // Update RTDB team node (0 Firestore cost in lobby!)
     const rtdbTeamSnap = await get(ref(rtdb, `auctions/${roomId}/teams/${roomId}_${userId}`));
@@ -1199,11 +1211,13 @@ export const AuctionProvider = ({ children }) => {
 
     await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { players: updatedPlayers });
 
+    /*
     try {
       if (supabase) {
         await supabase.from('auctions').update({ players: updatedPlayers }).eq('id', roomId);
       }
     } catch (sErr) {}
+    */
 
     const teamDataToSet = {
       auctionId: roomId,
@@ -1225,11 +1239,13 @@ export const AuctionProvider = ({ children }) => {
     const updatedPlayers = (data.players || []).filter(p => p.id !== botUserId);
     await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { players: updatedPlayers });
 
+    /*
     try {
       if (supabase) {
         await supabase.from('auctions').update({ players: updatedPlayers }).eq('id', roomId);
       }
     } catch (sErr) {}
+    */
 
     await set(ref(rtdb, `auctions/${roomId}/teams/${roomId}_${botUserId}`), null);
   }, []);
@@ -1271,11 +1287,13 @@ export const AuctionProvider = ({ children }) => {
 
     await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { players: updatedPlayers });
 
+    /*
     try {
       if (supabase) {
         await supabase.from('auctions').update({ players: updatedPlayers }).eq('id', roomId);
       }
     } catch (sErr) {}
+    */
 
     if (Object.keys(teamsToSet).length > 0) {
       await updateRtdb(ref(rtdb, `auctions/${roomId}/teams`), teamsToSet);

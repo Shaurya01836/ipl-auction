@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: ipl-auction
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    routes:
+      # Redirect all requests to index.html for client-side routing
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      # Cache static assets to optimize load times and bandwidth
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
