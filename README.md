@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./public/readme-assets/ipl-logo.png" width="120" height="120" alt="IPL Auction Logo">
+  <img src="./readme-assets/ipl-logo.png" width="120" height="120" alt="IPL Auction Logo">
 
   # 🏏 IPL Mega Auction & Fantasy Arena
   ### *The Ultimate Real-Time SaaS Auction & Live Fantasy Experience*
