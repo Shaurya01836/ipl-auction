@@ -1,192 +1,142 @@
 <div align="center">
-  <img src="./readme-assets/ipl-logo.png" width="120" height="120" alt="IPL Auction Logo">
 
-  # 🏏 IPL Mega Auction & Fantasy Arena
-  ### *The Ultimate Real-Time SaaS Auction & Live Fantasy Experience*
 
-  [![React](https://img.shields.io/badge/React-19.2-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
-  [![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
-  [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4.0-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-  [![Firebase](https://img.shields.io/badge/Firebase-12.11-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
-  [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
-  [![CricAPI](https://img.shields.io/badge/CricAPI-Integration-red?style=for-the-badge&logo=cricket&logoColor=white)](https://cricapi.com/)
+  # Crick Auction
+  ### *The ultimate real-time SaaS auction and live fantasy experience.*
 
-  <p align="center">
-    <b>A high-performance, real-time multiplayer simulation platform designed to replicate the intensity of the official IPL auction combined with an interactive Fantasy Arena powered by real-world match scorecards.</b>
-    <br />
-    <a href="#-key-features">Key Features</a> •
-    <a href="#-tech-stack">Tech Stack</a> •
-    <a href="#-project-structure">Project Structure</a> •
-    <a href="#-getting-started">Getting Started</a> •
-    <a href="#-automation-scripts">Automation Scripts</a>
-  </p>
+  [![React](https://img.shields.io/badge/React-19.2-20232A?style=flat-square&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+  [![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
+  [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4.0-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+  [![Firebase](https://img.shields.io/badge/Firebase-12.11-FFCA28?style=flat-square&logo=firebase&logoColor=black)](https://firebase.google.com/)
+  [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=flat-square&logo=supabase&logoColor=white)](https://supabase.com/)
+
+  Host live multiplayer auctions with friends, manage budgets, and bid in real-time.<br />
+  Draft your Fantasy squad, sync with real-world match scorecards, and compete globally.<br />
+  Experience sub-second latency bidding backed by a sophisticated hybrid database architecture.
+
+  [Play Now](https://crickauction.in) • [Documentation](#documentation) • [Releases](https://github.com/Shaurya01836/ipl-auction/releases) • [Contributing](#develop-and-contribute)
+  <br />
+  <br />
+</div>
+
+<p align="center">
+  <img src="./readme-assets/auction_room.png" alt="Live Bidding Dashboard" width="100%">
+</p>
+
+## A platform for competitive multiplayer simulation
+One host can manage an auction room. Running a live auction across multiple friends creates a different job: managing synchronized bid timers, tracking budgets, enforcing squad limits, and maintaining ultra-low latency.
+
+Crick Auction is a real-time web workspace built for that job. Add friends to a lobby, assign franchise teams, and start a live bidding war. For every player that comes under the hammer, the platform synchronizes a universal clock offset across all clients. The current bid, highest bidder, remaining purses, and chat stay perfectly synced from start to finish.
+
+Behind the React UI, the local Firebase RTDB engine watches live activity and coordinates state. The result is a shared, broadcast-quality view of the auction instead of a chaotic group chat experience.
+
+---
+
+## How it works
+
+### 1. Enter the Arena
+When you open Crick Auction, you're greeted with our dynamic loading screen. Under the hood, the app connects to the **Supabase PostgreSQL** directory to fetch active public rooms and leaderboard history without bottlenecking the live game engine.
+<div align="center">
+  <img src="./readme-assets/loading%20page.png" alt="Dynamic Loader Screen" width="80%">
+</div>
+<br />
+
+### 2. Create or Join an Auction
+You can either host a private room for your friends or jump into a public lobby. Creating a room sets up a completely isolated **Firebase Realtime Database (RTDB)** node just for your auction. This isolation means hundreds of auctions can happen simultaneously without slowing each other down.
+<div align="center">
+  <img src="./readme-assets/landing%20page.png" alt="Landing Page and Public Lobbies" width="80%">
+</div>
+<br />
+
+### 3. Claim Franchises & Fill Bots
+Once inside the lobby, you and your friends claim your favorite teams. If you don't have enough people to fill all the teams, you can turn on **AI Franchise Bots**. These bots use timer-adaptive bidding strategies—some bid aggressively early on, while others wait to snipe players in the final 5 seconds!
+<div align="center">
+  <img src="./readme-assets/auction_lobby.png" alt="Pre-Auction Lobby and Bot Configuration" width="80%">
+</div>
+<br />
+
+### 4. The Live Bidding War
+This is the core experience. When the auction starts, every connected user sees the exact same timer and bid amount instantly. The platform calculates a universal clock offset across all browsers to ensure fair bidding, preventing lag from ruining the fun. The host drives the pace while franchise owners manage their maximum purses and overseas player limits.
+*(See the massive image at the top of this page!)*
+<br />
+
+### 5. Final Squads & Fantasy League
+When all players are sold, the room automatically flushes its data from the active Firebase node into long-term Supabase storage to keep the database lightweight. You can review every team's final squad, see how much they spent, and draft your best 11 players into the Fantasy Arena to earn points based on real-world cricket matches!
+<div align="center">
+  <img src="./readme-assets/auction_summary.png" alt="Auction Results and Squad Summaries" width="80%">
 </div>
 
 ---
 
-## ✨ Key Features
+## Install
+Deploy or run the latest version of Crick Auction locally. No complex CLI is required.
 
-<table align="center" width="100%">
-  <tr>
-    <td width="50%" valign="top">
-      <h3>🏢 Real-Time Auction Engine</h3>
-      <ul>
-        <li><b>Firebase Sync:</b> Sub-second latency powered by Firebase Realtime Database.</li>
-        <li><b>Universal Clock Offset:</b> Automated synchronization of bid timers across all client machines using RTDB offset.</li>
-        <li><b>AI Bidding Bots:</b> Host-controlled AI franchise bots with dynamic, timer-adaptive bidding strategies (rapid openers vs. last 5-sec snipers).</li>
-        <li><b>Flexible Auction Formats:</b>
-          <ul>
-            <li><b>Mega:</b> 25 squad limit, 8 overseas limit, 120 Cr budget.</li>
-            <li><b>Sprint 11:</b> 11 squad limit, 4 overseas limit, 90 Cr budget.</li>
-            <li><b>Sprint 5:</b> 5 squad limit, 2 overseas limit, 60 Cr budget.</li>
-          </ul>
-        </li>
-      </ul>
-    </td>
-    <td width="50%" valign="top">
-      <h3>🏆 Fantasy Arena</h3>
-      <ul>
-        <li><b>Squad Selection:</b> Draft your Playing XI, select a Captain (2x points), Vice-Captain (1.5x points), and Impact Player from your auction acquisitions.</li>
-        <li><b>Real-time Leaderboard:</b> Ranks players based on actual match scores.</li>
-        <li><b>Admin Console:</b> Dedicated interface for administrators to manage rooms and sync stats.</li>
-      </ul>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <h3>📺 Premium Broadcast UI/UX</h3>
-      <ul>
-        <li><b>Sophisticated Mobile UI:</b> Single-row responsive header bar, touch-scrollable participants overlay, and auto-scroll to top on navigation.</li>
-        <li><b>Dynamic Squad Image Export:</b> Export and share custom high-res squad poster graphics (`html-to-image`) on WhatsApp, Instagram, or download as PNG.</li>
-        <li><b>Micro-Animations:</b> Smoothed with Framer Motion, including confetti and animated "SOLD"/"UNSOLD" cards.</li>
-        <li><b>Interactive Lobby:</b> Features team assignment tools, bot fill options, live chat, public room directory, and kick/ban controls.</li>
-      </ul>
-    </td>
-    <td width="50%" valign="top">
-      <h3>🔌 Hybrid Database Architecture</h3>
-      <ul>
-        <li><b>Firebase RTDB:</b> Ultra-fast live bidding ticks, clock offsets, and real-time chat with zero document-read costs.</li>
-        <li><b>Supabase PostgreSQL:</b> High-capacity index powering the Public Lobbies Directory and User Session History with 0 quota bottlenecks.</li>
-        <li><b>Automatic RTDB Cleanup:</b> Finished rooms are flushed to Supabase and automatically purged from RTDB to maintain a lightweight database footprint.</li>
-        <li><b>CricAPI Integration:</b> Automated fetchers pull real scorecard stats to calculate fantasy points.</li>
-      </ul>
-    </td>
-  </tr>
-</table>
-
----
-
-## 🛠 Tech Stack
-
-- **Frontend Core:** `React 19.2` + `Vite 6` (Ultra-fast Hot Module Replacement)
-- **Styling:** `Tailwind CSS v4` + `Framer Motion` (Smooth animations)
-- **Backend & Database:** `Firebase Realtime Database` + `Supabase PostgreSQL`
-- **Live Stats Integration:** `CricAPI` (Match data and real-world scoreboard points)
-- **Icons & Utilities:** `Lucide React`, `Canvas Confetti`, `html-to-image`
-
----
-
-## 📂 Project Structure
-
-```
-ipl-auction/
-├── public/                 # Static assets, sitemaps, robots.txt
-├── scripts/                # Database and data synchronization scripts
-│   ├── autoUpdateFantasy.js      # Auto-calculates points from live CricAPI matches
-│   ├── backfillIPL2026.js        # Imports IPL series scorecards
-│   ├── deployDatabaseRules.js    # Syncs rules to Firebase RTDB
-│   ├── supabase_schema.sql       # PostgreSQL schema definition for Supabase
-│   └── uploadConsolidatedPoints.js
-├── src/
-│   ├── components/         # Reusable widgets (Activity feed, Chat, Footer, etc.)
-│   │   └── fantasy/        # Fantasy team editor and squad preview components
-│   ├── contexts/           # State management (Auction and Authentication)
-│   ├── data/               # Seed data (Players list, franchises details)
-│   ├── lib/                # Database connection helpers (Firebase & Supabase)
-│   ├── pages/              # Main routing pages
-│   │   ├── AuctionRoom.jsx       # Interactive bidding screen
-│   │   ├── AuctionSummary.jsx    # Post-auction summary and Fantasy Arena
-│   │   ├── FantasyAdmin.jsx      # Admin panel for score calculations
-│   │   ├── LandingPage.jsx       # Franchise marquee & Public Room selector
-│   │   └── Lobby.jsx             # Pre-auction franchise lobby
-│   ├── App.jsx             # Router and layout definitions
-│   └── main.jsx            # React root mount
-├── database.rules.json     # Firebase Realtime Database Security Rules
-├── vite.config.js          # Vite config using `@tailwindcss/vite`
-└── package.json            # Dependencies and npm script shortcuts
-```
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js (v18+)
-- Firebase account (Realtime Database & Authentication)
-- Supabase account (PostgreSQL project)
-- CricAPI key (optional, required to run point synchronizer scripts)
-
-### Installation
-
-1. **Clone the Repository & Install Dependencies**
+1. **Clone and Install**
    ```bash
    git clone https://github.com/Shaurya01836/ipl-auction.git
    cd ipl-auction
    npm install
    ```
 
-2. **Configure Environment Variables**
-   Create a `.env` file in the root of the project:
+2. **Configure Environment**
+   Create a `.env` file and point it at the databases you want Crick Auction to manage.
    ```env
-   # Firebase Credentials
    VITE_FIREBASE_API_KEY=your_firebase_api_key
    VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
    VITE_FIREBASE_DATABASE_URL=https://your_project-default-rtdb.firebaseio.com
    VITE_FIREBASE_PROJECT_ID=your_project_id
-   VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-   VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
-   VITE_FIREBASE_APP_ID=your_app_id
-   VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
    
-   # Supabase Credentials (for Public Directory & History)
    VITE_SUPABASE_URL=https://your_project_ref.supabase.co
    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 
-   # Optional: Administrative and Integration keys
-   VITE_ADMIN_EMAIL=your_admin_email_to_access_fantasy_admin
    VITE_CRICKET_API_KEY=your_cricapi_key
    ```
 
-3. **Start the Development Server**
+3. **Start the local daemon**
    ```bash
    npm run dev
    ```
 
 ---
 
-## ⚙️ Automation Scripts
+## Product highlights
 
-The project includes CLI utilities inside the `scripts/` directory to manage database configuration and sync fantasy points:
+**Premium Broadcast UI/UX**
+Sophisticated mobile UI featuring touch-scrollable participant overlays, micro-animations smoothed with Framer Motion, confetti explosions, and animated "SOLD" cards.
 
-* **Sync Realtime Database Rules**
-  Updates rules on Firebase to secure bidding operations:
-  ```bash
-  node scripts/deployDatabaseRules.js
-  ```
-* **Backfill Match scorecards**
-  Fetches IPL matches and player points from CricAPI and registers them inside Firestore:
-  ```bash
-  node scripts/backfillIPL2026.js
-  ```
-* **Auto-Update Live Scores**
-  Processes current live scorecards to update the global fantasy leaderboard:
-  ```bash
-  node scripts/autoUpdateFantasy.js
-  ```
+**Hybrid Database Architecture**
+Ultra-fast live bidding ticks and real-time chat powered by Firebase RTDB with zero document-read costs, backed by Supabase PostgreSQL for high-capacity public directory indexing.
+
+**Automatic Sync Scripts**
+Node.js utilities inside `scripts/` automate the fetching of IPL match scorecards from CricAPI and sync global fantasy points directly into the database.
 
 ---
 
-<div align="center">
-  <p>Built for Cricket Fans • Designed for Pro Experience</p>
-  <p>© IPL Auction Simulation Platform</p>
-</div>
+## Supported Tech Stack
+The platform combines top-tier modern web technologies into one supervised workflow:
+
+| Core Frontend | Styling & UI | Backend & Auth | Integration |
+|---|---|---|---|
+| React 19.2 | Tailwind CSS v4 | Firebase RTDB | CricAPI |
+| Vite 6.0 | Framer Motion | Supabase | Node.js Scripts |
+| React Router | Lucide React | Firebase Auth | html-to-image |
+
+<br />
+
+## Report a bug
+Open a bug report from your own GitHub account. A few sentences in your own words about what you did and what went wrong are enough. Add what you expected, reproduction steps, your browser, or a screenshot if you have them. Use GitHub Issues for bugs and feature requests.
+
+## Develop and contribute
+Contributions are welcome across code, docs, examples, and tests. Start by cloning the repository and running `npm install`. Read the standard contribution guidelines before opening a pull request.
+
+## Documentation
+- **scripts/autoUpdateFantasy.js**: Auto-calculates points from live CricAPI matches.
+- **scripts/backfillIPL2026.js**: Imports IPL series scorecards.
+- **scripts/deployDatabaseRules.js**: Syncs security rules to Firebase RTDB.
+- **database.rules.json**: Contains the rules boundary for Firebase.
+
+## Community
+Join the discussion, follow updates, or start a conversation in GitHub Issues.
+
+## License
+Crick Auction is available under the Apache License 2.0.
