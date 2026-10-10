@@ -23,7 +23,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import FantasyDashboard from '../components/fantasy/FantasyDashboard';
+import SquadRating from '../components/SquadRating';
 
 const AuctionSummary = () => {
   const { id } = useParams();
@@ -35,6 +35,7 @@ const AuctionSummary = () => {
   const [expandedTeam, setExpandedTeam] = useState(null);
   const [sharingTeamId, setSharingTeamId] = useState(null);
   const [copiedTeamId, setCopiedTeamId] = useState(null);
+  const [squadViewMode, setSquadViewMode] = useState('grid');
 
   const [dbAuction, setDbAuction] = useState(null);
   const [dbTeams, setDbTeams] = useState([]);
@@ -243,7 +244,7 @@ const AuctionSummary = () => {
             {[
               { id: 'squads', label: 'Squads', fullLabel: 'Team Squads', icon: Users },
               { id: 'leaderboard', label: 'Top 5', fullLabel: 'Top Expensive', icon: Trophy },
-              { id: 'fantasy', label: 'Fantasy', fullLabel: 'Fantasy League', icon: Zap },
+              { id: 'fantasy', label: 'Ratings', fullLabel: 'Squad Ratings', icon: Zap },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -337,9 +338,7 @@ const AuctionSummary = () => {
               exit={{ opacity: 0, x: -30 }}
               className="max-w-5xl mx-auto"
             >
-              <FantasyDashboard 
-                auctionId={id} 
-                user={user} 
+              <SquadRating 
                 roomTeams={activeTeams}
                 currentAuction={activeAuction}
               />
@@ -434,6 +433,24 @@ const AuctionSummary = () => {
                                 <img src={t.logo} alt={`${t.name} Logo Watermark`} className="w-full h-full object-contain" />
                              </div>
 
+                             {/* View Mode Toggle */}
+                             <div className="flex justify-end relative z-10 mb-4 sm:mb-8">
+                               <div className="bg-white/5 border border-white/10 p-1 rounded-xl flex items-center gap-1">
+                                 <button 
+                                   onClick={() => setSquadViewMode('grid')} 
+                                   className={`px-3 sm:px-4 py-1.5 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] transition-all ${squadViewMode === 'grid' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'text-gray-400 hover:text-white'}`}
+                                 >
+                                   List
+                                 </button>
+                                 <button 
+                                   onClick={() => setSquadViewMode('card')} 
+                                   className={`px-3 sm:px-4 py-1.5 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] transition-all ${squadViewMode === 'card' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'text-gray-400 hover:text-white'}`}
+                                 >
+                                   Cards
+                                 </button>
+                               </div>
+                             </div>
+
                              {['Batsman', 'Wicket-Keeper', 'All-Rounder', 'Bowler'].map(role => {
                               const rolePlayers = squad.filter(p => p.role === role);
                               if (rolePlayers.length === 0) return null;
@@ -446,40 +463,83 @@ const AuctionSummary = () => {
                                     <span className="text-[9px] sm:text-[10px] font-black text-gray-600">{rolePlayers.length} Members</span>
                                   </div>
                                   
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
+                                  <div className={`grid ${squadViewMode === 'card' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4'}`}>
                                     {rolePlayers.map((p, pidx) => (
                                       <motion.div 
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: pidx * 0.04 }}
                                         key={p.id} 
-                                        className="bg-white/5 border border-white/10 p-2.5 sm:p-4 rounded-2xl sm:rounded-3xl flex items-center justify-between group/p hover:bg-white/10 transition-all"
+                                        className={squadViewMode === 'card' 
+                                          ? "bg-gradient-to-br from-[#1a1b26] to-[#0c0c0c] border border-white/10 p-4 sm:p-6 rounded-[2rem] flex flex-col justify-between group/p relative overflow-hidden transition-all hover:border-orange-500/30 hover:shadow-2xl hover:shadow-orange-500/10"
+                                          : "bg-white/5 border border-white/10 p-2.5 sm:p-4 rounded-2xl sm:rounded-3xl flex items-center justify-between group/p hover:bg-white/10 transition-all"
+                                        }
                                       >
-                                        <div className="flex items-center gap-3 min-w-0">
-                                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-black/40 border border-white/10 rounded-xl p-1 shrink-0 overflow-hidden">
-                                            <img 
-                                              src={p.image} 
-                                              alt={p.name}
-                                              decoding="async"
-                                              loading="lazy"
-                                              onError={(e) => {
-                                                e.target.onerror = null;
-                                                e.target.src = 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(p.name || 'Player');
-                                              }}
-                                              className="w-full h-full object-cover" 
-                                            />
-                                          </div>
-                                          <div className="overflow-hidden min-w-0">
-                                            <h5 className="text-[11px] sm:text-[12px] font-black uppercase tracking-tight truncate">{p.name}</h5>
-                                            <div className="flex items-center gap-1.5">
-                                              <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">{p.type}</span>
-                                              {p.country !== 'IND' && <Wifi size={10} className="text-purple-400 rotate-90 shrink-0" />}
-                                            </div>
-                                          </div>
-                                        </div>
-                                        <div className="text-right shrink-0">
-                                          <div className="text-[13px] sm:text-[14px] font-black text-green-500">₹{p.bid.toFixed(2)}Cr</div>
-                                        </div>
+                                        {squadViewMode === 'card' ? (
+                                           <>
+                                             <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 blur-3xl rounded-full pointer-events-none opacity-0 group-hover/p:opacity-100 transition-opacity" />
+                                             <div className="flex items-start justify-between relative z-10 mb-4">
+                                                <div className="flex items-center gap-4 min-w-0">
+                                                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-black/40 border border-white/10 rounded-2xl p-1 shrink-0 overflow-hidden">
+                                                    <img 
+                                                      src={p.image} 
+                                                      alt={p.name}
+                                                      decoding="async"
+                                                      loading="lazy"
+                                                      onError={(e) => {
+                                                        e.target.onerror = null;
+                                                        e.target.src = 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(p.name || 'Player');
+                                                      }}
+                                                      className="w-full h-full object-cover" 
+                                                    />
+                                                  </div>
+                                                  <div className="min-w-0">
+                                                    <h5 className="text-sm sm:text-lg font-black uppercase tracking-tight truncate">{p.name}</h5>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                      <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">{p.type}</span>
+                                                      {p.country !== 'IND' && <Wifi size={12} className="text-purple-400 rotate-90 shrink-0" />}
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <div className="text-right shrink-0">
+                                                  <span className="block text-[8px] sm:text-[10px] font-black text-orange-500 uppercase tracking-widest mb-1">Rating</span>
+                                                  <span className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-[#ff5500]">{p.rating || 15}</span>
+                                                </div>
+                                             </div>
+                                             <div className="relative z-10 pt-4 border-t border-white/5 flex items-center justify-between">
+                                                <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Acquired For</div>
+                                                <div className="text-base sm:text-lg font-black text-green-500">₹{p.bid.toFixed(2)}Cr</div>
+                                             </div>
+                                           </>
+                                        ) : (
+                                           <>
+                                             <div className="flex items-center gap-3 min-w-0">
+                                               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-black/40 border border-white/10 rounded-xl p-1 shrink-0 overflow-hidden">
+                                                 <img 
+                                                   src={p.image} 
+                                                   alt={p.name}
+                                                   decoding="async"
+                                                   loading="lazy"
+                                                   onError={(e) => {
+                                                     e.target.onerror = null;
+                                                     e.target.src = 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(p.name || 'Player');
+                                                   }}
+                                                   className="w-full h-full object-cover" 
+                                                 />
+                                               </div>
+                                               <div className="overflow-hidden min-w-0">
+                                                 <h5 className="text-[11px] sm:text-[12px] font-black uppercase tracking-tight truncate">{p.name}</h5>
+                                                 <div className="flex items-center gap-1.5">
+                                                   <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">{p.type}</span>
+                                                   {p.country !== 'IND' && <Wifi size={10} className="text-purple-400 rotate-90 shrink-0" />}
+                                                 </div>
+                                               </div>
+                                             </div>
+                                             <div className="text-right shrink-0">
+                                               <div className="text-[13px] sm:text-[14px] font-black text-green-500">₹{p.bid.toFixed(2)}Cr</div>
+                                             </div>
+                                           </>
+                                        )}
                                       </motion.div>
                                     ))}
                                   </div>

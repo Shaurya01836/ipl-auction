@@ -1114,55 +1114,42 @@ const AuctionRoom = () => {
                                           </div>
                                           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-white leading-none">{currentPlayer.name}</h2>
                                        </div>
-                                       {/* Role-aware stats grid: Bowlers show bowling stats first, Batsmen show batting stats first */}
+                                       {/* Dynamic Role-aware stats grid */}
                                         {(() => {
-                                           const role = currentPlayer.role;
                                            const s = currentPlayer.stats || {};
-                                           const isBowler = role === 'Bowler';
-                                           const isBatsman = role === 'Batsman' || role === 'Wicket-Keeper';
-                                           const isAllRounder = role === 'All-Rounder';
-
+                                           const entries = Object.entries(s).slice(0, 4); // display up to 4 stats
+                                           const colsCount = Math.max(2, Math.min(entries.length, 4));
+                                           const colClass = {
+                                              2: 'lg:grid-cols-2',
+                                              3: 'lg:grid-cols-3',
+                                              4: 'lg:grid-cols-4',
+                                              5: 'lg:grid-cols-5'
+                                           }[colsCount] || 'lg:grid-cols-4';
+                                           
                                            return (
-                                              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 bg-white/[0.02] p-2.5 sm:p-3 md:p-4 rounded-2xl border border-white/[0.04] backdrop-blur-md">
-                                                 {/* Col 1: Matches (always shown) */}
-                                                 <div className="text-center">
-                                                    <span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Matches</span>
-                                                    <span className="text-lg sm:text-xl font-bold text-gray-100">{s.matches || 0}</span>
-                                                 </div>
-
-                                                 {/* Col 2: Wickets for pure bowlers, Runs for batsmen/WK/all-rounders */}
-                                                 {isBowler && s.wickets !== undefined ? (
-                                                    <div className="text-center border-l border-white/5">
-                                                       <span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Wickets</span>
-                                                       <span className="text-lg sm:text-xl font-bold text-green-400">{s.wickets}</span>
-                                                    </div>
-                                                 ) : s.runs !== undefined ? (
-                                                    <div className="text-center border-l border-white/5">
-                                                       <span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Runs</span>
-                                                       <span className="text-lg sm:text-xl font-bold text-yellow-500">{s.runs}</span>
-                                                    </div>
-                                                 ) : null}
-
-                                                 {/* Col 3: Economy for bowlers, Strike Rate for batsmen/all-rounders */}
-                                                 {isBowler && s.econ !== undefined ? (
-                                                    <div className="text-center border-l border-white/5">
-                                                       <span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Economy</span>
-                                                       <span className="text-lg sm:text-xl font-bold text-cyan-400">{s.econ}</span>
-                                                    </div>
-                                                 ) : s.sr !== undefined ? (
-                                                    <div className="text-center border-l border-white/5">
-                                                       <span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Strike Rate</span>
-                                                       <span className="text-lg sm:text-xl font-bold text-gray-100">{s.sr}</span>
-                                                    </div>
-                                                 ) : null}
-
-                                                 {/* Col 4: Average for all roles */}
-                                                 {s.avg !== undefined ? (
-                                                    <div className="text-center border-l border-white/5">
-                                                       <span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Average</span>
-                                                       <span className="text-lg sm:text-xl font-bold text-orange-400">{s.avg}</span>
-                                                    </div>
-                                                 ) : null}
+                                              <div className={`grid grid-cols-2 ${colClass} gap-2 sm:gap-3 bg-white/[0.02] p-2.5 sm:p-3 md:p-4 rounded-2xl border border-white/[0.04] backdrop-blur-md`}>
+                                                 {entries.map(([key, value], index) => {
+                                                    const labelMap = {
+                                                       matches: 'Matches', runs: 'Runs', wickets: 'Wickets',
+                                                       econ: 'Economy', sr: 'Strike Rate', avg: 'Average',
+                                                       hs: 'Highest Score', bb: 'Best Bowling'
+                                                    };
+                                                    const colorMap = {
+                                                       wickets: 'text-green-400', runs: 'text-yellow-500', 
+                                                       econ: 'text-cyan-400', avg: 'text-orange-400',
+                                                       sr: 'text-purple-400', matches: 'text-gray-100',
+                                                       hs: 'text-pink-400', bb: 'text-emerald-400'
+                                                    };
+                                                    const label = labelMap[key] || key;
+                                                    const colorClass = colorMap[key] || 'text-gray-100';
+                                                    
+                                                    return (
+                                                       <div key={key} className={`text-center ${index > 0 ? 'border-white/5' : ''} ${index % 2 !== 0 ? 'border-l' : ''} ${index > 0 ? 'lg:border-l' : ''}`}>
+                                                          <span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">{label}</span>
+                                                          <span className={`text-lg sm:text-xl font-bold ${colorClass}`}>{value}</span>
+                                                       </div>
+                                                    );
+                                                 })}
                                               </div>
                                            );
                                         })()}
