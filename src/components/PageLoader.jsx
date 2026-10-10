@@ -197,7 +197,7 @@ const PageLoader = ({ isGame = false }) => {
           className="absolute left-1/2 -translate-x-1/2 md:translate-x-0 md:left-4 top-16 bottom-[180px] md:bottom-[130px] w-[85vw] md:w-[50vw] max-w-[650px] z-10 flex items-center justify-center p-0 select-none pointer-events-none"
         >
           <img 
-            src="/images/auct1.png" 
+            src="https://res.cloudinary.com/drl6ky9as/image/upload/v1791619857/auct1_cmavig.png"
             alt="IPL Auction Loading" 
             className="w-full h-full object-contain filter drop-shadow-[0_15px_45px_rgba(249,115,22,0.25)] opacity-95"
           />

@@ -1310,8 +1310,8 @@ const AdminPanel = () => {
                     key={role}
                     onClick={() => setPlayerRoleFilter(role)}
                     className={`px-4 py-2.5 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${playerRoleFilter === role
-                        ? 'bg-[#ff5500] text-white'
-                        : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                      ? 'bg-[#ff5500] text-white'
+                      : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
                       }`}
                   >
                     {role === 'all' ? 'All Roles' : role}

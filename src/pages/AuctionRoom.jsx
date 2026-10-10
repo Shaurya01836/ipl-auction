@@ -137,14 +137,14 @@ const AuctionRoom = () => {
    }, [currentAuction?.status, id, navigate]);
 
    const TEAM_SONGS = {
-      'csk': '/CSK.mpeg',
-      'mi': '/MI.mpeg',
-      'rcb': '/RCB.mpeg',
-      'kkr': '/KKR.mpeg',
-      'dc': '/DC.mpeg',
-      'pbks': '/PBKS.mpeg',
-      'rr': '/RR.mpeg',
-      'srh': '/SRH.mpeg',
+      'csk': '/CSK.mp3',
+      'mi': '/MI.mp3',
+      'rcb': '/RCB.mp3',
+      'kkr': '/KKR.mp3',
+      'dc': '/DC.mp3',
+      'pbks': '/PBKS.mp3',
+      'rr': '/RR.mp3',
+      'srh': '/SRH.mp3',
       'lsg': '/LSG.mp3',
       'gt': '/GT.mp3',
    };
@@ -845,9 +845,11 @@ const AuctionRoom = () => {
                      </div>
                   )}
                </div>
-               <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded-full" title="Connected Users">
+               <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded-full" title="Active Team Managers">
                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shrink-0" />
-                  <span className="text-[9px] font-black text-gray-300">{currentAuction?.players?.length || 1}/10</span>
+                  <span className="text-[9px] font-black text-gray-300">
+                     {currentAuction?.players?.filter(p => p.team).length || 0}/10
+                  </span>
                </div>
                <div className="flex items-center border-l border-white/10 pl-1.5 sm:pl-3">
                   <button onClick={copyRoomId} className="p-1 sm:p-1.5 bg-white/5 text-gray-400 rounded-lg hover:bg-white/10 transition-colors cursor-pointer" title="Copy Room ID">

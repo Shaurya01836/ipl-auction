@@ -404,7 +404,7 @@ const LandingPage = () => {
           variants={itemVariants}
           className="relative z-10 flex items-center gap-2 border border-yellow-500/30 bg-yellow-500/5 text-yellow-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest backdrop-blur-md mb-4 shadow-[0_0_20px_rgba(234,179,8,0.1)]"
         >
-          🏏 LIVE IPL AUCTION
+           LIVE IPL AUCTION
         </motion.div>
 
         <motion.div
@@ -573,7 +573,7 @@ const LandingPage = () => {
         variants={itemVariants}
         className="relative z-10 flex items-center gap-2 border border-yellow-500/30 bg-yellow-500/5 text-yellow-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest backdrop-blur-md mb-4 shadow-[0_0_20px_rgba(234,179,8,0.1)]"
       >
-        🏏 LIVE IPL AUCTION
+         LIVE IPL AUCTION
       </motion.div>
 
       {/* Hero */}

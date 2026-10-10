@@ -3,11 +3,6 @@ import { IPL_PLAYERS } from '../data/players';
 import { TEAMS } from '../data/teams';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const USERNAMES = [
-  'virat_king', 'msd_finisher', 'rohit_superfan', 'cricket_guru',
-  'csk_yellove', 'mi_paltan', 'rcb_bold', 'srh_orange', 'kkr_knight',
-  'rr_pink', 'dc_roar', 'lucknow_sg', 'punjab_sher', 'titans_gt'
-];
 
 const getShortName = (name) => {
   const parts = name.split(' ');
@@ -30,8 +25,6 @@ const generateMockNotification = (existingIds = new Set()) => {
   // 2. Pick a random team
   const team = TEAMS[Math.floor(Math.random() * TEAMS.length)];
 
-  // 3. Pick a random username
-  const username = USERNAMES[Math.floor(Math.random() * USERNAMES.length)];
 
   // 4. Generate realistic pricing
   const base = player.basePrice || 2.0;
@@ -47,7 +40,6 @@ const generateMockNotification = (existingIds = new Set()) => {
     id: Math.random().toString(36).substring(2, 9),
     player,
     team,
-    username,
     price: finalPrice
   };
 };
@@ -110,18 +102,21 @@ export default function AuctionActivityFeed({ activeCount = 0 }) {
 
       {/* Card Header */}
       <div className="flex flex-col flex-shrink-0">
-        <h2 className="text-sm sm:text-base font-black uppercase text-white tracking-wider leading-none flex items-center gap-1.5">
-          🔥 LIVE AUCTION ROOMS
+        <h2 className="text-sm sm:text-base font-black uppercase text-white tracking-wider leading-none flex items-center gap-2">
+          <span className="w-5 flex justify-center">🔥</span>
+          <span>LIVE AUCTION ROOMS</span>
         </h2>
         
         {/* Active Hubs Counter right under title */}
         <div className="flex items-center gap-2 mt-2 select-none">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+          <span className="w-5 flex justify-center">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            </span>
           </span>
-          <span className="text-[10px] font-black text-green-400 uppercase tracking-widest leading-none">
-            {activeCount !== undefined && activeCount !== null ? activeCount : fakeCount}+ Active rooms
+          <span className="text-[10px] font-black text-green-400 uppercase tracking-widest leading-none mt-[1px]">
+           {activeCount !== undefined && activeCount !== null ? activeCount : fakeCount}+ Active rooms
           </span>
         </div>
 

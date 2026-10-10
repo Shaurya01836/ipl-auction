@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 
 import { auth } from '../lib/firebase';
-import { 
-  onAuthStateChanged, 
+import {
+  onAuthStateChanged,
   signInWithPopup,
   GoogleAuthProvider,
   signOut,
@@ -16,9 +16,9 @@ import PageLoader from '../components/PageLoader';
 const AuthContext = createContext({
   user: null,
   loading: true,
-  loginWithGoogle: async () => {},
-  loginAsGuest: async () => {},
-  logout: async () => {}
+  loginWithGoogle: async () => { },
+  loginAsGuest: async () => { },
+  logout: async () => { }
 });
 
 const googleProvider = new GoogleAuthProvider();
@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }) => {
     const result = await signInWithPopup(auth, googleProvider);
     return result.user;
   };
-  
+
   const loginAsGuest = async (displayName) => {
     const result = await signInAnonymously(auth);
     await updateProfile(result.user, { displayName });
