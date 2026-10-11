@@ -11,7 +11,7 @@
   [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=flat-square&logo=supabase&logoColor=white)](https://supabase.com/)
 
   Host live multiplayer auctions with friends, manage budgets, and bid in real-time.<br />
-  Draft your Fantasy squad, sync with real-world match scorecards, and compete globally.<br />
+  Evaluate your drafted squad using the advanced Franchise Strength rating system.<br />
   Experience sub-second latency bidding backed by a sophisticated hybrid database architecture.
 
   [Play Now](https://crickauction.in) • [Documentation](#documentation) • [Releases](https://github.com/Shaurya01836/ipl-auction/releases) • [Contributing](#develop-and-contribute)
@@ -60,8 +60,8 @@ This is the core experience. When the auction starts, every connected user sees 
 *(See the massive image at the top of this page!)*
 <br />
 
-### 5. Final Squads & Fantasy League
-When all players are sold, the room automatically flushes its data from the active Firebase node into long-term Supabase storage to keep the database lightweight. You can review every team's final squad, see how much they spent, and draft your best 11 players into the Fantasy Arena to earn points based on real-world cricket matches!
+### 5. Final Squads & Franchise Ratings
+When all players are sold, the room automatically flushes its data from the active Firebase node into long-term Supabase storage to keep the database lightweight. You can review every team's final squad, switch between list and detailed player cards, and see how your team ranks globally using the built-in **Franchise Strength** evaluation system—which calculates your squad's average rating based on player career stats, form, and experience!
 <div align="center">
   <img src="./readme-assets/auction_summary.png" alt="Auction Results and Squad Summaries" width="80%">
 </div>
@@ -107,8 +107,8 @@ Sophisticated mobile UI featuring touch-scrollable participant overlays, micro-a
 **Hybrid Database Architecture**
 Ultra-fast live bidding ticks and real-time chat powered by Firebase RTDB with zero document-read costs, backed by Supabase PostgreSQL for high-capacity public directory indexing.
 
-**Automatic Sync Scripts**
-Node.js utilities inside `scripts/` automate the fetching of IPL match scorecards from CricAPI and sync global fantasy points directly into the database.
+**Automated Squad Evaluation**
+Built-in evaluation algorithms automatically generate player ratings based on historical T20 career data, striking baselines, and experience vectors to objectively score the strength of every constructed franchise.
 
 ---
 
