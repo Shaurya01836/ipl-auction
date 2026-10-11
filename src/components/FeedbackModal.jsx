@@ -17,7 +17,7 @@ const FeedbackModal = () => {
   const location = useLocation();
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState(1);
   const [hoverRating, setHoverRating] = useState(0);
   const [category, setCategory] = useState('general');
   const [email, setEmail] = useState('');
@@ -41,6 +41,7 @@ const FeedbackModal = () => {
       const authType = user ? (isGuest ? 'guest' : 'google') : 'anonymous';
       const userEmail = user?.email || email.trim() || 'Not provided';
       const userName = user?.displayName || (isGuest ? 'Guest Manager' : 'Anonymous');
+      const finalRating = Math.max(1, Math.min(5, Number(rating) || 1));
 
       await addDoc(collection(db, 'feedbacks'), {
         email: userEmail,
@@ -49,7 +50,7 @@ const FeedbackModal = () => {
         userId: user?.uid || null,
         userPhoto: user?.photoURL || null,
         category,
-        rating,
+        rating: finalRating,
         feedback: feedbackText.trim(),
         createdAt: serverTimestamp(),
       });
@@ -68,7 +69,7 @@ const FeedbackModal = () => {
       setError(null);
       setEmail('');
       setFeedbackText('');
-      setRating(0);
+      setRating(1);
       setCategory('general');
     }, 350);
   };
