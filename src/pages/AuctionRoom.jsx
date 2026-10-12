@@ -103,6 +103,52 @@ const AuctionRoom = () => {
 
    const displayAuctionState = optimisticState || currentAuction?.currentAuction;
 
+   // Real-time team ratings calculated entirely in browser memory (0 DB / infra cost)
+   const liveTeamRatings = useMemo(() => {
+      const playerMap = new Map(IPL_PLAYERS.map(p => [p.id, p]));
+      const ratingMap = {};
+
+      TEAMS.forEach(team => {
+         const teamDoc = roomTeams.find(doc => doc.teamId === team.id);
+         const squad = teamDoc?.squad || [];
+
+         let totalRating = 0;
+         let ratedPlayersCount = 0;
+
+         squad.forEach(member => {
+            const pid = typeof member === 'string' ? member : member.id;
+            const pInfo = playerMap.get(pid);
+            if (pInfo?.rating) {
+               totalRating += pInfo.rating;
+               ratedPlayersCount += 1;
+            }
+         });
+
+         const avgRating = ratedPlayersCount > 0 ? (totalRating / ratedPlayersCount).toFixed(1) : null;
+
+         ratingMap[team.id] = {
+            totalRating,
+            avgRating,
+            playerCount: squad.length
+         };
+      });
+
+      // Sorted ranking descending by avgRating, then totalRating, then team name
+      const rankedTeams = [...TEAMS].sort((a, b) => {
+         const rA = ratingMap[a.id]?.avgRating ? parseFloat(ratingMap[a.id].avgRating) : 0;
+         const rB = ratingMap[b.id]?.avgRating ? parseFloat(ratingMap[b.id].avgRating) : 0;
+         if (rB !== rA) return rB - rA;
+
+         const tA = ratingMap[a.id]?.totalRating || 0;
+         const tB = ratingMap[b.id]?.totalRating || 0;
+         if (tB !== tA) return tB - tA;
+
+         return a.name.localeCompare(b.name);
+      });
+
+      return { ratingMap, rankedTeams };
+   }, [roomTeams, IPL_PLAYERS]);
+
 
    // Audio unlocker for mobile devices
    useEffect(() => {
@@ -914,11 +960,12 @@ const AuctionRoom = () => {
                </div>
 
                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar touch-pan-y min-h-0">
-                  {TEAMS.map((t, idx) => {
+                  {(liveTeamRatings?.rankedTeams || TEAMS).map((t, idx) => {
                      const teamDoc = roomTeams.find(doc => doc.teamId === t.id);
                      const manager = currentAuction?.players?.find(p => p.id === teamDoc?.userId);
                      const isMyTeam = manager?.id === user?.uid;
                      const isSelected = selectedTeamId === (manager?.id || t.id);
+                     const ratingInfo = liveTeamRatings?.ratingMap[t.id];
 
                      return (
                         <div key={idx} className="border-b border-white/5 last:border-b-0 py-1">
@@ -926,8 +973,9 @@ const AuctionRoom = () => {
                               onClick={() => setSelectedTeamId(isSelected ? null : (manager?.id || t.id))}
                               className={`w-full text-left py-3 px-2 rounded-xl transition-all flex items-center justify-between group cursor-pointer ${isSelected ? 'bg-white/[0.03]' : 'hover:bg-white/[0.02]'}`}
                            >
-                              <div className="flex items-center gap-3">
-                                 <div className="w-9 h-9 rounded-lg bg-white/5 p-1 flex items-center justify-center">
+                              <div className="flex items-center gap-2.5">
+                                 <span className="w-4 text-[10px] font-black text-gray-500 text-center shrink-0">{idx + 1}</span>
+                                 <div className="w-8 h-8 rounded-lg bg-white/5 p-1 flex items-center justify-center shrink-0">
                                     <img src={t.logo} alt={`${t.name} Logo`} className="w-full h-full object-contain" />
                                  </div>
                                  <div className="overflow-hidden">
@@ -971,6 +1019,7 @@ const AuctionRoom = () => {
                                        {/* Header Stats */}
                                        <div className="flex items-center justify-between text-[9px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5 pb-2">
                                           <span>Spent: <span className="text-yellow-500">₹{((currentAuction?.settings?.budget || 120) - (teamDoc?.budgetRemaining || (currentAuction?.settings?.budget || 120))).toFixed(2)} Cr</span></span>
+                                          <span>Rating: <span className="text-amber-400 font-extrabold">{ratingInfo?.avgRating ? `${ratingInfo.avgRating}` : 'N/A'}</span></span>
                                           <span>Overseas: <span className="text-white">{(teamDoc?.squad?.filter(s => {
                                              const pid = typeof s === 'string' ? s : s.id;
                                              return IPL_PLAYERS.find(pl => pl.id === pid)?.country !== 'IND';
@@ -1004,7 +1053,12 @@ const AuctionRoom = () => {
                                                                <div className="flex items-center gap-2">
                                                                   <img src={p?.image} alt={p?.name || 'Player'} className="w-5 h-5 object-contain rounded bg-white/5" />
                                                                   <div className="overflow-hidden">
-                                                                     <h5 className="text-[10px] font-semibold text-gray-200 truncate max-w-[90px]">{p?.name}</h5>
+                                                                     <div className="flex items-center gap-1">
+                                                                        <h5 className="text-[10px] font-semibold text-gray-200 truncate max-w-[80px]">{p?.name}</h5>
+                                                                        {p?.rating && (
+                                                                           <span className="text-[8px] text-amber-400/80 font-medium">★{p.rating}</span>
+                                                                        )}
+                                                                     </div>
                                                                   </div>
                                                                </div>
                                                                <span className="text-[9px] font-bold text-yellow-500">
@@ -1062,41 +1116,101 @@ const AuctionRoom = () => {
                <main className="flex-1 overflow-y-auto p-4 md:p-8 flex flex-col items-center custom-scrollbar">
                   <div className="w-full max-w-4xl flex flex-col gap-4 md:gap-6">
                      <AnimatePresence mode="wait">
-                        {(displayAuctionState?.status === 'sold' || displayAuctionState?.status === 'unsold') ? (
-                           <motion.div
-                              key="celebration"
-                              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                              animate={{ opacity: 1, scale: 1, y: 0 }}
-                              exit={{ opacity: 0, scale: 1.1 }}
-                              className={`w-full max-w-2xl mx-auto min-h-[400px] flex flex-col items-center justify-center rounded-[2.5rem] overflow-hidden relative shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/20 ${displayAuctionState.status === 'sold' ? (TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.color || 'bg-green-500') : 'bg-red-950'}`}
-                           >
-                              {/* Confetti deleted for brevity during recovery */}
-                              <div className="flex flex-col items-center text-center z-10 px-8 py-10 w-full bg-gradient-to-b from-white/10 to-transparent">
-                                 <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="relative mb-6">
-                                    <img src={currentPlayer.image} alt={currentPlayer.name} className="w-32 h-32 md:w-36 md:h-40 object-cover rounded-3xl border-4 border-white/30 shadow-2xl relative z-10" />
-                                 </motion.div>
-                                 <motion.h2 initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="text-xl sm:text-2xl md:text-3xl font-black text-white uppercase tracking-tighter mb-1 drop-shadow-md">
-                                    {currentPlayer.name}
-                                 </motion.h2>
-                                 <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.4, type: 'spring' }} className="text-4xl sm:text-6xl md:text-8xl font-black  tracking-tighter text-white drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)] mb-6">
-                                    {displayAuctionState.status === 'sold' ? 'SOLD' : 'UNSOLD'}
-                                 </motion.div>
-                                 {displayAuctionState.status === 'sold' && (
-                                    <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }} className="flex flex-col items-center gap-4 w-full">
-                                       <div className="bg-black/40 backdrop-blur-xl px-6 sm:px-10 py-3 rounded-full border border-yellow-500/50 shadow-[0_0_30px_rgba(234,179,8,0.3)]">
-                                          <span className="text-2xl sm:text-4xl md:text-5xl font-black text-yellow-500 tracking-tight">₹{(displayAuctionState.currentBid || 0).toFixed(2)} Cr</span>
-                                       </div>
-                                       <div className="bg-white/10 backdrop-blur-md px-8 py-3 rounded-2xl border border-white/20 flex items-center gap-3">
-                                          <div className={`w-10 h-10 rounded-xl bg-white/5 border border-white/10 p-1.5 flex items-center justify-center`}>
-                                             <img src={TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.logo} alt="High Bidder Team Logo" className="w-full h-full object-contain" />
-                                          </div>
-                                          <span className="text-base sm:text-lg md:text-xl font-black uppercase text-white tracking-widest">{TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId)?.name || 'Franchise'}</span>
-                                       </div>
-                                    </motion.div>
-                                 )}
-                              </div>
-                           </motion.div>
-                        ) : (
+                        {(displayAuctionState?.status === 'sold' || displayAuctionState?.status === 'unsold') ? (() => {
+                            const isSold = displayAuctionState.status === 'sold';
+                            const buyerTeam = isSold ? TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId) : null;
+                            const slogan = isSold ? (TEAM_SLOGANS[buyerTeam?.id] || { slogan: 'IPL 2026!', hashtag: '#IPL' }) : null;
+
+                            return (
+                               <motion.div
+                                  key="celebration"
+                                  initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                                  exit={{ opacity: 0, scale: 1.05 }}
+                                  className="w-full max-w-sm sm:max-w-md mx-auto"
+                               >
+                                  <div className="relative w-full rounded-[2rem] overflow-hidden bg-[#0A0A0B] border border-white/15 shadow-[0_24px_70px_rgba(0,0,0,0.8)]">
+                                     {/* Franchise Ambient Glow Background */}
+                                     <div className={`absolute inset-0 opacity-25 bg-gradient-to-br ${isSold && buyerTeam ? buyerTeam.color.replace('bg-', 'from-') : 'from-red-600'} to-black`} />
+                                     <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.15)_1px,transparent_1px)] [background-size:12px_12px] opacity-20 pointer-events-none" />
+
+                                     <div className="relative p-5 sm:p-6 flex flex-col justify-between gap-4 z-10">
+                                        {/* Top Bar: Team Logo & Status info */}
+                                        <div className="flex justify-between items-start">
+                                           {isSold && buyerTeam ? (
+                                              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/15 shadow-lg">
+                                                 <img src={buyerTeam.logo} alt={`${buyerTeam.name} Logo`} className="w-full h-full object-contain" />
+                                              </div>
+                                           ) : (
+                                              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-red-500/10 backdrop-blur-md rounded-2xl p-2 border border-red-500/20 flex items-center justify-center">
+                                                 <span className="text-xl">🏏</span>
+                                              </div>
+                                           )}
+
+                                           <div className="text-right uppercase tracking-[0.15em] sm:tracking-[0.2em]">
+                                              <span className="text-[7.5px] sm:text-[8.5px] font-black text-yellow-500 block">IPL Auction 2026</span>
+                                              {isSold ? (
+                                                 <>
+                                                    <span className="text-[9px] sm:text-[10px] font-bold text-white/50 leading-none block">Sold to</span>
+                                                    <span className="text-xs sm:text-sm font-black text-white block mt-0.5">{displayAuctionState.highBidderName || buyerTeam?.name}</span>
+                                                 </>
+                                              ) : (
+                                                 <span className="text-xs sm:text-sm font-black text-red-400 block mt-0.5">Unsold</span>
+                                              )}
+                                           </div>
+                                        </div>
+
+                                        {/* Center: Player Portrait with Team Glow */}
+                                        <div className="flex flex-col justify-center items-center py-1 sm:py-2">
+                                           <div className="relative w-32 h-32 sm:w-40 sm:h-40 group">
+                                              <div className={`absolute inset-0 rounded-full blur-3xl opacity-40 ${isSold && buyerTeam ? buyerTeam.color : 'bg-red-500'}`} />
+                                              <img
+                                                 src={currentPlayer?.image}
+                                                 className="relative w-full h-full object-contain z-10 drop-shadow-[0_10px_30px_rgba(0,0,0,0.7)]"
+                                                 alt={currentPlayer?.name || 'Player'}
+                                                 onError={(e) => {
+                                                    e.target.onerror = null;
+                                                    e.target.src = 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(currentPlayer?.name || 'Player');
+                                                 }}
+                                              />
+                                           </div>
+                                           <div className="text-center mt-3">
+                                              <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white leading-tight">
+                                                 {currentPlayer?.name}
+                                              </h2>
+                                              <p className="text-[9.5px] sm:text-[10.5px] font-bold text-gray-400 uppercase tracking-[0.2em] sm:tracking-[0.25em] mt-0.5">
+                                                 {currentPlayer?.role} • {currentPlayer?.country}
+                                              </p>
+                                           </div>
+                                        </div>
+
+                                        {/* Bottom Bar: Slogan & Price Badge */}
+                                        <div className="space-y-2.5">
+                                           {isSold && slogan && (
+                                              <div className="text-center">
+                                                 <p className="text-xs sm:text-sm font-black italic uppercase tracking-wider text-yellow-400 drop-shadow-md">
+                                                    #{slogan.slogan}
+                                                 </p>
+                                              </div>
+                                           )}
+
+                                           <div className={`backdrop-blur-md border p-3 rounded-2xl text-center ${isSold ? 'bg-white/5 border-white/10' : 'bg-red-500/10 border-red-500/20'}`}>
+                                              {isSold ? (
+                                                 <p className="text-xl sm:text-2xl font-black text-white">
+                                                    ₹{(displayAuctionState.currentBid || 0).toFixed(2)} Cr
+                                                 </p>
+                                              ) : (
+                                                 <p className="text-base sm:text-lg font-black text-red-400 uppercase tracking-widest">
+                                                    UNSOLD
+                                                 </p>
+                                              )}
+                                           </div>
+                                        </div>
+                                     </div>
+                                  </div>
+                               </motion.div>
+                            );
+                         })() : (
                            <motion.div key="player-card" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full flex-col gap-4 md:gap-6 flex">
                               <div className="bg-gradient-to-b from-[#161616] to-[#0f0f0f] border border-white/[0.08] rounded-[2rem] overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.6)] relative min-h-[400px]">
                                  <div className="absolute top-0 inset-x-0 h-1 bg-white/5">
