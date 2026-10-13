@@ -130,7 +130,7 @@ export default function AuctionActivityFeed({ activeCount = 0 }) {
       </div>
 
       {/* Compact Single-line Signings List */}
-      <div className="h-[330px] overflow-hidden relative flex flex-col gap-1.5">
+      <div className="h-[111px] md:h-[330px] overflow-hidden relative flex flex-col gap-1.5">
         <AnimatePresence initial={false}>
           {notifications.map((notif) => (
             <motion.div

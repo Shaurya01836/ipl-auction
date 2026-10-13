@@ -86,7 +86,7 @@ const FeedbackModal = () => {
         whileTap={{ scale: 0.95 }}
         className="fixed bottom-20 right-6 z-[90] flex items-center gap-2 bg-[#0a0a0a]/80 hover:bg-[#ff5500]/10 text-white px-3.5 py-2 rounded-full border border-white/10 hover:border-[#ff5500]/30 backdrop-blur-xl shadow-2xl transition-all duration-300 group cursor-pointer"
       >
-        <MessageSquarePlus className="w-3.5 h-3.5 text-[#ff5500] group-hover:text-[#ff5500]" />
+        <MessageSquarePlus className="w-3.5 h-3.5" />
         <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/70 group-hover:text-white transition-colors duration-300">
           Feedback
         </span>
