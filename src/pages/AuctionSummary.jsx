@@ -395,15 +395,15 @@ const AuctionSummary = () => {
                       <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-8 relative z-10 border-t sm:border-t-0 pt-3 sm:pt-0 border-white/5">
                         {/* Summary Stats */}
                         <div className="flex items-center gap-4 sm:gap-6 md:gap-12 text-left sm:text-right sm:border-r border-white/5 sm:pr-6 md:pr-12">
-                          <div>
+                          <div className="shrink-0">
                             <span className="block text-[7px] sm:text-[8px] font-black text-blue-500 uppercase tracking-widest mb-0.5">Players</span>
                             <span className="text-xs sm:text-lg font-black">{squad.length}</span>
                           </div>
-                          <div>
+                          <div className="shrink-0">
                             <span className="block text-[7px] sm:text-[8px] font-black text-purple-500 uppercase tracking-widest mb-0.5">Overseas</span>
                             <span className="text-xs sm:text-lg font-black">{osCount}</span>
                           </div>
-                          <div>
+                          <div className="shrink-0">
                             <span className="block text-[7px] sm:text-[8px] font-black text-orange-500 uppercase tracking-widest mb-0.5">Spent</span>
                             <span className="text-xs sm:text-lg font-black">₹{totalSpent.toFixed(1)}Cr</span>
                           </div>

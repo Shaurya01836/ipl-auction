@@ -25,7 +25,7 @@ const Footer = () => {
             Terms & Conditions
           </Link>
           {isAdmin && (
-            <Link to="/admin" className="px-2 sm:px-6 py-4 text-[#ff5500] hover:bg-[#ff5500]/10 transition-colors flex items-center justify-center whitespace-nowrap border-white/10">
+            <Link to="/admin" className="px-2 sm:px-6 py-4 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center whitespace-nowrap border-white/10">
               Admin Dashboard
             </Link>
           )}

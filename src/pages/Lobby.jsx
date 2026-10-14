@@ -408,7 +408,7 @@ const Lobby = () => {
 
   // ─── Authenticated State ───
   return (
-    <div className="relative min-h-screen bg-[#050505] flex flex-col items-center py-8 px-4 font-sans text-white overflow-x-hidden">
+    <div className="relative min-h-screen bg-[#050505] flex flex-col items-center pt-8 px-4 font-sans text-white overflow-x-hidden">
 
       {/* Premium Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -418,47 +418,47 @@ const Lobby = () => {
       </div>
 
       {/* Top Navigation */}
-      <div className="w-full max-w-6xl flex flex-wrap items-center justify-between gap-3 sm:gap-4 mb-6 md:mb-10 z-20 px-2 sm:px-4">
-        <div className="flex items-center gap-2 sm:gap-4">
+      <div className="w-full max-w-6xl flex flex-nowrap items-center justify-between gap-1.5 sm:gap-2 md:gap-4 mb-6 md:mb-10 z-20 px-2 sm:px-4 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex items-center gap-1.5 sm:gap-3 md:gap-4 min-w-0">
           <button
             onClick={() => navigate('/')}
-            className="p-2.5 sm:p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl sm:rounded-2xl transition-all group flex items-center gap-2"
+            className="shrink-0 p-2 sm:p-2.5 md:p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl sm:rounded-2xl transition-all group flex items-center gap-1.5 sm:gap-2"
             title="Exit Hub"
           >
-            <Home size={18} className="group-hover:scale-110 transition-transform" />
-            <span className="text-[10px] font-black uppercase tracking-widest hidden sm:block">Exit Hub</span>
+            <Home size={16} className="group-hover:scale-110 transition-transform shrink-0" />
+            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest hidden sm:block whitespace-nowrap">Exit Hub</span>
           </button>
-          <div className="h-8 sm:h-10 w-px bg-white/10" />
-          <div className="flex flex-col">
-            <span className="text-[7px] sm:text-[9px] font-black text-gray-500 uppercase tracking-widest leading-none mb-0.5 sm:mb-1">Room ID</span>
-            <span className="text-base sm:text-xl font-black text-white tracking-tight leading-none">{id}</span>
+          <div className="h-6 sm:h-8 md:h-10 w-px bg-white/10 shrink-0" />
+          <div className="flex flex-col min-w-0">
+            <span className="text-[7px] sm:text-[9px] font-black text-gray-500 uppercase tracking-widest leading-none mb-0.5 sm:mb-1 whitespace-nowrap">Room ID</span>
+            <span className="text-sm sm:text-base md:text-xl font-black text-white tracking-tight leading-none truncate">{id}</span>
           </div>
           {spectateMode && (
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 font-black text-[9px] uppercase tracking-widest">
-              <Eye size={12} />
+            <div className="flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 font-black text-[8px] sm:text-[9px] uppercase tracking-widest whitespace-nowrap shrink-0">
+              <Eye size={10} className="sm:w-3 sm:h-3" />
               <span>SPECTATING</span>
             </div>
           )}
         </div>
 
         {isAdmin && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
               onClick={() => fillEmptyTeamsWithBots(id)}
-              className="px-4 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-wider text-orange-400 hover:text-orange-300 transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+              className="shrink-0 px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl sm:rounded-2xl font-black text-[9px] sm:text-[10px] md:text-xs uppercase tracking-wider text-orange-400 hover:text-orange-300 transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer active:scale-95 whitespace-nowrap"
               title="Add AI Bots to unassigned franchises"
             >
-              <Zap size={14} className="text-orange-400" />
+              <Zap size={12} className="text-orange-400 shrink-0 sm:w-[14px] sm:h-[14px]" />
               <span>Fill Bots</span>
             </button>
             <button
               onClick={handleStartAuction}
               disabled={isStarting}
-              className="relative overflow-hidden group px-4 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-wider sm:tracking-widest shadow-[0_10px_30px_rgba(255,85,0,0.3)] disabled:opacity-50 transition-all active:scale-95 cursor-pointer shrink-0"
+              className="relative overflow-hidden group shrink-0 px-3 sm:px-4 md:px-8 py-2 sm:py-2.5 md:py-3 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] rounded-xl sm:rounded-2xl font-black text-[9px] sm:text-[10px] md:text-xs uppercase tracking-wider md:tracking-widest shadow-[0_10px_30px_rgba(255,85,0,0.3)] disabled:opacity-50 transition-all active:scale-95 cursor-pointer whitespace-nowrap"
             >
               <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-              <div className="relative flex items-center gap-1.5 sm:gap-2">
-                {isStarting && <Loader2 size={16} className="animate-spin" />}
+              <div className="relative flex items-center gap-1 sm:gap-1.5 md:gap-2">
+                {isStarting && <Loader2 size={14} className="animate-spin shrink-0 md:w-4 md:h-4" />}
                 <span>{isStarting ? 'Igniting...' : 'Start Auction'}</span>
               </div>
             </button>
@@ -483,10 +483,10 @@ const Lobby = () => {
             {/* Background glow blob */}
             <div className="absolute -top-12 -right-12 w-24 h-24 bg-white/5 blur-[40px] rounded-full pointer-events-none" />
 
-            {/* Battle Rules Section */}
+            {/* Auction Rules Section */}
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Battle Rules</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Auction Rules</h3>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -575,7 +575,7 @@ const Lobby = () => {
             {/* Share Section */}
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Invite Crew Members</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Invite Players</h3>
               </div>
 
               <div className="flex gap-3">
@@ -622,7 +622,7 @@ const Lobby = () => {
             {/* Tabs Header */}
             <div className="flex bg-white/[0.02] p-1.5 gap-1.5 rounded-2xl mb-6 border border-white/5">
               {[
-                { id: 'players', icon: Users, label: `Crew` },
+                { id: 'players', icon: Users, label: `Players` },
                 { id: 'chat', icon: MessageSquare, label: 'Chat' }
               ].map(tab => (
                 <button
@@ -656,7 +656,7 @@ const Lobby = () => {
                           key={`${player.id}-${idx}`}
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0, transition: { delay: idx * 0.05 } }}
-                          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white/[0.01] border border-white/5 p-3.5 sm:p-4 rounded-2xl group transition-all hover:bg-white/[0.03] hover:border-white/10"
+                          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-3 bg-white/[0.01] border border-white/5 p-3 sm:p-4 rounded-2xl group transition-all hover:bg-white/[0.03] hover:border-white/10"
                         >
                           <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto">
                             <div className="w-11 h-11 sm:w-12 sm:h-12 shrink-0 rounded-2xl border border-white/10 flex items-center justify-center shadow-2xl relative overflow-hidden bg-white/5 p-1.5">
