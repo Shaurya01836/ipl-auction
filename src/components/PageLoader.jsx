@@ -1,61 +1,27 @@
 import React, { useState, useEffect } from 'react';
+// `motion` is used only inside JSX; core no-unused-vars can't detect that.
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
-import { Gavel } from 'lucide-react';
+import { Gavel, ChevronRight } from 'lucide-react';
 
 const GAME_TIPS = [
-  "TIP: Manage your budget carefully. Overspending early on marquee players might leave you with a weak squad.",
-  "DID YOU KNOW: MS Dhoni has captained the most matches in IPL history, leading in over 220 games.",
-  "TIP: Make sure to retain at least one top-tier spinner. They are crucial during the middle overs.",
-  "DID YOU KNOW: Virat Kohli holds the record for the most runs in a single IPL season, scoring 973 runs in 2016.",
-  "TIP: Keep an eye on the base price of players. Snatching quality players at base price is the key to winning.",
-  "DID YOU KNOW: Chris Gayle holds the record for the highest individual score in IPL history - 175* off 66 balls.",
-  "TIP: Pace bowlers with good yorker execution are essential for controlling the death overs."
+  "TIP: Hosting a room is free. Tap Create Room, pick your franchise, and share the 6-character code with your crew.",
+  "TIP: Playing solo? Hit Fill Bots in the lobby to let smart AI managers fill every empty franchise instantly.",
+  "TIP: Public rooms are listed in the Join tab - jump into an open auction without needing a room code.",
+  "TIP: Watch your purse. Reserve budget for your mandatory squad slots so you are never priced out late.",
+  "DID YOU KNOW: CrickAuction enforces the overseas quota automatically - max 8 in Mega, 4 in Classic, 2 in Sprint.",
+  "TIP: Toggle your room Public or Private before starting so only the right players can join.",
+  "DID YOU KNOW: Every completed auction is saved to your History tab with full squads, spends, and ratings.",
+  "TIP: No account needed - continue as a guest manager and start bidding in seconds."
 ];
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.15,
-      delayChildren: 0.1
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      type: "spring",
-      stiffness: 70,
-      damping: 15
-    }
-  }
-};
-
-const imageVariants = {
-  hidden: { opacity: 0, scale: 0.95 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 50,
-      damping: 15,
-      delay: 0.2
-    }
-  }
-};
-
 const PageLoader = ({ isGame = false }) => {
-  const [progress, setProgress] = useState(0);
+  const [, setProgress] = useState(0);
   const [tipIndex, setTipIndex] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   // Ensure loader UI stays visible for at least 2 seconds
   const [showLoader, setShowLoader] = useState(true);
+  const skippedIntro = useSkippedLocalState();
 
   // Check if we are on the landing page
   const isGameMode = isGame || (typeof window !== 'undefined' && window.location.pathname === '/');
@@ -101,7 +67,7 @@ const PageLoader = ({ isGame = false }) => {
     const switchTimeout = setTimeout(() => {
       if (simulatedInterval) clearInterval(simulatedInterval);
       startRealProgress();
-      // Ensure at least 2 s display before considering load
+      // Ensure at least 2s display before considering load
       if (document.readyState === 'complete') {
         finishLoading();
       } else {
@@ -111,10 +77,10 @@ const PageLoader = ({ isGame = false }) => {
 
     // No immediate load listener; will be attached after simulated phase
     
-  // Rotate tips every 4 seconds
+  // Rotate tips every 10 seconds
     const tipTimer = setInterval(() => {
       setTipIndex((prev) => (prev + 1) % GAME_TIPS.length);
-    }, 4000);
+    }, 10000);
 
     // Keyboard listener to skip/continue
     const handleKeyDown = (e) => {
@@ -144,12 +110,9 @@ const PageLoader = ({ isGame = false }) => {
     document.dispatchEvent(new CustomEvent('skipIntro'));
   };
 
-  if (isGameMode && !skippedLocalState(isLoaded)) {
+  if (isGameMode && !skippedIntro) {
     return (
       <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
         className="fixed inset-0 z-[9999] bg-[#050505] flex flex-col justify-end p-6 md:p-12 overflow-hidden select-none font-sans text-white"
       >
 
@@ -175,37 +138,36 @@ const PageLoader = ({ isGame = false }) => {
             className="absolute -bottom-[10%] -right-[10%] w-[60%] h-[60%] bg-blue-600/10 blur-[130px] rounded-full"
           />
 
-          {/* Subtle Grid Pattern Overlay */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+          {/* Texture Overlay (slow diagonal drift, top to bottom) */}
+          <motion.div
+            animate={{ x: [0, 400], y: [0, 400] }}
+            transition={{ duration: 70, repeat: Infinity, ease: "linear" }}
+            className="absolute -inset-[400px] bg-[url('https://res.cloudinary.com/drl6ky9as/image/upload/v1792012081/texture_os1ukf.jpg')] bg-repeat bg-[length:400px_400px] opacity-[0.3] mix-blend-screen"
+          />
 
           {/* Radial Overlay to darken edges (Vignette) */}
           <div className="absolute inset-0 bg-radial-[circle_at_center,transparent_20%,#050505_95%]" />
         </div>
 
-        {/* Top-Right: Game Info Tag */}
-        <motion.div
-          variants={itemVariants}
-          className="absolute top-6 right-6 z-10 flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1 rounded-sm text-[9px] font-black uppercase tracking-widest text-orange-400"
+        {/* Top-Right: Brand Lockup */}
+        <div
+          className="absolute top-6 right-6 z-10 flex items-center gap-2.5 bg-white/[0.04] border border-white/10 pl-2 pr-4 py-2 rounded-full backdrop-blur-md shadow-[0_8px_30px_rgba(0,0,0,0.4)]"
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-          IPL Auction Simulator
-        </motion.div>
-
-        {/* Left/Center Side: Decorative Cricket Artwork (Responsive and Fitted) */}
-        <motion.div
-          variants={imageVariants}
-          className="absolute left-1/2 -translate-x-1/2 md:translate-x-0 md:left-4 top-16 bottom-[180px] md:bottom-[130px] w-[85vw] md:w-[50vw] max-w-[650px] z-10 flex items-center justify-center p-0 select-none pointer-events-none"
-        >
-          <img 
-            src="https://res.cloudinary.com/drl6ky9as/image/upload/v1791619857/auct1_cmavig.png"
-            alt="IPL Auction Loading" 
-            className="w-full h-full object-contain filter drop-shadow-[0_15px_45px_rgba(249,115,22,0.25)] opacity-95"
-          />
-        </motion.div>
+          <span className="flex items-center justify-center w-7 h-7 rounded-full bg-white/15 border border-white/30">
+            <Gavel size={14} className="" />
+          </span>
+          <div className="flex flex-col leading-none">
+            <span
+              className="text-[20px] bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent"
+              style={{ fontFamily: '"Geist Pixel", Silkscreen, VT323, "Geist Mono", monospace', fontWeight: 600 }}
+            >
+              CrickAuction
+            </span>
+          </div>
+        </div>
 
         {/* Bottom Loading Bar & Tips */}
-        <motion.div
-          variants={itemVariants}
+        <div
           className="relative z-10 w-full max-w-7xl mx-auto flex flex-col gap-6"
         >
 
@@ -218,49 +180,56 @@ const PageLoader = ({ isGame = false }) => {
                 Loading Tip
               </span>
               <div className="min-h-[40px] flex items-center">
-                <AnimatePresence mode="wait">
-                  <motion.p
-                    key={tipIndex}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 10 }}
-                    transition={{ duration: 0.3 }}
-                    className="text-xs md:text-sm font-semibold tracking-wide text-white/90 leading-relaxed"
-                  >
-                    {GAME_TIPS[tipIndex]}
-                  </motion.p>
-                </AnimatePresence>
+                <p className="text-xs md:text-sm font-semibold tracking-wide text-white/90 leading-relaxed">
+                  {GAME_TIPS[tipIndex]}
+                </p>
               </div>
             </div>
 
-            {/* Bottom Right: Spinning Cricket Ball Loading Icon */}
+            {/* Bottom Right: Loading indicator / Enter button */}
             <div className="self-end md:self-auto flex items-center gap-4">
-              {(!isLoaded && showLoader) ? (
-                <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 px-4 py-2.5 rounded-md backdrop-blur-md shadow-lg">
-                  <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest">
-                    Loading
-                  </span>
-                  {/* Spinning Cricket ball representation */}
+              <AnimatePresence mode="wait">
+                {(!isLoaded && showLoader) ? (
                   <motion.div
-                    className="w-7 h-7 rounded-full bg-red-600 border border-red-700 relative overflow-hidden flex items-center justify-center shadow-[0_0_10px_rgba(220,38,38,0.5)]"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+                    key="loading"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    className="flex items-center gap-3 bg-white/[0.02] border border-white/5 px-4 py-2.5 rounded-md backdrop-blur-md shadow-lg"
                   >
-                    {/* White ball seam */}
-                    <div className="absolute inset-y-0 left-1/2 w-0.5 bg-white/70 transform -translate-x-1/2 border-dashed border-spacing-1" />
-                    <div className="absolute inset-x-0 top-1/2 h-0.5 bg-white/10 transform -translate-y-1/2" />
+                    <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest">
+                      Loading
+                    </span>
+                    {/* Spinning Cricket ball representation */}
+                    <motion.div
+                      className="w-7 h-7 rounded-full bg-red-600 border border-red-700 relative overflow-hidden flex items-center justify-center shadow-[0_0_10px_rgba(220,38,38,0.5)]"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+                    >
+                      {/* White ball seam */}
+                      <div className="absolute inset-y-0 left-1/2 w-0.5 bg-white/70 transform -translate-x-1/2 border-dashed border-spacing-1" />
+                      <div className="absolute inset-x-0 top-1/2 h-0.5 bg-white/10 transform -translate-y-1/2" />
+                    </motion.div>
                   </motion.div>
-                </div>
-              ) : (
-                <motion.button
-                  onClick={handleContinue}
-                  className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-semibold uppercase tracking-wider text-xs px-6 py-3 rounded-md shadow-lg transition-transform transform hover:scale-105 focus:outline-none"
-                initial={{ scale: 0.95 }}
-                animate={{ scale: 1 }}
-              >
-                  Click to Enter / Press Enter
-                </motion.button>
-              )}
+                ) : (
+                  <motion.div
+                    key="enter"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                  >
+                    <button
+                      onClick={handleContinue}
+                      className="group relative overflow-hidden flex items-center gap-2.5 bg-[#ff5500] text-white font-black uppercase tracking-[0.2em] text-[11px] px-7 py-3.5 rounded-2xl border border-white/10 transition-all cursor-pointer duration-200 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-[#ff5500]/50 focus:ring-offset-2 focus:ring-offset-[#050505]"
+                    >
+                      <span className="relative z-10">Enter Auction Room</span>
+                      <ChevronRight size={15} className="relative z-10 transition-transform duration-200 group-hover:translate-x-0.5" />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
           </div>
@@ -270,7 +239,7 @@ const PageLoader = ({ isGame = false }) => {
             <div className="h-full w-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
           </div>
 
-        </motion.div>
+        </div>
       </motion.div>
     );
   }
@@ -298,8 +267,8 @@ const PageLoader = ({ isGame = false }) => {
   );
 };
 
-// Helper hook/function to check if intro was skipped locally
-const skippedLocalState = (isLoaded) => {
+// Helper hook to check if intro was skipped locally
+const useSkippedLocalState = () => {
   const [skipped, setSkipped] = useState(false);
   useEffect(() => {
     const handleSkip = () => setSkipped(true);

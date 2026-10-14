@@ -161,9 +161,9 @@ const GameGuide = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#050505] text-gray-300 font-sans selection:bg-white/20 selection:text-white flex flex-col">
+    <div className="min-h-screen bg-[#0E0F10] text-[#E5E5E5] font-sans selection:bg-white/20 selection:text-white flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-[#050505]/90 backdrop-blur-md border-b border-white/10 px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-[#0E0F10]/90 backdrop-blur-md border-b border-white/10 px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs font-medium tracking-wide">
           <Link to="/" className="text-gray-400 hover:text-white transition-colors flex items-center gap-1.5">
             <Home size={14} />
@@ -176,7 +176,7 @@ const GameGuide = () => {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col lg:flex-row gap-12 lg:gap-24 items-start w-full flex-1">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex flex-col lg:flex-row gap-8 lg:gap-24 items-start w-full flex-1">
         {/* Left TOC */}
         <aside className="hidden lg:block w-64 shrink-0 sticky top-28">
           <h3 className="text-white font-semibold text-sm mb-4">On this page</h3>
@@ -195,15 +195,30 @@ const GameGuide = () => {
 
         {/* Main Content */}
         <main className="flex-1 max-w-3xl w-full pb-20">
-          <div className="mb-12 border-b border-white/10 pb-8">
+          <div className="mb-8 sm:mb-12 border-b border-white/10 pb-6 sm:pb-8">
             <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-4">Rulebook</h1>
             <p className="text-sm text-gray-500 mb-6">Last updated: October 2, 2026</p>
-            <p className="text-base text-gray-300 leading-relaxed">
+            <p className="text-base text-[#E5E5E5] leading-relaxed">
               This guide outlines how to host live bidding sessions, build balanced championship rosters, manage purse budgets, and utilize AI bots in CrickAuction.
             </p>
           </div>
 
-          <div className="space-y-16">
+          <details className="lg:hidden mb-8 border border-white/10 rounded-md p-4 bg-white/[0.01]">
+            <summary className="cursor-pointer text-sm font-medium text-white">On this page</summary>
+            <nav className="flex flex-col gap-2 mt-3 border-l border-white/10">
+              {sections.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => scrollTo(s.id)}
+                  className={`text-sm text-left pl-3 -ml-[1px] border-l ${activeSection === s.id ? 'border-[#ff5500] text-white' : 'border-transparent text-gray-400'} transition-colors`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </nav>
+          </details>
+
+          <div className="space-y-10 sm:space-y-16">
             
             {/* 1. Game Modes */}
             <section id="modes" className="scroll-mt-24">
@@ -281,7 +296,7 @@ const GameGuide = () => {
                   <div key={idx} className="border-b border-white/10">
                     <button
                       onClick={() => toggleFaq(idx)}
-                      className="w-full py-4 flex items-center justify-between text-left hover:text-white transition-colors text-gray-300 group"
+                      className="w-full py-4 flex items-center justify-between text-left hover:text-white transition-colors text-[#E5E5E5] group"
                     >
                       <span className="text-sm font-medium">{faq.q}</span>
                       <ChevronDown
