@@ -61,6 +61,13 @@ button, .no-select {
   transform: translateZ(0);
 }
 
+/* Pixel display font — matches the loading screen wordmark.
+   Geist Pixel only ships at weight 400, so we pin the weight for crispness. */
+.font-pixel {
+  font-family: "Geist Pixel", Silkscreen, VT323, "Geist Mono", monospace;
+  font-weight: 600;
+}
+
 .ipl-text-gradient {
   background: linear-gradient(135deg, #fff 0%, #d4af37 100%);
   -webkit-background-clip: text;

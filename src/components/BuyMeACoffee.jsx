@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Coffee,
   X,
@@ -48,40 +47,28 @@ const BuyMeACoffee = () => {
   return (
     <>
       {/* FAB — anchored bottom-right */}
-      <motion.button
+      <button
         id="support-fab-button"
         onClick={() => setIsOpen(true)}
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        whileHover={{ scale: 1.05, y: -2 }}
-        whileTap={{ scale: 0.95 }}
         className="fixed bottom-6 right-6 z-[90] flex items-center gap-2 bg-[#0a0a0a]/80 hover:bg-[#ff5500]/10 text-white px-3.5 py-2 rounded-full border border-white/10 hover:border-[#ff5500]/30 backdrop-blur-xl shadow-2xl transition-all duration-300 group cursor-pointer"
       >
         <Coffee className="w-3.5 h-3.5 " />
         <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/70 group-hover:text-white transition-colors duration-300">
           Support
         </span>
-      </motion.button>
+      </button>
 
       {/* Modal Overlay */}
-      <AnimatePresence>
         {isOpen && (
           <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
             {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+            <div
               onClick={() => setIsOpen(false)}
               className="absolute inset-0 bg-black/90 backdrop-blur-md"
             />
 
             {/* Modal Body */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 10 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+            <div
               className="relative w-full max-w-[340px] bg-[#0c0c0c] border border-white/10 rounded-[2rem] overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.8)] flex flex-col"
             >
               {/* Glow orbs */}
@@ -169,14 +156,8 @@ const BuyMeACoffee = () => {
                   </div>
 
                   {/* Custom amount input */}
-                  <AnimatePresence>
                     {selectedTier === 'custom' && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden"
-                      >
+                      <div className="overflow-hidden">
                         <input
                           type="number"
                           value={customAmount}
@@ -186,9 +167,8 @@ const BuyMeACoffee = () => {
                           min="1"
                           autoFocus
                         />
-                      </motion.div>
+                      </div>
                     )}
-                  </AnimatePresence>
                 </div>
 
                 {/* Tagline */}
@@ -234,10 +214,9 @@ const BuyMeACoffee = () => {
                   </p>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         )}
-      </AnimatePresence>
     </>
   );
 };

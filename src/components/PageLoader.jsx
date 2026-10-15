@@ -142,7 +142,7 @@ const PageLoader = ({ isGame = false }) => {
           <motion.div
             animate={{ x: [0, 400], y: [0, 400] }}
             transition={{ duration: 70, repeat: Infinity, ease: "linear" }}
-            className="absolute -inset-[400px] bg-[url('https://res.cloudinary.com/drl6ky9as/image/upload/v1792012081/texture_os1ukf.jpg')] bg-repeat bg-[length:400px_400px] opacity-[0.3] mix-blend-screen"
+            className="absolute -inset-[400px] bg-[url('https://res.cloudinary.com/drl6ky9as/image/upload/v1792012081/texture_os1ukf.jpg')] bg-repeat bg-[length:600px_600px] sm:bg-[length:800px_800px] opacity-[0.45] mix-blend-screen"
           />
 
           {/* Radial Overlay to darken edges (Vignette) */}
