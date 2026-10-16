@@ -183,11 +183,16 @@ const Lobby = () => {
   // ─── Unauthenticated State: Show Login Gateway ───
   if (banError) {
     return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-6 font-primary text-white">
+      <div className="relative min-h-screen bg-[#050505] flex items-center justify-center p-6 font-primary text-white overflow-x-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-orange-800/20 md:bg-orange-700/20 blur-[120px] rounded-full" />
+          <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-blue-600/10 blur-[120px] rounded-full" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://res.cloudinary.com/drl6ky9as/image/upload/v1792012081/texture_os1ukf.jpg')] opacity-[0.25]" />
+        </div>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="max-w-md w-full bg-white/5 border border-white/10 p-12 rounded-[3.5rem] text-center backdrop-blur-3xl relative overflow-hidden"
+          className="max-w-md w-full bg-white/5 border border-white/10 p-12 rounded-[3.5rem] text-center relative z-10 overflow-hidden"
         >
           <div className="absolute top-0 right-0 p-8 w-32 h-32 bg-red-500/10 rounded-full -mr-16 -mt-16 blur-3xl" />
           <div className="absolute bottom-0 left-0 p-8 w-32 h-32 bg-red-500/10 rounded-full -ml-16 -mb-16 blur-3xl" />
@@ -223,14 +228,15 @@ const Lobby = () => {
     return (
       <div className="relative min-h-screen bg-[#050505] flex flex-col items-center justify-center py-12 px-4 font-sans text-white overflow-x-hidden">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-orange-600/20 blur-[120px] rounded-full" />
+          <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-orange-800/20 md:bg-orange-700/20 blur-[120px] rounded-full" />
           <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-blue-600/10 blur-[120px] rounded-full" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://res.cloudinary.com/drl6ky9as/image/upload/v1792012081/texture_os1ukf.jpg')] opacity-[0.25]" />
         </div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative z-10 w-full md:w-xl max-md bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-3 backdrop-blur-3xl shadow-2xl"
+          className="relative z-10 w-full md:w-xl max-md bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-3 shadow-2xl"
         >
           <div className="bg-[#0c0c0c] rounded-[2.2rem] p-8 border border-white/5 flex flex-col items-center text-center">
 
@@ -318,11 +324,16 @@ const Lobby = () => {
 
   if (!currentAuction) {
     return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-6 text-white font-sans">
+      <div className="relative min-h-screen bg-[#050505] flex items-center justify-center p-6 text-white font-sans overflow-x-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-orange-800/20 md:bg-orange-700/20 blur-[120px] rounded-full" />
+          <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-blue-600/10 blur-[120px] rounded-full" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://res.cloudinary.com/drl6ky9as/image/upload/v1792012081/texture_os1ukf.jpg')] opacity-[0.25]" />
+        </div>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="max-w-md w-full bg-white/[0.03] border border-white/10 p-8 rounded-[2.5rem] text-center backdrop-blur-3xl shadow-2xl relative overflow-hidden"
+          className="max-w-md w-full bg-white/[0.03] border border-white/10 p-8 rounded-[2.5rem] text-center relative z-10 shadow-2xl overflow-hidden"
         >
           <div className="absolute top-0 right-0 p-8 w-32 h-32 bg-orange-500/10 rounded-full -mr-16 -mt-16 blur-3xl" />
           <div className="w-20 h-20 bg-orange-500/10 border border-orange-500/20 rounded-3xl flex items-center justify-center mx-auto mb-6 text-orange-500 shadow-2xl">
@@ -348,8 +359,9 @@ const Lobby = () => {
     return (
       <div className="relative min-h-screen bg-[#050505] flex flex-col items-center py-12 px-4 font-sans text-white overflow-x-hidden">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-orange-600/20 blur-[120px] rounded-full" />
+          <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-orange-800/20 md:bg-orange-700/20 blur-[120px] rounded-full" />
           <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-blue-600/10 blur-[120px] rounded-full" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://res.cloudinary.com/drl6ky9as/image/upload/v1792012081/texture_os1ukf.jpg')] opacity-[0.25]" />
         </div>
 
         <motion.div
@@ -412,9 +424,9 @@ const Lobby = () => {
 
       {/* Premium Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-orange-600/20 blur-[120px] rounded-full" />
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-orange-800/20 md:bg-orange-700/20 blur-[120px] rounded-full" />
         <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://res.cloudinary.com/drl6ky9as/image/upload/v1792012081/texture_os1ukf.jpg')] opacity-[0.25]" />
       </div>
 
       {/* Top Navigation */}
@@ -470,7 +482,7 @@ const Lobby = () => {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="w-full max-w-6xl bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-3 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10 relative mt-2"
+        className="w-full max-w-6xl bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-3 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10 relative mt-2"
       >
         {/* Subtle Glow behind panel */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#ff5500]/[0.02] via-[#ff5500]/[0.01] to-transparent rounded-[2.5rem] blur-xl pointer-events-none -z-10" />

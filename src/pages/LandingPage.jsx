@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import GithubStarButton from "../components/GithubStarButton";
 import BuyMeACoffee from "../components/BuyMeACoffee";
+import ConfirmDialog from "../components/ConfirmDialog";
 import AuctionActivityFeed from "../components/AuctionActivityFeed";
 import Footer from "../components/Footer";
 import useDocumentTitle from "../hooks/useDocumentTitle";
@@ -50,6 +51,7 @@ const LandingPage = () => {
   const [historyData, setHistoryData] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [expandedSession, setExpandedSession] = useState(null);
+  const [sessionToDelete, setSessionToDelete] = useState(null);
 
   const [isGuestMode, setIsGuestMode] = useState(false);
   const [guestName, setGuestName] = useState("");
@@ -225,39 +227,51 @@ const LandingPage = () => {
     });
   }, [publicRooms, searchQuery, filterMode]);
 
-  // Delete individual session from Supabase history & public list
-  const handleDeleteHistory = async (e, session) => {
-    e.stopPropagation(); // Prevent accordion toggle
-    if (
-      !window.confirm(
-        `Are you sure you want to delete room "${session.roomId}"?`,
-      )
-    )
-      return;
+  // Confirm + delete an individual session from Supabase history & public list
+  const handleDeleteHistory = async () => {
+    const session = sessionToDelete;
+    if (!session) return;
 
     const roomId = session.roomId;
     const teamDocId = session.id;
 
+    // Optimistically update the UI immediately so no refresh is needed
+    setHistoryData((prev) => prev.filter((item) => item.id !== teamDocId));
+    setPublicRooms((prev) => prev.filter((room) => room.roomId !== roomId));
+    if (expandedSession === teamDocId) setExpandedSession(null);
+    setSessionToDelete(null);
+
     try {
       if (supabase) {
         // 1. Delete user's team row from Supabase
-        await supabase.from("teams").delete().eq("id", teamDocId);
+        const { error: teamError } = await supabase
+          .from("teams")
+          .delete()
+          .eq("id", teamDocId);
+        if (teamError) throw teamError;
+
         // 2. Delete the auction room itself from Supabase
-        await supabase.from("auctions").delete().eq("id", roomId);
+        const { error: roomError } = await supabase
+          .from("auctions")
+          .delete()
+          .eq("id", roomId);
+        if (roomError) throw roomError;
       }
-
-      // 3. Remove room from Realtime Database if still sitting in waiting state
-      try {
-        await remove(ref(rtdb, `auctions/${roomId}`));
-      } catch {
-        // Ignore RTDB cleanup errors
-      }
-
-      // 4. Immediately update local state for both History and Public Rooms
-      setHistoryData((prev) => prev.filter((item) => item.id !== teamDocId));
-      setPublicRooms((prev) => prev.filter((room) => room.roomId !== roomId));
     } catch {
-      // Graceful delete failure
+      // Roll back the optimistic removal if the server delete failed
+      setHistoryData((prev) =>
+        prev.some((item) => item.id === teamDocId) ? prev : [session, ...prev],
+      );
+      setError("Could not delete this room. Please try again.");
+      setTimeout(() => setError(""), 3000);
+      return;
+    }
+
+    // 3. Remove room from Realtime Database if still sitting in waiting state
+    try {
+      await remove(ref(rtdb, `auctions/${roomId}`));
+    } catch {
+      // Ignore RTDB cleanup errors
     }
   };
 
@@ -1156,9 +1170,10 @@ const LandingPage = () => {
                                 </div>
                                 <button
                                   type="button"
-                                  onClick={(e) =>
-                                    handleDeleteHistory(e, session)
-                                  }
+                                  onClick={(e) => {
+                                    e.stopPropagation(); // Prevent accordion toggle
+                                    setSessionToDelete(session);
+                                  }}
                                   title="Delete History"
                                   aria-label="Delete history"
                                   className="p-1 sm:p-1.5 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
@@ -1310,6 +1325,17 @@ const LandingPage = () => {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={!!sessionToDelete}
+        title="Delete This Room?"
+        description="This permanently removes the room and its squad history for everyone. This action cannot be undone."
+        detail={sessionToDelete ? `Room ${sessionToDelete.roomId}` : ""}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onConfirm={handleDeleteHistory}
+        onCancel={() => setSessionToDelete(null)}
+      />
 
       <Footer />
     </main>

@@ -187,7 +187,7 @@ const AuctionSummary = () => {
 
   if ((loading && !activeAuction) || (!activeAuction && summaryLoading)) {
     return (
-      <div className="h-screen bg-[#050505] text-white flex flex-col items-center justify-center p-8 text-center">
+      <div className="h-screen-safe bg-[#050505] text-white flex flex-col items-center justify-center p-8 text-center">
         <div className="w-20 h-20 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin mb-8" />
         <h2 className="text-2xl font-black italic tracking-widest uppercase animate-pulse text-gray-400">Loading Summary...</h2>
       </div>

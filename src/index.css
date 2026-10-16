@@ -8,6 +8,18 @@
   --color-ipl-dark: #0b0e1e;
 }
 
+/* ── Mobile-safe full viewport height ───────────────────────────────────────
+   Uses the dynamic viewport height (dvh) so bottom-fixed chrome such as the
+   auction room's mobile nav bar stays visible when mobile browsers show/hide
+   their URL toolbar. Falls back to 100vh on browsers without dvh support.    */
+@utility h-screen-safe {
+  height: 100vh;
+
+  @supports (height: 100dvh) {
+    height: 100dvh;
+  }
+}
+
 body {
   margin: 0;
   font-family: var(--font-sans);

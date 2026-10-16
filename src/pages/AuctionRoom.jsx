@@ -792,7 +792,7 @@ const AuctionRoom = () => {
       const availableTeams = TEAMS.filter(t => !takenTeamIds.has(t.id));
 
       return (
-         <div className="h-screen bg-[#050505] text-white flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
+         <div className="h-screen-safe bg-[#050505] text-white flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-500/10 blur-[120px] rounded-full" />
             <div className="relative z-10 flex flex-col items-center w-full max-w-2xl">
                {availableTeams.length > 0 ? (
@@ -877,7 +877,7 @@ const AuctionRoom = () => {
    }
 
    return (
-      <div className="h-screen bg-[#0d0d0d] text-white font-sans flex flex-col items-center overflow-hidden">
+      <div className="h-screen-safe bg-[#0d0d0d] text-white font-sans flex flex-col items-center overflow-hidden">
 
          <header className="w-full h-14 bg-black/40 backdrop-blur-md border-b border-white/5 flex flex-row items-center justify-between px-2.5 sm:px-4 md:px-6 z-50 gap-2 shrink-0">
             <div className="flex items-center gap-1.5 sm:gap-4 shrink-0">
@@ -953,8 +953,8 @@ const AuctionRoom = () => {
             </div>
          </header>
 
-         <div className="w-full flex flex-col md:flex-row flex-1 overflow-hidden relative">
-            <aside className={`${mobileTab === 'squad' ? 'flex' : 'hidden'} md:flex w-full md:w-80 bg-black/40 border-r border-white/5 flex-col h-full max-h-[calc(100vh-7.5rem)] md:max-h-[calc(100vh-3.5rem)] overflow-hidden`}>
+         <div className="w-full flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden relative">
+            <aside className={`${mobileTab === 'squad' ? 'flex' : 'hidden'} md:flex w-full md:w-80 bg-black/40 border-r border-white/5 flex-col h-full max-h-[calc(100dvh-7.5rem)] md:max-h-[calc(100dvh-3.5rem)] overflow-hidden`}>
                <div className="h-14 border-b border-white/5 bg-white/[0.01] flex items-center px-6 shrink-0">
                   <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none">Auction Teams</span>
                </div>
@@ -1354,7 +1354,7 @@ const AuctionRoom = () => {
                </main>
             </div>
 
-            <aside className={`${mobileTab === 'activity' ? 'flex' : 'hidden'} md:flex w-full md:w-96 bg-black/40 border-l border-white/5 flex-col h-full md:max-h-[calc(100vh-3.5rem)]`}>
+            <aside className={`${mobileTab === 'activity' ? 'flex' : 'hidden'} md:flex w-full md:w-96 bg-black/40 border-l border-white/5 flex-col h-full md:max-h-[calc(100dvh-3.5rem)]`}>
                {/* Premium Tabs Header */}
                <div className="h-14 bg-white/[0.01] border-b border-white/5 flex items-center shrink-0 w-full">
                   <button
