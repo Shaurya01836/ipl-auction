@@ -1,50 +1,97 @@
 {
   "rules": {
-    /* 
-      IPL Auction - Realtime Database Security Rules
-      
-      These rules secure the Realtime Database against unauthorized public access,
-      preventing the "insecure rules" warning from Firebase, while maintaining
-      full real-time functionality for authenticated auction players and guests.
+    /*
+      IPL Auction - Realtime Database security rules
+      -----------------------------------------------------------------
+      Threat model: the tree holds live, in-progress auction state for every
+      room. The public internet must never be able to read, tamper with, or
+      delete a room. Every request must be authenticated.
+
+      How the app uses the tree (src/contexts/AuctionContext.jsx):
+        auctions/{roomId}/room            host creates; any room member updates
+                                          players/status; host-only for rules/bans
+        auctions/{roomId}/live            host starts a lot; ANY member may bid
+                                          and may close an expired lot (fallback)
+        auctions/{roomId}/playerOrder     host only (start auction)
+        auctions/{roomId}/messages        chat + system sale logs (any member)
+        auctions/{roomId}/teams/{id}      per-team roster/purse, synced by clients
+        auctions/{roomId}/presence/{uid}  per-user online flag
     */
     ".read": false,
     ".write": false,
 
     "auctions": {
-      ".read": "auth != null",
+      // Do not allow listing/enumerating rooms. A room is read by its id only.
+      ".read": false,
+      ".write": false,
+
       "$roomId": {
-        // Any authenticated user (including anonymous guest sign-ins) can read and delete auction state
+        // Any signed-in user who knows the 6-char room code can join/read it.
         ".read": "auth != null",
-        ".write": "auth != null",
+
+        /*
+          Writing/deleting the WHOLE room node (i.e. resetting or deleting the
+          room). Reserved for the host. Note: the client-side auto-cleanup that
+          runs after a sale will simply no-op for non-hosts (it is wrapped in a
+          try/catch); use scripts/cleanup-rtdb-auctions.js to purge old rooms.
+        */
+        ".write": "auth != null && data.child('room/hostId').val() == auth.uid",
 
         "room": {
-          // Any authenticated user can write/sync the room state
-          ".write": "auth != null"
+          ".read": "auth != null",
+
+          // Created by the host when the room node is empty; afterwards only the
+          // host may replace the whole document.
+          ".write": "auth != null && (!data.exists() || data.child('hostId').val() == auth.uid)",
+
+          // Host identity can never change once set.
+          "hostId": { ".validate": "newData.isString() && (!data.exists() || newData.val() == data.val())" },
+
+          // Roster is updated by every member (join / team pick) and by the
+          // client that settles a lot (spent / squadCount), so it stays open to
+          // authenticated users. (RTDB rules cannot assert "is an array".)
+          "players": { ".write": "auth != null" },
+
+          // Lot lifecycle. The host-fallback that closes an expired lot can run
+          // on any client, so this cannot be host-only.
+          "status": {
+            ".write": "auth != null",
+            ".validate": "newData.val() == 'waiting' || newData.val() == 'active' || newData.val() == 'completed'"
+          }
+
+          // Everything else under room (bannedPlayers, auctionType, isPublic,
+          // settings, squad limits, playerOrder mirror, ...) inherits room.write
+          // => host only.
         },
-        "playerOrder": {
-          // Any authenticated user can write/sync player order
-          ".write": "auth != null"
-        },
+
         "live": {
-          // Any authenticated user can write/sync the live bidding state with atomic validation
+          // Bids are placed by any authenticated member; the lot may be closed by
+          // any client once the server-verified timer has expired.
           ".write": "auth != null",
           ".validate": "newData.hasChildren(['status']) && (newData.child('status').val() == 'bidding' || newData.child('status').val() == 'sold' || newData.child('status').val() == 'unsold' || newData.child('status').val() == 'paused' || newData.child('status').val() == 'waiting' || newData.child('status').val() == 'processing_sale')"
         },
+
+        // The shuffled auction order is produced by the host when starting.
+        "playerOrder": {
+          ".write": "auth != null && root.child('auctions').child($roomId).child('room/hostId').val() == auth.uid"
+        },
+
         "messages": {
-          // Any authenticated user can write to the messages sub-path for chat synchronization
-          ".write": "auth != null"
+          ".write": "auth != null",
+          "$messageId": {
+            ".validate": "newData.hasChild('text') && newData.child('text').isString()"
+          }
         },
+
+        // Whole-tree team sync happens from every client on each sale.
         "teams": {
-          // Any authenticated user can write/sync team roster data
           ".write": "auth != null"
         },
-        "userSquads": {
-          // Any authenticated user can write/sync their fantasy squad
-          ".write": "auth != null"
-        },
+
+        // A user may only write their own presence entry.
         "presence": {
+          ".read": "auth != null",
           "$userId": {
-            // Ensure that presence writes are strictly authorized to the user themselves
             ".write": "auth != null && auth.uid == $userId"
           }
         }

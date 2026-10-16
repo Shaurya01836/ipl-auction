@@ -1,11 +1,15 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
-import { getDatabase, ref, onValue, goOffline, goOnline } from "firebase/database";
+import { getDatabase, ref, onValue, goOffline } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  // Single-project setup: Auth, Firestore and the Realtime Database all live in
+  // the same Firebase project, so RTDB requests carry the signed-in user's token
+  // and the database rules can rely on `auth != null` / `auth.uid`.
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
@@ -13,18 +17,7 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-const rtdbFirebaseConfig = {
-  apiKey: import.meta.env.VITE_RTDB_FIREBASE_API_KEY || import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_RTDB_FIREBASE_AUTH_DOMAIN || import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  databaseURL: import.meta.env.VITE_RTDB_FIREBASE_DATABASE_URL || import.meta.env.VITE_FIREBASE_DATABASE_URL,
-  projectId: import.meta.env.VITE_RTDB_FIREBASE_PROJECT_ID || import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_RTDB_FIREBASE_STORAGE_BUCKET || import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_RTDB_FIREBASE_MESSAGING_SENDER_ID || import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_RTDB_FIREBASE_APP_ID || import.meta.env.VITE_FIREBASE_APP_ID
-};
-
 const app = initializeApp(firebaseConfig);
-const rtdbApp = initializeApp(rtdbFirebaseConfig, "RTDB_APP");
 
 export const auth = getAuth(app);
 export const db = initializeFirestore(app, {
@@ -47,7 +40,7 @@ export { analytics };
 // ─── Server Time Sync via Firebase RTDB ───
 let _serverTimeOffset = 0;
 
-export const rtdb = getDatabase(rtdbApp);
+export const rtdb = getDatabase(app);
 
 
 try {
@@ -57,7 +50,7 @@ try {
   onValue(offsetRef, (snap) => {
     _serverTimeOffset = snap.val() || 0;
   });
-} catch (e) {
+} catch {
   // RTDB sync skipped silently. We default to local machine clock.
 }
 
