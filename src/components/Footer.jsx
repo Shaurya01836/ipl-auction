@@ -11,7 +11,7 @@ const Footer = () => {
     <footer className="mt-16 sm:mt-32 w-full mx-auto border-t border-white/10 z-10 relative flex flex-col font-mono">
       <div className="w-full flex flex-col lg:flex-row text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-gray-400">
         <div className="flex-1 px-4 sm:px-6 py-6 lg:py-4 flex items-center justify-center lg:justify-start border-b lg:border-b-0 border-white/10 text-center lg:text-left leading-relaxed">
-          <span>© {currentYear} CRICK AUCTION. ALL RIGHTS RESERVED. CONCEPT CRAFTED BY <a href="https://ershaurya.dev" target="_blank" rel="noopener noreferrer" className="ml-1 hover:text-white transition-colors underline underline-offset-2">SHAURYA</a></span>
+          <span>© {currentYear} CRICK AUCTION. ALL RIGHTS RESERVED. CONCEPT CRAFTED BY <a href="https://ershaurya.dev" target="_blank" rel="noopener noreferrer" className="ml-1 hover:text-white transition-colors underline underline-offset-2">SHAURYA UPADHYAY</a></span>
         </div>
 
         <div className="grid grid-cols-2 lg:flex lg:flex-row lg:flex-nowrap border-l-0 lg:border-l border-white/10 justify-center w-full lg:w-auto">

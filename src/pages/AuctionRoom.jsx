@@ -47,6 +47,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { TEAMS } from '../data/teams';
 import TextChat from '../components/TextChat';
 import PageLoader from '../components/PageLoader';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const AuctionRoom = () => {
    const { id } = useParams();
@@ -81,6 +82,8 @@ const AuctionRoom = () => {
    const [showSettings, setShowSettings] = useState(false);
    const [summaryTab, setSummaryTab] = useState('squads'); // squads, leaderboard
    const [showParticipantsOverlay, setShowParticipantsOverlay] = useState(false);
+   const [showEndConfirm, setShowEndConfirm] = useState(false);
+   const [isEnding, setIsEnding] = useState(false);
    const [sidebarTab, setSidebarTab] = useState('activity'); // activity or chat
    const audioRef = useRef(null);
    const celebrationAudioRef = useRef(null);
@@ -925,7 +928,7 @@ const AuctionRoom = () => {
                         </button>
                      )}
                      <button
-                        onClick={() => endAuction(id)}
+                        onClick={() => setShowEndConfirm(true)}
                         className="p-1 sm:px-2.5 sm:py-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-300 text-[10px] font-black uppercase tracking-widest hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/20 transition-all cursor-pointer flex items-center gap-1"
                         title="End Auction"
                      >
@@ -1772,6 +1775,29 @@ const AuctionRoom = () => {
                </motion.div>
             )}
          </AnimatePresence>
+
+         <ConfirmDialog
+            isOpen={showEndConfirm}
+            title="End This Auction?"
+            description="This finalizes every squad, saves the results to history, and closes the live room for all participants. This action cannot be undone."
+            detail={`Room ${id}`}
+            confirmLabel="End Auction"
+            cancelLabel="Cancel"
+            loading={isEnding}
+            onConfirm={async () => {
+               setIsEnding(true);
+               try {
+                  await endAuction(id);
+                  setShowEndConfirm(false);
+               } catch {
+                  setError('Failed to end the auction. Please try again.');
+                  setTimeout(() => setError(''), 3000);
+               } finally {
+                  setIsEnding(false);
+               }
+            }}
+            onCancel={() => !isEnding && setShowEndConfirm(false)}
+         />
       </div>
    );
 };

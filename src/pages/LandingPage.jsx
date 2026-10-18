@@ -20,6 +20,7 @@ import {
   History,
   Trash2,
   RefreshCw,
+  Clock,
 } from "lucide-react";
 import GithubStarButton from "../components/GithubStarButton";
 import BuyMeACoffee from "../components/BuyMeACoffee";
@@ -87,6 +88,7 @@ const LandingPage = () => {
           .select("*")
           .in("status", ["waiting", "active"])
           .eq("is_public", true)
+          .eq("host_online", true)
           .gte("created_at", threeHoursAgoISO)
           .order("created_at", { ascending: false })
           
@@ -174,6 +176,8 @@ const LandingPage = () => {
                 roomId: teamData.auction_id,
                 teamId: teamData.team_id,
                 teamName: teamData.team_name,
+                mode: auctionData?.auction_type || "mega",
+                status: auctionData?.status || "waiting",
                 budgetRemaining: teamData.budget_remaining,
                 spent,
                 squad: (teamData.squad || []).map((s) => {
@@ -1090,6 +1094,8 @@ const LandingPage = () => {
                           (t) => t.id === session.teamId,
                         );
                         const isExpanded = expandedSession === session.id;
+                        const isCompleted = session.status === "completed";
+                        const isActive = session.status === "active";
                         const overseasCount = session.squad.filter(
                           (p) => p?.country !== "IND",
                         ).length;
@@ -1133,15 +1139,7 @@ const LandingPage = () => {
                                     <span className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wider shrink-0">
                                       Room: {session.roomId}
                                     </span>
-                                    <span
-                                      className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded shrink-0 ${
-                                        session.mode === "mega"
-                                          ? "bg-orange-500/10 text-orange-500"
-                                          : session.mode === "sprint11"
-                                            ? "bg-yellow-500/10 text-yellow-500"
-                                            : "bg-blue-500/10 text-blue-500"
-                                      }`}
-                                    >
+                                    <span className="text-[7px] sm:text-[8px] font-black uppercase px-1.5 py-0.5 rounded shrink-0 bg-gray-500/10 text-gray-400">
                                       {session.mode}
                                     </span>
                                     <span
@@ -1193,116 +1191,158 @@ const LandingPage = () => {
                             {isExpanded && (
                               <div className="overflow-hidden">
                                 <div className="bg-[#111] border border-white/5 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 space-y-2 sm:space-y-3 mt-1">
-                                  {/* Quick Stats */}
-                                  <div className="flex flex-wrap items-center justify-between gap-1 sm:gap-3 text-[7px] sm:text-[9px] font-black uppercase tracking-tight px-1.5 py-1 bg-white/[0.02] rounded-lg sm:rounded-xl border border-white/5">
-                                    <span className="text-gray-400">
-                                      Budget Left:{" "}
-                                      <span className="text-green-400">
-                                        ₹{session.budgetRemaining?.toFixed(1)}{" "}
-                                        Cr
-                                      </span>
-                                    </span>
-                                    <span className="text-gray-400">
-                                      Overseas:{" "}
-                                      <span className="text-purple-400">
-                                        {overseasCount}/8
-                                      </span>
-                                    </span>
-                                    <span className="text-gray-400">
-                                      Squad:{" "}
-                                      <span className="text-white">
-                                        {session.squad.length}/25
-                                      </span>
-                                    </span>
-                                  </div>
-
-                                  {/* Players by Role */}
-                                  {[
-                                    "Batsman",
-                                    "Wicket-Keeper",
-                                    "All-Rounder",
-                                    "Bowler",
-                                  ].map((role) => {
-                                    const rolePlayers = session.squad.filter(
-                                      (p) => p?.role === role,
-                                    );
-                                    if (rolePlayers.length === 0) return null;
-
-                                    return (
-                                      <div key={role}>
-                                        <div className="flex items-center gap-2 px-1 mb-1">
-                                          <span className="text-[7px] sm:text-[8px] font-black text-blue-500 uppercase tracking-widest">
-                                            {role}s
+                                  {isCompleted ? (
+                                    <>
+                                      {/* Quick Stats */}
+                                      <div className="flex flex-wrap items-center justify-between gap-1 sm:gap-3 text-[7px] sm:text-[9px] font-black uppercase tracking-tight px-1.5 py-1 bg-white/[0.02] rounded-lg sm:rounded-xl border border-white/5">
+                                        <span className="text-gray-400">
+                                          Budget Left:{" "}
+                                          <span className="text-green-400">
+                                            ₹{session.budgetRemaining?.toFixed(1)}{" "}
+                                            Cr
                                           </span>
-                                          <div className="flex-1 h-px bg-white/5" />
-                                          <span className="text-[8px] font-black text-gray-400">
-                                            {rolePlayers.length}
+                                        </span>
+                                        <span className="text-gray-400">
+                                          Overseas:{" "}
+                                          <span className="text-purple-400">
+                                            {overseasCount}/8
                                           </span>
-                                        </div>
-                                        <div className="space-y-1">
-                                          {rolePlayers.map((p, idx) => (
-                                            <div
-                                              key={idx}
-                                              className="flex items-center justify-between bg-white/[0.03] hover:bg-white/5 transition-all p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl"
-                                            >
-                                              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 pr-2">
-                                                <img
-                                                  src={p?.image}
-                                                  alt={p?.name}
-                                                  className="w-5 h-5 sm:w-7 sm:h-7 object-contain rounded-md bg-white/5 shrink-0"
-                                                />
-                                                <div className="min-w-0 flex-1">
-                                                  <h4 className="text-[9px] sm:text-[11px] font-black leading-tight truncate">
-                                                    {p?.name}
-                                                  </h4>
-                                                  <div className="flex items-center gap-1.5">
-                                                    <span className="text-[7px] font-bold text-gray-400 uppercase">
-                                                      {p?.type}
-                                                    </span>
-                                                    {p?.country !== "IND" && (
-                                                      <Wifi
-                                                        size={8}
-                                                        className="text-purple-400 rotate-90 shrink-0"
-                                                      />
-                                                    )}
-                                                  </div>
-                                                </div>
-                                              </div>
-                                              <span className="text-[8px] sm:text-[10px] font-black italic text-yellow-500 shrink-0">
-                                                ₹{(p?.bid || 0).toFixed(2)} Cr
+                                        </span>
+                                        <span className="text-gray-400">
+                                          Squad:{" "}
+                                          <span className="text-white">
+                                            {session.squad.length}/25
+                                          </span>
+                                        </span>
+                                      </div>
+
+                                      {/* Players by Role */}
+                                      {[
+                                        "Batsman",
+                                        "Wicket-Keeper",
+                                        "All-Rounder",
+                                        "Bowler",
+                                      ].map((role) => {
+                                        const rolePlayers = session.squad.filter(
+                                          (p) => p?.role === role,
+                                        );
+                                        if (rolePlayers.length === 0) return null;
+
+                                        return (
+                                          <div key={role}>
+                                            <div className="flex items-center gap-2 px-1 mb-1">
+                                              <span className="text-[7px] sm:text-[8px] font-black text-blue-500 uppercase tracking-widest">
+                                                {role}s
+                                              </span>
+                                              <div className="flex-1 h-px bg-white/5" />
+                                              <span className="text-[8px] font-black text-gray-400">
+                                                {rolePlayers.length}
                                               </span>
                                             </div>
-                                          ))}
+                                            <div className="space-y-1">
+                                              {rolePlayers.map((p, idx) => (
+                                                <div
+                                                  key={idx}
+                                                  className="flex items-center justify-between bg-white/[0.03] hover:bg-white/5 transition-all p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl"
+                                                >
+                                                  <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 pr-2">
+                                                    <img
+                                                      src={p?.image}
+                                                      alt={p?.name}
+                                                      className="w-5 h-5 sm:w-7 sm:h-7 object-contain rounded-md bg-white/5 shrink-0"
+                                                    />
+                                                    <div className="min-w-0 flex-1">
+                                                      <h4 className="text-[9px] sm:text-[11px] font-black leading-tight truncate">
+                                                        {p?.name}
+                                                      </h4>
+                                                      <div className="flex items-center gap-1.5">
+                                                        <span className="text-[7px] font-bold text-gray-400 uppercase">
+                                                          {p?.type}
+                                                        </span>
+                                                        {p?.country !== "IND" && (
+                                                          <Wifi
+                                                            size={8}
+                                                            className="text-purple-400 rotate-90 shrink-0"
+                                                          />
+                                                        )}
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                  <span className="text-[8px] sm:text-[10px] font-black italic text-yellow-500 shrink-0">
+                                                    ₹{(p?.bid || 0).toFixed(2)} Cr
+                                                  </span>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+
+                                      {session.squad.length === 0 && (
+                                        <p className="text-center text-[9px] sm:text-[10px] text-gray-400 font-bold py-3 sm:py-4 uppercase">
+                                          No players acquired in this session
+                                        </p>
+                                      )}
+
+                                      <button
+                                        onClick={() =>
+                                          navigate(`/summary/${session.roomId}`)
+                                        }
+                                        className="w-full mt-1.5 sm:mt-2 py-2 sm:py-3 bg-blue-600/10 border border-blue-500/20 rounded-xl text-blue-500 text-[8px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-blue-600/20 transition-all cursor-pointer flex items-center justify-center gap-2"
+                                      >
+                                        <Trophy size={12} /> View Full Summary
+                                      </button>
+                                    </>
+                                  ) : isActive ? (
+                                    <>
+                                      {/* Live auction info */}
+                                      <div className="flex items-start gap-2.5 px-2.5 py-2.5 bg-yellow-500/[0.06] border border-yellow-500/15 rounded-xl">
+                                        <div className="min-w-0">
+                                          <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-yellow-400">
+                                            Auction In Progress
+                                          </p>
+                                          <p className="text-[8px] sm:text-[9px] text-gray-500 font-medium mt-0.5">
+                                            Bidding is live right now — jump back in to keep building your squad.
+                                          </p>
                                         </div>
                                       </div>
-                                    );
-                                  })}
 
-                                  {session.squad.length === 0 && (
-                                    <p className="text-center text-[9px] sm:text-[10px] text-gray-400 font-bold py-3 sm:py-4 uppercase">
-                                      No players acquired in this session
-                                    </p>
-                                  )}
-
-                                  {/* View Full Summary / Resume Auction Button */}
-                                  {session.status === "completed" ? (
-                                    <button
-                                      onClick={() =>
-                                        navigate(`/summary/${session.roomId}`)
-                                      }
-                                      className="w-full mt-1.5 sm:mt-2 py-2 sm:py-3 bg-blue-600/10 border border-blue-500/20 rounded-xl text-blue-500 text-[8px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-blue-600/20 transition-all cursor-pointer flex items-center justify-center gap-2"
-                                    >
-                                      <Trophy size={12} /> View Full Summary
-                                    </button>
+                                      <button
+                                        onClick={() =>
+                                          navigate(`/lobby/${session.roomId}`)
+                                        }
+                                        className="w-full mt-1.5 sm:mt-2 py-2 sm:py-3 bg-orange-500/10 border border-orange-500/20 rounded-xl text-orange-500 text-[8px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-orange-500/20 transition-all cursor-pointer flex items-center justify-center gap-2"
+                                      >
+                                        <Zap size={12} /> Resume Auction
+                                      </button>
+                                    </>
                                   ) : (
-                                    <button
-                                      onClick={() =>
-                                        navigate(`/lobby/${session.roomId}`)
-                                      }
-                                      className="w-full mt-1.5 sm:mt-2 py-2 sm:py-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-yellow-500 text-[8px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-yellow-500/20 transition-all cursor-pointer flex items-center justify-center gap-2"
-                                    >
-                                      <Zap size={12} /> Resume / Join Auction
-                                    </button>
+                                    <>
+                                      {/* Waiting room info */}
+                                      <div className="flex items-start gap-2.5 px-2.5 py-2.5 bg-white/[0.02] border border-white/10 rounded-xl">
+                                        <Clock
+                                          size={14}
+                                          className="text-gray-400 mt-0.5 shrink-0"
+                                        />
+                                        <div className="min-w-0">
+                                          <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-gray-300">
+                                            Auction Not Started
+                                          </p>
+                                          <p className="text-[8px] sm:text-[9px] text-gray-500 font-medium mt-0.5">
+                                            This room is still waiting in the lobby for the host to start bidding.
+                                          </p>
+                                        </div>
+                                      </div>
+
+                                      <button
+                                        onClick={() =>
+                                          navigate(`/lobby/${session.roomId}`)
+                                        }
+                                        className="w-full mt-1.5 sm:mt-2 py-2 sm:py-3 bg-orange-500/10 border border-orange-500/20 rounded-xl text-orange-500 text-[8px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-orange-500/20 transition-all cursor-pointer flex items-center justify-center gap-2"
+                                      >
+                                        <Zap size={12} /> Resume / Join Auction
+                                      </button>
+                                    </>
                                   )}
                                 </div>
                               </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAuction } from '../contexts/AuctionContext';
@@ -58,7 +58,7 @@ const useIsMobile = () => {
 const Lobby = () => {
   const { id } = useParams();
   const { user, loginWithGoogle, loginAsGuest, logout, loading: authLoading } = useAuth();
-  const { joinAuction, currentAuction, loading: auctionLoading, kickPlayer, updatePlayerTeam, updateRoomSettings, startAuction, joinRoomDb, addBotTeam, removeBotTeam, fillEmptyTeamsWithBots } = useAuction();
+  const { joinAuction, currentAuction, loading: auctionLoading, messages, kickPlayer, updatePlayerTeam, updateRoomSettings, startAuction, joinRoomDb, addBotTeam, removeBotTeam, fillEmptyTeamsWithBots } = useAuction();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('players');
@@ -87,6 +87,81 @@ const Lobby = () => {
   const currentUserPlayer = players.find(p => p.id === user?.uid);
 
   const isJoined = players.some(p => p.id === user?.uid);
+
+  // ─── Chat unread indicator ───
+  // Purely client-side: it reuses the `messages` array already streamed into
+  // AuctionContext (limitToLast(10)). No extra RTDB reads/writes, no extra
+  // Supabase calls — the only storage is one small localStorage key per room.
+  const chatMessages = useMemo(
+    () => (messages || []).filter(m => m.type === 'text' || m.type === 'gif' || !m.type),
+    [messages]
+  );
+
+  const [unreadChat, setUnreadChat] = useState(0);
+  const [windowFocused, setWindowFocused] = useState(() =>
+    typeof document === 'undefined' ? true : document.visibilityState === 'visible'
+  );
+  const chatReadRef = useRef(null); // id of the last chat message the user has seen
+  const chatInitRef = useRef(false); // whether we've synced the first batch for this room
+
+  // Only mark messages read while the tab is actually visible.
+  useEffect(() => {
+    const onFocus = () => setWindowFocused(true);
+    const onBlur = () => setWindowFocused(false);
+    const onVisibility = () => setWindowFocused(document.visibilityState === 'visible');
+    window.addEventListener('focus', onFocus);
+    window.addEventListener('blur', onBlur);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      window.removeEventListener('blur', onBlur);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, []);
+
+  // Restore the read marker when switching rooms.
+  useEffect(() => {
+    chatInitRef.current = false;
+    chatReadRef.current = id
+      ? window.localStorage.getItem(`lobby_chat_read_${id}`)
+      : null;
+    setUnreadChat(0);
+  }, [id]);
+
+  // Recompute the badge; clear it live while the chat tab is open & focused.
+  useEffect(() => {
+    const latest = chatMessages[chatMessages.length - 1];
+    if (!latest) return;
+
+    // First sight of messages for this room with no prior marker → history is read.
+    if (!chatInitRef.current && !chatReadRef.current) {
+      chatInitRef.current = true;
+      chatReadRef.current = latest.id;
+      try { window.localStorage.setItem(`lobby_chat_read_${id}`, latest.id); } catch { /* storage disabled */ }
+      setUnreadChat(0);
+      return;
+    }
+    chatInitRef.current = true;
+
+    if (activeTab === 'chat' && windowFocused) {
+      if (chatReadRef.current !== latest.id) {
+        chatReadRef.current = latest.id;
+        try { window.localStorage.setItem(`lobby_chat_read_${id}`, latest.id); } catch { /* storage disabled */ }
+      }
+      setUnreadChat(0);
+      return;
+    }
+
+    // Count messages newer than the read marker that aren't mine. If the marker
+    // has rotated out of the last-10 window, every retained message counts.
+    let count = 0;
+    for (let i = chatMessages.length - 1; i >= 0; i--) {
+      if (chatMessages[i].id === chatReadRef.current) break;
+      if (chatMessages[i].userId !== user?.uid) count++;
+    }
+    setUnreadChat(count);
+  }, [chatMessages, activeTab, windowFocused, id, user?.uid]);
+
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -667,8 +742,18 @@ const Lobby = () => {
                     : 'text-gray-500 hover:text-gray-300 hover:bg-white/[0.01]'
                     }`}
                 >
-                  <tab.icon size={16} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
-                  <span className="text-[9px] font-black uppercase tracking-widest">{tab.id === 'players' ? `${tab.label} (${players.length})` : tab.label}</span>
+                  <span className="relative">
+                    <tab.icon size={16} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
+                    {tab.id === 'chat' && unreadChat > 0 && (
+                      <span className="absolute -top-1.5 -right-2.5 flex items-center justify-center">
+                        <span className="absolute inline-flex h-4 w-4 rounded-full bg-red-500 opacity-75 animate-ping" />
+                        <span className="relative flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[8px] font-black text-white shadow-[0_0_10px_rgba(239,68,68,0.8)]">
+                          {unreadChat > 9 ? '9+' : unreadChat}
+                        </span>
+                      </span>
+                    )}
+                  </span>
+                  <span className={`text-[9px] font-black uppercase tracking-widest ${tab.id === 'chat' && unreadChat > 0 ? 'text-red-400' : ''}`}>{tab.id === 'players' ? `${tab.label} (${players.length})` : tab.label}</span>
                 </button>
               ))}
             </div>

@@ -711,18 +711,28 @@ export const AuctionProvider = ({ children }) => {
           lastSeen: serverTimestampRtdb() 
         });
 
-        // Sync host online presence to Supabase if current user is the host
-        /*
-        if (currentRoomData && currentRoomData.hostId === userId) {
-          try {
-            if (supabase) {
-              await supabase.from('auctions').update({ host_online: true }).eq('id', auctionId);
-            }
-          } catch (sErr) {}
-        }
-        */
       }
     });
+
+    // ─── host_online (Supabase directory) ← RTDB presence mirror ───
+    // The public directory reads a plain `host_online` boolean from Supabase, but
+    // the RTDB is the source of truth for presence (its server-side onDisconnect
+    // flips a member to offline even on a hard crash / closed tab). To keep
+    // Supabase in sync WITHOUT a heartbeat, we mirror the derived value to
+    // Supabase only when it actually changes, and only from a single elected
+    // client (the online member with the lowest uid) so N members never cause
+    // N writes per transition.
+    let lastHostOnlineSynced = null; // last value we pushed (null = unknown)
+    const syncHostOnline = (next) => {
+      if (!supabase || next === lastHostOnlineSynced) return;
+      lastHostOnlineSynced = next; // optimistic: parallel presence ticks won't double-write
+      supabase
+        .from('auctions')
+        .update({ host_online: next })
+        .eq('id', auctionId)
+        .then(() => {})
+        .catch(() => { lastHostOnlineSynced = null; }); // allow a later retry
+    };
 
 
     const checkAndSet = () => {
@@ -734,13 +744,19 @@ export const AuctionProvider = ({ children }) => {
           lastSeen: currentPresences[p.id]?.lastSeen || null
         }));
 
-        // Sync host online state to Supabase when presences update
-        const isHostCurrentlyOnline = !!currentPresences[currentRoomData.hostId]?.online;
-        /* (Disabled heartbeat to save Supabase limits)
-        if (currentRoomData.hostId === userId && supabase) {
-          supabase.from('auctions').update({ host_online: isHostCurrentlyOnline }).eq('id', auctionId).then(() => {}).catch(() => {});
+        // Mirror the host's real presence to Supabase on transitions only.
+        // Elect one reporter = the online member with the lowest uid, so exactly
+        // one client writes per transition. Peers/spectators can be the reporter
+        // too, which is what lets an abrupt host disconnect be reflected (the
+        // RTDB onDisconnect flips presence server-side even if the host crashes).
+        if (Object.keys(currentPresences).length > 0) {
+          const reporterId = Object.keys(currentPresences)
+            .filter((uid) => currentPresences[uid]?.online)
+            .sort()[0];
+          if (reporterId === userId) {
+            syncHostOnline(!!currentPresences[currentRoomData.hostId]?.online);
+          }
         }
-        */
 
         setCurrentAuction({ 
           id: auctionId, 
@@ -939,9 +955,11 @@ export const AuctionProvider = ({ children }) => {
       // Set offline on component unmount
       set(myPresenceRef, { online: false, lastSeen: serverTimestampRtdb() });
 
-      // Sync host offline status to Supabase if host left room
-      if (currentRoomData && currentRoomData.hostId === userId && supabase) {
-        supabase.from('auctions').update({ host_online: false }).eq('id', auctionId).then(() => {}).catch(() => {});
+      // Mark the room offline in the directory when the HOST leaves. This is the
+      // only writer for the "lone host leaves / no peers left to mirror" case;
+      // otherwise the peer-elected presence mirror handles offline transitions.
+      if (currentRoomData && currentRoomData.hostId === userId) {
+        syncHostOnline(false);
       }
 
       setCurrentAuction(null);
