@@ -89,8 +89,7 @@ const LandingPage = () => {
           .eq("is_public", true)
           .gte("created_at", threeHoursAgoISO)
           .order("created_at", { ascending: false })
-          .limit(100);
-
+          
         if (!error && supabaseRooms && supabaseRooms.length > 0) {
           const list = supabaseRooms.map((r) => {
             const players = r.players || [];

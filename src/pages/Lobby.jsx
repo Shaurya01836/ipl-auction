@@ -36,6 +36,25 @@ import TextChat from '../components/TextChat';
 import Footer from '../components/Footer';
 import PageLoader from '../components/PageLoader';
 
+// Small-screen detection (matches the 767px breakpoint used in index.css).
+// Framer-motion elements render without any animation when this is true.
+const MOBILE_QUERY = '(max-width: 767px)';
+
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(MOBILE_QUERY).matches
+  );
+
+  useEffect(() => {
+    const mql = window.matchMedia(MOBILE_QUERY);
+    const onChange = (event) => setIsMobile(event.matches);
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+  }, []);
+
+  return isMobile;
+};
+
 const Lobby = () => {
   const { id } = useParams();
   const { user, loginWithGoogle, loginAsGuest, logout, loading: authLoading } = useAuth();
@@ -96,6 +115,15 @@ const Lobby = () => {
       }
     }
   }, [currentAuction, user]);
+
+  const isMobile = useIsMobile();
+
+  // Mobile: jump straight to the settled state (no enter/exit motion).
+  // Desktop: keep the original enter/exit animations.
+  const SETTLED = { opacity: 1, x: 0, y: 0, scale: 1 };
+  const enterProps = (from, extra = {}) =>
+    isMobile ? { initial: false, animate: SETTLED } : { initial: from, animate: SETTLED, ...extra };
+  const exitProps = (exit) => (isMobile ? {} : { exit });
 
   if (currentAuction?.status === 'completed' || currentAuction?.status === 'active') return null;
 
@@ -190,8 +218,7 @@ const Lobby = () => {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://res.cloudinary.com/drl6ky9as/image/upload/v1792012081/texture_os1ukf.jpg')] opacity-[0.25]" />
         </div>
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
+          {...enterProps({ opacity: 0, scale: 0.9 })}
           className="max-w-md w-full bg-white/5 border border-white/10 p-12 rounded-[3.5rem] text-center relative z-10 overflow-hidden"
         >
           <div className="absolute top-0 right-0 p-8 w-32 h-32 bg-red-500/10 rounded-full -mr-16 -mt-16 blur-3xl" />
@@ -234,8 +261,7 @@ const Lobby = () => {
         </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          {...enterProps({ opacity: 0, y: 20 })}
           className="relative z-10 w-full md:w-xl max-md bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-3 shadow-2xl"
         >
           <div className="bg-[#0c0c0c] rounded-[2.2rem] p-8 border border-white/5 flex flex-col items-center text-center">
@@ -331,8 +357,7 @@ const Lobby = () => {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://res.cloudinary.com/drl6ky9as/image/upload/v1792012081/texture_os1ukf.jpg')] opacity-[0.25]" />
         </div>
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
+          {...enterProps({ opacity: 0, scale: 0.9 })}
           className="max-w-md w-full bg-white/[0.03] border border-white/10 p-8 rounded-[2.5rem] text-center relative z-10 shadow-2xl overflow-hidden"
         >
           <div className="absolute top-0 right-0 p-8 w-32 h-32 bg-orange-500/10 rounded-full -mr-16 -mt-16 blur-3xl" />
@@ -365,8 +390,7 @@ const Lobby = () => {
         </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          {...enterProps({ opacity: 0, y: 20 })}
           className="w-full max-w-4xl z-10"
         >
           <div className="text-center mb-16">
@@ -479,9 +503,7 @@ const Lobby = () => {
       </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+        {...enterProps({ opacity: 0, y: 30 }, { transition: { delay: 0.1 } })}
         className="w-full max-w-6xl bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-3 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10 relative mt-2"
       >
         {/* Subtle Glow behind panel */}
@@ -656,9 +678,8 @@ const Lobby = () => {
                 {activeTab === 'players' && (
                   <motion.div
                     key="p-list"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
+                    {...enterProps({ opacity: 0, y: 10 })}
+                    {...exitProps({ opacity: 0, y: -10 })}
                     className="space-y-4"
                   >
                     {players.map((player, idx) => {
@@ -666,8 +687,7 @@ const Lobby = () => {
                       return (
                         <motion.div
                           key={`${player.id}-${idx}`}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0, transition: { delay: idx * 0.05 } }}
+                          {...enterProps({ opacity: 0, x: -10 }, { transition: { delay: idx * 0.05 } })}
                           className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-3 bg-white/[0.01] border border-white/5 p-3 sm:p-4 rounded-2xl group transition-all hover:bg-white/[0.03] hover:border-white/10"
                         >
                           <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto">
@@ -727,9 +747,8 @@ const Lobby = () => {
                 {activeTab === 'chat' && (
                   <motion.div
                     key="chat"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
+                    {...enterProps({ opacity: 0, y: 10 })}
+                    {...exitProps({ opacity: 0, y: -10 })}
                     className="h-[400px]"
                   >
                     <TextChat roomId={id} />
@@ -747,19 +766,16 @@ const Lobby = () => {
           <div className="fixed inset-0 z-[999] flex items-center justify-center p-3 sm:p-4 md:p-6">
             {/* Backdrop */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              {...enterProps({ opacity: 0 })}
+              {...exitProps({ opacity: 0 })}
               onClick={() => setShowBotInfo(false)}
               className="fixed inset-0 bg-black/80 backdrop-blur-md"
             />
 
             {/* Modal Card */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              {...enterProps({ opacity: 0, scale: 0.95, y: 20 }, { transition: { type: 'spring', damping: 25, stiffness: 300 } })}
+              {...exitProps({ opacity: 0, scale: 0.95, y: 20 })}
               className="relative w-full max-w-lg max-h-[85vh] sm:max-h-[90vh] bg-[#0c0c0c] border border-white/10 rounded-3xl sm:rounded-[2.5rem] p-5 sm:p-6 md:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.8)] z-10 flex flex-col my-auto overflow-hidden"
             >
               {/* Background Glows */}

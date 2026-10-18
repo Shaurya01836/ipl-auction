@@ -105,7 +105,7 @@ export const IPL_PLAYERS = [
       "wickets": 82,
       "econ": 9.36
     },
-    "rating": 69
+    "rating": 80
   },
   {
     "id": "p_105",
@@ -123,7 +123,7 @@ export const IPL_PLAYERS = [
       "sr": 166.72,
       "hs": "105*"
     },
-    "rating": 91
+    "rating": 88
   },
   {
     "id": "p_106",
@@ -249,7 +249,7 @@ export const IPL_PLAYERS = [
       "avg": 28.21,
       "bb": "4/14"
     },
-    "rating": 68
+    "rating": 75
   },
   {
     "id": "p_114",
@@ -429,7 +429,7 @@ export const IPL_PLAYERS = [
       "sr": 174.48,
       "hs": "89*"
     },
-    "rating": 85
+    "rating": 83
   },
   {
     "id": "p_125",
@@ -969,7 +969,7 @@ export const IPL_PLAYERS = [
       "wickets": 11,
       "econ": 9.04
     },
-    "rating": 67
+    "rating": 77
   },
   {
     "id": "p_150",
@@ -1815,7 +1815,7 @@ export const IPL_PLAYERS = [
       "avg": 25.72,
       "bb": "3/24"
     },
-    "rating": 56
+    "rating": 60
   },
   {
     "id": "p_198",
@@ -2859,7 +2859,7 @@ export const IPL_PLAYERS = [
       "avg": 22.58,
       "bb": "4/32"
     },
-    "rating": 57
+    "rating": 63
   },
   {
     "id": "p_223",
@@ -3927,7 +3927,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "USP1",
-    "image": "https://api.dicebear.com/7.x/initials/svg?seed=YashRajPunja&backgroundColor=111111&fontFamily=Arial&fontWeight=900",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1280,q_80/lsci/db/PICTURES/CMS/420600/420665.png",
     "stats": {
       "matches": 8,
       "wickets": 9,
@@ -4604,7 +4604,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "Uncapped Batters",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/default.png",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_wide_w_1280,q_70/lsci/db/PICTURES/CMS/416200/416288.9.jpg",
     "stats": {
       "matches": 4,
       "runs": 46,
@@ -4728,7 +4728,7 @@ export const IPL_PLAYERS = [
     "country": "RSA",
     "basePrice": 1.5,
     "set": "Spinners Set 1",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/default.png",
+    "image": "https://search.cricinfo.com/db/PICTURES/CMS/413300/413301.5.jpg",
     "stats": {
       "matches": 2,
       "wickets": 2,
@@ -4782,7 +4782,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "Uncapped All-Rounders",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/default.png",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1280,q_80/lsci/db/PICTURES/CMS/416000/416039.jpg",
     "stats": {
       "matches": 13,
       "wickets": 14,
@@ -4852,7 +4852,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "Uncapped Fast Bowlers",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/default.png",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/415600/415638.jpg",
     "stats": {
       "matches": 7,
       "wickets": 14,
