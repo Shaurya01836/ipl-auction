@@ -248,9 +248,12 @@ const LandingPage = () => {
   }, [user?.uid]);
 
   useEffect(() => {
-    if (activeTab !== "history" || !user?.uid) return;
+    // Load once when the signed-in user is available (entering the site or
+    // switching accounts). Opening the History tab reuses this data; only the
+    // explicit Refresh button triggers another request.
+    if (!user?.uid) return;
     fetchHistory();
-  }, [activeTab, user?.uid, fetchHistory]);
+  }, [user?.uid, fetchHistory]);
 
   // Filtered public rooms
   const filteredPublicRooms = useMemo(() => {
