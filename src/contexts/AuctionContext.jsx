@@ -41,6 +41,8 @@ import {
 } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
 import { useQuota } from './QuotaContext';
+import { useConnectionAlert } from './ConnectionAlertContext';
+import { shouldReportConnectionTrouble } from '../lib/connectionAlerts';
 
 
 const TEAMS = [
@@ -72,6 +74,7 @@ const shuffleArray = (array) => {
 export const AuctionProvider = ({ children }) => {
   const { user } = useAuth();
   const { handleFirebaseError } = useQuota();
+  const { reportConnectionTrouble, clearConnectionAlert } = useConnectionAlert();
   const [currentAuction, setCurrentAuction] = useState(null);
   const [team, setTeam] = useState(null);
   const [roomTeams, setRoomTeams] = useState([]);
@@ -671,6 +674,10 @@ export const AuctionProvider = ({ children }) => {
     let auctionLoaded = false;
     let teamsLoaded = false;
     let messagesLoaded = false;
+    // Flips when the RTDB socket is genuinely usable. A database that refused
+    // the connection (most often the free plan's 100-session ceiling) never
+    // gets here, which is what makes it the discriminator the watchdog needs.
+    let socketConnected = false;
 
     const checkLoaded = () => {
       if (auctionLoaded && teamsLoaded && messagesLoaded) {
@@ -678,9 +685,16 @@ export const AuctionProvider = ({ children }) => {
       }
     };
 
-    // Auto-timeout for loading
-    const loadTimeout = setTimeout(() => {
-      if (loading) setLoading(false);
+    // ─── Connection watchdog ───
+    // When a connection is refused the listeners below never fire at all: no
+    // snapshot, no error callback, no kill reason. That is why this screen used
+    // to load forever, and why the old 5s "timeout" here never helped — it read
+    // `loading` from the render in which this callback was created, so it always
+    // saw the initial `false`. Reporting "we cannot reach the database" is safe
+    // here because a healthy socket connects in well under one tick.
+    const watchdog = setInterval(() => {
+      if (!shouldReportConnectionTrouble({ socketConnected, auctionLoaded })) return;
+      reportConnectionTrouble();
     }, 5000);
 
     // ─── Real Presence Logic ───
@@ -698,7 +712,11 @@ export const AuctionProvider = ({ children }) => {
 
     // Set presence status on connect/disconnect
     const unsubConnected = onValue(connectedRef, async (snap) => {
+      socketConnected = snap.val() === true;
       if (snap.val() === true) {
+        // Reaching the server means any "cannot connect" notice is stale now.
+        clearConnectionAlert();
+
         // We're connected (or reconnected)! Do something and set onDisconnect
         set(myPresenceRef, { 
           online: true, 
@@ -945,7 +963,7 @@ export const AuctionProvider = ({ children }) => {
     });
 
     return () => {
-      clearTimeout(loadTimeout);
+      clearInterval(watchdog);
       unsubConnected();
       unsubPresence();
       unsubAuction();
