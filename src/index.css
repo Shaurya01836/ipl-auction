@@ -8,6 +8,11 @@
   --color-ipl-dark: #0b0e1e;
 }
 
+/* Desktop compact mode: the 125% browser-zoom view (roughly 1200px CSS wide)
+   and narrow laptops land below 1280px. From 1280px up the room keeps the
+   original desktop layout. Mobile (<768px) keeps its own sizing. */
+@custom-variant compact (@media (min-width: 768px) and (max-width: 1279.98px));
+
 /* ── Mobile-safe full viewport height ───────────────────────────────────────
    Uses the dynamic viewport height (dvh) so bottom-fixed chrome such as the
    auction room's mobile nav bar stays visible when mobile browsers show/hide

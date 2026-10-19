@@ -48,6 +48,15 @@ import { TEAMS } from '../data/teams';
 import TextChat from '../components/TextChat';
 import PageLoader from '../components/PageLoader';
 import ConfirmDialog from '../components/ConfirmDialog';
+import {
+   clampTimer,
+   computeTeamSpent,
+   countOverseas,
+   formatCrores,
+   isOverseasPlayer,
+   timerProgress,
+   toFiniteNumber,
+} from '../lib/auctionDisplay';
 
 const AuctionRoom = () => {
    const { id } = useParams();
@@ -64,29 +73,30 @@ const AuctionRoom = () => {
       pauseAuction,
       resumeAuction,
       endAuction,
-      sendMessage,
       messages,
       updateRoomSettings,
       kickPlayer,
       getSyncedTime
    } = useAuction();
-   const { user, logout } = useAuth();
-   const [timeLeft, setTimeLeft] = useState(15);
+   const { user } = useAuth();
+   // UI-only tick used to re-render the derived countdown. The authoritative
+   // deadline remains displayAuctionState.timerEndsAt + getSyncedTime().
+   const [, setTimerTick] = useState(0);
    const [error, setError] = useState('');
    const [copied, setCopied] = useState(false);
    const [showPlayersOverlay, setShowPlayersOverlay] = useState(false);
    const [activeOverlayTab, setActiveOverlayTab] = useState('upcoming');
-   const [searchQuery, setSearchQuery] = useState('');
+   const [searchQuery] = useState('');
    const [selectedTeamId, setSelectedTeamId] = useState(null);
    const [mobileTab, setMobileTab] = useState('arena'); // arena, squad, activity
    const [showSettings, setShowSettings] = useState(false);
-   const [summaryTab, setSummaryTab] = useState('squads'); // squads, leaderboard
    const [showParticipantsOverlay, setShowParticipantsOverlay] = useState(false);
    const [showEndConfirm, setShowEndConfirm] = useState(false);
    const [isEnding, setIsEnding] = useState(false);
    const [sidebarTab, setSidebarTab] = useState('activity'); // activity or chat
-   const audioRef = useRef(null);
    const celebrationAudioRef = useRef(null);
+   const fallbackAudioRef = useRef(null);
+   const redirectedToLobbyRef = useRef(false);
    const [newTimerValue, setNewTimerValue] = useState(currentAuction?.settings?.bidTimer || 10);
    const [optimisticState, setOptimisticState] = useState(null);
    const [joiningTeam, setJoiningTeam] = useState(null);
@@ -105,6 +115,22 @@ const AuctionRoom = () => {
    }, [currentAuction?.currentAuction?.currentBid, optimisticState]);
 
    const displayAuctionState = optimisticState || currentAuction?.currentAuction;
+
+   // Display-only timer derivation. Never write to timerEndsAt here: the
+   // deadline and bid acceptance remain owned by AuctionContext/RTDB.
+   const configuredBidTimer = toFiniteNumber(currentAuction?.settings?.bidTimer, 10);
+   const timerTotal = configuredBidTimer > 0 ? configuredBidTimer : 10;
+   const isTimerBidding = displayAuctionState?.status === 'bidding';
+   const isTimerPaused = displayAuctionState?.status === 'paused';
+   const rawSecondsRemaining = isTimerBidding && displayAuctionState?.timerEndsAt
+      ? Math.ceil((displayAuctionState.timerEndsAt - getSyncedTime()) / 1000)
+      : 0;
+   const secondsRemaining = isTimerBidding
+      ? clampTimer(rawSecondsRemaining, timerTotal)
+      : 0;
+   const timerPercent = isTimerBidding
+      ? timerProgress(rawSecondsRemaining, timerTotal)
+      : 0;
 
    // Real-time team ratings calculated entirely in browser memory (0 DB / infra cost)
    const liveTeamRatings = useMemo(() => {
@@ -184,6 +210,14 @@ const AuctionRoom = () => {
          navigate(`/summary/${id}`, { replace: true });
       }
    }, [currentAuction?.status, id, navigate]);
+
+   // Missing-auth redirects must happen in an effect, never during render.
+   useEffect(() => {
+      if (!user && !loading && !redirectedToLobbyRef.current) {
+         redirectedToLobbyRef.current = true;
+         navigate(`/lobby/${id}`, { replace: true });
+      }
+   }, [user, loading, id, navigate]);
 
    const TEAM_SONGS = {
       'csk': '/CSK.mp3',
@@ -458,9 +492,11 @@ const AuctionRoom = () => {
          try {
             await joinRoomDb(id, user.uid, { name: user.displayName || 'Manager' });
          } catch (e) {
-            // Auto-join failed
-            if (e.message.includes("kicked")) {
+            if (e?.message?.includes("kicked")) {
                setBanError(e.message);
+            } else {
+               // Non-blocking: the live subscription still connects the user.
+               console.warn('[auction] Auto-join failed', e);
             }
          }
       };
@@ -501,10 +537,52 @@ const AuctionRoom = () => {
 
          oscillator.start();
          oscillator.stop(audioCtx.currentTime + duration);
-      } catch (e) {
-         // Audio context blocked or not supported
+      } catch {
+         // AudioContext can be unavailable or blocked; beeps are non-critical.
       }
    };
+
+   // Release only resources owned by this component when it unmounts.
+   useEffect(() => {
+      return () => {
+         const audio = celebrationAudioRef.current;
+         if (audio) {
+            try {
+               audio.pause();
+               audio.currentTime = 0;
+               audio.removeAttribute('src');
+               audio.load();
+            } catch (e) {
+               console.warn('[auction audio] Failed to release celebration audio', e);
+            }
+         }
+
+         const fallback = fallbackAudioRef.current;
+         if (fallback) {
+            try {
+               fallback.pause();
+               fallback.currentTime = 0;
+               fallback.removeAttribute('src');
+               fallback.load();
+            } catch (e) {
+               console.warn('[auction audio] Failed to release fallback audio', e);
+            }
+            fallbackAudioRef.current = null;
+         }
+
+         const ctx = audioCtxRef.current;
+         if (ctx && ctx.state !== 'closed') {
+            ctx.close().catch(() => {
+               // The context may already be closing; nothing else to release.
+            });
+         }
+
+         if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.onvoiceschanged = null;
+         }
+      };
+   }, []);
 
 
    const lastHandledSoundStatusRef = useRef(null);
@@ -561,13 +639,18 @@ const AuctionRoom = () => {
             frame();
 
             if (teamId && TEAM_SONGS[teamId.toLowerCase()]) {
-               const audio = celebrationAudioRef.current || new Audio();
+               if (!celebrationAudioRef.current) celebrationAudioRef.current = new Audio();
+               const audio = celebrationAudioRef.current;
                try {
                   audio.pause();
                   audio.src = TEAM_SONGS[teamId.toLowerCase()];
                   audio.volume = 0.5;
-                  audio.play().catch(() => { });
-               } catch (e) { }
+                  audio.play().catch(() => {
+                     // Autoplay can be blocked until a user gesture; non-fatal.
+                  });
+               } catch (e) {
+                  console.warn('[auction audio] Celebration playback failed', e);
+               }
             }
          }
       } else if (status === 'unsold') {
@@ -588,12 +671,20 @@ const AuctionRoom = () => {
                   if (playPromise !== undefined) {
                      playPromise.catch(() => {
                         // Mobile fallback Audio object
+                        if (fallbackAudioRef.current) {
+                           fallbackAudioRef.current.pause();
+                        }
                         const fallbackAudio = new Audio(randomAudio);
                         fallbackAudio.volume = 0.7;
-                        fallbackAudio.play().catch(() => { });
+                        fallbackAudioRef.current = fallbackAudio;
+                        fallbackAudio.play().catch(() => {
+                           // Autoplay can be blocked until a user gesture; non-fatal.
+                        });
                      });
                   }
-               } catch (e) { }
+               } catch (e) {
+                  console.warn('[auction audio] Unsold playback failed', e);
+               }
             }
          }
       } else {
@@ -640,7 +731,7 @@ const AuctionRoom = () => {
             playBeep(diff === 1 ? 880 : 440, 0.1);
          }
 
-         setTimeLeft(diff);
+         setTimerTick((tick) => tick + 1);
          if (diff === 0) {
             // Primary trigger: Admin/Host triggers end immediately when timer expires
             // Fallback trigger: Non-host client triggers end if timer has expired by >1.5s (host tab closed/lagged)
@@ -671,7 +762,7 @@ const AuctionRoom = () => {
       }
 
       // Squad Size Guard
-      const squadLimit = currentAuction?.squadLimit || 25;
+      const squadLimit = toFiniteNumber(currentAuction?.squadLimit, 25);
       if ((team?.squad?.length || 0) >= squadLimit) {
          setError(`Squad Full (Max ${squadLimit} Players)`);
          playBeep(220, 0.3);
@@ -680,14 +771,10 @@ const AuctionRoom = () => {
       }
 
       // Overseas Limit Check
-      const isOverseas = currentPlayer?.country !== 'IND';
-      const overseasLimit = currentAuction?.overseasLimit || 8;
+      const isOverseas = isOverseasPlayer(currentPlayer);
+      const overseasLimit = toFiniteNumber(currentAuction?.overseasLimit, 8);
       if (isOverseas) {
-         const overseasCount = team?.squad?.filter(s => {
-            const pid = typeof s === 'string' ? s : s.id;
-            const p = IPL_PLAYERS.find(pl => pl.id === pid);
-            return p?.country !== 'IND';
-         }).length || 0;
+         const overseasCount = countOverseas(team?.squad, IPL_PLAYERS);
 
          if (overseasCount >= overseasLimit) {
             setError(`Overseas Player Limit Reached (Max ${overseasLimit})`);
@@ -762,7 +849,6 @@ const AuctionRoom = () => {
    }
 
    if (!user && !loading) {
-      navigate(`/lobby/${id}`, { replace: true });
       return <PageLoader />;
    }
 
@@ -783,7 +869,9 @@ const AuctionRoom = () => {
             team: selectedTeam.id
          });
       } catch (err) {
-         // Join failed
+         console.error('[auction] Failed to join selected team', err);
+         setError('Failed to join that team. Please try again.');
+         setTimeout(() => setError(''), 3000);
          setJoiningTeam(null);
       }
    };
@@ -882,13 +970,13 @@ const AuctionRoom = () => {
    return (
       <div className="h-screen-safe bg-[#0d0d0d] text-white font-sans flex flex-col items-center overflow-hidden">
 
-         <header className="w-full h-14 bg-black/40 backdrop-blur-md border-b border-white/5 flex flex-row items-center justify-between px-2.5 sm:px-4 md:px-6 z-50 gap-2 shrink-0">
+         <header className="w-full h-14 compact:h-12 bg-black/40 backdrop-blur-md border-b border-white/5 flex flex-row items-center justify-between px-2.5 sm:px-4 md:px-6 z-50 gap-2 shrink-0">
             <div className="flex items-center gap-1.5 sm:gap-4 shrink-0">
                <div className="flex items-center gap-1">
-                  <span className="text-gray-500 text-[8px] sm:text-[10px] font-black uppercase tracking-widest hidden xs:inline">ID:</span>
-                  <span className="text-white font-mono font-bold tracking-widest text-[10px] sm:text-sm">{id}</span>
+                  <span className="text-gray-500 text-[8px] sm:text-[10px] compact:text-[9px] font-black uppercase tracking-widest hidden xs:inline">ID:</span>
+                  <span className="text-white font-mono font-bold tracking-widest text-[10px] sm:text-sm compact:text-xs">{id}</span>
                   {spectateMode && (
-                     <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 font-black text-[8px] sm:text-[9px] uppercase tracking-widest ml-1 shrink-0">
+                     <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 font-black text-[8px] sm:text-[9px] compact:text-[8px] uppercase tracking-widest ml-1 shrink-0">
                         <Eye size={10} />
                         <span>SPECTATING</span>
                      </div>
@@ -896,7 +984,7 @@ const AuctionRoom = () => {
                </div>
                <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded-full" title="Active Team Managers">
                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shrink-0" />
-                  <span className="text-[9px] font-black text-gray-300">
+                  <span className="text-[9px] compact:text-[8px] font-black text-gray-300">
                      {currentAuction?.players?.filter(p => p.team).length || 0}/10
                   </span>
                </div>
@@ -913,7 +1001,7 @@ const AuctionRoom = () => {
                      {displayAuctionState?.status === 'paused' ? (
                         <button
                            onClick={() => resumeAuction(id)}
-                           className="p-1 sm:px-2.5 sm:py-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-300 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1"
+                           className="p-1 sm:px-2.5 sm:py-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-300 text-[10px] compact:text-[9px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1"
                            title="Resume Auction"
                         >
                            <PlayCircle size={13} /> <span className="hidden md:inline">Resume</span>
@@ -921,7 +1009,7 @@ const AuctionRoom = () => {
                      ) : (
                         <button
                            onClick={() => pauseAuction(id)}
-                           className="p-1 sm:px-2.5 sm:py-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-300 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1"
+                           className="p-1 sm:px-2.5 sm:py-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-300 text-[10px] compact:text-[9px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1"
                            title="Pause Auction"
                         >
                            <Pause size={13} /> <span className="hidden md:inline">Pause</span>
@@ -929,14 +1017,14 @@ const AuctionRoom = () => {
                      )}
                      <button
                         onClick={() => setShowEndConfirm(true)}
-                        className="p-1 sm:px-2.5 sm:py-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-300 text-[10px] font-black uppercase tracking-widest hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/20 transition-all cursor-pointer flex items-center gap-1"
+                        className="p-1 sm:px-2.5 sm:py-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-300 text-[10px] compact:text-[9px] font-black uppercase tracking-widest hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/20 transition-all cursor-pointer flex items-center gap-1"
                         title="End Auction"
                      >
                         <XCircle size={13} /> <span className="hidden md:inline">End</span>
                      </button>
                      <button
                         onClick={() => setShowParticipantsOverlay(true)}
-                        className="p-1 sm:px-2.5 sm:py-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-300 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1"
+                        className="p-1 sm:px-2.5 sm:py-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-300 text-[10px] compact:text-[9px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1"
                         title="Active Participants"
                      >
                         <Users size={13} /> <span className="hidden md:inline">Participants</span>
@@ -957,12 +1045,12 @@ const AuctionRoom = () => {
          </header>
 
          <div className="w-full flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden relative">
-            <aside className={`${mobileTab === 'squad' ? 'flex' : 'hidden'} md:flex w-full md:w-80 bg-black/40 border-r border-white/5 flex-col h-full max-h-[calc(100dvh-7.5rem)] md:max-h-[calc(100dvh-3.5rem)] overflow-hidden`}>
-               <div className="h-14 border-b border-white/5 bg-white/[0.01] flex items-center px-6 shrink-0">
-                  <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none">Auction Teams</span>
+            <aside className={`${mobileTab === 'squad' ? 'flex' : 'hidden'} md:flex w-full md:w-56 lg:w-64 xl:w-80 bg-black/40 border-r border-white/5 flex-col h-full max-h-[calc(100dvh-7.5rem)] md:max-h-[calc(100dvh-3.5rem)] compact:max-h-[calc(100dvh-3rem)] overflow-hidden`}>
+               <div className="h-14 compact:h-12 border-b border-white/5 bg-white/[0.01] flex items-center px-6 shrink-0">
+                  <span className="text-[10px] compact:text-[9px] font-black text-gray-500 uppercase tracking-widest leading-none">Auction Teams</span>
                </div>
 
-               <div className="flex-1 overflow-y-auto p-4 custom-scrollbar touch-pan-y min-h-0">
+               <div className="flex-1 overflow-y-auto p-4 compact:p-3 custom-scrollbar touch-pan-y min-h-0">
                   {(liveTeamRatings?.rankedTeams || TEAMS).map((t, idx) => {
                      const teamDoc = roomTeams.find(doc => doc.teamId === t.id);
                      const manager = currentAuction?.players?.find(p => p.id === teamDoc?.userId);
@@ -974,25 +1062,25 @@ const AuctionRoom = () => {
                         <div key={idx} className="border-b border-white/5 last:border-b-0 py-1">
                            <button
                               onClick={() => setSelectedTeamId(isSelected ? null : (manager?.id || t.id))}
-                              className={`w-full text-left py-3 px-2 rounded-xl transition-all flex items-center justify-between group cursor-pointer ${isSelected ? 'bg-white/[0.03]' : 'hover:bg-white/[0.02]'}`}
+                              className={`w-full text-left py-3 compact:py-2.5 px-2 rounded-xl transition-all flex items-center justify-between group cursor-pointer ${isSelected ? 'bg-white/[0.03]' : 'hover:bg-white/[0.02]'}`}
                            >
                               <div className="flex items-center gap-2.5">
-                                 <span className="w-4 text-[10px] font-black text-gray-500 text-center shrink-0">{idx + 1}</span>
-                                 <div className="w-8 h-8 rounded-lg bg-white/5 p-1 flex items-center justify-center shrink-0">
+                                 <span className="w-4 text-[10px] compact:text-[9px] font-black text-gray-500 text-center shrink-0">{idx + 1}</span>
+                                 <div className="w-8 h-8 compact:w-7 compact:h-7 rounded-lg bg-white/5 p-1 flex items-center justify-center shrink-0">
                                     <img src={t.logo} alt={`${t.name} Logo`} className="w-full h-full object-contain" />
                                  </div>
                                  <div className="overflow-hidden">
-                                    <h5 className="text-[11px] font-bold text-white leading-tight truncate max-w-[110px]">{t.name}</h5>
+                                    <h5 className="text-[11px] compact:text-[10px] font-bold text-white leading-tight truncate max-w-[110px]">{t.name}</h5>
                                     <div className="flex items-center gap-1.5 mt-0.5">
                                        {manager ? (
                                           <>
                                              <div className={`w-1.5 h-1.5 rounded-full ${manager.isOnline ? 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.4)] animate-pulse' : 'bg-gray-600'}`} />
-                                             <span className="text-[9px] font-semibold text-gray-400 truncate max-w-[110px]">
+                                             <span className="text-[9px] compact:text-[8px] font-semibold text-gray-400 truncate max-w-[110px]">
                                                 {manager.name} {isMyTeam ? '(You)' : ''}
                                              </span>
                                           </>
                                        ) : (
-                                          <span className="text-[8px] font-bold text-gray-500 uppercase tracking-wider">
+                                          <span className="text-[8px] compact:text-[7px] font-bold text-gray-500 uppercase tracking-wider">
                                              Available
                                           </span>
                                        )}
@@ -1001,10 +1089,10 @@ const AuctionRoom = () => {
                               </div>
                               <div className="flex items-center gap-4">
                                  <div className="text-right">
-                                    <span className="text-[10px] font-bold block leading-none text-gray-200">
-                                       ₹{(teamDoc?.budgetRemaining || (currentAuction?.settings?.budget || 120.0)).toFixed(1)} Cr
+                                    <span className="text-[10px] compact:text-[9px] font-bold block leading-none text-gray-200">
+                                       ₹{formatCrores(teamDoc?.budgetRemaining ?? toFiniteNumber(currentAuction?.settings?.budget, 120), 1)} Cr
                                     </span>
-                                    <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest mt-0.5 block">{teamDoc?.squad?.length || 0}/{currentAuction?.squadLimit || 25}</span>
+                                    <span className="text-[8px] compact:text-[7px] font-bold text-gray-500 uppercase tracking-widest mt-0.5 block">{teamDoc?.squad?.length || 0}/{toFiniteNumber(currentAuction?.squadLimit, 25)}</span>
                                  </div>
                                  <ChevronDown size={12} className={`text-gray-500 transition-transform duration-300 ${isSelected ? 'rotate-180' : ''}`} />
                               </div>
@@ -1020,13 +1108,17 @@ const AuctionRoom = () => {
                                  >
                                     <div className="space-y-3 pt-2 pl-1">
                                        {/* Header Stats */}
-                                       <div className="flex items-center justify-between text-[9px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5 pb-2">
-                                          <span>Spent: <span className="text-yellow-500">₹{((currentAuction?.settings?.budget || 120) - (teamDoc?.budgetRemaining || (currentAuction?.settings?.budget || 120))).toFixed(2)} Cr</span></span>
+                                       <div className="flex items-center justify-between text-[9px] compact:text-[8px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5 pb-2">
+                                          <span>Spent: <span className="text-yellow-500">{(() => {
+                                             const spent = computeTeamSpent({
+                                                budget: toFiniteNumber(currentAuction?.settings?.budget, 120),
+                                                budgetRemaining: teamDoc?.budgetRemaining,
+                                                spent: teamDoc?.spent,
+                                             });
+                                             return spent === null ? '—' : `₹${formatCrores(spent, 2)} Cr`;
+                                          })()}</span></span>
                                           <span>Rating: <span className="text-amber-400 font-extrabold">{ratingInfo?.avgRating ? `${ratingInfo.avgRating}` : 'N/A'}</span></span>
-                                          <span>Overseas: <span className="text-white">{(teamDoc?.squad?.filter(s => {
-                                             const pid = typeof s === 'string' ? s : s.id;
-                                             return IPL_PLAYERS.find(pl => pl.id === pid)?.country !== 'IND';
-                                          }).length || 0)}/{currentAuction?.overseasLimit || 8}</span></span>
+                                          <span>Overseas: <span className="text-white">{countOverseas(teamDoc?.squad, IPL_PLAYERS)}/{toFiniteNumber(currentAuction?.overseasLimit, 8)}</span></span>
                                        </div>
 
                                        {teamDoc?.squad?.length > 0 ? (
@@ -1046,8 +1138,8 @@ const AuctionRoom = () => {
                                                 return (
                                                    <div key={role} className="space-y-1.5">
                                                       <div className="flex items-center justify-between border-b border-white/5 pb-1">
-                                                         <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest">{role}</span>
-                                                         <span className="text-[9px] font-bold text-gray-400">{playersInRole.length}</span>
+                                                         <span className="text-[8px] compact:text-[7px] font-bold text-gray-500 uppercase tracking-widest">{role}</span>
+                                                         <span className="text-[9px] compact:text-[8px] font-bold text-gray-400">{playersInRole.length}</span>
                                                       </div>
 
                                                       <div className="space-y-1">
@@ -1057,15 +1149,15 @@ const AuctionRoom = () => {
                                                                   <img src={p?.image} alt={p?.name || 'Player'} className="w-5 h-5 object-contain rounded bg-white/5" />
                                                                   <div className="overflow-hidden">
                                                                      <div className="flex items-center gap-1">
-                                                                        <h5 className="text-[10px] font-semibold text-gray-200 truncate max-w-[80px]">{p?.name}</h5>
+                                                                        <h5 className="text-[10px] compact:text-[9px] font-semibold text-gray-200 truncate max-w-[80px]">{p?.name}</h5>
                                                                         {p?.rating && (
-                                                                           <span className="text-[8px] text-amber-400/80 font-medium">★{p.rating}</span>
+                                                                           <span className="text-[8px] compact:text-[7px] text-amber-400/80 font-medium">★{p.rating}</span>
                                                                         )}
                                                                      </div>
                                                                   </div>
                                                                </div>
-                                                               <span className="text-[9px] font-bold text-yellow-500">
-                                                                  ₹{p?.bidVal ? p.bidVal.toFixed(2) : (p?.basePrice || 0).toFixed(2)} Cr
+                                                               <span className="text-[9px] compact:text-[8px] font-bold text-yellow-500">
+                                                                  {p?.bidVal == null ? '—' : `₹${formatCrores(p.bidVal)} Cr`}
                                                                </span>
                                                             </div>
                                                          ))}
@@ -1076,7 +1168,7 @@ const AuctionRoom = () => {
                                           </div>
                                        ) : (
                                           <div className="py-3 text-center opacity-30">
-                                             <p className="text-[9px] font-medium text-gray-500 uppercase tracking-wider">No players joined yet</p>
+                                             <p className="text-[9px] compact:text-[8px] font-medium text-gray-500 uppercase tracking-wider">No players joined yet</p>
                                           </div>
                                        )}
                                     </div>
@@ -1095,20 +1187,20 @@ const AuctionRoom = () => {
                   <div className="w-full max-w-4xl mx-auto flex items-center justify-between gap-1.5 sm:gap-3 md:gap-4 min-w-0">
                      <div className="flex items-center gap-1.5 sm:gap-3 md:gap-4 min-w-0 flex-1">
                         <div className="px-2 sm:px-2.5 py-0.5 bg-yellow-500/10 border border-yellow-500/20 rounded-full shrink-0 flex items-center">
-                           <span className="text-[7.5px] sm:text-[9px] font-extrabold text-yellow-400/90 uppercase tracking-widest whitespace-nowrap">{currentPlayer?.set}</span>
+                           <span className="text-[7.5px] sm:text-[9px] compact:text-[8px] font-extrabold text-yellow-400/90 uppercase tracking-widest whitespace-nowrap">{currentPlayer?.set}</span>
                         </div>
                         <div className="w-px h-3.5 sm:h-4 bg-white/10 shrink-0" />
                         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-                           <span className="text-[7.5px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Base:</span>
-                           <span className="text-[11px] sm:text-sm md:text-base font-black text-white whitespace-nowrap">₹{currentPlayer?.basePrice?.toFixed(2)} Cr</span>
+                           <span className="text-[7.5px] sm:text-[9px] compact:text-[8px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Base:</span>
+                           <span className="text-[11px] sm:text-sm md:text-base compact:text-sm font-black text-white whitespace-nowrap">{currentPlayer?.basePrice == null ? '—' : `₹${formatCrores(currentPlayer.basePrice)} Cr`}</span>
                         </div>
                      </div>
                      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
                         <div className="w-px h-3.5 sm:h-4 bg-white/10 shrink-0" />
                         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-                           <span className="text-[7.5px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Bidder:</span>
+                           <span className="text-[7.5px] sm:text-[9px] compact:text-[8px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Bidder:</span>
                            <div className="bg-green-500/20 border border-green-500/30 px-1.5 sm:px-2 py-0.5 rounded-md max-w-[85px] xs:max-w-[120px] sm:max-w-[180px] truncate">
-                              <span className="text-[7.5px] sm:text-[9px] font-black text-green-400 uppercase tracking-wider truncate block">{displayAuctionState?.highBidderName}</span>
+                              <span className="text-[7.5px] sm:text-[9px] compact:text-[8px] font-black text-green-400 uppercase tracking-wider truncate block">{displayAuctionState?.highBidderName}</span>
                            </div>
                         </div>
                      </div>
@@ -1116,7 +1208,7 @@ const AuctionRoom = () => {
                </div>
 
                {/* Center Scrollable Main Body */}
-               <main className="flex-1 overflow-y-auto p-4 md:p-8 flex flex-col items-center custom-scrollbar">
+               <main className="flex-1 overflow-y-auto p-4 md:p-8 compact:p-4 flex flex-col items-center custom-scrollbar">
                   <div className="w-full max-w-4xl flex flex-col gap-4 md:gap-6">
                      <AnimatePresence mode="wait">
                         {(displayAuctionState?.status === 'sold' || displayAuctionState?.status === 'unsold') ? (() => {
@@ -1137,7 +1229,7 @@ const AuctionRoom = () => {
                                      <div className={`absolute inset-0 opacity-25 bg-gradient-to-br ${isSold && buyerTeam ? buyerTeam.color.replace('bg-', 'from-') : 'from-red-600'} to-black`} />
                                      <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.15)_1px,transparent_1px)] [background-size:12px_12px] opacity-20 pointer-events-none" />
 
-                                     <div className="relative p-5 sm:p-6 flex flex-col justify-between gap-4 z-10">
+                                     <div className="relative p-5 sm:p-6 compact:p-4 flex flex-col justify-between gap-4 z-10">
                                         {/* Top Bar: Team Logo & Status info */}
                                         <div className="flex justify-between items-start">
                                            {isSold && buyerTeam ? (
@@ -1165,7 +1257,7 @@ const AuctionRoom = () => {
 
                                         {/* Center: Player Portrait with Team Glow */}
                                         <div className="flex flex-col justify-center items-center py-1 sm:py-2">
-                                           <div className="relative w-32 h-32 sm:w-40 sm:h-40 group">
+                                           <div className="relative w-32 h-32 sm:w-40 sm:h-40 compact:w-32 compact:h-32 group">
                                               <div className={`absolute inset-0 rounded-full blur-3xl opacity-40 ${isSold && buyerTeam ? buyerTeam.color : 'bg-red-500'}`} />
                                               <img
                                                  src={currentPlayer?.image}
@@ -1178,7 +1270,7 @@ const AuctionRoom = () => {
                                               />
                                            </div>
                                            <div className="text-center mt-3">
-                                              <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white leading-tight">
+                                              <h2 className="text-xl sm:text-2xl compact:text-xl font-black uppercase tracking-tight text-white leading-tight">
                                                  {currentPlayer?.name}
                                               </h2>
                                               <p className="text-[9.5px] sm:text-[10.5px] font-bold text-gray-400 uppercase tracking-[0.2em] sm:tracking-[0.25em] mt-0.5">
@@ -1199,8 +1291,8 @@ const AuctionRoom = () => {
 
                                            <div className={`backdrop-blur-md border p-3 rounded-2xl text-center ${isSold ? 'bg-white/5 border-white/10' : 'bg-red-500/10 border-red-500/20'}`}>
                                               {isSold ? (
-                                                 <p className="text-xl sm:text-2xl font-black text-white">
-                                                    ₹{(displayAuctionState.currentBid || 0).toFixed(2)} Cr
+                                                 <p className="text-xl sm:text-2xl compact:text-xl font-black text-white">
+                                                    {displayAuctionState?.currentBid == null ? '—' : `₹${formatCrores(displayAuctionState.currentBid)} Cr`}
                                                  </p>
                                               ) : (
                                                  <p className="text-base sm:text-lg font-black text-red-400 uppercase tracking-widest">
@@ -1215,21 +1307,21 @@ const AuctionRoom = () => {
                             );
                          })() : (
                            <motion.div key="player-card" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full flex-col gap-4 md:gap-6 flex">
-                              <div className="bg-gradient-to-b from-[#161616] to-[#0f0f0f] border border-white/[0.08] rounded-[2rem] overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.6)] relative min-h-[400px]">
+                              <div className="bg-gradient-to-b from-[#161616] to-[#0f0f0f] border border-white/[0.08] rounded-[2rem] overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.6)] relative min-h-[400px] lg:min-h-0">
                                  <div className="absolute top-0 inset-x-0 h-1 bg-white/5">
-                                    <motion.div initial={{ width: "100%" }} animate={{ width: `${(timeLeft / (currentAuction?.settings?.bidTimer || 10)) * 100}%` }} className={`h-full transition-colors duration-1000 ${timeLeft < 5 ? 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]'}`} />
+                                    <motion.div initial={{ width: "100%" }} animate={{ width: `${timerPercent}%` }} className={`h-full transition-colors duration-1000 ${isTimerPaused ? 'bg-gray-500' : secondsRemaining < 5 ? 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]'}`} />
                                  </div>
-                                 <div className="p-4 sm:p-6 md:p-10 flex flex-col md:flex-row items-center gap-4 sm:gap-6 md:gap-10">
-                                    <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-60 md:h-80 bg-gradient-to-b from-white/10 to-transparent rounded-2xl md:rounded-[2rem] overflow-hidden border border-white/10 relative z-10 shadow-[0_12px_40px_rgba(0,0,0,0.4)] group hover:scale-[1.02] transition-transform duration-500 shrink-0">
+                                 <div className="p-4 sm:p-6 lg:p-5 xl:p-10 flex flex-col lg:flex-row items-center gap-4 sm:gap-6 lg:gap-5 xl:gap-10">
+                                    <div className="w-28 h-28 sm:w-36 sm:h-36 lg:w-36 lg:h-48 xl:w-60 xl:h-80 bg-gradient-to-b from-white/10 to-transparent rounded-2xl sm:rounded-[2rem] overflow-hidden border border-white/10 relative z-10 shadow-[0_12px_40px_rgba(0,0,0,0.4)] group hover:scale-[1.02] transition-transform duration-500 shrink-0">
                                        <img src={currentPlayer.image} alt={currentPlayer.name} decoding="async" className="w-full h-full object-cover" />
                                     </div>
-                                    <div className="flex-1 flex flex-col gap-4 md:gap-6 w-full text-center md:text-left">
+                                    <div className="flex-1 min-w-0 flex flex-col gap-4 xl:gap-6 w-full text-center lg:text-left">
                                        <div>
-                                          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2 md:mb-4">
+                                          <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 mb-2 xl:mb-4">
                                              <span className="bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[8px] md:text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">{currentPlayer.role}</span>
                                              <span className="bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[8px] md:text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">{currentPlayer.type}</span>
                                           </div>
-                                          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-white leading-none">{currentPlayer.name}</h2>
+                                          <h2 className="text-2xl sm:text-3xl xl:text-5xl font-black tracking-tight text-white leading-tight break-words">{currentPlayer.name}</h2>
                                        </div>
                                        {/* Dynamic Role-aware stats grid */}
                                         {(() => {
@@ -1237,14 +1329,14 @@ const AuctionRoom = () => {
                                            const entries = Object.entries(s).slice(0, 4); // display up to 4 stats
                                            const colsCount = Math.max(2, Math.min(entries.length, 4));
                                            const colClass = {
-                                              2: 'lg:grid-cols-2',
-                                              3: 'lg:grid-cols-3',
-                                              4: 'lg:grid-cols-4',
-                                              5: 'lg:grid-cols-5'
-                                           }[colsCount] || 'lg:grid-cols-4';
+                                              2: 'grid-cols-2',
+                                              3: 'xl:grid-cols-3',
+                                              4: 'xl:grid-cols-4',
+                                              5: 'xl:grid-cols-5'
+                                           }[colsCount] || 'xl:grid-cols-4';
                                            
                                            return (
-                                              <div className={`grid grid-cols-2 ${colClass} gap-2 sm:gap-3 bg-white/[0.02] p-2.5 sm:p-3 md:p-4 rounded-2xl border border-white/[0.04] backdrop-blur-md`}>
+                                              <div className={`grid grid-cols-2 ${colClass} gap-2 xl:gap-3 bg-white/[0.02] p-2.5 lg:p-3 xl:p-4 rounded-2xl border border-white/[0.04] backdrop-blur-md`}>
                                                  {entries.map(([key, value], index) => {
                                                     const labelMap = {
                                                        matches: 'Matches', runs: 'Runs', wickets: 'Wickets',
@@ -1261,20 +1353,20 @@ const AuctionRoom = () => {
                                                     const colorClass = colorMap[key] || 'text-gray-100';
                                                     
                                                     return (
-                                                       <div key={key} className={`text-center ${index > 0 ? 'border-white/5' : ''} ${index % 2 !== 0 ? 'border-l' : ''} ${index > 0 ? 'lg:border-l' : ''}`}>
-                                                          <span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">{label}</span>
-                                                          <span className={`text-lg sm:text-xl font-bold ${colorClass}`}>{value}</span>
+                                                       <div key={key} className={`text-center ${index > 0 ? 'border-white/5' : ''} ${index % 2 !== 0 ? 'border-l' : ''} ${index > 0 ? 'xl:border-l' : ''}`}>
+                                                          <span className="block text-[8px] compact:text-[7px] font-black text-gray-500 uppercase tracking-widest mb-1 break-words leading-tight">{label}</span>
+                                                          <span className={`text-base sm:text-lg xl:text-xl font-bold ${colorClass}`}>{value}</span>
                                                        </div>
                                                     );
                                                  })}
                                               </div>
                                            );
                                         })()}
-                                       <div className="flex items-center justify-between mt-2 md:mt-4">
+                                       <div className="flex flex-wrap items-center justify-between gap-2 mt-2 xl:mt-4">
                                           <div className="text-left">
-                                             <span className="text-[9px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Current Bid</span>
+                                             <span className="text-[9px] xl:text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Current Bid</span>
                                              <div className="flex items-center gap-2 sm:gap-3">
-                                                <span className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white leading-none">₹{(displayAuctionState?.currentBid || 0).toFixed(2)} Cr</span>
+                                                <span className="text-lg sm:text-xl xl:text-3xl font-extrabold text-white leading-none">{displayAuctionState?.currentBid == null ? '—' : `₹${formatCrores(displayAuctionState.currentBid)} Cr`}</span>
                                                 {displayAuctionState?.highBidderTeamId && (
                                                    <div className="flex items-center gap-1.5 sm:gap-2 bg-white/5 border border-white/10 px-2 py-1 rounded-xl">
                                                       <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-white/5 border border-white/10 p-0.5 flex items-center justify-center">
@@ -1285,45 +1377,50 @@ const AuctionRoom = () => {
                                                 )}
                                              </div>
                                           </div>
-                                          <div className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full flex flex-col items-center justify-center transition-all duration-300 border-2 ${timeLeft < 5
-                                             ? 'border-red-500 bg-red-500/10 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]'
-                                             : 'border-green-500/30 bg-green-500/5 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.1)]'
+                                          <div className={`w-12 h-12 sm:w-14 sm:h-14 xl:w-16 xl:h-16 rounded-full flex flex-col items-center justify-center transition-all duration-300 border-2 ${isTimerPaused
+                                             ? 'border-gray-500 bg-gray-500/10 text-gray-400'
+                                             : secondsRemaining < 5
+                                                ? 'border-red-500 bg-red-500/10 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]'
+                                                : 'border-green-500/30 bg-green-500/5 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.1)]'
                                              }`}>
-                                             <span className="text-base sm:text-lg md:text-xl font-black leading-none">{timeLeft}</span>
-                                             <span className="text-[6px] md:text-[7px] font-bold tracking-widest uppercase mt-0.5">Sec</span>
+                                             {isTimerPaused ? (
+                                                <span className="text-[8px] sm:text-[9px] md:text-[10px] font-black leading-none tracking-wider">PAUSED</span>
+                                             ) : (
+                                                <>
+                                                   <span className="text-base sm:text-lg xl:text-xl font-black leading-none">{secondsRemaining}</span>
+                                                   <span className="text-[6px] md:text-[7px] font-bold tracking-widest uppercase mt-0.5">Sec</span>
+                                                </>
+                                             )}
                                           </div>
                                        </div>
                                     </div>
                                  </div>
-                                 <div className="bg-black/20 border-t border-white/5 p-3 sm:p-4 md:p-6 flex flex-col gap-3">
+                                 <div className="bg-black/20 border-t border-white/5 p-3 sm:p-4 xl:p-6 flex flex-col gap-3">
                                     {/* Franchise Quick Stats Bar right above Bid button (Mobile view only) */}
                                     {team && (() => {
-                                       const osCount = (team.squad || []).filter(s => {
-                                          const pid = typeof s === 'string' ? s : s.id;
-                                          return IPL_PLAYERS.find(pl => pl.id === pid)?.country !== 'IND';
-                                       }).length;
-                                       const totalBudget = currentAuction?.settings?.budget || 120;
+                                       const osCount = countOverseas(team.squad, IPL_PLAYERS);
+                                       const totalBudget = toFiniteNumber(currentAuction?.settings?.budget, 120);
 
                                        return (
                                           <div className="flex md:hidden items-center justify-between bg-white/[0.03] border border-white/10 px-2.5 sm:px-4 py-2 rounded-xl text-[9px] sm:text-xs font-bold text-gray-300">
                                              <div className="flex items-center gap-1" title="Squad Count">
                                                 <span className="text-gray-500 uppercase font-black text-[8px] sm:text-[10px]">Squad:</span>
-                                                <span className="text-blue-400 font-extrabold">{team.squad?.length || 0}/{currentAuction?.squadLimit || 25}</span>
+                                                <span className="text-blue-400 font-extrabold">{team.squad?.length || 0}/{toFiniteNumber(currentAuction?.squadLimit, 25)}</span>
                                              </div>
                                              <div className="w-px h-3 bg-white/10" />
                                              <div className="flex items-center gap-1" title="Overseas Players">
                                                 <span className="text-gray-500 uppercase font-black text-[8px] sm:text-[10px]">OS:</span>
-                                                <span className="text-purple-400 font-extrabold">{osCount}/{currentAuction?.overseasLimit || 8}</span>
+                                                <span className="text-purple-400 font-extrabold">{osCount}/{toFiniteNumber(currentAuction?.overseasLimit, 8)}</span>
                                              </div>
                                              <div className="w-px h-3 bg-white/10" />
                                              <div className="flex items-center gap-1" title="Purse Left out of Total Budget">
                                                 <span className="text-gray-500 uppercase font-black text-[8px] sm:text-[10px]">Purse:</span>
-                                                <span className="text-green-400 font-extrabold">₹{(team.budgetRemaining || 0).toFixed(1)}/{totalBudget}Cr</span>
+                                                <span className="text-green-400 font-extrabold">₹{formatCrores(team.budgetRemaining ?? totalBudget, 1)}/{formatCrores(totalBudget, 0)}Cr</span>
                                              </div>
                                              <div className="w-px h-3 bg-white/10 hidden xs:block" />
                                              <div className="items-center gap-1 hidden xs:flex" title="Total Spent">
                                                 <span className="text-gray-500 uppercase font-black text-[8px] sm:text-[10px]">Spent:</span>
-                                                <span className="text-yellow-400 font-extrabold">₹{(team.spent || 0).toFixed(1)}Cr</span>
+                                                <span className="text-yellow-400 font-extrabold">₹{formatCrores(team.spent, 1)}Cr</span>
                                              </div>
                                           </div>
                                        );
@@ -1332,8 +1429,8 @@ const AuctionRoom = () => {
                                     <div className="flex gap-3 md:gap-4">
                                        <button
                                           onClick={handleBid}
-                                          disabled={spectateMode || !team || timeLeft === 0 || displayAuctionState?.status !== 'bidding' || displayAuctionState?.highBidderId === user?.uid}
-                                          className={`flex-1 h-12 sm:h-14 md:h-18 font-black text-sm sm:text-base md:text-xl rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale cursor-pointer ${spectateMode
+                                          disabled={spectateMode || !team || secondsRemaining === 0 || displayAuctionState?.status !== 'bidding' || displayAuctionState?.highBidderId === user?.uid}
+                                          className={`flex-1 h-12 sm:h-14 xl:h-18 font-black text-sm sm:text-base xl:text-xl rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale cursor-pointer ${spectateMode
                                              ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                                              : displayAuctionState?.highBidderId === user?.uid
                                                 ? 'bg-white/5 text-green-500 border border-green-500/20 shadow-inner'
@@ -1341,12 +1438,12 @@ const AuctionRoom = () => {
                                              }`}
                                        >
                                           {spectateMode ? (
-                                             <span className="flex items-center gap-2 text-xs md:text-sm font-black uppercase tracking-widest text-blue-400">
+                                             <span className="flex items-center gap-2 text-xs xl:text-sm font-black uppercase tracking-widest text-blue-400">
                                                 <Eye size={18} /> Spectator View (Read Only)
                                              </span>
-                                          ) : displayAuctionState?.status === 'paused' ? 'PAUSED' : displayAuctionState?.highBidderId === user?.uid ? "LEADING BIDDER" : `PLACE BID: ₹${nextBidAmount.toFixed(2)} Cr`}
+                                          ) : displayAuctionState?.status === 'paused' ? 'PAUSED' : displayAuctionState?.highBidderId === user?.uid ? "LEADING BIDDER" : `PLACE BID: ₹${formatCrores(nextBidAmount)} Cr`}
                                        </button>
-                                       <button onClick={() => setShowPlayersOverlay(true)} className="w-12 h-12 sm:w-14 sm:h-14 md:w-18 md:h-18 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-all"><List size={20} /></button>
+                                       <button onClick={() => setShowPlayersOverlay(true)} className="w-12 h-12 sm:w-14 sm:h-14 xl:w-18 xl:h-18 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-all"><List size={20} /></button>
                                     </div>
                                  </div>
                               </div>
@@ -1357,9 +1454,9 @@ const AuctionRoom = () => {
                </main>
             </div>
 
-            <aside className={`${mobileTab === 'activity' ? 'flex' : 'hidden'} md:flex w-full md:w-96 bg-black/40 border-l border-white/5 flex-col h-full md:max-h-[calc(100dvh-3.5rem)]`}>
+            <aside className={`${mobileTab === 'activity' ? 'flex' : 'hidden'} md:flex w-full md:w-64 lg:w-72 xl:w-96 bg-black/40 border-l border-white/5 flex-col h-full md:max-h-[calc(100dvh-3.5rem)] compact:max-h-[calc(100dvh-3rem)]`}>
                {/* Premium Tabs Header */}
-               <div className="h-14 bg-white/[0.01] border-b border-white/5 flex items-center shrink-0 w-full">
+               <div className="h-14 compact:h-12 bg-white/[0.01] border-b border-white/5 flex items-center shrink-0 w-full">
                   <button
                      onClick={() => setSidebarTab('activity')}
                      className={`h-full flex-1 flex items-center justify-center gap-2 transition-all cursor-pointer ${sidebarTab === 'activity'
@@ -1368,7 +1465,7 @@ const AuctionRoom = () => {
                         }`}
                   >
                      <History size={14} />
-                     <span className="text-[10px] uppercase tracking-widest">Live Activity</span>
+                     <span className="text-[10px] compact:text-[9px] uppercase tracking-widest">Live Activity</span>
                   </button>
                   <button
                      onClick={() => setSidebarTab('chat')}
@@ -1378,7 +1475,7 @@ const AuctionRoom = () => {
                         }`}
                   >
                      <MessageSquare size={14} />
-                     <span className="text-[10px] uppercase tracking-widest">Chat</span>
+                     <span className="text-[10px] compact:text-[9px] uppercase tracking-widest">Chat</span>
                   </button>
                </div>
 
@@ -1393,7 +1490,7 @@ const AuctionRoom = () => {
                            exit={{ opacity: 0, y: -10 }}
                            className="flex-1 flex flex-col min-h-0 h-full"
                         >
-                           <div className="flex-1 overflow-y-auto p-3 sm:p-4 custom-scrollbar h-full relative">
+                           <div className="flex-1 overflow-y-auto p-3 sm:p-4 compact:p-3 custom-scrollbar h-full relative">
                               {/* Timeline line */}
                               <div className="absolute left-6 sm:left-10 top-6 bottom-6 w-[1px] bg-white/5 pointer-events-none" />
 
@@ -1456,10 +1553,10 @@ const AuctionRoom = () => {
 
                                           {/* Minimal Text content */}
                                           <div className="flex-1 min-w-0">
-                                             <p className="text-[10px] sm:text-[11px] md:text-[12px] font-medium leading-relaxed text-gray-300">
+                                             <p className="text-[10px] sm:text-[11px] md:text-[12px] compact:text-[10px] font-medium leading-relaxed text-gray-300">
                                                 {displayText}
                                              </p>
-                                             {timeAgo && <span className="text-[8px] font-bold text-gray-600 uppercase tracking-widest mt-0.5 block">{timeAgo}</span>}
+                                             {timeAgo && <span className="text-[8px] compact:text-[7px] font-bold text-gray-600 uppercase tracking-widest mt-0.5 block">{timeAgo}</span>}
                                           </div>
                                        </motion.div>
                                     );
@@ -1469,7 +1566,7 @@ const AuctionRoom = () => {
                               {messages.filter(m => m.type === 'log' || m.type === 'sold_card').filter(m => !m.text.includes('New bid:')).length === 0 && (
                                  <div className="h-full flex flex-col items-center justify-center py-10 opacity-30">
                                     <History size={24} className="text-gray-700 mb-2" />
-                                    <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">No activity yet</p>
+                                    <p className="text-[10px] compact:text-[9px] font-black text-gray-600 uppercase tracking-widest">No activity yet</p>
                                  </div>
                               )}
                            </div>
@@ -1583,7 +1680,7 @@ const AuctionRoom = () => {
                                              </div>
                                              <div className="bg-black/40 px-2 py-1 rounded-lg border border-white/5 text-center">
                                                 <span className="text-[9px] sm:text-[10px] font-black text-yellow-500">
-                                                   ₹{p.basePrice.toFixed(2)} Cr
+                                                   ₹{formatCrores(p.basePrice)} Cr
                                                 </span>
                                              </div>
                                           </div>
@@ -1609,7 +1706,7 @@ const AuctionRoom = () => {
                                     </div>
                                     <div className="bg-black/40 px-2 py-1 rounded-lg border border-white/5 text-center">
                                        <span className="text-[9px] sm:text-[10px] font-black text-yellow-500">
-                                          ₹{(activeOverlayTab === 'sold' || activeOverlayTab === 'leaderboard' ? p.bid : p.basePrice).toFixed(2)} Cr
+                                          ₹{formatCrores(activeOverlayTab === 'sold' || activeOverlayTab === 'leaderboard' ? p.bid : p.basePrice)} Cr
                                        </span>
                                     </div>
                                  </div>
@@ -1766,7 +1863,7 @@ const AuctionRoom = () => {
                                  <div><h5 className="text-sm font-black uppercase flex items-center gap-2">{player.name}{player.isHost && <span className="px-1.5 py-0.5 bg-yellow-500/20 text-yellow-500 text-[8px] rounded-md">HOST</span>}</h5><p className="text-[10px] font-bold text-gray-500 uppercase">{player.teamName}</p></div>
                               </div>
                               {!player.isHost && (
-                                 <button onClick={async () => { if (window.confirm(`Are you sure you want to kick ${player.name}?`)) { await kickPlayer(id, player); } }} className="px-4 py-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all opacity-0 group-hover:opacity-100 cursor-pointer">Kick Player</button>
+                                 <button onClick={async () => { if (window.confirm(`Are you sure you want to kick ${player.name}?`)) { try { await kickPlayer(id, player); } catch { setError('Failed to remove that manager. Please try again.'); setTimeout(() => setError(''), 3000); } } }} className="px-4 py-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all opacity-0 group-hover:opacity-100 cursor-pointer">Kick Player</button>
                               )}
                            </div>
                         ))}
@@ -1858,7 +1955,7 @@ const SoldCard = ({ msg }) => {
                      />
                   </div>
                   <div className="text-center mt-2 sm:mt-4">
-                     <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white leading-tight">{player?.name}</h2>
+                     <h2 className="text-xl sm:text-2xl compact:text-xl font-black uppercase tracking-tight text-white leading-tight">{player?.name}</h2>
                      <p className="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] sm:tracking-[0.3em]">{player?.role} • {player?.country}</p>
                   </div>
                </div>
@@ -1871,7 +1968,7 @@ const SoldCard = ({ msg }) => {
 
                   <div className="bg-white/5 backdrop-blur-md border border-white/10 p-3 sm:p-4 rounded-2xl sm:rounded-3xl text-center">
 
-                     <p className="text-xl sm:text-2xl font-black text-white">₹{msg.metadata.bid.toFixed(2)} Cr</p>
+                     <p className="text-xl sm:text-2xl compact:text-xl font-black text-white">₹{formatCrores(msg.metadata?.bid)} Cr</p>
                   </div>
                </div>
             </div>

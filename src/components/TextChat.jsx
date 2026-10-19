@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuction } from '../contexts/AuctionContext';
 import { useAuth } from '../contexts/AuthContext';
-import { TEAMS } from '../data/teams';
 import { Send, MessageSquare, ChevronUp, ChevronDown, Image as ImageIcon } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { shouldStickToBottom } from '../lib/auctionDisplay';
 
 
 const GIPHY_API_KEY = import.meta.env.VITE_GIPHY_API_KEY;
@@ -12,31 +12,64 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
    const { messages, sendMessage } = useAuction();
    const { user } = useAuth();
    const [text, setText] = useState('');
+   const [chatError, setChatError] = useState('');
+   const [gifError, setGifError] = useState('');
    const scrollContainerRef = useRef(null);
+   const stickToBottomRef = useRef(true);
+   const lastScrollTopRef = useRef(0);
 
    // Filter only text and gif chat messages
    const chatMessages = messages.filter(m => m.type === 'text' || m.type === 'gif' || !m.type);
+   const lastMessageId = chatMessages[chatMessages.length - 1]?.id;
 
-   const scrollToBottom = () => {
+   const scrollToBottom = useCallback(() => {
       if (scrollContainerRef.current) {
          scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
       }
-   };
+   }, []);
 
-
+   // Follow the latest message by identity, not only by length: the RTDB
+   // subscription keeps a fixed-size window, so replacement messages do not
+   // change the length. Only follow when the user is already near the bottom.
+   // When collapsed, remember the reading position so expanding does not jump.
    useEffect(() => {
-      scrollToBottom();
-   }, [chatMessages.length]);
+      if (isCollapsed) return undefined;
+      const el = scrollContainerRef.current;
+      if (!el) return undefined;
+
+      const raf = requestAnimationFrame(() => {
+         if (stickToBottomRef.current) {
+            scrollToBottom();
+         } else {
+            el.scrollTop = lastScrollTopRef.current;
+         }
+      });
+      return () => cancelAnimationFrame(raf);
+   }, [lastMessageId, isCollapsed, scrollToBottom]);
+
+   const handleScroll = () => {
+      const el = scrollContainerRef.current;
+      if (!el) return;
+      lastScrollTopRef.current = el.scrollTop;
+      stickToBottomRef.current = shouldStickToBottom(
+         el.scrollHeight,
+         el.scrollTop,
+         el.clientHeight,
+      );
+   };
 
    const handleSend = async (e) => {
       e.preventDefault();
       if (!text.trim() || !roomId) return;
-      
+
       try {
          await sendMessage(roomId, text.trim(), 'text');
          setText('');
+         setChatError('');
+         stickToBottomRef.current = true;
       } catch (err) {
-         // Send failed silently or handled by context
+         console.error('[chat] Failed to send message', err);
+         setChatError('Message could not be sent. Please try again.');
       }
    };
 
@@ -45,14 +78,18 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
    const [searchedGifs, setSearchedGifs] = useState([]);
    const [isSearchingGifs, setIsSearchingGifs] = useState(false);
 
-   const fetchGifs = async (query = '') => {
+   const fetchGifs = useCallback(async (query = '') => {
       setIsSearchingGifs(true);
+      setGifError('');
       try {
          const url = query.trim()
             ? `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query.trim())}&limit=16&rating=g`
             : `https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_API_KEY}&limit=16&rating=g`;
-            
+
          const res = await fetch(url);
+         if (!res.ok) {
+            throw new Error(`Giphy request failed with status ${res.status}`);
+         }
          const json = await res.json();
          if (json && json.data) {
             const list = json.data.map(item => ({
@@ -65,11 +102,13 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
             setSearchedGifs([]);
          }
       } catch (err) {
+         console.error('[chat] Failed to load GIFs', err);
          setSearchedGifs([]);
+         setGifError('Could not load GIFs. Please try again.');
       } finally {
          setIsSearchingGifs(false);
       }
-   };
+   }, []);
 
    const handleSearchGifs = async (e) => {
       if (e) e.preventDefault();
@@ -80,7 +119,7 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
       if (showGifPicker) {
          fetchGifs('');
       }
-   }, [showGifPicker]);
+   }, [showGifPicker, fetchGifs]);
 
    return (
       <div className="relative flex flex-col h-full bg-transparent w-full">
@@ -100,19 +139,16 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
          {!isCollapsed && (
             <>
                {/* Messages Scroll Area */}
-               <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar flex flex-col min-h-0">
+               <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-4 compact:p-3 space-y-3 custom-scrollbar flex flex-col min-h-0">
                   {chatMessages.length === 0 ? (
                      <div className="flex-1 flex flex-col items-center justify-center opacity-30 p-8 text-center my-auto">
                         <MessageSquare size={24} className="text-gray-500 mb-2 animate-pulse" />
-                        <p className="text-[9px] font-black text-white/50 uppercase tracking-widest">No banter yet</p>
-                        <p className="text-[8px] text-gray-600 font-bold uppercase tracking-widest mt-1">Start the conversation</p>
+                        <p className="text-[9px] compact:text-[8px] font-black text-white/50 uppercase tracking-widest">No banter yet</p>
+                        <p className="text-[8px] compact:text-[7px] text-gray-600 font-bold uppercase tracking-widest mt-1">Start the conversation</p>
                      </div>
                   ) : (
                      chatMessages.map((msg, index) => {
                         const isMe = msg.userId === user?.uid;
-                        
-                        // Find bidder's team logo
-                        const userTeamId = TEAMS.find(t => t.id === msg.teamId || t.name === msg.teamId)?.logo;
 
                         return (
                            <motion.div
@@ -124,11 +160,11 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
                               {/* Name and Team Header (only for other users) */}
                               {!isMe && (
                                  <div className="flex items-center gap-1.5 mb-1 px-1">
-                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tight">
+                                    <span className="text-[9px] compact:text-[8px] font-bold text-gray-400 uppercase tracking-tight">
                                        {msg.userName}
                                     </span>
                                     {msg.teamId && (
-                                       <span className="bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-[7px] font-black text-gray-400 uppercase tracking-widest">
+                                       <span className="bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-[7px] compact:text-[6px] font-black text-gray-400 uppercase tracking-widest">
                                           {msg.teamId}
                                        </span>
                                     )}
@@ -137,7 +173,7 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
 
                               {/* Speech Bubble */}
                               <div
-                                 className={`rounded-2xl text-[11px] leading-relaxed break-words shadow-lg overflow-hidden ${
+                                 className={`rounded-2xl text-[11px] compact:text-[10px] leading-relaxed break-words shadow-lg overflow-hidden ${
                                     msg.type === 'gif' || (msg.text?.startsWith('http') && msg.text?.includes('.gif'))
                                        ? 'border border-white/10 max-w-[200px]'
                                        : isMe
@@ -158,6 +194,9 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
                </div>
 
                {/* Message Input Box */}
+               {chatError && (
+                  <p role="alert" className="px-3 pt-2 text-[9px] compact:text-[8px] font-bold text-red-400">{chatError}</p>
+               )}
                <form onSubmit={handleSend} className="p-3 border-t border-white/5 bg-white/[0.01] flex gap-2 relative">
                   <button
                      type="button"
@@ -172,7 +211,7 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
                      value={text}
                      onChange={(e) => setText(e.target.value)}
                      placeholder="Type a message..."
-                     className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-[11px] text-white focus:outline-none focus:border-white/30 transition-colors placeholder:text-gray-700"
+                     className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 compact:px-3 compact:py-2 text-[11px] compact:text-[10px] text-white focus:outline-none focus:border-white/30 transition-colors placeholder:text-gray-700"
                      maxLength={150}
                   />
                   <button
@@ -224,7 +263,7 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
                            </div>
                         ) : searchedGifs.length === 0 ? (
                            <div className="col-span-4 flex items-center justify-center py-8 opacity-50">
-                              <span className="text-[9px] font-black text-white uppercase tracking-widest">No GIFs Found</span>
+                              <span className="text-[9px] font-black text-white uppercase tracking-widest">{gifError || 'No GIFs Found'}</span>
                            </div>
                         ) : (
                            searchedGifs.map((gif) => (
@@ -234,9 +273,14 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
                                  onClick={async () => {
                                     try {
                                        await sendMessage(roomId, gif.url, 'gif');
+                                        setChatError('');
+                                        stickToBottomRef.current = true;
                                        setShowGifPicker(false);
                                        setGifSearchQuery('');
-                                    } catch (e) {}
+                                    } catch (err) {
+                                        console.error('[chat] Failed to send GIF', err);
+                                        setChatError('GIF could not be sent. Please try again.');
+                                     }
                                  }}
                                  className="relative rounded-lg overflow-hidden border border-white/5 hover:border-white/30 aspect-video group cursor-pointer transition-all active:scale-95 bg-white/5"
                               >

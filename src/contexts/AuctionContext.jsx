@@ -21,28 +21,17 @@ import {
 } from 'firebase/database';
 import { 
   doc, 
-  onSnapshot, 
-  updateDoc, 
   getDoc,
   getDocs,
-  setDoc,
-  addDoc,
-  arrayUnion,
-  arrayRemove,
   collection,
-  runTransaction,
-  deleteDoc,
   query,
-  where,
-  orderBy,
-  serverTimestamp,
-  increment,
-  writeBatch
+  where
 } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
 import { useQuota } from './QuotaContext';
 import { useConnectionAlert } from './ConnectionAlertContext';
 import { shouldReportConnectionTrouble } from '../lib/connectionAlerts';
+import { countOverseas, isOverseasPlayer, toFiniteNumber } from '../lib/auctionDisplay';
 
 
 const TEAMS = [
@@ -92,7 +81,7 @@ export const AuctionProvider = ({ children }) => {
   // Create a new room in DB (RTDB + Supabase index, zero Firestore load)
   const createRoom = useCallback(async (roomId, userId, playerDetails, auctionType = 'mega', isPublic = true) => {
     // Explicitly connect RTDB WebSocket for room creation
-    try { goOnline(rtdb); } catch (e) {}
+    try { goOnline(rtdb); } catch { /* RTDB reconnects automatically */ }
 
     const teamDetails = TEAMS.find(t => t.id === playerDetails.team);
     
@@ -188,7 +177,8 @@ export const AuctionProvider = ({ children }) => {
         }
       }
     } catch (sErr) {
-      // Non-blocking Supabase fallback
+      // Non-blocking Supabase fallback: RTDB already holds the room.
+      console.warn('[auction] Failed to mirror new room to Supabase', sErr);
     }
   }, []);
   
@@ -234,7 +224,8 @@ export const AuctionProvider = ({ children }) => {
         }
       }
     } catch (err) {
-      // Graceful error handling
+      // Lobby sync is best-effort; Realtime Database remains the live source.
+      console.warn('[auction] Failed to sync lobby teams to Supabase', err);
     }
   }, []);
 
@@ -306,12 +297,15 @@ export const AuctionProvider = ({ children }) => {
     if (supabase) {
       try {
         await supabase.from('auctions').update({ status: 'active' }).eq('id', roomId);
-      } catch (sErr) {}
+      } catch (sErr) {
+        // Non-fatal: RTDB status remains authoritative for the live auction.
+        console.warn('[auction] Failed to mirror active status to Supabase', sErr);
+      }
     }
 
     try {
       await set(playerOrderRef, randomizedIndices);
-    } catch (e) {
+    } catch {
       // Graceful fallback if RTDB sub-path rule is pending deploy
     }
 
@@ -406,7 +400,7 @@ export const AuctionProvider = ({ children }) => {
         // Get current team data from RTDB to update RTDB team node
         const rtdbTeamSnap = await get(ref(rtdb, `auctions/${roomId}/teams/${teamDocId}`));
         const tData = rtdbTeamSnap.exists() ? rtdbTeamSnap.val() : {};
-        const defaultBudget = roomData.settings?.budget || 120.0;
+        const defaultBudget = toFiniteNumber(roomData.settings?.budget, 120.0);
         newTeamData = {
           auctionId: roomId,
           userId: auctionState.highBidderId,
@@ -500,7 +494,9 @@ export const AuctionProvider = ({ children }) => {
             setTimeout(async () => {
               try {
                 await remove(ref(rtdb, `auctions/${roomId}`));
-              } catch (cleanErr) {}
+              } catch {
+                // Best-effort cleanup: the room may already be gone.
+              }
             }, 30000);
           }
         } finally {
@@ -512,13 +508,14 @@ export const AuctionProvider = ({ children }) => {
       setTimeout(advanceToNextPlayer, waitTime);
     } catch (err) {
       // Release the lock on any outer error so future players can be ended
+      console.error('[auction] endPlayerAuction failed', err);
       endingPlayerRef.current = false;
     }
   }, [getSyncedTime, flushAuctionToFirestore]);
 
   const joinRoomDb = useCallback(async (roomId, userId, playerDetails) => {
     // Explicitly connect RTDB WebSocket when joining a room
-    try { goOnline(rtdb); } catch (e) {}
+    try { goOnline(rtdb); } catch { /* RTDB reconnects automatically */ }
 
     const teamDetails = TEAMS.find(t => t.id === playerDetails.team);
     
@@ -540,15 +537,18 @@ export const AuctionProvider = ({ children }) => {
               hostName: sData.host_name,
               status: sData.status,
               auctionType: sData.auction_type || 'mega',
-              squadLimit: sData.squad_limit || 25,
-              overseasLimit: sData.overseas_limit || 8,
+              squadLimit: toFiniteNumber(sData.squad_limit, 25),
+              overseasLimit: toFiniteNumber(sData.overseas_limit, 8),
               players: sData.players || [],
               bannedPlayers: sData.banned_players || [],
               settings: sData.settings || { bidTimer: 10, budget: 120 }
             };
             supabaseFound = true;
           }
-        } catch (sErr) {}
+        } catch (sErr) {
+          // Fall back to Firestore when the Supabase mirror read fails.
+          console.warn('[auction] Supabase room lookup failed; falling back to Firestore', sErr);
+        }
       }
 
       if (!supabaseFound) {
@@ -603,7 +603,7 @@ export const AuctionProvider = ({ children }) => {
           userId: userId,
           teamId: playerDetails.team,
           teamName: teamDetails?.name || 'Unknown',
-          budgetRemaining: data.settings?.budget || 120.0,
+          budgetRemaining: toFiniteNumber(data.settings?.budget, 120.0),
           spent: 0,
           squad: []
         };
@@ -659,7 +659,8 @@ export const AuctionProvider = ({ children }) => {
         timestamp: serverTimestampRtdb()
       });
     } catch (err) {
-      // Error kicking player
+      console.error('[auction] Failed to kick player', err);
+      throw err;
     }
   }, []);
 
@@ -668,7 +669,7 @@ export const AuctionProvider = ({ children }) => {
     if (!userId) return () => {};
     
     // Explicitly open RTDB WebSocket connection for active auction session
-    try { goOnline(rtdb); } catch (e) {}
+    try { goOnline(rtdb); } catch { /* RTDB reconnects automatically */ }
 
     setLoading(true);
     let auctionLoaded = false;
@@ -832,8 +833,8 @@ export const AuctionProvider = ({ children }) => {
                   hostName: sData.host_name,
                   status: sData.status,
                   auctionType: sData.auction_type || 'mega',
-                  squadLimit: sData.squad_limit || 25,
-                  overseasLimit: sData.overseas_limit || 8,
+                  squadLimit: toFiniteNumber(sData.squad_limit, 25),
+                  overseasLimit: toFiniteNumber(sData.overseas_limit, 8),
                   players: sData.players || [],
                   bannedPlayers: sData.banned_players || [],
                   settings: sData.settings || { bidTimer: 10, budget: 120 }
@@ -986,7 +987,7 @@ export const AuctionProvider = ({ children }) => {
       setMessages([]);
 
       // Immediately close RTDB connection when leaving auction room/lobby to free up connection quota
-      try { goOffline(rtdb); } catch (e) {}
+      try { goOffline(rtdb); } catch { /* RTDB reconnects automatically */ }
     };
   }, [user]);
 
@@ -1002,7 +1003,9 @@ export const AuctionProvider = ({ children }) => {
     });
   }, [user]);
 
-  const placeBid = useCallback(async (amount) => {
+  // The bid amount is recomputed from live room state; callers may pass a
+  // hint, but it is intentionally ignored.
+  const placeBid = useCallback(async () => {
     if (!currentAuction) throw new Error("Auction not found!");
     if (!user) throw new Error("Please log in to bid!");
     if (!team) throw new Error("You must select a team in the lobby to participate!");
@@ -1013,20 +1016,17 @@ export const AuctionProvider = ({ children }) => {
     if (currentAuction.currentAuction?.highBidderId === user.uid) throw new Error("You are already the highest bidder!");
 
     // Squad limit check
-    const squadLimit = currentAuction.squadLimit || 25;
+    const squadLimit = toFiniteNumber(currentAuction.squadLimit, 25);
     if (team.squad && team.squad.length >= squadLimit) {
       throw new Error(`You have reached the squad limit of ${squadLimit} players!`);
     }
 
     // Overseas limit check
     const player = IPL_PLAYERS.find(p => p.id === currentAuction.currentAuction?.playerId);
-    const isOverseas = player && player.country !== 'IND';
-    const overseasLimit = currentAuction.overseasLimit || 8;
+    const isOverseas = player ? isOverseasPlayer(player) : false;
+    const overseasLimit = toFiniteNumber(currentAuction.overseasLimit, 8);
     if (isOverseas && team.squad) {
-      const currentOverseasCount = team.squad.reduce((count, s) => {
-        const pInfo = IPL_PLAYERS.find(p => p.id === (typeof s === 'string' ? s : s.id));
-        return pInfo && pInfo.country !== 'IND' ? count + 1 : count;
-      }, 0);
+      const currentOverseasCount = countOverseas(team.squad, IPL_PLAYERS);
       if (currentOverseasCount >= overseasLimit) {
         throw new Error(`You have reached the overseas quota of ${overseasLimit} players for this mode!`);
       }
@@ -1036,12 +1036,12 @@ export const AuctionProvider = ({ children }) => {
     // The transaction update function is retried by Firebase on conflicts — using team.budgetRemaining
     // inside it reads a stale React closure each retry, not the live DB value. We do the check here
     // (from the most recent RTDB-synced team state) and rely on the server to enforce it atomically.
-    const cBidSnapshot = currentAuction.currentAuction?.currentBid || 0;
+    const cBidSnapshot = toFiniteNumber(currentAuction.currentAuction?.currentBid, 0);
     const incSnapshot = cBidSnapshot < 5 ? 0.20 : 0.25;
     const nextBidSnapshot = cBidSnapshot === 0
-      ? (player?.basePrice || 0)
+      ? toFiniteNumber(player?.basePrice, 0)
       : parseFloat((cBidSnapshot + incSnapshot).toFixed(2));
-    const myBudget = team.budgetRemaining || 0;
+    const myBudget = toFiniteNumber(team.budgetRemaining, 0);
     if (myBudget < nextBidSnapshot) {
       throw new Error('Insufficient budget to place this bid.');
     }
@@ -1114,7 +1114,7 @@ export const AuctionProvider = ({ children }) => {
         userId: userId,
         teamId: newTeamId,
         teamName: teamDetails?.name || 'Unknown',
-        budgetRemaining: data.settings?.budget || 120.0,
+        budgetRemaining: toFiniteNumber(data.settings?.budget, 120.0),
         spent: 0,
         squad: []
       };
@@ -1184,7 +1184,9 @@ export const AuctionProvider = ({ children }) => {
     setTimeout(async () => {
       try {
         await remove(ref(rtdb, `auctions/${roomId}`));
-      } catch (cleanErr) {}
+      } catch {
+        // Best-effort cleanup: the room may already be gone.
+      }
     }, 5000);
   }, [user, currentAuction, flushAuctionToFirestore]);
 
@@ -1207,7 +1209,7 @@ export const AuctionProvider = ({ children }) => {
       
       const cBid = currentData.currentBid || 0;
       const inc = cBid < 5 ? 0.20 : 0.25;
-      const nAmount = cBid === 0 ? IPL_PLAYERS.find(p => p.id === currentData.playerId)?.basePrice || 0 : parseFloat((cBid + inc).toFixed(2));
+      const nAmount = cBid === 0 ? toFiniteNumber(IPL_PLAYERS.find(p => p.id === currentData.playerId)?.basePrice, 0) : parseFloat((cBid + inc).toFixed(2));
 
       // Guard: Abort retried transaction if updated bid exceeds bot's max valuation or remaining budget
       if (nAmount > maxValuation || nAmount > botBudget) return;
@@ -1260,7 +1262,7 @@ export const AuctionProvider = ({ children }) => {
       userId: botUserId,
       teamId,
       teamName: teamDetails.name,
-      budgetRemaining: data.settings?.budget || 120.0,
+      budgetRemaining: toFiniteNumber(data.settings?.budget, 120.0),
       spent: 0,
       squad: []
     };
@@ -1314,7 +1316,7 @@ export const AuctionProvider = ({ children }) => {
           userId: botUserId,
           teamId: t.id,
           teamName: t.name,
-          budgetRemaining: data.settings?.budget || 120.0,
+          budgetRemaining: toFiniteNumber(data.settings?.budget, 120.0),
           spent: 0,
           squad: []
         };
@@ -1403,7 +1405,7 @@ export const AuctionProvider = ({ children }) => {
     // Bound delay safely: minimum 300ms, maximum (remainingMs - 300ms)
     delayMs = Math.max(300, Math.min(delayMs, Math.max(300, remainingMs - 300)));
 
-    const initialBudget = currentAuction.settings?.budget || 120.0;
+    const initialBudget = toFiniteNumber(currentAuction.settings?.budget, 120.0);
 
     const timer = setTimeout(async () => {
       // Pick a suitable bot team that is not the current high bidder
@@ -1417,8 +1419,8 @@ export const AuctionProvider = ({ children }) => {
           currentBid: live.currentBid || 0,
           highBidderId: live.highBidderId,
           botTeam,
-          squadLimit: currentAuction.squadLimit || 25,
-          overseasLimit: currentAuction.overseasLimit || 8,
+          squadLimit: toFiniteNumber(currentAuction.squadLimit, 25),
+          overseasLimit: toFiniteNumber(currentAuction.overseasLimit, 8),
           initialBudget,
         });
 
@@ -1435,7 +1437,8 @@ export const AuctionProvider = ({ children }) => {
               botTeam.budgetRemaining ?? initialBudget
             );
           } catch (e) {
-            // Graceful bot bid fail
+            // A failed bot bid is non-fatal: the auction continues for humans.
+            console.warn('[auction] Bot bid attempt failed', e);
           }
           break; // 1 bid per delay tick
         }
