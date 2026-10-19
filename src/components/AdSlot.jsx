@@ -7,8 +7,10 @@ const AdSlot = ({ slot, className = '', label = 'Advertisement' }) => {
   useEffect(() => {
     if (!canRenderAd) return;
 
+    // The loader also ships in index.html so Auto ads work site-wide; reuse it
+    // instead of injecting a second copy when a manual slot is added later.
     const scriptId = 'google-adsense-script';
-    if (!document.getElementById(scriptId)) {
+    if (!document.querySelector('script[src*="adsbygoogle.js"]')) {
       const script = document.createElement('script');
       script.id = scriptId;
       script.async = true;
@@ -19,7 +21,7 @@ const AdSlot = ({ slot, className = '', label = 'Advertisement' }) => {
 
     try {
       (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch (error) {
+    } catch {
       // Ad blockers or delayed script loading can throw here; the page should continue normally.
     }
   }, [canRenderAd, clientId, slot]);

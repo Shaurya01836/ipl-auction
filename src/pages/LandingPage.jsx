@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useAuction } from "../contexts/AuctionContext";
@@ -28,6 +28,13 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import AuctionActivityFeed from "../components/AuctionActivityFeed";
 import Footer from "../components/Footer";
 import useDocumentTitle from "../hooks/useDocumentTitle";
+import {
+  computeTeamSpent,
+  countOverseas,
+  formatCrores,
+  isOverseasPlayer,
+  toFiniteNumber,
+} from "../lib/auctionDisplay";
 
 const LandingPage = () => {
   useDocumentTitle(
@@ -51,6 +58,7 @@ const LandingPage = () => {
   // History state
   const [historyData, setHistoryData] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState(null);
   const [expandedSession, setExpandedSession] = useState(null);
   const [sessionToDelete, setSessionToDelete] = useState(null);
 
@@ -113,7 +121,7 @@ const LandingPage = () => {
               status: r.status,
               auctionType: r.auction_type || "mega",
               players: uniquePlayers,
-              squadLimit: r.squad_limit || 25,
+              squadLimit: toFiniteNumber(r.squad_limit, 25),
               settings: r.settings || {},
             };
           });
@@ -135,88 +143,117 @@ const LandingPage = () => {
   }, []);
 
   // Fetch auction history directly from Supabase
-  // Fetch auction history directly from Supabase
-  useEffect(() => {
-    if (activeTab !== "history" || !user?.uid || historyData.length > 0) return;
+  const historyRequestRef = useRef(false);
 
-    const fetchHistory = async () => {
-      setHistoryLoading(true);
-      try {
-        if (supabase) {
-          const { data: supabaseTeams, error: tErr } = await supabase
-            .from("teams")
-            .select("*")
-            .eq("user_id", user.uid)
-            .order("created_at", { ascending: false });
+  const fetchHistory = useCallback(async () => {
+    const userId = user?.uid;
+    if (!userId || !supabase) {
+      setHistoryData([]);
+      setHistoryError(null);
+      return;
+    }
+    // Guard against overlapping requests (and React StrictMode double effects).
+    if (historyRequestRef.current) return;
 
-          if (!tErr && supabaseTeams && supabaseTeams.length > 0) {
-            const auctionIds = [
-              ...new Set(supabaseTeams.map((t) => t.auction_id)),
-            ].filter(Boolean);
+    historyRequestRef.current = true;
+    setHistoryLoading(true);
+    setHistoryError(null);
+    try {
+      const { data: supabaseTeams, error: teamsError } = await supabase
+        .from("teams")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
 
-            const { data: supabaseAuctions } = await supabase
-              .from("auctions")
-              .select("*")
-              .in("id", auctionIds);
+      if (teamsError) throw teamsError;
 
-            const auctionMap = {};
-            (supabaseAuctions || []).forEach((a) => {
-              auctionMap[a.id] = a;
-            });
-
-            const sessions = supabaseTeams.map((teamData) => {
-              const auctionData = auctionMap[teamData.auction_id];
-              const totalBudget = auctionData?.settings?.budget || 120;
-              const spent =
-                teamData.spent ||
-                totalBudget - (teamData.budget_remaining || totalBudget);
-
-              return {
-                id: teamData.id,
-                roomId: teamData.auction_id,
-                teamId: teamData.team_id,
-                teamName: teamData.team_name,
-                mode: auctionData?.auction_type || "mega",
-                status: auctionData?.status || "waiting",
-                budgetRemaining: teamData.budget_remaining,
-                spent,
-                squad: (teamData.squad || []).map((s) => {
-                  const pid = typeof s === "string" ? s : s.id;
-                  const bid = typeof s === "string" ? 0 : s.bid;
-                  const playerInfo = IPL_PLAYERS.find((p) => p.id === pid);
-                  return {
-                    id: pid,
-                    name: playerInfo?.name || pid,
-                    role: playerInfo?.role || "Player",
-                    image: playerInfo?.image || "",
-                    bid: bid || playerInfo?.basePrice || 0,
-                  };
-                }),
-                date: teamData.created_at
-                  ? new Date(teamData.created_at).toLocaleDateString("en-IN", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })
-                  : "Recent Session",
-              };
-            });
-
-            setHistoryData(sessions);
-            setHistoryLoading(false);
-            return;
-          }
-        }
+      if (!supabaseTeams || supabaseTeams.length === 0) {
         setHistoryData([]);
-      } catch {
-        setHistoryData([]);
-      } finally {
-        setHistoryLoading(false);
+        return;
       }
-    };
 
+      const auctionIds = [
+        ...new Set(supabaseTeams.map((t) => t.auction_id)),
+      ].filter(Boolean);
+
+      const { data: supabaseAuctions, error: auctionsError } = await supabase
+        .from("auctions")
+        .select("*")
+        .in("id", auctionIds);
+
+      if (auctionsError) throw auctionsError;
+
+      const auctionMap = {};
+      (supabaseAuctions || []).forEach((a) => {
+        auctionMap[a.id] = a;
+      });
+
+      const sessions = supabaseTeams.map((teamData) => {
+        const auctionData = auctionMap[teamData.auction_id];
+        const totalBudget = toFiniteNumber(auctionData?.settings?.budget, 120);
+        const spent = computeTeamSpent({
+          budget: totalBudget,
+          budgetRemaining: teamData.budget_remaining,
+          spent: teamData.spent,
+        });
+
+        return {
+          id: teamData.id,
+          roomId: teamData.auction_id,
+          teamId: teamData.team_id,
+          teamName: teamData.team_name,
+          mode: auctionData?.auction_type || "mega",
+          status: auctionData?.status || "waiting",
+          budgetRemaining: teamData.budget_remaining ?? null,
+          spent,
+          overseasLimit: toFiniteNumber(auctionData?.overseas_limit, 8),
+          squadLimit: toFiniteNumber(auctionData?.squad_limit, 25),
+          squad: (teamData.squad || [])
+            .map((s) => {
+              const pid = typeof s === "string" ? s : s.id;
+              // Legacy string entries carry no bid: keep it unknown (null)
+              // rather than substituting the player's base price.
+              const bid = typeof s === "string" ? null : (s.bid ?? null);
+              const playerInfo = IPL_PLAYERS.find((p) => p.id === pid);
+              return {
+                id: pid,
+                name: playerInfo?.name || pid,
+                role: playerInfo?.role || "Player",
+                image: playerInfo?.image || "",
+                country: playerInfo?.country,
+                type: playerInfo?.type,
+                bid,
+              };
+            })
+            .filter((p) => p.id),
+          date: teamData.created_at
+            ? new Date(teamData.created_at).toLocaleDateString("en-IN", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })
+            : "Recent Session",
+        };
+      });
+
+      setHistoryData(sessions);
+    } catch (error) {
+      // Keep any previously loaded data visible; surface the failure instead.
+      console.error("[history] Failed to load auction history", error);
+      setHistoryError("Could not load your auction history. Please try again.");
+    } finally {
+      historyRequestRef.current = false;
+      setHistoryLoading(false);
+    }
+  }, [user?.uid]);
+
+  useEffect(() => {
+    // Load once when the signed-in user is available (entering the site or
+    // switching accounts). Opening the History tab reuses this data; only the
+    // explicit Refresh button triggers another request.
+    if (!user?.uid) return;
     fetchHistory();
-  }, [activeTab, user?.uid]);
+  }, [user?.uid, fetchHistory]);
 
   // Filtered public rooms
   const filteredPublicRooms = useMemo(() => {
@@ -260,7 +297,8 @@ const LandingPage = () => {
           .eq("id", roomId);
         if (roomError) throw roomError;
       }
-    } catch {
+    } catch (err) {
+      console.error("[history] Failed to delete auction session", err);
       // Roll back the optimistic removal if the server delete failed
       setHistoryData((prev) =>
         prev.some((item) => item.id === teamDocId) ? prev : [session, ...prev],
@@ -273,8 +311,9 @@ const LandingPage = () => {
     // 3. Remove room from Realtime Database if still sitting in waiting state
     try {
       await remove(ref(rtdb, `auctions/${roomId}`));
-    } catch {
-      // Ignore RTDB cleanup errors
+    } catch (err) {
+      // The Supabase rows are already gone; RTDB cleanup is best-effort.
+      console.warn("[history] Failed to remove deleted auction from RTDB", err);
     }
   };
 
@@ -1060,6 +1099,37 @@ const LandingPage = () => {
             {/* ─── HISTORY TAB ─── */}
             {activeTab === "history" && (
               <div key="history-tab" className="space-y-3 sm:space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] sm:text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                    Auction History
+                  </span>
+                  <button
+                    type="button"
+                    onClick={fetchHistory}
+                    disabled={historyLoading}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-gray-300 hover:text-white hover:bg-white/10 transition-all disabled:opacity-40 cursor-pointer"
+                  >
+                    <RefreshCw
+                      size={10}
+                      className={historyLoading ? "animate-spin" : ""}
+                    />
+                    Refresh
+                  </button>
+                </div>
+                {historyError && historyData.length > 0 && (
+                  <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/20">
+                    <span className="text-[9px] font-bold text-red-400">
+                      {historyError}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={fetchHistory}
+                      className="text-[8px] font-black uppercase tracking-widest text-red-300 hover:text-white cursor-pointer"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                )}
                 {historyLoading ? (
                   <div className="flex flex-col items-center justify-center py-10 sm:py-16">
                     <Loader2
@@ -1069,6 +1139,28 @@ const LandingPage = () => {
                     <p className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2 sm:mt-4">
                       Syncing Database...
                     </p>
+                  </div>
+                ) : historyError && historyData.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-10 sm:py-16 text-center">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-red-500/10 border border-red-500/20 rounded-xl sm:rounded-2xl flex items-center justify-center mb-3 sm:mb-4">
+                      <RefreshCw
+                        size={22}
+                        className="text-red-400 sm:w-7 sm:h-7"
+                      />
+                    </div>
+                    <h2 className="text-xs sm:text-sm font-black text-red-400 uppercase tracking-widest mb-1">
+                      History Unavailable
+                    </h2>
+                    <p className="text-[9px] sm:text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-4">
+                      {historyError}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={fetchHistory}
+                      className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-widest text-white hover:bg-white/10 transition-all cursor-pointer"
+                    >
+                      Try Again
+                    </button>
                   </div>
                 ) : historyData.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-10 sm:py-16 text-center">
@@ -1096,9 +1188,10 @@ const LandingPage = () => {
                         const isExpanded = expandedSession === session.id;
                         const isCompleted = session.status === "completed";
                         const isActive = session.status === "active";
-                        const overseasCount = session.squad.filter(
-                          (p) => p?.country !== "IND",
-                        ).length;
+                        const overseasCount = countOverseas(
+                          session.squad,
+                          IPL_PLAYERS,
+                        );
 
                         return (
                           <div key={session.id} className="space-y-1">
@@ -1159,7 +1252,9 @@ const LandingPage = () => {
                               <div className="flex items-center gap-1.5 sm:gap-4 shrink-0 ml-1.5 sm:ml-2">
                                 <div className="text-right">
                                   <span className="text-[9px] sm:text-xs font-black italic text-yellow-500 block">
-                                    ₹{session.spent.toFixed(1)} Cr
+                                    {session.spent === null
+                                      ? "—"
+                                      : `₹${formatCrores(session.spent, 1)} Cr`}
                                   </span>
                                   <span className="block text-[7px] sm:text-[8px] font-bold text-gray-400">
                                     {session.squad.length} players
@@ -1198,20 +1293,21 @@ const LandingPage = () => {
                                         <span className="text-gray-400">
                                           Budget Left:{" "}
                                           <span className="text-green-400">
-                                            ₹{session.budgetRemaining?.toFixed(1)}{" "}
-                                            Cr
+                                            {session.budgetRemaining == null
+                                              ? "—"
+                                              : `₹${formatCrores(session.budgetRemaining, 1)} Cr`}
                                           </span>
                                         </span>
                                         <span className="text-gray-400">
                                           Overseas:{" "}
                                           <span className="text-purple-400">
-                                            {overseasCount}/8
+                                            {overseasCount}/{session.overseasLimit}
                                           </span>
                                         </span>
                                         <span className="text-gray-400">
                                           Squad:{" "}
                                           <span className="text-white">
-                                            {session.squad.length}/25
+                                            {session.squad.length}/{session.squadLimit}
                                           </span>
                                         </span>
                                       </div>
@@ -1259,7 +1355,7 @@ const LandingPage = () => {
                                                         <span className="text-[7px] font-bold text-gray-400 uppercase">
                                                           {p?.type}
                                                         </span>
-                                                        {p?.country !== "IND" && (
+                                                        {isOverseasPlayer(p) && (
                                                           <Wifi
                                                             size={8}
                                                             className="text-purple-400 rotate-90 shrink-0"
@@ -1269,7 +1365,9 @@ const LandingPage = () => {
                                                     </div>
                                                   </div>
                                                   <span className="text-[8px] sm:text-[10px] font-black italic text-yellow-500 shrink-0">
-                                                    ₹{(p?.bid || 0).toFixed(2)} Cr
+                                                    {p?.bid == null
+                                                      ? "—"
+                                                      : `₹${formatCrores(p.bid)} Cr`}
                                                   </span>
                                                 </div>
                                               ))}

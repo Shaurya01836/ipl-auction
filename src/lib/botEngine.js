@@ -1,5 +1,6 @@
 import { IPL_PLAYERS } from '../data/players';
 import { TEAMS } from '../data/teams';
+import { countOverseas, isOverseasPlayer, toFiniteNumber } from './auctionDisplay';
 
 /**
  * Player Set → Tier Multipliers
@@ -94,7 +95,7 @@ const TEAM_PREFERENCES = {
  * Returns a value in Cr that varies per team, per player, and per auction run.
  */
 function computeBotValuation({ player, botTeam, squadLimit, budgetRemaining, initialBudget }) {
-  const basePrice = player.basePrice || 0.30;
+  const basePrice = toFiniteNumber(player.basePrice, 0.30);
   const set = player.set || 'Set 4';
   const teamId = botTeam.teamId;
 
@@ -179,12 +180,9 @@ export function evaluateBotBid({
   if (currentSquad.length >= squadLimit) return null;
 
   // 3. Overseas limit check
-  const isOverseas = player.country && player.country !== 'IND';
+  const isOverseas = isOverseasPlayer(player);
   if (isOverseas) {
-    const currentOverseasCount = currentSquad.reduce((acc, s) => {
-      const pInfo = IPL_PLAYERS.find(p => p.id === (typeof s === 'string' ? s : s.id));
-      return pInfo && pInfo.country !== 'IND' ? acc + 1 : acc;
-    }, 0);
+    const currentOverseasCount = countOverseas(currentSquad, IPL_PLAYERS);
     if (currentOverseasCount >= overseasLimit) return null;
   }
 
@@ -198,9 +196,9 @@ export function evaluateBotBid({
   if (currentRoleCount >= maxPerRole && slotsRemaining > 1) return null;
 
   // 5. Calculate the next incremental bid amount
-  const cBid = currentBid || 0;
+  const cBid = toFiniteNumber(currentBid, 0);
   const increment = cBid < 5 ? 0.20 : 0.25;
-  const nextBid = cBid === 0 ? (player.basePrice || 0.30) : parseFloat((cBid + increment).toFixed(2));
+  const nextBid = cBid === 0 ? toFiniteNumber(player.basePrice, 0.30) : parseFloat((cBid + increment).toFixed(2));
 
   // 6. Budget check
   const budgetRemaining = botTeam.budgetRemaining ?? initialBudget;

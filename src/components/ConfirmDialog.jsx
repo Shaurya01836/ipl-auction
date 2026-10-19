@@ -33,8 +33,9 @@ const ConfirmDialog = ({
 
     const handleKeyDown = (e) => {
       if (loading) return;
+      // Only Escape is handled globally. Enter/Space are left to the focused
+      // button so pressing Enter while Cancel is focused cannot confirm.
       if (e.key === "Escape") onCancel?.();
-      if (e.key === "Enter") onConfirm?.();
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -94,6 +95,7 @@ const ConfirmDialog = ({
         <div className="flex items-center gap-2 mt-5">
           <button
             type="button"
+            autoFocus
             onClick={() => !loading && onCancel?.()}
             disabled={loading}
             className="flex-1 h-10 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10 text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50 cursor-pointer"

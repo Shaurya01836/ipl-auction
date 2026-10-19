@@ -236,7 +236,9 @@ const AdminPanel = () => {
           const fbQuery = query(collection(db, 'feedbacks'), orderBy('createdAt', 'desc'));
           const fbSnap = await getDocs(fbQuery);
           fbList = fbSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        } catch (e) {
+        } catch {
+          // orderBy may fail when the index is missing; fall back to an
+          // unordered read so feedback still loads.
           const fbSnap = await getDocs(collection(db, 'feedbacks'));
           fbList = fbSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
         }
@@ -503,6 +505,7 @@ const AdminPanel = () => {
       setActionSuccess('Feedback entry deleted successfully.');
       setTimeout(() => setActionSuccess(null), 3000);
     } catch (err) {
+      console.error('[admin] Failed to delete feedback entry', err);
       setError('Failed to delete feedback entry.');
     } finally {
       setIsDeleting(false);
@@ -519,13 +522,16 @@ const AdminPanel = () => {
       try {
         await deleteDoc(doc(db, 'auctions', id));
       } catch (e) {
-        // Silent ignore
+        // The Supabase row is already deleted; the Firestore mirror is
+        // best-effort cleanup, so log without failing the whole action.
+        console.warn('[admin] Failed to delete Firestore auction mirror', e);
       }
 
       setSupabaseAuctions((prev) => prev.filter((item) => item.id !== id));
       setActionSuccess('Auction room deleted from database.');
       setTimeout(() => setActionSuccess(null), 3000);
     } catch (err) {
+      console.error('[admin] Failed to delete auction room', err);
       setError('Failed to delete auction room.');
     } finally {
       setIsDeleting(false);
@@ -545,7 +551,8 @@ const AdminPanel = () => {
       if (ts.toDate) return ts.toDate().toLocaleString();
       if (ts.seconds) return new Date(ts.seconds * 1000).toLocaleString();
       return new Date(ts).toLocaleString();
-    } catch (e) {
+    } catch {
+      // Unknown timestamp shape; show a stable string fallback.
       return String(ts);
     }
   };

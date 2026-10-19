@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuction } from '../contexts/AuctionContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -24,6 +24,13 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SquadRating from '../components/SquadRating';
+import {
+  computeTeamSpent,
+  countOverseas,
+  formatCrores,
+  isOverseasPlayer,
+  toFiniteNumber,
+} from '../lib/auctionDisplay';
 
 const AuctionSummary = () => {
   const { id } = useParams();
@@ -40,6 +47,8 @@ const AuctionSummary = () => {
   const [dbAuction, setDbAuction] = useState(null);
   const [dbTeams, setDbTeams] = useState([]);
   const [summaryLoading, setSummaryLoading] = useState(true);
+  const [summaryError, setSummaryError] = useState(null);
+  const [summaryReloadKey, setSummaryReloadKey] = useState(0);
 
   const teamCardRefs = React.useRef({});
 
@@ -103,10 +112,13 @@ const AuctionSummary = () => {
 
     const fetchSummaryFromPersistentStore = async () => {
       setSummaryLoading(true);
+      setSummaryError(null);
       try {
         if (supabase) {
-          const { data: aData } = await supabase.from('auctions').select('*').eq('id', id).maybeSingle();
-          const { data: tData } = await supabase.from('teams').select('*').eq('auction_id', id);
+          const { data: aData, error: auctionError } = await supabase.from('auctions').select('*').eq('id', id).maybeSingle();
+          if (auctionError) throw auctionError;
+          const { data: tData, error: teamsError } = await supabase.from('teams').select('*').eq('auction_id', id);
+          if (teamsError) throw teamsError;
 
           if (aData && isMounted) {
             setDbAuction({
@@ -115,8 +127,8 @@ const AuctionSummary = () => {
               hostName: aData.host_name,
               status: aData.status || 'completed',
               auctionType: aData.auction_type || 'mega',
-              squadLimit: aData.squad_limit || 25,
-              overseasLimit: aData.overseas_limit || 8,
+              squadLimit: toFiniteNumber(aData.squad_limit, 25),
+              overseasLimit: toFiniteNumber(aData.overseas_limit, 8),
               players: aData.players || [],
               settings: aData.settings || { budget: 120, bidTimer: 10 }
             });
@@ -128,8 +140,8 @@ const AuctionSummary = () => {
                 userId: t.user_id,
                 teamId: t.team_id,
                 teamName: t.team_name,
-                budgetRemaining: t.budget_remaining ?? 120,
-                spent: t.spent || 0,
+                budgetRemaining: t.budget_remaining ?? null,
+                spent: toFiniteNumber(t.spent, 0),
                 squad: t.squad || []
               })));
             }
@@ -147,9 +159,14 @@ const AuctionSummary = () => {
           if (!tSnap.empty && isMounted) {
             setDbTeams(tSnap.docs.map(d => ({ id: d.id, ...d.data() })));
           }
+        } else if (isMounted) {
+          setSummaryError('Auction summary not found.');
         }
       } catch (err) {
-        // Fallback error handling
+        console.error('[summary] Failed to load auction summary', err);
+        if (isMounted) {
+          setSummaryError('Could not load the auction summary. Please try again.');
+        }
       } finally {
         if (isMounted) setSummaryLoading(false);
       }
@@ -158,7 +175,7 @@ const AuctionSummary = () => {
     fetchSummaryFromPersistentStore();
 
     return () => { isMounted = false; };
-  }, [id]);
+  }, [id, summaryReloadKey]);
 
   const activeAuction = currentAuction || dbAuction;
   const activeTeams = (roomTeams && roomTeams.length > 0) ? roomTeams : dbTeams;
@@ -168,11 +185,15 @@ const AuctionSummary = () => {
     return activeTeams.flatMap(rt => 
       (rt.squad || []).map(s => {
         const pid = typeof s === 'string' ? s : s.id;
-        const bidVal = typeof s === 'string' ? 0 : s.bid;
+        // Legacy string entries have no bid information: keep it unknown (null)
+        // instead of fabricating a 0 value.
+        const bidVal = typeof s === 'string' ? null : (s.bid ?? null);
         const teamInfo = TEAMS.find(t => t.id === rt.teamId);
         const pInfo = IPL_PLAYERS.find(p => p.id === pid);
         return { 
           ...pInfo, 
+          id: pid,
+          name: pInfo?.name || pid,
           bidVal, 
           teamName: teamInfo?.name, 
           teamId: rt.teamId, 
@@ -180,10 +201,29 @@ const AuctionSummary = () => {
           teamTextColor: teamInfo?.textColor
         };
       }).filter(p => p && p.id)
-    ).sort((a, b) => b.bidVal - a.bidVal);
+    ).sort((a, b) => toFiniteNumber(b.bidVal, -1) - toFiniteNumber(a.bidVal, -1));
   }, [activeTeams]);
 
   const topPlayers = allSoldPlayers.slice(0, 5);
+
+  if (!activeAuction && summaryError) {
+    return (
+      <div className="h-screen-safe bg-[#050505] text-white flex flex-col items-center justify-center p-8 text-center">
+        <h2 className="text-xl font-black italic tracking-widest uppercase text-red-400 mb-2">Summary Unavailable</h2>
+        <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-6">{summaryError}</p>
+        <button
+          type="button"
+          onClick={() => {
+            setSummaryError(null);
+            setSummaryReloadKey((key) => key + 1);
+          }}
+          className="px-5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-white hover:bg-white/10 transition-all cursor-pointer"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   if ((loading && !activeAuction) || (!activeAuction && summaryLoading)) {
     return (
@@ -308,7 +348,7 @@ const AuctionSummary = () => {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
                           <h3 className="text-base sm:text-2xl font-black uppercase tracking-tight italic leading-none truncate">{player.name}</h3>
-                          {player.country !== 'IND' && <Wifi size={12} className="text-purple-400 rotate-90 shrink-0" />}
+                          {isOverseasPlayer(player) && <Wifi size={12} className="text-purple-400 rotate-90 shrink-0" />}
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
                           <div className={`px-1.5 py-0.5 rounded text-[7px] sm:text-[8px] font-black uppercase shrink-0 ${player.teamColor} ${player.teamTextColor}`}>
@@ -323,7 +363,11 @@ const AuctionSummary = () => {
                     <div className="text-left sm:text-right border-t sm:border-t-0 pt-2 sm:pt-0 border-white/5 flex sm:block items-center justify-between">
                       <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest sm:hidden">Winning Bid</p>
                       <div className="text-2xl sm:text-4xl font-black text-[#ff5500] tracking-tighter">
-                        ₹{player.bidVal.toFixed(2)}<span className="text-xs ml-1 font-bold not-italic text-gray-500">Cr</span>
+                        {player.bidVal == null ? (
+                          <span>—</span>
+                        ) : (
+                          <>₹{formatCrores(player.bidVal)}<span className="text-xs ml-1 font-bold not-italic text-gray-500">Cr</span></>
+                        )}
                       </div>
                     </div>
                   </motion.div>
@@ -351,22 +395,27 @@ const AuctionSummary = () => {
               exit={{ opacity: 0, y: -30 }}
               className="max-w-5xl mx-auto space-y-3 sm:space-y-4"
             >
-              {TEAMS.map((t, idx) => {
+              {TEAMS.map((t) => {
                 const teamDoc = activeTeams.find(doc => doc.teamId === t.id);
                 const manager = activeAuction?.players?.find(p => p.team === t.id);
                 const isExpanded = expandedTeam === t.id;
                 
                 const squad = (teamDoc?.squad || []).map(s => {
                   const pid = typeof s === 'string' ? s : s.id;
-                  const bid = typeof s === 'string' ? 0 : s.bid;
-                  return { ...IPL_PLAYERS.find(p => p.id === pid), bid };
-                });
+                  const bid = typeof s === 'string' ? null : (s.bid ?? null);
+                  const playerInfo = IPL_PLAYERS.find(p => p.id === pid);
+                  return { ...(playerInfo || {}), id: pid, name: playerInfo?.name || pid, bid };
+                }).filter(p => p && p.id);
 
                 if (squad.length === 0) return null;
 
-                const osCount = squad.filter(p => p.country !== 'IND').length;
-                const totalBudget = activeAuction?.settings?.budget || 120;
-                const totalSpent = totalBudget - (teamDoc?.budgetRemaining || totalBudget);
+                const osCount = countOverseas(teamDoc?.squad, IPL_PLAYERS);
+                const totalBudget = toFiniteNumber(activeAuction?.settings?.budget, 120);
+                const totalSpent = computeTeamSpent({
+                  budget: totalBudget,
+                  budgetRemaining: teamDoc?.budgetRemaining,
+                  spent: teamDoc?.spent,
+                });
 
                 return (
                   <div key={t.id} className="group flex flex-col gap-2">
@@ -405,7 +454,7 @@ const AuctionSummary = () => {
                           </div>
                           <div className="shrink-0">
                             <span className="block text-[7px] sm:text-[8px] font-black text-orange-500 uppercase tracking-widest mb-0.5">Spent</span>
-                            <span className="text-xs sm:text-lg font-black">₹{totalSpent.toFixed(1)}Cr</span>
+                            <span className="text-xs sm:text-lg font-black">{totalSpent === null ? '—' : `₹${formatCrores(totalSpent, 1)}Cr`}</span>
                           </div>
                         </div>
 
@@ -497,7 +546,7 @@ const AuctionSummary = () => {
                                                     <h5 className="text-sm sm:text-lg font-black uppercase tracking-tight truncate">{p.name}</h5>
                                                     <div className="flex items-center gap-2 mt-1">
                                                       <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">{p.type}</span>
-                                                      {p.country !== 'IND' && <Wifi size={12} className="text-purple-400 rotate-90 shrink-0" />}
+                                                      {isOverseasPlayer(p) && <Wifi size={12} className="text-purple-400 rotate-90 shrink-0" />}
                                                     </div>
                                                   </div>
                                                 </div>
@@ -508,7 +557,7 @@ const AuctionSummary = () => {
                                              </div>
                                              <div className="relative z-10 pt-4 border-t border-white/5 flex items-center justify-between">
                                                 <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Acquired For</div>
-                                                <div className="text-base sm:text-lg font-black text-green-500">₹{p.bid.toFixed(2)}Cr</div>
+                                                <div className="text-base sm:text-lg font-black text-green-500">{p.bid == null ? '—' : `₹${formatCrores(p.bid)}Cr`}</div>
                                              </div>
                                            </>
                                         ) : (
@@ -531,12 +580,12 @@ const AuctionSummary = () => {
                                                  <h5 className="text-[11px] sm:text-[12px] font-black uppercase tracking-tight truncate">{p.name}</h5>
                                                  <div className="flex items-center gap-1.5">
                                                    <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">{p.type}</span>
-                                                   {p.country !== 'IND' && <Wifi size={10} className="text-purple-400 rotate-90 shrink-0" />}
+                                                   {isOverseasPlayer(p) && <Wifi size={10} className="text-purple-400 rotate-90 shrink-0" />}
                                                  </div>
                                                </div>
                                              </div>
                                              <div className="text-right shrink-0">
-                                               <div className="text-[13px] sm:text-[14px] font-black text-green-500">₹{p.bid.toFixed(2)}Cr</div>
+                                               <div className="text-[13px] sm:text-[14px] font-black text-green-500">{p.bid == null ? '—' : `₹${formatCrores(p.bid)}Cr`}</div>
                                              </div>
                                            </>
                                         )}

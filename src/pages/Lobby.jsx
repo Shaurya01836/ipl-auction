@@ -32,6 +32,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { TEAMS } from '../data/teams';
+import { formatCrores, toFiniteNumber } from '../lib/auctionDisplay';
 import TextChat from '../components/TextChat';
 import Footer from '../components/Footer';
 import PageLoader from '../components/PageLoader';
@@ -57,8 +58,8 @@ const useIsMobile = () => {
 
 const Lobby = () => {
   const { id } = useParams();
-  const { user, loginWithGoogle, loginAsGuest, logout, loading: authLoading } = useAuth();
-  const { joinAuction, currentAuction, loading: auctionLoading, messages, kickPlayer, updatePlayerTeam, updateRoomSettings, startAuction, joinRoomDb, addBotTeam, removeBotTeam, fillEmptyTeamsWithBots } = useAuction();
+  const { user, loginWithGoogle, loginAsGuest, loading: authLoading } = useAuth();
+  const { joinAuction, currentAuction, loading: auctionLoading, messages, kickPlayer, updatePlayerTeam, startAuction, joinRoomDb, removeBotTeam, fillEmptyTeamsWithBots } = useAuction();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('players');
@@ -69,6 +70,7 @@ const Lobby = () => {
   const [guestName, setGuestName] = useState('');
   const [isGuestMode, setIsGuestMode] = useState(false);
   const [banError, setBanError] = useState(null);
+  const [actionError, setActionError] = useState(null);
   const [showBotInfo, setShowBotInfo] = useState(false);
 
   const [spectateMode, setSpectateMode] = useState(() => {
@@ -206,22 +208,32 @@ const Lobby = () => {
   const handleStartAuction = async () => {
     if (isAdmin) {
       setIsStarting(true);
+      setActionError(null);
       try {
         await startAuction(id);
         navigate(`/auction/${id}`);
       } catch (error) {
+        console.error('[lobby] Failed to start auction', error);
+        setActionError('Could not start the auction. Please try again.');
         setIsStarting(false);
       }
     }
   };
 
   const handleKickPlayer = async (playerObj) => {
-    if (isAdmin) await kickPlayer(id, playerObj);
+    if (!isAdmin) return;
+    try {
+      await kickPlayer(id, playerObj);
+    } catch (error) {
+      console.error('[lobby] Failed to kick player', error);
+      setActionError('Could not remove that manager. Please try again.');
+    }
   };
 
   const handleTeamSelect = async (teamId) => {
     if (teamAssignments[teamId] && teamId !== currentUserPlayer?.team) return;
     setIsSelectingTeam(teamId);
+    setActionError(null);
     try {
       if (!isJoined) {
         await joinRoomDb(id, user.uid, { name: user.displayName || 'Manager', team: teamId });
@@ -229,7 +241,12 @@ const Lobby = () => {
         await updatePlayerTeam(id, user.uid, teamId);
       }
     } catch (e) {
-      if (e.message.includes("kicked")) setBanError(e.message);
+      if (e?.message?.includes("kicked")) {
+        setBanError(e.message);
+      } else {
+        console.error('[lobby] Failed to select team', e);
+        setActionError('Could not join that team. Please try again.');
+      }
     } finally {
       setIsSelectingTeam(null);
     }
@@ -237,10 +254,12 @@ const Lobby = () => {
 
   const handleGoogleSignIn = async () => {
     setIsUpdatingSettings(true);
+    setActionError(null);
     try {
       await loginWithGoogle();
     } catch (error) {
-      // Login failed
+      console.error('[lobby] Google sign-in failed', error);
+      setActionError('Sign-in failed. Please try again.');
     } finally {
       setIsUpdatingSettings(false);
     }
@@ -250,10 +269,12 @@ const Lobby = () => {
     e.preventDefault();
     if (!guestName.trim()) return;
     setIsUpdatingSettings(true);
+    setActionError(null);
     try {
       await loginAsGuest(guestName);
     } catch (error) {
-      // Guest login failed
+      console.error('[lobby] Guest sign-in failed', error);
+      setActionError('Could not join as a guest. Please try again.');
     } finally {
       setIsUpdatingSettings(false);
     }
@@ -268,19 +289,6 @@ const Lobby = () => {
   const shareWhatsApp = () => {
     const text = `Join my IPL Auction room! Code: ${id}\n${window.location.href}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-  };
-
-  const handleUpdateBidTimer = async (seconds) => {
-    if (!isAdmin) return;
-    setIsUpdatingSettings(true);
-    try {
-      await updateRoomSettings(id, {
-        ...currentAuction.settings,
-        bidTimer: seconds
-      });
-    } finally {
-      setIsUpdatingSettings(false);
-    }
   };
 
   // ─── Unauthenticated State: Show Login Gateway ───
@@ -521,6 +529,15 @@ const Lobby = () => {
   return (
     <div className="relative min-h-screen bg-[#050505] flex flex-col items-center pt-8 px-4 font-sans text-white overflow-x-hidden">
 
+      {actionError && (
+        <div
+          role="alert"
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-red-500/15 border border-red-500/30 text-red-300 text-[9px] sm:text-[10px] font-black uppercase tracking-widest shadow-2xl"
+        >
+          {actionError}
+        </div>
+      )}
+
       {/* Premium Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-orange-800/20 md:bg-orange-700/20 blur-[120px] rounded-full" />
@@ -610,19 +627,19 @@ const Lobby = () => {
                 <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
                   <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-1">Initial Budget</span>
                   <span className="text-[11px] font-black text-yellow-500 uppercase tracking-tight">
-                    ₹{currentAuction?.settings?.budget || 120}.0 Cr
+                    ₹{formatCrores(toFiniteNumber(currentAuction?.settings?.budget, 120), 1)} Cr
                   </span>
                 </div>
                 <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
                   <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-1">Squad Capacity</span>
                   <span className="text-[11px] font-black text-blue-400 uppercase tracking-tight">
-                    {currentAuction?.squadLimit || 25} Players
+                    {toFiniteNumber(currentAuction?.squadLimit, 25)} Players
                   </span>
                 </div>
                 <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
                   <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-1">Overseas Quota</span>
                   <span className="text-[11px] font-black text-purple-400 uppercase tracking-tight">
-                    Max {currentAuction?.overseasLimit || 8}
+                    Max {toFiniteNumber(currentAuction?.overseasLimit, 8)}
                   </span>
                 </div>
               </div>
