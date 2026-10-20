@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SquadRating from '../components/SquadRating';
+import useRoomServer from '../hooks/useRoomServer';
 import {
   computeTeamSpent,
   countOverseas,
@@ -35,6 +36,7 @@ import {
 const AuctionSummary = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { server, ready: serverReady } = useRoomServer(id);
   const { currentAuction, roomTeams, loading, joinAuction } = useAuction();
   const { user } = useAuth();
   
@@ -100,11 +102,10 @@ const AuctionSummary = () => {
 
 
   useEffect(() => {
-    if (id && user?.uid) {
-      const unsub = joinAuction(id, user.uid);
-      return () => unsub();
-    }
-  }, [id, user?.uid, joinAuction]);
+    if (!serverReady || !id || !user?.uid) return;
+    const unsub = joinAuction(id, user.uid, server);
+    return () => unsub();
+  }, [id, user?.uid, joinAuction, server, serverReady]);
 
   useEffect(() => {
     if (!id) return;
@@ -225,7 +226,7 @@ const AuctionSummary = () => {
     );
   }
 
-  if ((loading && !activeAuction) || (!activeAuction && summaryLoading)) {
+  if (!serverReady || (loading && !activeAuction) || (!activeAuction && summaryLoading)) {
     return (
       <div className="h-screen-safe bg-[#050505] text-white flex flex-col items-center justify-center p-8 text-center">
         <div className="w-20 h-20 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin mb-8" />

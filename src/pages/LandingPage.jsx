@@ -2,9 +2,25 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useAuction } from "../contexts/AuctionContext";
-import { rtdb } from "../lib/firebase";
+import {
+  getActiveServer,
+  getRtdb,
+  getAvailableServers,
+  goOfflineServer,
+  isServerAvailable,
+} from "../lib/firebase";
 import { supabase } from "../lib/supabase";
+import { generateRoomCode, normalizeRoomCode } from "../lib/roomCodes";
 import { ref, remove } from "firebase/database";
+import {
+  DEFAULT_AUCTION_SERVER,
+  getAuctionServer,
+  getPreferredServer,
+  getServerFromSearch,
+  getServerMeta,
+  setPreferredServer,
+  withServerParam,
+} from "../lib/auctionServers";
 import { IPL_PLAYERS } from "../data/players";
 import { TEAMS } from "../data/teams";
 import {
@@ -27,6 +43,7 @@ import BuyMeACoffee from "../components/BuyMeACoffee";
 import ConfirmDialog from "../components/ConfirmDialog";
 import AuctionActivityFeed from "../components/AuctionActivityFeed";
 import Footer from "../components/Footer";
+import ServerSwitcher from "../components/ServerSwitcher";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import {
   computeTeamSpent,
@@ -48,6 +65,29 @@ const LandingPage = () => {
   const [roomCode, setRoomCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+
+  const availableServers = useMemo(() => getAvailableServers(), []);
+  const [selectedServer, setSelectedServer] = useState(() => {
+    const hinted = getServerFromSearch(window.location.search);
+    if (hinted && isServerAvailable(hinted)) return hinted;
+    const preferred = getPreferredServer();
+    return isServerAvailable(preferred) ? preferred : DEFAULT_AUCTION_SERVER;
+  });
+
+  const handleServerChange = (server) => {
+    if (!isServerAvailable(server)) return;
+    setSelectedServer(server);
+    setNotice("");
+    // Keep the URL in sync so a refresh does not snap back to an older hint.
+    const url = new URL(window.location.href);
+    url.searchParams.set("server", server);
+    window.history.replaceState({}, "", url);
+  };
+
+  useEffect(() => {
+    setPreferredServer(selectedServer);
+  }, [selectedServer]);
 
   // Public Lobbies state
   const [publicRooms, setPublicRooms] = useState([]);
@@ -76,8 +116,14 @@ const LandingPage = () => {
       setError(
         "ACCESS DENIED: You have been removed from that hub by the host.",
       );
-      // Clean up URL
-      window.history.replaceState({}, document.title, window.location.pathname);
+      // Clean up the error flag without losing the server hint.
+      params.delete("error");
+      const query = params.toString();
+      window.history.replaceState(
+        {},
+        document.title,
+        `${window.location.pathname}${query ? `?${query}` : ""}`,
+      );
     }
   }, []);
 
@@ -117,6 +163,7 @@ const LandingPage = () => {
               uniquePlayers.find((p) => p.isHost) || uniquePlayers[0];
             return {
               roomId: r.id,
+              server: getAuctionServer(r),
               hostName: r.host_name || host?.name || "Manager",
               status: r.status,
               auctionType: r.auction_type || "mega",
@@ -200,6 +247,7 @@ const LandingPage = () => {
         return {
           id: teamData.id,
           roomId: teamData.auction_id,
+          server: getAuctionServer(auctionData),
           teamId: teamData.team_id,
           teamName: teamData.team_name,
           mode: auctionData?.auction_type || "mega",
@@ -258,14 +306,25 @@ const LandingPage = () => {
   // Filtered public rooms
   const filteredPublicRooms = useMemo(() => {
     return publicRooms.filter((room) => {
+      const matchesServer = room.server === selectedServer;
       const matchesSearch =
         room.roomId.toLowerCase().includes(searchQuery.toLowerCase()) ||
         room.hostName.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesMode =
         filterMode === "all" || room.auctionType === filterMode;
-      return matchesSearch && matchesMode;
+      return matchesServer && matchesSearch && matchesMode;
     });
-  }, [publicRooms, searchQuery, filterMode]);
+  }, [publicRooms, selectedServer, searchQuery, filterMode]);
+
+  const serverRoomCount = useMemo(
+    () => publicRooms.filter((room) => room.server === selectedServer).length,
+    [publicRooms, selectedServer],
+  );
+
+  const filteredHistory = useMemo(
+    () => historyData.filter((session) => session.server === selectedServer),
+    [historyData, selectedServer],
+  );
 
   // Confirm + delete an individual session from Supabase history & public list
   const handleDeleteHistory = async () => {
@@ -308,12 +367,21 @@ const LandingPage = () => {
       return;
     }
 
-    // 3. Remove room from Realtime Database if still sitting in waiting state
-    try {
-      await remove(ref(rtdb, `auctions/${roomId}`));
-    } catch (err) {
-      // The Supabase rows are already gone; RTDB cleanup is best-effort.
-      console.warn("[history] Failed to remove deleted auction from RTDB", err);
+    // 3. Remove room from the room's own Realtime Database if still sitting in
+    // waiting state. Never clean up the other server's namespace.
+    if (isServerAvailable(session.server)) {
+      try {
+        await remove(ref(getRtdb(session.server), `auctions/${roomId}`));
+      } catch (err) {
+        // The Supabase rows are already gone; RTDB cleanup is best-effort.
+        console.warn(
+          "[history] Failed to remove deleted auction from RTDB",
+          err,
+        );
+      } finally {
+        // Deleting history must not leave a browse-time socket open.
+        goOfflineServer(session.server);
+      }
     }
   };
 
@@ -352,28 +420,65 @@ const LandingPage = () => {
       const displayName = user.displayName || "Manager";
 
       if (activeTab === "new") {
-        const newRoomId = Math.random()
-          .toString(36)
-          .substring(2, 8)
-          .toUpperCase();
-        await createRoom(
-          newRoomId,
-          user.uid,
-          { name: displayName, team: selectedTeam },
-          auctionType,
-          isPublicRoom,
-        );
-        navigate(`/lobby/${newRoomId}`);
+        let newRoomId = null;
+        let result = null;
+
+        // Collisions are rare but possible; retry with a fresh code instead of
+        // letting an upsert overwrite an existing room.
+        for (let attempt = 0; attempt < 4; attempt += 1) {
+          const candidate = generateRoomCode();
+          try {
+            result = await createRoom(
+              candidate,
+              user.uid,
+              { name: displayName, team: selectedTeam },
+              auctionType,
+              isPublicRoom,
+              selectedServer,
+            );
+            newRoomId = candidate;
+            break;
+          } catch (createError) {
+            if (
+              createError?.code !== "ROOM_CODE_TAKEN" ||
+              attempt === 3
+            ) {
+              throw createError;
+            }
+          }
+        }
+
+        if (!newRoomId) {
+          throw new Error("Could not create a room code. Please try again.");
+        }
+
+        const actualServer = result?.server || selectedServer;
+        setSelectedServer(actualServer);
+        if (result?.fellBack) {
+          setNotice(
+            `${getServerMeta(result.requestedServer).label} was full, so this room was created on ${getServerMeta(actualServer).label}.`,
+          );
+          setTimeout(() => setNotice(""), 6000);
+        }
+        navigate(withServerParam(`/lobby/${newRoomId}`, actualServer));
       } else if (activeTab === "join") {
         if (!roomCode) {
           setIsSubmitting(false);
           return;
         }
-        const code = roomCode.toUpperCase();
-        await joinRoomDb(code, user.uid, { name: displayName, team: "" });
-        navigate(`/lobby/${code}`);
+        const code = normalizeRoomCode(roomCode);
+        const resolvedServer = await joinRoomDb(code, user.uid, {
+          name: displayName,
+          team: "",
+        });
+        const actualServer = resolvedServer || selectedServer;
+        setSelectedServer(actualServer);
+        navigate(withServerParam(`/lobby/${code}`, actualServer));
       }
     } catch (error) {
+      // createRoom/joinRoomDb may have opened a probe socket before failing.
+      // The landing page must stay browse-only; the room page will reconnect.
+      goOfflineServer(getActiveServer());
       setError(
         error.message || "Failed to create/join room. Please try again.",
       );
@@ -606,11 +711,28 @@ const LandingPage = () => {
         <div className="bg-[#0c0c0c] rounded-[2.2rem] border border-white/5 grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch divide-y lg:divide-y-0 lg:divide-x divide-white/5 overflow-hidden">
           {/* Left Side: Live signings */}
           <div className="lg:col-span-5 w-full flex flex-col p-6 md:p-8 relative">
-            <AuctionActivityFeed activeCount={publicRooms.length} />
+            <AuctionActivityFeed activeCount={serverRoomCount} />
           </div>
 
           {/* Right Side: Create/Join/History form */}
           <div className="lg:col-span-7 w-full p-4 sm:p-6 md:p-8 flex flex-col">
+            {availableServers.length > 1 && (
+              <div className="flex items-center justify-between gap-3 mb-3 sm:mb-4">
+                <div className="min-w-0">
+                  <span className="text-[9px] sm:text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                    Auction Server
+                  </span>
+                  <p className="text-[8px] sm:text-[9px] text-gray-500 font-medium">
+                    Lobbies and history are separate per server.
+                  </p>
+                </div>
+                <ServerSwitcher
+                  servers={availableServers}
+                  value={selectedServer}
+                  onChange={handleServerChange}
+                />
+              </div>
+            )}
             {/* Flat Tab Bar Navigation: Create / Join / History */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-white/5 mb-5 sm:mb-8 gap-3 sm:gap-4">
               <div className="flex">
@@ -635,9 +757,9 @@ const LandingPage = () => {
                   }`}
                 >
                   <span>Join</span>
-                  {publicRooms.length > 0 && (
+                  {serverRoomCount > 0 && (
                     <span className="bg-[#ff5500]/20 text-[#ff5500] text-[9px] px-1.5 py-0.2 rounded-full font-extrabold ml-0.5">
-                      {publicRooms.length}
+                      {serverRoomCount}
                     </span>
                   )}
                 </button>
@@ -1030,8 +1152,8 @@ const LandingPage = () => {
                         No Active Public Lobbies
                       </p>
                       <p className="text-[9px] sm:text-[10px] text-gray-400 font-medium">
-                        No open public rooms right now. Create one to get
-                        started!
+                        No open public rooms on this server right now. Create
+                        one to get started!
                       </p>
                     </div>
                   ) : (
@@ -1071,6 +1193,10 @@ const LandingPage = () => {
                                       ? "11-Classic"
                                       : "Mega"}
                                 </span>
+                                <span className="shrink-0">•</span>
+                                <span className="text-gray-500 truncate">
+                                  {getServerMeta(room.server).shortLabel}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -1078,7 +1204,12 @@ const LandingPage = () => {
                           <button
                             type="button"
                             onClick={() => {
-                              navigate(`/lobby/${room.roomId}`);
+                              navigate(
+                                withServerParam(
+                                  `/lobby/${room.roomId}`,
+                                  room.server,
+                                ),
+                              );
                             }}
                             className="px-2.5 sm:px-4 py-1.5 sm:py-2 bg-orange-500 hover:bg-orange-600 text-white font-black text-[8px] sm:text-[10px] uppercase tracking-wider rounded-lg transition-all active:scale-95 flex items-center gap-1 shrink-0 cursor-pointer shadow-md"
                           >
@@ -1116,7 +1247,7 @@ const LandingPage = () => {
                     Refresh
                   </button>
                 </div>
-                {historyError && historyData.length > 0 && (
+                {historyError && filteredHistory.length > 0 && (
                   <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/20">
                     <span className="text-[9px] font-bold text-red-400">
                       {historyError}
@@ -1140,7 +1271,7 @@ const LandingPage = () => {
                       Syncing Database...
                     </p>
                   </div>
-                ) : historyError && historyData.length === 0 ? (
+                ) : historyError && filteredHistory.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-10 sm:py-16 text-center">
                     <div className="w-12 h-12 sm:w-16 sm:h-16 bg-red-500/10 border border-red-500/20 rounded-xl sm:rounded-2xl flex items-center justify-center mb-3 sm:mb-4">
                       <RefreshCw
@@ -1162,7 +1293,7 @@ const LandingPage = () => {
                       Try Again
                     </button>
                   </div>
-                ) : historyData.length === 0 ? (
+                ) : filteredHistory.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-10 sm:py-16 text-center">
                     <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/5 border border-dashed border-white/10 rounded-xl sm:rounded-2xl flex items-center justify-center mb-3 sm:mb-4">
                       <History
@@ -1174,14 +1305,14 @@ const LandingPage = () => {
                       No Auctions Yet
                     </h2>
                     <p className="text-[9px] sm:text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                      Create or join a room to start bidding!
+                      Create or join a room on this server to start bidding!
                     </p>
                   </div>
                 ) : (
                   <>
                     {/* Session List */}
                     <div className="space-y-2 sm:space-y-3 max-h-[330px] sm:max-h-[400px] overflow-y-auto custom-scrollbar pr-0.5 sm:pr-1">
-                      {historyData.map((session) => {
+                      {filteredHistory.map((session) => {
                         const teamMeta = TEAMS.find(
                           (t) => t.id === session.teamId,
                         );
@@ -1384,7 +1515,12 @@ const LandingPage = () => {
 
                                       <button
                                         onClick={() =>
-                                          navigate(`/summary/${session.roomId}`)
+                                          navigate(
+                                            withServerParam(
+                                              `/summary/${session.roomId}`,
+                                              session.server,
+                                            ),
+                                          )
                                         }
                                         className="w-full mt-1.5 sm:mt-2 py-2 sm:py-3 bg-blue-600/10 border border-blue-500/20 rounded-xl text-blue-500 text-[8px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-blue-600/20 transition-all cursor-pointer flex items-center justify-center gap-2"
                                       >
@@ -1407,7 +1543,12 @@ const LandingPage = () => {
 
                                       <button
                                         onClick={() =>
-                                          navigate(`/lobby/${session.roomId}`)
+                                          navigate(
+                                            withServerParam(
+                                              `/lobby/${session.roomId}`,
+                                              session.server,
+                                            ),
+                                          )
                                         }
                                         className="w-full mt-1.5 sm:mt-2 py-2 sm:py-3 bg-orange-500/10 border border-orange-500/20 rounded-xl text-orange-500 text-[8px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-orange-500/20 transition-all cursor-pointer flex items-center justify-center gap-2"
                                       >
@@ -1434,7 +1575,12 @@ const LandingPage = () => {
 
                                       <button
                                         onClick={() =>
-                                          navigate(`/lobby/${session.roomId}`)
+                                          navigate(
+                                            withServerParam(
+                                              `/lobby/${session.roomId}`,
+                                              session.server,
+                                            ),
+                                          )
                                         }
                                         className="w-full mt-1.5 sm:mt-2 py-2 sm:py-3 bg-orange-500/10 border border-orange-500/20 rounded-xl text-orange-500 text-[8px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-orange-500/20 transition-all cursor-pointer flex items-center justify-center gap-2"
                                       >
@@ -1452,6 +1598,12 @@ const LandingPage = () => {
                   </>
                 )}
               </div>
+            )}
+
+            {notice && (
+              <p className="mt-4 text-xs text-amber-400 font-bold text-center">
+                {notice}
+              </p>
             )}
 
             {error && (
