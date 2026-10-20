@@ -1,5 +1,14 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { db, getServerTime, rtdb } from '../lib/firebase';
+import {
+  db,
+  getActiveServer,
+  getServerTime,
+  goOfflineServer,
+  goOnlineServer,
+  isServerAvailable,
+  rtdb,
+  waitForServerConnection,
+} from '../lib/firebase';
 import { supabase } from '../lib/supabase';
 import { IPL_PLAYERS } from '../data/players';
 import { evaluateBotBid } from '../lib/botEngine';
@@ -15,9 +24,7 @@ import {
   push,
   serverTimestamp as serverTimestampRtdb,
   query as queryRtdb,
-  limitToLast,
-  goOnline,
-  goOffline
+  limitToLast
 } from 'firebase/database';
 import { 
   doc, 
@@ -32,6 +39,20 @@ import { useQuota } from './QuotaContext';
 import { useConnectionAlert } from './ConnectionAlertContext';
 import { shouldReportConnectionTrouble } from '../lib/connectionAlerts';
 import { countOverseas, isOverseasPlayer, toFiniteNumber } from '../lib/auctionDisplay';
+import {
+  DEFAULT_AUCTION_SERVER,
+  PRIMARY_SERVER,
+  SECONDARY_SERVER,
+  getAuctionServer,
+  getServerMeta,
+  normalizeServer,
+  withServerParam,
+} from '../lib/auctionServers';
+import {
+  fetchAuctionRecord,
+  insertAuctionWithServer,
+  upsertAuctionWithServer,
+} from '../lib/auctionServerDirectory';
 
 
 const TEAMS = [
@@ -46,6 +67,28 @@ const TEAMS = [
   { id: 'GT', name: 'Gujarat Titans', color: 'bg-slate-700' },
   { id: 'LSG', name: 'Lucknow Super Giants', color: 'bg-pink-800' },
 ];
+
+const createRoomCodeTakenError = () => {
+  const error = new Error('That room code is already in use. Please try again.');
+  error.code = 'ROOM_CODE_TAKEN';
+  return error;
+};
+
+const mapSupabaseAuction = (sData) => ({
+  id: sData.id,
+  hostId: sData.host_id,
+  hostName: sData.host_name,
+  status: sData.status,
+  auctionType: sData.auction_type || 'mega',
+  isPublic: sData.is_public !== false,
+  playerOrder: sData.player_order || [],
+  squadLimit: toFiniteNumber(sData.squad_limit, 25),
+  overseasLimit: toFiniteNumber(sData.overseas_limit, 8),
+  players: sData.players || [],
+  bannedPlayers: sData.banned_players || [],
+  settings: sData.settings || { bidTimer: 10, budget: 120 },
+  server: getAuctionServer(sData),
+});
 
 const AuctionContext = createContext();
 
@@ -79,9 +122,52 @@ export const AuctionProvider = ({ children }) => {
   }, []);
 
   // Create a new room in DB (RTDB + Supabase index, zero Firestore load)
-  const createRoom = useCallback(async (roomId, userId, playerDetails, auctionType = 'mega', isPublic = true) => {
-    // Explicitly connect RTDB WebSocket for room creation
-    try { goOnline(rtdb); } catch { /* RTDB reconnects automatically */ }
+  const createRoom = useCallback(async (
+    roomId,
+    userId,
+    playerDetails,
+    auctionType = 'mega',
+    isPublic = true,
+    server = DEFAULT_AUCTION_SERVER,
+  ) => {
+    const requestedServer = normalizeServer(server);
+
+    // A full free-plan database never opens its socket. Probe the chosen server
+    // first, then retry the same creation on the other configured server.
+    const tryServer = async (candidate) => {
+      if (!isServerAvailable(candidate)) return false;
+      try {
+        goOnlineServer(candidate);
+        return await waitForServerConnection(rtdb, 6000);
+      } catch (err) {
+        console.warn(
+          `[auction] Could not connect to ${getServerMeta(candidate).label}`,
+          err,
+        );
+        return false;
+      }
+    };
+
+    let actualServer = requestedServer;
+    let connected = await tryServer(actualServer);
+
+    if (!connected) {
+      const fallbackServer =
+        actualServer === PRIMARY_SERVER ? SECONDARY_SERVER : PRIMARY_SERVER;
+      if (fallbackServer !== actualServer && (await tryServer(fallbackServer))) {
+        actualServer = fallbackServer;
+        connected = true;
+      }
+    }
+
+    if (!connected) {
+      // The last probe can switch the active binding even when it fails. Close
+      // whichever server is active now, not just the originally requested one.
+      goOfflineServer(getActiveServer());
+      throw new Error(
+        'Both auction servers are at capacity right now. Please try again in a minute.',
+      );
+    }
 
     const teamDetails = TEAMS.find(t => t.id === playerDetails.team);
     
@@ -92,20 +178,9 @@ export const AuctionProvider = ({ children }) => {
     const budget = isSprint5 ? 60.0 : isSprint11 ? 90.0 : 120.0;
     const squadLimit = isSprint5 ? 5 : isSprint11 ? 11 : 25;
     const overseasLimit = isSprint5 ? 2 : isSprint11 ? 4 : 8;
+    const settings = { bidTimer: 10, budget };
 
-    const liveRef = ref(rtdb, `auctions/${roomId}/live`);
-    await set(liveRef, { status: 'waiting' });
-
-    // Instantly set host online presence in RTDB
-    const hostPresenceRef = ref(rtdb, `auctions/${roomId}/presence/${userId}`);
-    await set(hostPresenceRef, {
-      online: true,
-      lastSeen: serverTimestampRtdb()
-    });
-
-    // Sync to RTDB for real-time reads
-    const rtdbRoomRef = ref(rtdb, `auctions/${roomId}/room`);
-    await set(rtdbRoomRef, {
+    const roomData = {
       hostId: userId,
       hostName: playerDetails.name,
       status: 'waiting',
@@ -113,6 +188,7 @@ export const AuctionProvider = ({ children }) => {
       isPublic: !!isPublic,
       squadLimit,
       overseasLimit,
+      server: actualServer,
       players: [{
         id: userId,
         name: playerDetails.name,
@@ -121,29 +197,71 @@ export const AuctionProvider = ({ children }) => {
         isHost: true
       }],
       bannedPlayers: [],
-      settings: {
-        bidTimer: 10,
-        budget
-      }
-    });
+      settings
+    };
 
-    if (playerDetails.team) {
-      const rtdbTeamRef = ref(rtdb, `auctions/${roomId}/teams/${roomId}_${userId}`);
-      await set(rtdbTeamRef, {
-        auctionId: roomId,
-        userId: userId,
-        teamId: playerDetails.team,
-        teamName: teamDetails?.name || 'Unknown',
-        budgetRemaining: budget,
-        spent: 0,
-        squad: []
-      });
+    // Claim the room atomically. This catches a stale room whose Supabase
+    // mirror failed, and two clients racing for the same code on this server.
+    // The Supabase INSERT below is the cross-server uniqueness guard.
+    const rtdbRoomRef = ref(rtdb, `auctions/${roomId}/room`);
+    let claim;
+    try {
+      claim = await runTransactionRtdb(
+        rtdbRoomRef,
+        (current) => (current ? undefined : roomData),
+      );
+    } catch (claimError) {
+      goOfflineServer(actualServer);
+      throw claimError;
+    }
+    if (!claim.committed) {
+      goOfflineServer(actualServer);
+      throw createRoomCodeTakenError();
     }
 
-    // Write to Supabase (primary database index, 0 Firestore cost)
+    try {
+      const liveRef = ref(rtdb, `auctions/${roomId}/live`);
+      await set(liveRef, { status: 'waiting' });
+
+      // Instantly set host online presence in RTDB
+      const hostPresenceRef = ref(rtdb, `auctions/${roomId}/presence/${userId}`);
+      await set(hostPresenceRef, {
+        online: true,
+        lastSeen: serverTimestampRtdb()
+      });
+
+      if (playerDetails.team) {
+        const rtdbTeamRef = ref(rtdb, `auctions/${roomId}/teams/${roomId}_${userId}`);
+        await set(rtdbTeamRef, {
+          auctionId: roomId,
+          userId: userId,
+          teamId: playerDetails.team,
+          teamName: teamDetails?.name || 'Unknown',
+          budgetRemaining: budget,
+          spent: 0,
+          squad: []
+        });
+      }
+    } catch (rtdbErr) {
+      // Do not leave a half-created room behind on the failed server.
+      try {
+        await remove(ref(rtdb, `auctions/${roomId}`));
+      } catch {
+        // Best effort cleanup.
+      }
+      goOfflineServer(actualServer);
+      throw rtdbErr;
+    }
+
+    // Write to Supabase (shared directory for both RTDBs, 0 Firestore cost).
+    // The helper also works before the optional top-level `server` column is
+    // migrated by falling back to `settings.server`.
     try {
       if (supabase) {
-        await supabase.from('auctions').upsert({
+        // Insert, not upsert: `auctions.id` is the cross-server uniqueness
+        // guard. A racing create receives 23505 instead of overwriting the
+        // other room, and we clean up the losing RTDB room.
+        const mirror = await insertAuctionWithServer({
           id: roomId,
           host_id: userId,
           host_name: playerDetails.name,
@@ -160,8 +278,24 @@ export const AuctionProvider = ({ children }) => {
             teamName: teamDetails?.name || 'Unknown',
             isHost: true
           }],
-          settings: { bidTimer: 10, budget }
-        });
+          settings
+        }, actualServer);
+
+        if (mirror.error?.code === '23505') {
+          try {
+            await remove(ref(rtdb, `auctions/${roomId}`));
+          } catch {
+            // Best effort cleanup.
+          }
+          goOfflineServer(actualServer);
+          throw createRoomCodeTakenError();
+        }
+
+        if (mirror.error) {
+          // The invite link still carries ?server=, so the room remains usable
+          // even if this directory write fails.
+          console.warn('[auction] Failed to mirror new room to Supabase', mirror.error);
+        }
 
         if (playerDetails.team) {
           await supabase.from('teams').upsert({
@@ -177,9 +311,16 @@ export const AuctionProvider = ({ children }) => {
         }
       }
     } catch (sErr) {
+      if (sErr?.code === 'ROOM_CODE_TAKEN') throw sErr;
       // Non-blocking Supabase fallback: RTDB already holds the room.
       console.warn('[auction] Failed to mirror new room to Supabase', sErr);
     }
+
+    return {
+      server: actualServer,
+      requestedServer,
+      fellBack: actualServer !== requestedServer,
+    };
   }, []);
   
   // Helper to flush complete room & teams data from RTDB to Supabase in single batch call
@@ -195,7 +336,9 @@ export const AuctionProvider = ({ children }) => {
 
       // Flush to Supabase (0 Firestore cost)
       if (supabase) {
-        await supabase.from('auctions').upsert({
+        const server =
+          roomData.server || roomData.settings?.server || getActiveServer();
+        const mirror = await upsertAuctionWithServer({
           id: roomId,
           host_id: roomData.hostId || '',
           host_name: roomData.hostName || 'Manager',
@@ -206,7 +349,10 @@ export const AuctionProvider = ({ children }) => {
           settings: roomData.settings || {},
           banned_players: roomData.bannedPlayers || [],
           ...(roomData.playerOrder ? { player_order: roomData.playerOrder } : {})
-        });
+        }, server);
+        if (mirror.error) {
+          console.warn('[auction] Failed to flush room to Supabase', mirror.error);
+        }
 
         const supabaseTeams = Object.entries(teamsData).map(([docId, teamVal]) => ({
           id: docId,
@@ -513,49 +659,135 @@ export const AuctionProvider = ({ children }) => {
     }
   }, [getSyncedTime, flushAuctionToFirestore]);
 
-  const joinRoomDb = useCallback(async (roomId, userId, playerDetails) => {
-    // Explicitly connect RTDB WebSocket when joining a room
-    try { goOnline(rtdb); } catch { /* RTDB reconnects automatically */ }
-
+  const joinRoomDb = useCallback(async (roomId, userId, playerDetails, serverHint) => {
     const teamDetails = TEAMS.find(t => t.id === playerDetails.team);
-    
-    // Fetch current room state from RTDB (0 Firestore cost!)
-    const rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
-    let data = null;
-    
-    if (rtdbRoomSnap.exists()) {
-      data = rtdbRoomSnap.val();
-    } else {
-      let supabaseFound = false;
-      if (supabase) {
+
+    let targetServer = normalizeServer(serverHint, null);
+    let directoryRecord = null;
+
+    // A bare room code needs the shared Supabase directory. Invite links carry
+    // ?server= and skip this read, except as a fallback if the room is missing.
+    if (!targetServer) {
+      try {
+        directoryRecord = await fetchAuctionRecord(roomId);
+        if (directoryRecord) targetServer = getAuctionServer(directoryRecord);
+      } catch (sErr) {
+        console.warn('[auction] Supabase room directory lookup failed', sErr);
+      }
+    }
+
+    if (directoryRecord) {
+      const directoryServer = getAuctionServer(directoryRecord);
+      if (!isServerAvailable(directoryServer)) {
+        throw new Error(
+          `${getServerMeta(directoryServer).label} is unavailable right now.`,
+        );
+      }
+      targetServer = directoryServer;
+    }
+
+    if (!targetServer) targetServer = getActiveServer();
+    if (!isServerAvailable(targetServer)) targetServer = DEFAULT_AUCTION_SERVER;
+
+    goOnlineServer(targetServer);
+    let connected = await waitForServerConnection(rtdb, 6000);
+
+    // If a stale/incorrect hint pointed at the wrong database, let the shared
+    // directory correct it before giving up on capacity. If the directory is
+    // down too, still probe the other server once so a room created during a
+    // Supabase outage remains joinable.
+    if (!connected) {
+      if (!directoryRecord) {
         try {
-          const { data: sData } = await supabase.from('auctions').select('*').eq('id', roomId).maybeSingle();
-          if (sData) {
-            data = {
-              id: sData.id,
-              hostId: sData.host_id,
-              hostName: sData.host_name,
-              status: sData.status,
-              auctionType: sData.auction_type || 'mega',
-              squadLimit: toFiniteNumber(sData.squad_limit, 25),
-              overseasLimit: toFiniteNumber(sData.overseas_limit, 8),
-              players: sData.players || [],
-              bannedPlayers: sData.banned_players || [],
-              settings: sData.settings || { bidTimer: 10, budget: 120 }
-            };
-            supabaseFound = true;
-          }
-        } catch (sErr) {
-          // Fall back to Firestore when the Supabase mirror read fails.
-          console.warn('[auction] Supabase room lookup failed; falling back to Firestore', sErr);
+          directoryRecord = await fetchAuctionRecord(roomId);
+        } catch {
+          // Keep the generic capacity error below.
         }
       }
 
-      if (!supabaseFound) {
-        const roomSnap = await getDoc(doc(db, 'auctions', roomId));
-        if (!roomSnap.exists()) throw new Error("Room not found!");
-        data = roomSnap.data();
+      const directoryServer = directoryRecord
+        ? getAuctionServer(directoryRecord)
+        : null;
+      const otherServer =
+        targetServer === PRIMARY_SERVER ? SECONDARY_SERVER : PRIMARY_SERVER;
+      const nextServer = directoryRecord
+        ? directoryServer
+        : otherServer;
+
+      if (
+        nextServer &&
+        nextServer !== targetServer &&
+        isServerAvailable(nextServer)
+      ) {
+        targetServer = nextServer;
+        goOnlineServer(targetServer);
+        connected = await waitForServerConnection(rtdb, 6000);
       }
+    }
+
+    if (!connected) {
+      throw new Error(
+        `${getServerMeta(targetServer).label} is at capacity right now. Please try again in a minute.`,
+      );
+    }
+
+    // Fetch current room state from the resolved RTDB (0 Firestore cost!).
+    let rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
+
+    if (!rtdbRoomSnap.exists() && !directoryRecord) {
+      try {
+        directoryRecord = await fetchAuctionRecord(roomId);
+      } catch {
+        // Fall through to Firestore.
+      }
+    }
+
+    // If the directory is unavailable too, a bare code can still be a room on
+    // the other server (e.g. a create whose Supabase mirror failed). Probe the
+    // other database once before declaring the room missing.
+    if (!rtdbRoomSnap.exists() && !directoryRecord) {
+      const otherServer =
+        targetServer === PRIMARY_SERVER ? SECONDARY_SERVER : PRIMARY_SERVER;
+      if (isServerAvailable(otherServer)) {
+        targetServer = otherServer;
+        goOnlineServer(targetServer);
+        connected = await waitForServerConnection(rtdb, 6000);
+        if (connected) {
+          rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
+        }
+      }
+    }
+
+    if (!rtdbRoomSnap.exists() && directoryRecord) {
+      const directoryServer = getAuctionServer(directoryRecord);
+      if (!isServerAvailable(directoryServer)) {
+        throw new Error(
+          `${getServerMeta(directoryServer).label} is unavailable right now.`,
+        );
+      }
+      if (directoryServer !== targetServer) {
+        targetServer = directoryServer;
+        goOnlineServer(targetServer);
+        connected = await waitForServerConnection(rtdb, 6000);
+        if (!connected) {
+          throw new Error(
+            `${getServerMeta(targetServer).label} is at capacity right now. Please try again in a minute.`,
+          );
+        }
+        rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
+      }
+    }
+
+    const roomWasMissing = !rtdbRoomSnap.exists();
+    let data = null;
+    if (!roomWasMissing) {
+      data = rtdbRoomSnap.val();
+    } else if (directoryRecord) {
+      data = mapSupabaseAuction(directoryRecord);
+    } else {
+      const roomSnap = await getDoc(doc(db, 'auctions', roomId));
+      if (!roomSnap.exists()) throw new Error("Room not found!");
+      data = roomSnap.data();
     }
 
     if (data.bannedPlayers && data.bannedPlayers.includes(userId)) {
@@ -580,19 +812,15 @@ export const AuctionProvider = ({ children }) => {
     const updatedPlayers = existingPlayers.filter(p => p && p.id !== userId && p.userId !== userId);
     updatedPlayers.push(updatedPlayer);
 
-    // Update RTDB (0 Firestore cost in lobby!)
-    await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { players: updatedPlayers });
-
-    // Sync updated player count/list to Supabase so Public Lobbies show live player counts
-    /*
-    try {
-      if (supabase) {
-        await supabase.from('auctions').update({ players: updatedPlayers }).eq('id', roomId);
-      }
-    } catch (sErr) {
-      // Non-blocking sync error
+    // Update RTDB (0 Firestore cost in lobby!). If the RTDB room node was
+    // missing, write the full directory/Firestore snapshot so joinAuction does
+    // not latch onto a partial `{ players }` room.
+    const roomRef = ref(rtdb, `auctions/${roomId}/room`);
+    if (roomWasMissing) {
+      await set(roomRef, { ...data, players: updatedPlayers });
+    } else {
+      await updateRtdb(roomRef, { players: updatedPlayers });
     }
-    */
 
     // Create/Update team in RTDB if team is provided
     if (playerDetails.team) {
@@ -618,6 +846,8 @@ export const AuctionProvider = ({ children }) => {
         }
       }
     }
+
+    return targetServer;
   }, []);
 
   // Kick a player from the room
@@ -665,11 +895,18 @@ export const AuctionProvider = ({ children }) => {
   }, []);
 
   // Listen to current auction state live
-  const joinAuction = useCallback((auctionId, userId) => {
+  const joinAuction = useCallback((auctionId, userId, serverHint) => {
     if (!userId) return () => {};
-    
-    // Explicitly open RTDB WebSocket connection for active auction session
-    try { goOnline(rtdb); } catch { /* RTDB reconnects automatically */ }
+
+    const preferredServer = normalizeServer(serverHint || getActiveServer());
+    const roomServer = isServerAvailable(preferredServer)
+      ? preferredServer
+      : DEFAULT_AUCTION_SERVER;
+    try {
+      goOnlineServer(roomServer);
+    } catch {
+      // The watchdog below reports an unusable socket.
+    }
 
     setLoading(true);
     let auctionLoaded = false;
@@ -802,7 +1039,7 @@ export const AuctionProvider = ({ children }) => {
         
         // PROACTIVE BAN CHECK: Kick user if they are banned
         if (data.bannedPlayers && data.bannedPlayers.includes(userId)) {
-           window.location.href = '/?error=kicked';
+           window.location.href = withServerParam('/?error=kicked', roomServer);
            return;
         }
 
@@ -827,18 +1064,7 @@ export const AuctionProvider = ({ children }) => {
             if (supabase) {
               const { data: sData } = await supabase.from('auctions').select('*').eq('id', auctionId).maybeSingle();
               if (sData) {
-                data = {
-                  id: sData.id,
-                  hostId: sData.host_id,
-                  hostName: sData.host_name,
-                  status: sData.status,
-                  auctionType: sData.auction_type || 'mega',
-                  squadLimit: toFiniteNumber(sData.squad_limit, 25),
-                  overseasLimit: toFiniteNumber(sData.overseas_limit, 8),
-                  players: sData.players || [],
-                  bannedPlayers: sData.banned_players || [],
-                  settings: sData.settings || { bidTimer: 10, budget: 120 }
-                };
+                data = mapSupabaseAuction(sData);
               }
             }
 
@@ -849,7 +1075,7 @@ export const AuctionProvider = ({ children }) => {
 
             if (data) {
               if (data.bannedPlayers && data.bannedPlayers.includes(userId)) {
-                 window.location.href = '/?error=kicked';
+                 window.location.href = withServerParam('/?error=kicked', roomServer);
                  return;
               }
               auctionLoaded = true;
@@ -987,7 +1213,7 @@ export const AuctionProvider = ({ children }) => {
       setMessages([]);
 
       // Immediately close RTDB connection when leaving auction room/lobby to free up connection quota
-      try { goOffline(rtdb); } catch { /* RTDB reconnects automatically */ }
+      try { goOfflineServer(roomServer); } catch { /* RTDB reconnects automatically */ }
     };
   }, [user]);
 

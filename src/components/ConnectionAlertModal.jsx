@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Home, RefreshCw } from 'lucide-react';
 import { useConnectionAlert } from '../contexts/ConnectionAlertContext';
+import { CAPACITY } from '../lib/connectionAlerts';
+import { getActiveServer, isServerAvailable } from '../lib/firebase';
+import { getServerMeta, setPreferredServer } from '../lib/auctionServers';
 
 /**
  * Shown when the app cannot reach the Realtime Database: either the project has
@@ -88,6 +91,23 @@ function AlertDialog({ problem }) {
   }, [secondsLeft, retry]);
 
   const copy = COPY[problem] ?? COPY.unreachable;
+  const activeServer = getActiveServer();
+  const otherServer = activeServer === 'primary' ? 'secondary' : 'primary';
+  const canSwitchServer =
+    problem === CAPACITY && isServerAvailable(otherServer);
+  const activeMeta = getServerMeta(activeServer);
+  const otherMeta = getServerMeta(otherServer);
+  const body = canSwitchServer
+    ? `${activeMeta.label} has reached its free-plan connection limit. Your internet is fine. ${otherMeta.label} is ready for a new room.`
+    : copy.body;
+  const hint = canSwitchServer
+    ? `Use ${otherMeta.label} to create or join a room there. Existing rooms cannot move between servers.`
+    : copy.hint;
+
+  const switchServer = () => {
+    setPreferredServer(otherServer);
+    window.location.href = `/?server=${otherServer}`;
+  };
 
   return (
     <div
@@ -124,10 +144,10 @@ function AlertDialog({ problem }) {
                 id="connection-alert-body"
                 className="mb-2.5 text-[13px] font-medium leading-relaxed text-gray-300 sm:text-sm"
               >
-                {copy.body}
+                {body}
               </p>
 
-              <p className="text-[11.5px] leading-relaxed text-gray-500">{copy.hint}</p>
+              <p className="text-[11.5px] leading-relaxed text-gray-500">{hint}</p>
             </div>
 
             {/* Pinned actions — never scroll out of reach */}
@@ -159,6 +179,16 @@ function AlertDialog({ problem }) {
                   <Home className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
+
+              {canSwitchServer && (
+                <button
+                  type="button"
+                  onClick={switchServer}
+                  className="mt-2.5 flex h-10 w-full items-center justify-center rounded-xl border border-orange-500/30 bg-orange-500/10 text-[10px] font-black uppercase tracking-[0.15em] text-orange-300 transition-all hover:bg-orange-500/20 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+                >
+                  Use {otherMeta.label}
+                </button>
+              )}
 
               <p className="mt-2 text-center text-[10px] font-medium text-gray-500">
                 Auto-retry in {secondsLeft}s

@@ -48,6 +48,8 @@ import { TEAMS } from '../data/teams';
 import TextChat from '../components/TextChat';
 import PageLoader from '../components/PageLoader';
 import ConfirmDialog from '../components/ConfirmDialog';
+import useRoomServer from '../hooks/useRoomServer';
+import { withServerParam } from '../lib/auctionServers';
 import {
    clampTimer,
    computeTeamSpent,
@@ -61,6 +63,7 @@ import {
 const AuctionRoom = () => {
    const { id } = useParams();
    const navigate = useNavigate();
+   const { server, ready: serverReady } = useRoomServer(id);
    const {
       currentAuction,
       team,
@@ -206,18 +209,20 @@ const AuctionRoom = () => {
 
    // Sync completion status
    useEffect(() => {
+      if (!serverReady) return;
       if (currentAuction?.status === 'completed') {
-         navigate(`/summary/${id}`, { replace: true });
+         navigate(withServerParam(`/summary/${id}`, server), { replace: true });
       }
-   }, [currentAuction?.status, id, navigate]);
+   }, [currentAuction?.status, id, navigate, server, serverReady]);
 
    // Missing-auth redirects must happen in an effect, never during render.
    useEffect(() => {
+      if (!serverReady) return;
       if (!user && !loading && !redirectedToLobbyRef.current) {
          redirectedToLobbyRef.current = true;
-         navigate(`/lobby/${id}`, { replace: true });
+         navigate(withServerParam(`/lobby/${id}`, server), { replace: true });
       }
-   }, [user, loading, id, navigate]);
+   }, [user, loading, id, navigate, server, serverReady]);
 
    const TEAM_SONGS = {
       'csk': '/CSK.mp3',
@@ -485,12 +490,12 @@ const AuctionRoom = () => {
    }, [activeOverlayTab, filteredPlayers]);
 
    useEffect(() => {
-      if (!id || !user?.uid) return;
-      const unsub = joinAuction(id, user.uid);
+      if (!serverReady || !id || !user?.uid) return;
+      const unsub = joinAuction(id, user.uid, server);
 
       const autoJoin = async () => {
          try {
-            await joinRoomDb(id, user.uid, { name: user.displayName || 'Manager' });
+            await joinRoomDb(id, user.uid, { name: user.displayName || 'Manager' }, server);
          } catch (e) {
             if (e?.message?.includes("kicked")) {
                setBanError(e.message);
@@ -503,7 +508,7 @@ const AuctionRoom = () => {
       autoJoin();
 
       return () => unsub();
-   }, [id, user?.uid, user?.displayName, joinAuction, joinRoomDb]);
+   }, [id, user?.uid, user?.displayName, joinAuction, joinRoomDb, server, serverReady]);
 
    useEffect(() => {
       if (currentAuction && user) {
@@ -852,7 +857,7 @@ const AuctionRoom = () => {
       return <PageLoader />;
    }
 
-   if (loading) {
+   if (!serverReady || loading) {
       return (
          <PageLoader />
       );
@@ -867,7 +872,7 @@ const AuctionRoom = () => {
          await joinRoomDb(id, user.uid, {
             name: user.displayName || 'Manager',
             team: selectedTeam.id
-         });
+         }, server);
       } catch (err) {
          console.error('[auction] Failed to join selected team', err);
          setError('Failed to join that team. Please try again.');

@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Search, Gavel, ExternalLink, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { getAuctionServer, withServerParam } from '../../lib/auctionServers';
 import PaginationControls from './PaginationControls';
 
 const AuctionsTab = ({
@@ -93,7 +94,10 @@ const AuctionsTab = ({
 
                   <div className="flex items-center gap-2">
                     <Link
-                      to={`/auction/${auc.id}`}
+                      to={withServerParam(
+                        `/auction/${auc.id}`,
+                        getAuctionServer(auc),
+                      )}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-blue-400 hover:text-white bg-blue-500/10 border border-blue-500/20 px-2.5 py-1.5 rounded-xl transition-all"
@@ -148,7 +152,10 @@ const AuctionsTab = ({
                       </td>
                       <td className="py-4 px-6 text-right space-x-2">
                         <Link
-                          to={`/auction/${auc.id}`}
+                          to={withServerParam(
+                            `/auction/${auc.id}`,
+                            getAuctionServer(auc),
+                          )}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-blue-400 hover:text-white bg-blue-500/10 border border-blue-500/20 px-2.5 py-1.5 rounded-xl transition-all"

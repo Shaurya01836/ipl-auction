@@ -36,6 +36,8 @@ import { formatCrores, toFiniteNumber } from '../lib/auctionDisplay';
 import TextChat from '../components/TextChat';
 import Footer from '../components/Footer';
 import PageLoader from '../components/PageLoader';
+import useRoomServer from '../hooks/useRoomServer';
+import { withServerParam } from '../lib/auctionServers';
 
 // Small-screen detection (matches the 767px breakpoint used in index.css).
 // Framer-motion elements render without any animation when this is true.
@@ -58,6 +60,7 @@ const useIsMobile = () => {
 
 const Lobby = () => {
   const { id } = useParams();
+  const { server, ready: serverReady } = useRoomServer(id);
   const { user, loginWithGoogle, loginAsGuest, loading: authLoading } = useAuth();
   const { joinAuction, currentAuction, loading: auctionLoading, messages, kickPlayer, updatePlayerTeam, startAuction, joinRoomDb, removeBotTeam, fillEmptyTeamsWithBots } = useAuction();
   const navigate = useNavigate();
@@ -170,19 +173,19 @@ const Lobby = () => {
   }, []);
 
   useEffect(() => {
-    if (id && user?.uid) {
-      const unsub = joinAuction(id, user.uid);
-      return () => unsub();
-    }
-  }, [id, user?.uid, joinAuction]);
+    if (!serverReady || !id || !user?.uid) return;
+    const unsub = joinAuction(id, user.uid, server);
+    return () => unsub();
+  }, [id, user?.uid, joinAuction, server, serverReady]);
 
   useEffect(() => {
+    if (!serverReady) return;
     if (currentAuction?.status === 'active') {
-      navigate(`/auction/${id}`, { replace: true });
+      navigate(withServerParam(`/auction/${id}`, server), { replace: true });
     } else if (currentAuction?.status === 'completed') {
-      navigate(`/summary/${id}`, { replace: true });
+      navigate(withServerParam(`/summary/${id}`, server), { replace: true });
     }
-  }, [currentAuction?.status, id, navigate]);
+  }, [currentAuction?.status, id, navigate, server, serverReady]);
 
   useEffect(() => {
     if (currentAuction && user) {
@@ -211,7 +214,7 @@ const Lobby = () => {
       setActionError(null);
       try {
         await startAuction(id);
-        navigate(`/auction/${id}`);
+        navigate(withServerParam(`/auction/${id}`, server));
       } catch (error) {
         console.error('[lobby] Failed to start auction', error);
         setActionError('Could not start the auction. Please try again.');
@@ -236,7 +239,7 @@ const Lobby = () => {
     setActionError(null);
     try {
       if (!isJoined) {
-        await joinRoomDb(id, user.uid, { name: user.displayName || 'Manager', team: teamId });
+        await joinRoomDb(id, user.uid, { name: user.displayName || 'Manager', team: teamId }, server);
       } else {
         await updatePlayerTeam(id, user.uid, teamId);
       }
@@ -281,7 +284,8 @@ const Lobby = () => {
   };
 
   const copyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
+    const link = `${window.location.origin}${withServerParam(`/lobby/${id}`, server)}`;
+    navigator.clipboard.writeText(link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -425,7 +429,7 @@ const Lobby = () => {
     );
   }
 
-  if (auctionLoading) {
+  if (!serverReady || auctionLoading) {
     return (
       <PageLoader />
     );
