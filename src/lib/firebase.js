@@ -41,16 +41,22 @@ if (typeof window !== 'undefined') {
 export { analytics };
 
 // ─── Two RTDB backends ───
-// Server 2 is a separate Firebase project, so it gets its own Firebase App.
-// Its database rules are public, which means we intentionally do not attach the
-// primary project's Auth instance to it: the app's Firebase UID remains the
-// portable identity used in room data on both servers.
+// When a RTDB override URL is supplied for a server, we spin up a dedicated
+// Firebase app for it so the API key always matches the database project and
+// avoids the "invalid credentials" warning that occurs when a key from one
+// project is used against another project's database URL.
+
+const primaryDatabaseURL = (
+  import.meta.env.VITE_RTDB_A_URL || ''
+).trim();
+
 const secondaryDatabaseURL = (
   import.meta.env.VITE_RTDB_B_URL ||
   import.meta.env.VITE_FIREBASE_B_DATABASE_URL ||
   ''
 ).trim();
 
+const PRIMARY_APP_NAME   = 'ipl-auction-rtdb-primary';
 const SECONDARY_APP_NAME = 'ipl-auction-rtdb-secondary';
 
 function deriveProjectId(databaseURL) {
@@ -62,35 +68,35 @@ function deriveProjectId(databaseURL) {
   }
 }
 
-function createSecondaryDatabase() {
-  if (!secondaryDatabaseURL) return null;
+function createOverrideDatabase(databaseURL, appName, envPrefix) {
+  if (!databaseURL) return null;
   try {
-    const existing = getApps().find((candidate) => candidate.name === SECONDARY_APP_NAME);
-    const secondaryApp = existing || initializeApp(
+    const existing = getApps().find((candidate) => candidate.name === appName);
+    const overrideApp = existing || initializeApp(
       Object.fromEntries(
         Object.entries({
-          apiKey: import.meta.env.VITE_FIREBASE_B_API_KEY,
-          authDomain: import.meta.env.VITE_FIREBASE_B_AUTH_DOMAIN,
-          databaseURL: secondaryDatabaseURL,
+          apiKey:            import.meta.env[`${envPrefix}_API_KEY`],
+          authDomain:        import.meta.env[`${envPrefix}_AUTH_DOMAIN`],
+          databaseURL,
           projectId:
-            import.meta.env.VITE_FIREBASE_B_PROJECT_ID ||
-            deriveProjectId(secondaryDatabaseURL),
-          storageBucket: import.meta.env.VITE_FIREBASE_B_STORAGE_BUCKET,
-          messagingSenderId: import.meta.env.VITE_FIREBASE_B_MESSAGING_SENDER_ID,
-          appId: import.meta.env.VITE_FIREBASE_B_APP_ID,
+            import.meta.env[`${envPrefix}_PROJECT_ID`] ||
+            deriveProjectId(databaseURL),
+          storageBucket:     import.meta.env[`${envPrefix}_STORAGE_BUCKET`],
+          messagingSenderId: import.meta.env[`${envPrefix}_MESSAGING_SENDER_ID`],
+          appId:             import.meta.env[`${envPrefix}_APP_ID`],
         }).filter(([, value]) => Boolean(value)),
       ),
-      SECONDARY_APP_NAME,
+      appName,
     );
-    return getDatabase(secondaryApp, secondaryDatabaseURL);
+    return getDatabase(overrideApp, databaseURL);
   } catch (error) {
-    console.error('[firebase] Could not initialise Server 2', error);
+    console.error(`[firebase] Could not initialise override RTDB app "${appName}"`, error);
     return null;
   }
 }
 
-const primaryRtdb = getDatabase(app);
-const secondaryRtdb = createSecondaryDatabase();
+const primaryRtdb   = createOverrideDatabase(primaryDatabaseURL,   PRIMARY_APP_NAME,   'VITE_RTDB_A') || getDatabase(app);
+const secondaryRtdb = createOverrideDatabase(secondaryDatabaseURL, SECONDARY_APP_NAME, 'VITE_RTDB_B');
 
 export const SECONDARY_SERVER_ENABLED = Boolean(secondaryRtdb);
 
