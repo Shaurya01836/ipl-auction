@@ -40,6 +40,7 @@ import PageLoader from '../components/PageLoader';
 import useRoomServer from '../hooks/useRoomServer';
 import { withServerParam } from '../lib/auctionServers';
 import { isHotspotRoomCode } from '../lib/roomCodes';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 // Small-screen detection (matches the 767px breakpoint used in index.css).
 // Framer-motion elements render without any animation when this is true.
@@ -62,6 +63,7 @@ const useIsMobile = () => {
 
 const Lobby = () => {
   const { id } = useParams();
+  useDocumentTitle(`Lobby ${id ? `#${id}` : ''} | CrickAuction`, 'Live franchise team selection and auction hub.', true);
   const { server, ready: serverReady } = useRoomServer(id);
   const { user, loginWithGoogle, loginAsGuest, loading: authLoading } = useAuth();
   const { joinAuction, currentAuction, loading: auctionLoading, messages, kickPlayer, updatePlayerTeam, startAuction, joinRoomDb, removeBotTeam, fillEmptyTeamsWithBots } = useAuction();

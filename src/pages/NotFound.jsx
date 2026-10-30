@@ -7,8 +7,9 @@ import Footer from '../components/Footer'
 
 export default function NotFound() {
   useDocumentTitle(
-    'Page Not Found (404) | IPL Auction Simulator',
-    'The page you are looking for does not exist or has been moved.'
+    'Page Not Found (404) | CrickAuction',
+    'The page you are looking for does not exist or has been moved.',
+    true
   )
 
   return (

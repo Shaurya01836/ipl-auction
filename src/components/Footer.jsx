@@ -14,14 +14,17 @@ const Footer = () => {
           <span>© {currentYear} CRICK AUCTION. ALL RIGHTS RESERVED. CONCEPT CRAFTED BY <a href="https://ershaurya.dev" target="_blank" rel="noopener noreferrer" className="ml-1 hover:text-white transition-colors underline underline-offset-2">SHAURYA UPADHYAY</a></span>
         </div>
 
-        <div className="grid grid-cols-2 lg:flex lg:flex-row lg:flex-nowrap border-l-0 lg:border-l border-white/10 justify-center w-full lg:w-auto">
-          <Link to="/guide" className="px-2 sm:px-6 py-4 hover:text-white hover:bg-white/5 transition-colors border-b lg:border-b-0 border-r border-white/10 flex items-center justify-center whitespace-nowrap">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:flex lg:flex-row lg:flex-nowrap border-l-0 lg:border-l border-white/10 justify-center w-full lg:w-auto">
+          <Link to="/about" className="px-2 sm:px-5 py-4 hover:text-white hover:bg-white/5 transition-colors border-b lg:border-b-0 border-r border-white/10 flex items-center justify-center whitespace-nowrap">
+            About Us
+          </Link>
+          <Link to="/guide" className="px-2 sm:px-5 py-4 hover:text-white hover:bg-white/5 transition-colors border-b lg:border-b-0 border-r border-white/10 flex items-center justify-center whitespace-nowrap">
             Game Guide
           </Link>
-          <Link to="/privacy" className="px-2 sm:px-6 py-4 hover:text-white hover:bg-white/5 transition-colors border-b lg:border-b-0 lg:border-r border-white/10 flex items-center justify-center whitespace-nowrap">
+          <Link to="/privacy" className="px-2 sm:px-5 py-4 hover:text-white hover:bg-white/5 transition-colors border-b lg:border-b-0 border-r border-white/10 flex items-center justify-center whitespace-nowrap">
             Privacy Policy
           </Link>
-          <Link to="/terms" className={`px-2 sm:px-6 py-4 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center whitespace-nowrap border-white/10 ${isAdmin ? 'border-r' : 'col-span-2'}`}>
+          <Link to="/terms" className={`px-2 sm:px-5 py-4 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center whitespace-nowrap border-white/10 ${isAdmin ? 'border-r' : ''}`}>
             Terms & Conditions
           </Link>
           {isAdmin && (

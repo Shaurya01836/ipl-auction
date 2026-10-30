@@ -26,6 +26,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import SquadRating from '../components/SquadRating';
 import useRoomServer from '../hooks/useRoomServer';
 import { isHotspotRoomCode } from '../lib/roomCodes';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 import {
   computeTeamSpent,
   countOverseas,
@@ -36,6 +37,7 @@ import {
 
 const AuctionSummary = () => {
   const { id } = useParams();
+  useDocumentTitle(`Auction Summary #${id || ''} | CrickAuction`, 'Final squad rosters and auction summary.', true);
   const navigate = useNavigate();
   const { server, ready: serverReady } = useRoomServer(id);
   const { currentAuction, roomTeams, loading, joinAuction } = useAuction();
