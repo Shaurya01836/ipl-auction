@@ -13,6 +13,7 @@ const AuctionRoom     = lazy(() => import('./pages/AuctionRoom'))
 const AuctionSummary  = lazy(() => import('./pages/AuctionSummary'))
 const Lobby           = lazy(() => import('./pages/Lobby'))
 const GameGuide       = lazy(() => import('./pages/GameGuide'))
+const AboutUs         = lazy(() => import('./pages/AboutUs'))
 const PrivacyPolicy   = lazy(() => import('./pages/PrivacyPolicy'))
 const TermsConditions = lazy(() => import('./pages/TermsConditions'))
 const AdminPanel      = lazy(() => import('./pages/AdminPanel'))
@@ -61,6 +62,9 @@ function App() {
                   } />
                   <Route path="/guide" element={
                     <Suspense fallback={<PageFallback />}><GameGuide /></Suspense>
+                  } />
+                  <Route path="/about" element={
+                    <Suspense fallback={<PageFallback />}><AboutUs /></Suspense>
                   } />
                   <Route path="/privacy" element={
                     <Suspense fallback={<PageFallback />}><PrivacyPolicy /></Suspense>
