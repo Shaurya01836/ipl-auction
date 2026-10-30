@@ -52,6 +52,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import useRoomServer from '../hooks/useRoomServer';
 import { withServerParam } from '../lib/auctionServers';
 import { isHotspotRoomCode } from '../lib/roomCodes';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 import {
    clampTimer,
    computeTeamSpent,
@@ -64,6 +65,7 @@ import {
 
 const AuctionRoom = () => {
    const { id } = useParams();
+   useDocumentTitle(`Auction Room #${id || ''} | CrickAuction`, 'Live multiplayer IPL Auction bidding arena.', true);
    const navigate = useNavigate();
    const { server, ready: serverReady } = useRoomServer(id);
    const {
