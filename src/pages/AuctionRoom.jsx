@@ -40,7 +40,8 @@ import {
    Trophy,
    Clock,
    LogOut,
-   Eye
+   Eye,
+   Radio
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -50,6 +51,7 @@ import PageLoader from '../components/PageLoader';
 import ConfirmDialog from '../components/ConfirmDialog';
 import useRoomServer from '../hooks/useRoomServer';
 import { withServerParam } from '../lib/auctionServers';
+import { isHotspotRoomCode } from '../lib/roomCodes';
 import {
    clampTimer,
    computeTeamSpent,
@@ -980,6 +982,13 @@ const AuctionRoom = () => {
                <div className="flex items-center gap-1">
                   <span className="text-gray-500 text-[8px] sm:text-[10px] compact:text-[9px] font-black uppercase tracking-widest hidden xs:inline">ID:</span>
                   <span className="text-white font-mono font-bold tracking-widest text-[10px] sm:text-sm compact:text-xs">{id}</span>
+                  {(server === 'local' || isHotspotRoomCode(id)) && (
+                     <div className="flex items-center gap-1 px-1.5 py-0.5 sm:px-2.5 sm:py-0.5 bg-[#ff5500]/15 border border-[#ff5500]/30 rounded-full text-[#ff5500] font-black text-[7px] sm:text-[8px] uppercase tracking-widest ml-1 shrink-0">
+                        <Radio size={9} className="animate-pulse" />
+                        <span className="hidden sm:inline">OFFLINE HOTSPOT</span>
+                        <span className="sm:hidden">HOTSPOT</span>
+                     </div>
+                  )}
                   {spectateMode && (
                      <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 font-black text-[8px] sm:text-[9px] compact:text-[8px] uppercase tracking-widest ml-1 shrink-0">
                         <Eye size={10} />
