@@ -53,6 +53,29 @@ import {
   insertAuctionWithServer,
   upsertAuctionWithServer,
 } from '../lib/auctionServerDirectory';
+import { isHotspotRoomCode } from '../lib/roomCodes';
+import {
+  createLocalRoom,
+  joinLocalRoomDb as joinLocalRoomDbEngine,
+  subscribeLocalRoom,
+  updateLocalPlayerTeam as updateLocalPlayerTeamEngine,
+  fillLocalEmptyTeamsWithBots as fillLocalEmptyTeamsWithBotsEngine,
+  removeLocalBotTeam as removeLocalBotTeamEngine,
+  startLocalAuction as startLocalAuctionEngine,
+  placeLocalBid as placeLocalBidEngine,
+  endLocalPlayerAuction as endLocalPlayerAuctionEngine,
+  pauseLocalAuction as pauseLocalAuctionEngine,
+  resumeLocalAuction as resumeLocalAuctionEngine,
+  endLocalAuction as endLocalAuctionEngine,
+  sendLocalMessage as sendLocalMessageEngine,
+  kickLocalPlayer as kickLocalPlayerEngine,
+  updateLocalRoomSettings as updateLocalRoomSettingsEngine,
+  setSupabaseClient,
+} from '../lib/localAuctionEngine';
+
+if (typeof supabase !== 'undefined' && supabase) {
+  setSupabaseClient(supabase);
+}
 
 
 const TEAMS = [
@@ -115,11 +138,14 @@ export const AuctionProvider = ({ children }) => {
   const endingPlayerRef = React.useRef(false);
 
 
-  // Server-authoritative time using Firebase RTDB offset.
+  // Server-authoritative time using Firebase RTDB offset (or local time for hotspot rooms).
   // getServerTime() returns Date.now() + serverOffset, synced across all clients.
   const getSyncedTime = useCallback(() => {
+    if (currentAuction?.server === 'local' || isHotspotRoomCode(currentAuction?.id)) {
+      return Date.now();
+    }
     return getServerTime();
-  }, []);
+  }, [currentAuction?.server, currentAuction?.id]);
 
   // Create a new room in DB (RTDB + Supabase index, zero Firestore load)
   const createRoom = useCallback(async (
@@ -130,6 +156,10 @@ export const AuctionProvider = ({ children }) => {
     isPublic = true,
     server = DEFAULT_AUCTION_SERVER,
   ) => {
+    if (server === 'local' || isHotspotRoomCode(roomId)) {
+      return createLocalRoom(roomId, userId, playerDetails, auctionType, isPublic);
+    }
+
     const requestedServer = normalizeServer(server);
 
     // A full free-plan database never opens its socket. Probe the chosen server
@@ -376,6 +406,10 @@ export const AuctionProvider = ({ children }) => {
   }, []);
 
   const startAuction = useCallback(async (roomId) => {
+    if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
+      return startLocalAuctionEngine(roomId);
+    }
+
     // Fetch room data to determine auction type
     const rtdbRoomRef = ref(rtdb, `auctions/${roomId}/room`);
     const roomSnap = await get(rtdbRoomRef);
@@ -478,6 +512,10 @@ export const AuctionProvider = ({ children }) => {
   }, [getSyncedTime]);
 
   const endPlayerAuction = useCallback(async (roomId) => {
+    if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
+      return endLocalPlayerAuctionEngine(roomId);
+    }
+
     // Prevent duplicate calls from the timer interval
     if (endingPlayerRef.current) return;
     endingPlayerRef.current = true;
@@ -660,6 +698,10 @@ export const AuctionProvider = ({ children }) => {
   }, [getSyncedTime, flushAuctionToFirestore]);
 
   const joinRoomDb = useCallback(async (roomId, userId, playerDetails, serverHint) => {
+    if (serverHint === 'local' || isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
+      return joinLocalRoomDbEngine(roomId, userId, playerDetails);
+    }
+
     const teamDetails = TEAMS.find(t => t.id === playerDetails.team);
 
     let targetServer = normalizeServer(serverHint, null);
@@ -852,6 +894,10 @@ export const AuctionProvider = ({ children }) => {
 
   // Kick a player from the room
   const kickPlayer = useCallback(async (roomId, playerObj) => {
+    if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
+      return kickLocalPlayerEngine(roomId, playerObj?.id);
+    }
+
     try {
       const rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
       if (!rtdbRoomSnap.exists()) return;
@@ -897,6 +943,17 @@ export const AuctionProvider = ({ children }) => {
   // Listen to current auction state live
   const joinAuction = useCallback((auctionId, userId, serverHint) => {
     if (!userId) return () => {};
+
+    if (serverHint === 'local' || isHotspotRoomCode(auctionId)) {
+      setLoading(true);
+      return subscribeLocalRoom(auctionId, userId, {
+        setCurrentAuction,
+        setRoomTeams,
+        setTeam,
+        setMessages,
+        setLoading,
+      });
+    }
 
     const preferredServer = normalizeServer(serverHint || getActiveServer());
     const roomServer = isServerAvailable(preferredServer)
@@ -1219,6 +1276,15 @@ export const AuctionProvider = ({ children }) => {
 
   const sendMessage = useCallback(async (roomId, text, type = 'text') => {
     if (!user) return;
+    if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
+      return sendLocalMessageEngine(
+        roomId,
+        user.uid,
+        user.displayName || 'Manager',
+        text,
+        type,
+      );
+    }
     const msgRef = ref(rtdb, `auctions/${roomId}/messages`);
     await push(msgRef, {
       userId: user.uid,
@@ -1256,6 +1322,16 @@ export const AuctionProvider = ({ children }) => {
       if (currentOverseasCount >= overseasLimit) {
         throw new Error(`You have reached the overseas quota of ${overseasLimit} players for this mode!`);
       }
+    }
+
+    if (currentAuction.server === 'local' || isHotspotRoomCode(currentAuction.id)) {
+      return placeLocalBidEngine(
+        currentAuction.id,
+        user.uid,
+        team.teamId,
+        user.displayName || 'Manager',
+        team.teamName,
+      );
     }
 
     // ── Bug Fix 1: Budget pre-flight check OUTSIDE the transaction ──
@@ -1308,6 +1384,10 @@ export const AuctionProvider = ({ children }) => {
   }, [currentAuction, user, team, getSyncedTime]);
 
   const updatePlayerTeam = useCallback(async (roomId, userId, newTeamId) => {
+    if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
+      return updateLocalPlayerTeamEngine(roomId, userId, newTeamId);
+    }
+
     const rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
     if (!rtdbRoomSnap.exists()) return;
     
@@ -1349,11 +1429,17 @@ export const AuctionProvider = ({ children }) => {
   }, []);
   
   const updateRoomSettings = useCallback(async (roomId, settings) => {
+    if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
+      return updateLocalRoomSettingsEngine(roomId, settings);
+    }
     await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { settings });
-  }, []);
+  }, [currentAuction?.server]);
 
   const pauseAuction = useCallback(async (roomId) => {
     if (!user || !currentAuction || currentAuction.hostId !== user.uid) return;
+    if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
+      return pauseLocalAuctionEngine(roomId);
+    }
 
     const liveRef = ref(rtdb, `auctions/${roomId}/live`);
     const msgRef = ref(rtdb, `auctions/${roomId}/messages`);
@@ -1373,6 +1459,9 @@ export const AuctionProvider = ({ children }) => {
 
   const resumeAuction = useCallback(async (roomId) => {
     if (!user || !currentAuction || currentAuction.hostId !== user.uid) return;
+    if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
+      return resumeLocalAuctionEngine(roomId);
+    }
     
     const liveRef = ref(rtdb, `auctions/${roomId}/live`);
     const msgRef = ref(rtdb, `auctions/${roomId}/messages`);
@@ -1395,6 +1484,9 @@ export const AuctionProvider = ({ children }) => {
 
   const endAuction = useCallback(async (roomId) => {
     if (!user || !currentAuction || currentAuction.hostId !== user.uid) return;
+    if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
+      return endLocalAuctionEngine(roomId);
+    }
 
     await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { status: 'completed' });
     await flushAuctionToFirestore(roomId);
@@ -1496,6 +1588,10 @@ export const AuctionProvider = ({ children }) => {
   }, []);
 
   const removeBotTeam = useCallback(async (roomId, botUserId) => {
+    if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
+      return removeLocalBotTeamEngine(roomId, botUserId);
+    }
+
     const rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
     if (!rtdbRoomSnap.exists()) return;
     const data = rtdbRoomSnap.val();
@@ -1515,6 +1611,10 @@ export const AuctionProvider = ({ children }) => {
   }, []);
 
   const fillEmptyTeamsWithBots = useCallback(async (roomId) => {
+    if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
+      return fillLocalEmptyTeamsWithBotsEngine(roomId);
+    }
+
     const rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
     if (!rtdbRoomSnap.exists()) return;
     const data = rtdbRoomSnap.val();
@@ -1569,9 +1669,10 @@ export const AuctionProvider = ({ children }) => {
   // multiple times during the same countdown cycle.
   const lastBotBidCycleRef = React.useRef(null);
 
-  // Host Bidding Bot Loop Effect
+  // Host Bidding Bot Loop Effect (Cloud RTDB)
   useEffect(() => {
     if (!currentAuction || !user || currentAuction.hostId !== user.uid) return;
+    if (currentAuction.server === 'local' || isHotspotRoomCode(currentAuction.id)) return;
     if (currentAuction.currentAuction?.status !== 'bidding') return;
 
     const botPlayers = (currentAuction.players || []).filter(p => p.isBot || p.id.startsWith('bot_'));

@@ -25,6 +25,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import SquadRating from '../components/SquadRating';
 import useRoomServer from '../hooks/useRoomServer';
+import { isHotspotRoomCode } from '../lib/roomCodes';
 import {
   computeTeamSpent,
   countOverseas,
@@ -110,6 +111,12 @@ const AuctionSummary = () => {
   useEffect(() => {
     if (!id) return;
     let isMounted = true;
+
+    // Hotspot and local offline rooms load directly from local engine state via joinAuction
+    if (server === 'local' || isHotspotRoomCode(id)) {
+      setSummaryLoading(false);
+      return;
+    }
 
     const fetchSummaryFromPersistentStore = async () => {
       setSummaryLoading(true);
