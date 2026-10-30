@@ -150,7 +150,7 @@ const getPlayerKeyStats = (player) => {
 };
 
 const AdminPanel = () => {
-  useDocumentTitle('Admin Control Hub | IPL Auction Hub');
+  useDocumentTitle('Admin Control Hub | CrickAuction', 'Administrative management panel.', true);
   const navigate = useNavigate();
   const { user, loginWithGoogle, logout } = useAuth();
 

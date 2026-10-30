@@ -1,4 +1,13 @@
 User-agent: *
 Allow: /
+Allow: /guide
+Allow: /about
+Allow: /privacy
+Allow: /terms
+Disallow: /lobby/
+Disallow: /auction/
+Disallow: /summary/
+Disallow: /admin
+Disallow: /admin/
 
 Sitemap: https://crickauction.in/sitemap.xml
