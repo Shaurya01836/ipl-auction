@@ -13,6 +13,7 @@ import {
 test('normalizeServer accepts known ids and falls back safely', () => {
   assert.equal(normalizeServer('primary'), 'primary');
   assert.equal(normalizeServer('secondary'), 'secondary');
+  assert.equal(normalizeServer('local'), 'local');
   assert.equal(normalizeServer('nope'), DEFAULT_AUCTION_SERVER);
   assert.equal(normalizeServer(undefined), DEFAULT_AUCTION_SERVER);
   assert.equal(normalizeServer('nope', null), null);
@@ -40,6 +41,7 @@ test('settings.server wins over a migration default on the top-level column', ()
 
 test('getServerFromSearch only accepts known server values', () => {
   assert.equal(getServerFromSearch('?server=secondary'), 'secondary');
+  assert.equal(getServerFromSearch('?server=local'), 'local');
   assert.equal(getServerFromSearch('?foo=1&server=primary'), 'primary');
   assert.equal(getServerFromSearch('?server=bogus'), null);
   assert.equal(getServerFromSearch(''), null);

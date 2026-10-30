@@ -22,3 +22,18 @@ export function generateRoomCode(length = 6, random = Math.random) {
 export function normalizeRoomCode(value) {
   return String(value || '').trim().toUpperCase();
 }
+
+/** True when a room code is formatted as a local/offline hotspot room */
+export function isHotspotRoomCode(code) {
+  const normalized = normalizeRoomCode(code);
+  return (
+    normalized.startsWith('HOTSPOT') ||
+    normalized.startsWith('LOCAL') ||
+    normalized.startsWith('OFFLINE') ||
+    normalized.includes('192.168.') ||
+    normalized.includes('172.') ||
+    normalized.includes('10.') ||
+    normalized.includes(':3000') ||
+    normalized.includes(':8080')
+  );
+}

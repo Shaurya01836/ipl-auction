@@ -102,7 +102,7 @@ export default function AuctionActivityFeed({ activeCount = 0 }) {
 
       {/* Card Header */}
       <div className="flex flex-col flex-shrink-0">
-        <h2 className="text-sm sm:text-base font-black uppercase text-white tracking-wider leading-none flex items-center gap-2">
+        <h2 className="text-sm sm:text-base font-pixel uppercase text-white tracking-wider leading-none flex items-center gap-2">
           <span className="w-5 flex justify-center">🔥</span>
           <span>LIVE AUCTION ROOMS</span>
         </h2>
@@ -115,7 +115,7 @@ export default function AuctionActivityFeed({ activeCount = 0 }) {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
             </span>
           </span>
-          <span className="text-[10px] font-black text-green-400 uppercase tracking-widest leading-none mt-[1px]">
+          <span className="text-[10px] font-pixel text-green-400 uppercase tracking-widest leading-none mt-[1px]">
            {activeCount !== undefined && activeCount !== null ? activeCount : fakeCount}+ Active rooms
           </span>
         </div>
@@ -124,7 +124,7 @@ export default function AuctionActivityFeed({ activeCount = 0 }) {
         <div className="w-full h-px bg-white/10 my-4" />
 
         {/* Recent Signings Section Label */}
-        <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-3 flex-shrink-0">
+        <span className="text-[10px] text-gray-500 font-pixel uppercase tracking-widest mb-3 flex-shrink-0">
           Recent Signings
         </span>
       </div>

@@ -27,7 +27,8 @@ import {
   Sparkles,
   Info,
   X,
-  Eye
+  Eye,
+  Radio
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -38,6 +39,7 @@ import Footer from '../components/Footer';
 import PageLoader from '../components/PageLoader';
 import useRoomServer from '../hooks/useRoomServer';
 import { withServerParam } from '../lib/auctionServers';
+import { isHotspotRoomCode } from '../lib/roomCodes';
 
 // Small-screen detection (matches the 767px breakpoint used in index.css).
 // Framer-motion elements render without any animation when this is true.
@@ -565,6 +567,12 @@ const Lobby = () => {
             <span className="text-[7px] sm:text-[9px] font-black text-gray-500 uppercase tracking-widest leading-none mb-0.5 sm:mb-1 whitespace-nowrap">Room ID</span>
             <span className="text-sm sm:text-base md:text-xl font-black text-white tracking-tight leading-none truncate">{id}</span>
           </div>
+          {(server === 'local' || isHotspotRoomCode(id)) && (
+            <div className="flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 bg-[#ff5500]/15 border border-[#ff5500]/30 rounded-full text-[#ff5500] font-black text-[8px] sm:text-[9px] uppercase tracking-widest whitespace-nowrap shrink-0">
+              <Radio size={10} className="sm:w-3 sm:h-3 animate-pulse" />
+              <span>OFFLINE HOTSPOT</span>
+            </div>
+          )}
           {spectateMode && (
             <div className="flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 font-black text-[8px] sm:text-[9px] uppercase tracking-widest whitespace-nowrap shrink-0">
               <Eye size={10} className="sm:w-3 sm:h-3" />

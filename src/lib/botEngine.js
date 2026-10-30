@@ -1,6 +1,6 @@
-import { IPL_PLAYERS } from '../data/players';
-import { TEAMS } from '../data/teams';
-import { countOverseas, isOverseasPlayer, toFiniteNumber } from './auctionDisplay';
+import { IPL_PLAYERS } from '../data/players.js';
+import { TEAMS } from '../data/teams.js';
+import { countOverseas, isOverseasPlayer, toFiniteNumber } from './auctionDisplay.js';
 
 /**
  * Player Set → Tier Multipliers

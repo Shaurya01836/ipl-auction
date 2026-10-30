@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   DEFAULT_AUCTION_SERVER,
+  LOCAL_SERVER,
   getPreferredServer,
   getServerFromSearch,
   normalizeServer,
@@ -8,6 +9,7 @@ import {
 } from '../lib/auctionServers';
 import { resolveRoomServer } from '../lib/auctionServerDirectory';
 import { isServerAvailable, setActiveServer } from '../lib/firebase';
+import { isHotspotRoomCode } from '../lib/roomCodes';
 
 const EMPTY_RESOLUTION = {
   roomId: null,
@@ -20,8 +22,9 @@ const EMPTY_RESOLUTION = {
  * Resolve a room's RTDB before any listener subscribes.
  *
  * This is the readiness gate used by Lobby, AuctionRoom and AuctionSummary.
- * Supabase's auction directory is authoritative; `?server=` is a fallback hint
- * when the directory is unavailable or the row has not been mirrored yet.
+ * Hotspot and offline rooms resolve immediately to 'local' without any cloud
+ * lookup. Supabase's auction directory is authoritative for cloud rooms;
+ * `?server=` is a fallback hint when the directory is unavailable.
  *
  * The state is keyed by roomId so changing rooms derives `ready = false`
  * immediately, without a synchronous state reset inside the effect.
@@ -34,7 +37,24 @@ export default function useRoomServer(roomId) {
 
     if (!roomId) return undefined;
 
-    const hint = getServerFromSearch(window.location.search);
+    const searchStr = typeof window !== 'undefined' ? window.location.search : '';
+    const hint = getServerFromSearch(searchStr);
+
+    // Hotspot / local offline mode bypasses all cloud server discovery & RTDB probes
+    if (
+      isHotspotRoomCode(roomId) ||
+      hint === LOCAL_SERVER ||
+      searchStr.includes('local=true') ||
+      searchStr.includes('server=local')
+    ) {
+      setResolution({
+        roomId,
+        server: LOCAL_SERVER,
+        ready: true,
+        error: null,
+      });
+      return undefined;
+    }
 
     resolveRoomServer(roomId, hint)
       .catch((lookupError) => {

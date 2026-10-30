@@ -9,6 +9,7 @@
 
 export const PRIMARY_SERVER = 'primary';
 export const SECONDARY_SERVER = 'secondary';
+export const LOCAL_SERVER = 'local';
 export const DEFAULT_AUCTION_SERVER = PRIMARY_SERVER;
 
 export const AUCTION_SERVERS = Object.freeze([
@@ -23,6 +24,12 @@ export const AUCTION_SERVERS = Object.freeze([
     label: 'Server 2',
     shortLabel: 'S2',
     description: 'Overflow',
+  },
+  {
+    id: LOCAL_SERVER,
+    label: 'Offline / Hotspot',
+    shortLabel: 'Local',
+    description: 'Hotspot / LAN',
   },
 ]);
 
