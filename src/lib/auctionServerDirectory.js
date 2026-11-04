@@ -5,15 +5,29 @@ import {
   normalizeServer,
 } from './auctionServers';
 
+const directoryCache = new Map();
+const CACHE_TTL_MS = 60 * 1000; // 1 minute in-memory cache to eliminate duplicate egress
+
 /** Read one auction directory row. Returns null when Supabase is unavailable. */
 export async function fetchAuctionRecord(roomId) {
   if (!supabase || !roomId) return null;
+
+  const cached = directoryCache.get(roomId);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.record;
+  }
+
+  // Optimize egress: Only request server routing columns, avoiding heavy JSON blobs like player_order
   const { data, error } = await supabase
     .from('auctions')
-    .select('*')
+    .select('id, settings, status')
     .eq('id', roomId)
     .maybeSingle();
+
   if (error) throw error;
+  if (data) {
+    directoryCache.set(roomId, { record: data, timestamp: Date.now() });
+  }
   return data || null;
 }
 

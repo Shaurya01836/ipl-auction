@@ -149,8 +149,17 @@ const LandingPage = () => {
     }
   }, []);
 
-  // Fetch Public Lobbies directly from Supabase (0 RTDB bandwidth download cost)
-  const fetchPublicLobbies = async () => {
+  // Client-side cache for Public Lobbies to stop redundant Supabase egress on frequent renders
+  const publicLobbiesCacheRef = useRef({ data: null, timestamp: 0 });
+
+  // Fetch Public Lobbies directly from Supabase (optimized egress, minimal columns)
+  const fetchPublicLobbies = async (force = false) => {
+    const now = Date.now();
+    if (!force && publicLobbiesCacheRef.current.data && now - publicLobbiesCacheRef.current.timestamp < 30000) {
+      setPublicRooms(publicLobbiesCacheRef.current.data);
+      return;
+    }
+
     setLobbiesLoading(true);
     try {
       if (supabase) {
@@ -159,14 +168,15 @@ const LandingPage = () => {
           Date.now() - THREE_HOURS_MS,
         ).toISOString();
 
+        // Optimized egress: Exclude heavy player_order and banned_players arrays (server is inside settings)
         const { data: supabaseRooms, error } = await supabase
           .from("auctions")
-          .select("*")
+          .select("id, host_name, status, auction_type, players, squad_limit, settings, created_at")
           .in("status", ["waiting", "active"])
           .eq("is_public", true)
           .eq("host_online", true)
           .gte("created_at", threeHoursAgoISO)
-          .order("created_at", { ascending: false })
+          .order("created_at", { ascending: false });
           
         if (!error && supabaseRooms && supabaseRooms.length > 0) {
           const list = supabaseRooms.map((r) => {
@@ -194,6 +204,7 @@ const LandingPage = () => {
               settings: r.settings || {},
             };
           });
+          publicLobbiesCacheRef.current = { data: list, timestamp: Date.now() };
           setPublicRooms(list);
           setLobbiesLoading(false);
           return;
@@ -213,14 +224,22 @@ const LandingPage = () => {
 
   // Fetch auction history directly from Supabase
   const historyRequestRef = useRef(false);
+  const historyCacheRef = useRef(new Map());
 
-  const fetchHistory = useCallback(async () => {
+  const fetchHistory = useCallback(async (force = false) => {
     const userId = user?.uid;
     if (!userId || !supabase) {
       setHistoryData([]);
       setHistoryError(null);
       return;
     }
+
+    const cached = historyCacheRef.current.get(userId);
+    if (!force && cached && Date.now() - cached.timestamp < 45000) {
+      setHistoryData(cached.data);
+      return;
+    }
+
     // Guard against overlapping requests (and React StrictMode double effects).
     if (historyRequestRef.current) return;
 
@@ -228,16 +247,19 @@ const LandingPage = () => {
     setHistoryLoading(true);
     setHistoryError(null);
     try {
+      // Optimized egress: Select only needed columns for history cards and limit to recent 20
       const { data: supabaseTeams, error: teamsError } = await supabase
         .from("teams")
-        .select("*")
+        .select("id, auction_id, user_id, team_id, team_name, budget_remaining, spent, squad, created_at")
         .eq("user_id", userId)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(20);
 
       if (teamsError) throw teamsError;
 
       if (!supabaseTeams || supabaseTeams.length === 0) {
         setHistoryData([]);
+        historyCacheRef.current.set(userId, { data: [], timestamp: Date.now() });
         return;
       }
 
@@ -245,9 +267,10 @@ const LandingPage = () => {
         ...new Set(supabaseTeams.map((t) => t.auction_id)),
       ].filter(Boolean);
 
+      // Optimized egress: Exclude player_order and massive player collections (server is in settings)
       const { data: supabaseAuctions, error: auctionsError } = await supabase
         .from("auctions")
-        .select("*")
+        .select("id, settings, status, auction_type, overseas_limit, squad_limit, created_at")
         .in("id", auctionIds);
 
       if (auctionsError) throw auctionsError;
@@ -307,6 +330,7 @@ const LandingPage = () => {
       });
 
       setHistoryData(sessions);
+      historyCacheRef.current.set(userId, { data: sessions, timestamp: Date.now() });
     } catch (error) {
       // Keep any previously loaded data visible; surface the failure instead.
       console.error("[history] Failed to load auction history", error);

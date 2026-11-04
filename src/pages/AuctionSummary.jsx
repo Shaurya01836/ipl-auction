@@ -125,9 +125,18 @@ const AuctionSummary = () => {
       setSummaryError(null);
       try {
         if (supabase) {
-          const { data: aData, error: auctionError } = await supabase.from('auctions').select('*').eq('id', id).maybeSingle();
+          // Optimized egress: Exclude heavy player_order column
+          const { data: aData, error: auctionError } = await supabase
+            .from('auctions')
+            .select('id, host_id, host_name, status, auction_type, squad_limit, overseas_limit, players, settings')
+            .eq('id', id)
+            .maybeSingle();
           if (auctionError) throw auctionError;
-          const { data: tData, error: teamsError } = await supabase.from('teams').select('*').eq('auction_id', id);
+
+          const { data: tData, error: teamsError } = await supabase
+            .from('teams')
+            .select('id, auction_id, user_id, team_id, team_name, budget_remaining, spent, squad')
+            .eq('auction_id', id);
           if (teamsError) throw teamsError;
 
           if (aData && isMounted) {

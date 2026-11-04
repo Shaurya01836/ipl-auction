@@ -299,9 +299,9 @@ const AdminPanel = () => {
             supabase.from('auctions').select('*', { count: 'exact', head: true }).eq('status', 'completed'),
             supabase
               .from('auctions')
-              .select('*')
+              .select('id, host_name, status, auction_type, settings, created_at')
               .order('created_at', { ascending: false })
-              .limit(1000)
+              .limit(100)
           ]);
 
           if (listRes.error) throw listRes.error;
