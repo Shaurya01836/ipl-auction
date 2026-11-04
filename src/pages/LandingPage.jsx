@@ -507,7 +507,7 @@ const LandingPage = () => {
           return;
         }
         const code = normalizeRoomCode(roomCode);
-        if (isHotspotRoomCode(code)) {
+        if (isHotspotRoomCode(code) || selectedServer === 'local') {
           setIsSubmitting(false);
           navigate(`/lobby/${code}?local=true&server=local`);
           return;

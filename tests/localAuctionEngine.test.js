@@ -13,6 +13,8 @@ import {
   pauseLocalAuction,
   resumeLocalAuction,
   endLocalAuction,
+  mergeLocalRooms,
+  subscribeLocalRoom,
 } from '../src/lib/localAuctionEngine.js';
 
 test('createLocalRoom creates a room with valid initial data', () => {
@@ -129,5 +131,84 @@ test('pauseLocalAuction, resumeLocalAuction, and endLocalAuction manage room lif
   room = readLocalRoom(roomId);
   assert.equal(room.status, 'completed');
   assert.equal(room.live.status, 'completed');
+});
+
+test('mergeLocalRooms prevents stale waiting state from overwriting active status', () => {
+  const current = {
+    id: 'HOTSPOT-MERGE1',
+    status: 'active',
+    live: { status: 'bidding', playerId: 10 },
+    playerOrder: [10, 20],
+    players: [{ id: 'host', name: 'Host' }],
+    messages: [{ id: 'm1', text: 'Started', timestamp: 100 }],
+  };
+
+  const incomingStale = {
+    id: 'HOTSPOT-MERGE1',
+    status: 'waiting',
+    live: { status: 'waiting' },
+    players: [{ id: 'guest', name: 'Guest' }],
+    messages: [{ id: 'm0', text: 'Joined', timestamp: 50 }],
+  };
+
+  const merged = mergeLocalRooms(current, incomingStale);
+
+  assert.equal(merged.status, 'active');
+  assert.equal(merged.live.status, 'bidding');
+  assert.equal(merged.live.playerId, 10);
+  assert.deepEqual(merged.playerOrder, [10, 20]);
+  assert.equal(merged.players.length, 2);
+  assert.equal(merged.messages.length, 2);
+  assert.equal(merged.messages[0].id, 'm0');
+  assert.equal(merged.messages[1].id, 'm1');
+});
+
+test('mergeLocalRooms promotes waiting to active when incoming state is active', () => {
+  const current = {
+    id: 'HOTSPOT-MERGE2',
+    status: 'waiting',
+    live: { status: 'waiting' },
+    players: [{ id: 'guest', name: 'Guest' }],
+  };
+
+  const incomingActive = {
+    id: 'HOTSPOT-MERGE2',
+    status: 'active',
+    live: { status: 'bidding', playerId: 5 },
+    playerOrder: [5, 6],
+    players: [{ id: 'host', name: 'Host' }],
+  };
+
+  const merged = mergeLocalRooms(current, incomingActive);
+
+  assert.equal(merged.status, 'active');
+  assert.equal(merged.live.status, 'bidding');
+  assert.equal(merged.live.playerId, 5);
+  assert.equal(merged.players.length, 2);
+});
+
+test('subscribeLocalRoom syncs auction start state to subscriber', () => {
+  const roomId = 'HOTSPOT-SYNC1';
+  createLocalRoom(roomId, 'user_host', { name: 'Host', team: 'MI' }, 'mega');
+
+  let latestAuctionState = null;
+  const unsubscribe = subscribeLocalRoom(roomId, 'user_guest', {
+    setCurrentAuction: (val) => { latestAuctionState = val; },
+    setRoomTeams: () => {},
+    setTeam: () => {},
+    setMessages: () => {},
+    setLoading: () => {},
+  });
+
+  assert.ok(latestAuctionState);
+  assert.equal(latestAuctionState.status, 'waiting');
+
+  startLocalAuction(roomId);
+
+  assert.ok(latestAuctionState);
+  assert.equal(latestAuctionState.status, 'active');
+  assert.equal(latestAuctionState.currentAuction.status, 'bidding');
+
+  unsubscribe();
 });
 

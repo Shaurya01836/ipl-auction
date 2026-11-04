@@ -46,9 +46,8 @@ const LocalPlayRoadmap = ({ onSelectOfflineMode }) => {
               <button
                 type="button"
                 onClick={onSelectOfflineMode}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#ff5500] hover:bg-[#ff8c00] active:scale-[0.98] text-white text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(255,85,0,0.35)] cursor-pointer group"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#ff5500] active:scale-[0.98] text-white text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2  cursor-pointer group"
               >
-                <Radio size={14} className="shrink-0 animate-pulse" />
                 <span>Try Hotspot Mode</span>
                 <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
               </button>
@@ -59,7 +58,7 @@ const LocalPlayRoadmap = ({ onSelectOfflineMode }) => {
         {/* ── 3 Simple Steps: How to Play Offline ── */}
         <div className="relative z-10 pt-5 sm:pt-6">
           <div className="flex items-center gap-2 mb-3.5">
-          
+
             <h3 className="text-xs sm:text-sm font-black uppercase text-white tracking-wider">
               How It Works in 3 Easy Steps:
             </h3>
@@ -70,10 +69,7 @@ const LocalPlayRoadmap = ({ onSelectOfflineMode }) => {
             <div className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.02] border border-white/5 flex flex-col justify-between group hover:border-[#ff5500]/30 transition-all">
               <div>
                 <div className="flex items-center justify-between mb-2.5">
-                  <span className="w-6 h-6 rounded-lg bg-[#ff5500]/15 border border-[#ff5500]/30 text-[#ff5500] text-[10px] font-mono font-bold flex items-center justify-center">
-                    01
-                  </span>
-                  <Radio size={16} className="text-[#ff5500]" />
+
                 </div>
                 <h4 className="text-xs sm:text-sm font-black uppercase text-white mb-1">
                   Turn On Mobile Hotspot
@@ -83,7 +79,7 @@ const LocalPlayRoadmap = ({ onSelectOfflineMode }) => {
                 </p>
               </div>
               <div className="mt-3 pt-2.5 border-t border-white/5 text-[9px] font-mono uppercase text-emerald-400 font-bold flex items-center gap-1.5">
-                <CheckCircle2 size={11} className="shrink-0" />
+
                 <span>Zero mobile data consumed</span>
               </div>
             </div>
@@ -92,10 +88,7 @@ const LocalPlayRoadmap = ({ onSelectOfflineMode }) => {
             <div className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.02] border border-white/5 flex flex-col justify-between group hover:border-blue-500/30 transition-all">
               <div>
                 <div className="flex items-center justify-between mb-2.5">
-                  <span className="w-6 h-6 rounded-lg bg-blue-500/15 border border-blue-500/30 text-blue-400 text-[10px] font-mono font-bold flex items-center justify-center">
-                    02
-                  </span>
-                  <Smartphone size={16} className="text-blue-400" />
+
                 </div>
                 <h4 className="text-xs sm:text-sm font-black uppercase text-white mb-1">
                   Friends Connect Wi-Fi
@@ -105,7 +98,7 @@ const LocalPlayRoadmap = ({ onSelectOfflineMode }) => {
                 </p>
               </div>
               <div className="mt-3 pt-2.5 border-t border-white/5 text-[9px] font-mono uppercase text-blue-400 font-bold flex items-center gap-1.5">
-                <CheckCircle2 size={11} className="shrink-0" />
+
                 <span>Instant local connection</span>
               </div>
             </div>
@@ -114,10 +107,6 @@ const LocalPlayRoadmap = ({ onSelectOfflineMode }) => {
             <div className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.02] border border-white/5 flex flex-col justify-between group hover:border-amber-500/30 transition-all">
               <div>
                 <div className="flex items-center justify-between mb-2.5">
-                  <span className="w-6 h-6 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[10px] font-mono font-bold flex items-center justify-center">
-                    03
-                  </span>
-                  <Zap size={16} className="text-amber-400" />
                 </div>
                 <h4 className="text-xs sm:text-sm font-black uppercase text-white mb-1">
                   Start & Bid with Zero Lag
@@ -127,7 +116,7 @@ const LocalPlayRoadmap = ({ onSelectOfflineMode }) => {
                 </p>
               </div>
               <div className="mt-3 pt-2.5 border-t border-white/5 text-[9px] font-mono uppercase text-amber-400 font-bold flex items-center gap-1.5">
-                <CheckCircle2 size={11} className="shrink-0" />
+
                 <span>Sub-5ms paddle latency</span>
               </div>
             </div>
