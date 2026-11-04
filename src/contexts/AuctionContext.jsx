@@ -407,7 +407,7 @@ export const AuctionProvider = ({ children }) => {
 
   const startAuction = useCallback(async (roomId) => {
     if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
-      return startLocalAuctionEngine(roomId);
+      return await startLocalAuctionEngine(roomId);
     }
 
     // Fetch room data to determine auction type

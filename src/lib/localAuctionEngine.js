@@ -35,16 +35,20 @@ export function getLocalRoomKey(roomId) {
  * Enables sync across Incognito, different browsers, and other devices on local Wi-Fi.
  */
 export async function syncRoomToServer(roomId, roomData) {
-  if (typeof window === 'undefined' || !window.fetch) return;
+  if (typeof window === 'undefined' || !window.fetch) return null;
   try {
-    await fetch(`/api/hotspot-room/${encodeURIComponent(roomId)}`, {
+    const res = await fetch(`/api/hotspot-room/${encodeURIComponent(roomId)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(roomData),
     });
+    if (res.ok) {
+      return await res.json();
+    }
   } catch {
     // Ignore fetch errors (e.g. offline or static server)
   }
+  return null;
 }
 
 /**
@@ -57,14 +61,6 @@ export async function fetchRoomFromServer(roomId) {
     if (res.ok) {
       const data = await res.json();
       if (data && data.id) {
-        memoryStore.set(roomId, data);
-        if (typeof window !== 'undefined' && window.localStorage) {
-          try {
-            window.localStorage.setItem(getLocalRoomKey(roomId), JSON.stringify(data));
-          } catch {
-            // Ignore storage errors
-          }
-        }
         return data;
       }
     }
@@ -72,6 +68,88 @@ export async function fetchRoomFromServer(roomId) {
     // Ignore network errors
   }
   return null;
+}
+
+/**
+ * Safely merge two snapshots of local room state.
+ * Prevents backwards status transitions (e.g. active -> waiting).
+ */
+export function mergeLocalRooms(current, incoming) {
+  if (!current) return incoming;
+  if (!incoming) return current;
+
+  const statusWeight = { waiting: 0, active: 1, completed: 2 };
+  const currentWeight = statusWeight[current.status] || 0;
+  const incomingWeight = statusWeight[incoming.status] || 0;
+
+  // Never allow a stale 'waiting' state to overwrite an 'active' or 'completed' state
+  let finalStatus = incoming.status;
+  let finalLive = incoming.live;
+  let finalPlayerOrder = incoming.playerOrder;
+
+  if (currentWeight > incomingWeight) {
+    finalStatus = current.status;
+    finalLive = current.live;
+    finalPlayerOrder = current.playerOrder || incoming.playerOrder;
+  }
+
+  // Merge players by ID, giving precedence to incoming properties while retaining existing
+  const playerMap = new Map();
+  (current.players || []).forEach((p) => playerMap.set(p.id, p));
+  (incoming.players || []).forEach((p) => {
+    const prev = playerMap.get(p.id) || {};
+    playerMap.set(p.id, { ...prev, ...p });
+  });
+
+  // Merge messages by ID, ordered by timestamp
+  const msgMap = new Map();
+  (current.messages || []).forEach((m) => msgMap.set(m.id, m));
+  (incoming.messages || []).forEach((m) => msgMap.set(m.id, m));
+  const messages = Array.from(msgMap.values()).sort(
+    (a, b) => (a.timestamp || 0) - (b.timestamp || 0),
+  );
+
+  return {
+    ...current,
+    ...incoming,
+    status: finalStatus,
+    live: finalLive,
+    playerOrder: finalPlayerOrder || current.playerOrder,
+    players: Array.from(playerMap.values()),
+    teams: { ...(current.teams || {}), ...(incoming.teams || {}) },
+    presences: { ...(current.presences || {}), ...(incoming.presences || {}) },
+    messages,
+  };
+}
+
+const broadcastChannelMap = new Map();
+const localRoomSubscribers = new Set();
+
+export function getBroadcastChannel(roomId) {
+  if (typeof BroadcastChannel === 'undefined') return null;
+  if (!broadcastChannelMap.has(roomId)) {
+    try {
+      const ch = new BroadcastChannel(`hotspot_room_${roomId}`);
+      if (typeof ch.unref === 'function') {
+        ch.unref();
+      }
+      broadcastChannelMap.set(roomId, ch);
+    } catch {
+      return null;
+    }
+  }
+  return broadcastChannelMap.get(roomId);
+}
+
+export function broadcastLocalRoom(roomId, roomData) {
+  const channel = getBroadcastChannel(roomId);
+  if (channel) {
+    try {
+      channel.postMessage({ type: 'ROOM_UPDATE', roomId, state: roomData });
+    } catch {
+      // Ignore broadcast channel errors
+    }
+  }
 }
 
 export function readLocalRoom(roomId) {
@@ -87,7 +165,10 @@ export function readLocalRoom(roomId) {
 }
 
 export function writeLocalRoom(roomId, roomData) {
-  const serialized = JSON.stringify(roomData);
+  const current = readLocalRoom(roomId) || memoryStore.get(roomId);
+  const merged = current ? mergeLocalRooms(current, roomData) : roomData;
+  const serialized = JSON.stringify(merged);
+
   if (typeof window !== 'undefined' && window.localStorage) {
     try {
       window.localStorage.setItem(getLocalRoomKey(roomId), serialized);
@@ -95,28 +176,29 @@ export function writeLocalRoom(roomId, roomData) {
       console.warn('[hotspot] Failed to write to localStorage', e);
     }
   }
-  memoryStore.set(roomId, roomData);
+  memoryStore.set(roomId, merged);
 
   // Sync to local bridge server (bridges normal tabs, incognito, and LAN devices)
-  syncRoomToServer(roomId, roomData);
+  syncRoomToServer(roomId, merged);
 
-  // Broadcast to other tabs & windows in the same profile
-  if (typeof BroadcastChannel !== 'undefined') {
+  // Broadcast to other tabs & windows in the same profile (reusing channel safely)
+  broadcastLocalRoom(roomId, merged);
+
+  // Notify in-process subscribers directly
+  localRoomSubscribers.forEach((cb) => {
     try {
-      const channel = new BroadcastChannel(`hotspot_room_${roomId}`);
-      channel.postMessage({ type: 'ROOM_UPDATE', roomId, state: roomData });
-      channel.close();
+      cb(roomId, merged);
     } catch {
-      // Ignore broadcast channel errors
+      // Ignore subscriber errors
     }
-  }
+  });
 
   // Dispatch custom in-window event for instant intra-window subscriber updates
   if (typeof window !== 'undefined') {
     try {
       window.dispatchEvent(
         new CustomEvent('hotspot-room-update', {
-          detail: { roomId, state: roomData },
+          detail: { roomId, state: merged },
         }),
       );
     } catch {
@@ -124,7 +206,7 @@ export function writeLocalRoom(roomId, roomData) {
     }
   }
 
-  return roomData;
+  return merged;
 }
 
 const shuffleArray = (array) => {
@@ -468,8 +550,8 @@ export function removeLocalBotTeam(roomId, botUserId) {
  * Start the local auction.
  */
 export function startLocalAuction(roomId) {
-  const room = readLocalRoom(roomId);
-  if (!room) return;
+  let room = readLocalRoom(roomId) || memoryStore.get(roomId);
+  if (!room) return Promise.resolve(null);
 
   const playerOrder = generateLocalPlayerOrder(room.auctionType || 'mega');
   const firstPlayer = IPL_PLAYERS[playerOrder[0]];
@@ -497,6 +579,9 @@ export function startLocalAuction(roomId) {
   });
 
   writeLocalRoom(roomId, room);
+  // Return the server sync promise so callers can await completion if desired,
+  // while synchronous callers (e.g. unit tests) have already received the synchronous local update.
+  return syncRoomToServer(roomId, room).then(() => room);
 }
 
 /**
@@ -891,9 +976,11 @@ export function subscribeLocalRoom(
   { setCurrentAuction, setRoomTeams, setTeam, setMessages, setLoading },
 ) {
   let isSubscribed = true;
+  let lastAppliedSerialized = '';
 
   const pushStateToContext = (room) => {
     if (!room || !isSubscribed) return;
+    lastAppliedSerialized = JSON.stringify(room);
 
     const presences = room.presences || {};
     const playersWithPresence = (room.players || []).map((p) => ({
@@ -939,7 +1026,16 @@ export function subscribeLocalRoom(
   fetchRoomFromServer(roomId).then((serverData) => {
     if (!isSubscribed) return;
     if (serverData) {
-      pushStateToContext(serverData);
+      const current = readLocalRoom(roomId) || memoryStore.get(roomId);
+      const merged = current ? mergeLocalRooms(current, serverData) : serverData;
+      const serialized = JSON.stringify(merged);
+      memoryStore.set(roomId, merged);
+      if (typeof window !== 'undefined' && window.localStorage) {
+        try {
+          window.localStorage.setItem(getLocalRoomKey(roomId), serialized);
+        } catch {}
+      }
+      pushStateToContext(merged);
     } else if (!readLocalRoom(roomId)) {
       // If room truly does not exist on server either, initialize template
       joinLocalRoomDb(roomId, userId, { name: 'Manager' }).then(() => {
@@ -950,19 +1046,25 @@ export function subscribeLocalRoom(
     }
   });
 
-  // Cross-tab broadcast channel listener
-  let broadcastChannel = null;
-  if (typeof BroadcastChannel !== 'undefined') {
-    try {
-      broadcastChannel = new BroadcastChannel(`hotspot_room_${roomId}`);
-      broadcastChannel.onmessage = (event) => {
-        if (event.data?.roomId === roomId && event.data?.state) {
-          pushStateToContext(event.data.state);
-        }
-      };
-    } catch {
-      // BroadcastChannel disabled
+  // Cross-tab broadcast channel listener (persistent channel, no premature close)
+  const channel = getBroadcastChannel(roomId);
+  const onBroadcastMessage = (event) => {
+    if (!isSubscribed) return;
+    if (event.data?.roomId === roomId && event.data?.state) {
+      const current = readLocalRoom(roomId) || memoryStore.get(roomId);
+      const merged = current ? mergeLocalRooms(current, event.data.state) : event.data.state;
+      const serialized = JSON.stringify(merged);
+      memoryStore.set(roomId, merged);
+      if (typeof window !== 'undefined' && window.localStorage) {
+        try {
+          window.localStorage.setItem(getLocalRoomKey(roomId), serialized);
+        } catch {}
+      }
+      pushStateToContext(merged);
     }
+  };
+  if (channel) {
+    channel.addEventListener('message', onBroadcastMessage);
   }
 
   // Background bridge polling: keeps normal tabs, incognito windows & LAN peers in lockstep
@@ -971,26 +1073,32 @@ export function subscribeLocalRoom(
     const serverState = await fetchRoomFromServer(roomId);
     if (!isSubscribed || !serverState) return;
 
-    const localState = readLocalRoom(roomId);
-    if (!localState || JSON.stringify(serverState) !== JSON.stringify(localState)) {
-      memoryStore.set(roomId, serverState);
+    const current = readLocalRoom(roomId) || memoryStore.get(roomId);
+    const merged = current ? mergeLocalRooms(current, serverState) : serverState;
+    const mergedSerialized = JSON.stringify(merged);
+
+    if (mergedSerialized !== lastAppliedSerialized) {
+      memoryStore.set(roomId, merged);
       if (typeof window !== 'undefined' && window.localStorage) {
         try {
-          window.localStorage.setItem(getLocalRoomKey(roomId), JSON.stringify(serverState));
+          window.localStorage.setItem(getLocalRoomKey(roomId), mergedSerialized);
         } catch {
           // Ignore
         }
       }
-      pushStateToContext(serverState);
+      pushStateToContext(merged);
     }
-  }, 1200);
+  }, 800);
 
   // Local storage storage-event listener
   const onStorage = (event) => {
+    if (!isSubscribed) return;
     if (event.key === getLocalRoomKey(roomId) && event.newValue) {
       try {
         const state = JSON.parse(event.newValue);
-        pushStateToContext(state);
+        const current = readLocalRoom(roomId) || memoryStore.get(roomId);
+        const merged = current ? mergeLocalRooms(current, state) : state;
+        pushStateToContext(merged);
       } catch {
         // parse error
       }
@@ -1000,8 +1108,18 @@ export function subscribeLocalRoom(
     window.addEventListener('storage', onStorage);
   }
 
+  // In-process subscriber listener
+  const onMemoryUpdate = (rId, state) => {
+    if (!isSubscribed) return;
+    if (rId === roomId && state) {
+      pushStateToContext(state);
+    }
+  };
+  localRoomSubscribers.add(onMemoryUpdate);
+
   // Same-window custom event listener
   const onLocalSync = (event) => {
+    if (!isSubscribed) return;
     if (event.detail?.roomId === roomId && event.detail?.state) {
       pushStateToContext(event.detail.state);
     }
@@ -1117,9 +1235,10 @@ export function subscribeLocalRoom(
     clearInterval(hostEngineInterval);
     clearInterval(serverPollInterval);
 
-    if (broadcastChannel) {
+    localRoomSubscribers.delete(onMemoryUpdate);
+    if (channel) {
       try {
-        broadcastChannel.close();
+        channel.removeEventListener('message', onBroadcastMessage);
       } catch {
         // Ignore
       }
