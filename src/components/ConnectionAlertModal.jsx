@@ -91,14 +91,6 @@ function AlertDialog({ problem }) {
             <div className="absolute left-1/2 top-0 h-px w-2/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-[#ff5500]/50 to-transparent" />
 
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-3 pt-5 text-left sm:px-7 sm:pt-6">
-              {/* Badge */}
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-orange-500/30 bg-orange-500/10 px-3 py-1 text-[9px] font-black uppercase tracking-wider text-orange-400 mb-2.5">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-orange-500" />
-                </span>
-                <span>{copy.badge}</span>
-              </div>
 
               <h2
                 id="connection-alert-title"
@@ -115,12 +107,9 @@ function AlertDialog({ problem }) {
               </p>
 
               {/* Offline / Hotspot Mode Promotion Card */}
-              <div className="my-3.5 rounded-2xl border border-[#ff5500]/30 bg-gradient-to-b from-[#ff5500]/15 via-[#ff5500]/5 to-transparent p-3.5 text-left shadow-[0_8px_25px_rgba(255,85,0,0.15)]">
+              <div className="my-3.5 border-t border-white/10 pt-4">
                 <div className="flex items-center justify-between gap-2 mb-1.5">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-[#ff5500]/25 border border-[#ff5500]/40 flex items-center justify-center text-[#ff5500]">
-                      <Radio size={13} className="animate-pulse" />
-                    </div>
                     <span className="text-[11px] font-black uppercase text-white tracking-wider">
                       Play Hotspot & Wi-Fi Mode
                     </span>
@@ -153,7 +142,7 @@ function AlertDialog({ problem }) {
               <button
                 type="button"
                 onClick={playHotspotMode}
-                className="group/hotspot relative flex h-12 w-full touch-manipulation items-center justify-center overflow-hidden rounded-xl border border-orange-500/40 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] text-xs font-black uppercase tracking-[0.14em] text-white shadow-[0_10px_30px_rgba(255,85,0,0.35)] transition-all active:scale-[0.98] cursor-pointer"
+                className="group/hotspot relative flex h-12 w-full touch-manipulation items-center justify-center overflow-hidden rounded-xl border border-orange-500/40 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] text-xs font-black uppercase tracking-[0.14em] text-white transition-all active:scale-[0.98] cursor-pointer"
               >
                 <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/hotspot:translate-y-0 transition-transform duration-300" />
                 <span className="relative flex items-center justify-center gap-2">
