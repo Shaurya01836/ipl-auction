@@ -1,7 +1,27 @@
+
 import { IPL_PLAYERS } from '../data/players.js';
 import { evaluateBotBid } from './botEngine.js';
-import { toFiniteNumber } from './auctionDisplay.js';
+import { toFiniteNumber, countOverseas, isOverseasPlayer } from './auctionDisplay.js';
 import { supabase } from './supabase.js';
+
+/* ============================================================================
+ * LOCAL / HOTSPOT AUCTION  (host-authoritative design)
+ *
+ *  - The HOST device is the only "server". It alone owns: status, live bid,
+ *    timer, players, teams, purse, messages.  Every host change bumps `hostRev`.
+ *  - CLIENT devices never write room state. They send small INTENTS to the host
+ *    (join, pick team, bid, chat, presence) over Supabase Realtime Broadcast
+ *    (+ BroadcastChannel for tabs of the same browser).
+ *  - The host broadcasts full snapshots on every change + a 1s heartbeat.
+ *    Clients accept a snapshot only if its hostRev is NEWER -> no stale
+ *    overwrite, no ping-pong, no regression (sold -> bidding etc).
+ *  - Clocks: clients run an NTP-style ping/pong against the host and keep the
+ *    lowest-RTT sample as `offset`. Use getSyncedNow()/getLiveRemainingMs()
+ *    in the UI. Timer expiry is decided ONLY by the host clock.
+ *  - Pause stores `remainingMs`, resume continues from it.
+ *  - The Supabase `auctions`/`teams` rows are a throttled, host-only backup
+ *    (late joiners / reload recovery). Nobody else writes them.
+ * ========================================================================== */
 
 export const TEAMS = [
   { id: 'MI', name: 'Mumbai Indians', color: 'bg-blue-600' },
@@ -17,448 +37,1018 @@ export const TEAMS = [
 ];
 
 const LOCAL_STORAGE_PREFIX = 'ipl-auction:local-room:';
+const MAX_MESSAGES = 60;
+const ENGINE_TICK_MS = 150;
+const SLOW_TICK_MS = 1000; // heartbeat / presence / retries
+const OFFLINE_AFTER_MS = 10000;
+const DB_SYNC_MS = 1500;
+const FIRST_PLAYER_MS = 15000;
+const SOLD_DISPLAY_MS = 4000;
+const UNSOLD_DISPLAY_MS = 2000;
+const RESUME_MIN_MS = 3000;
+const BROADCAST_EVENTS = ['state', 'hello', 'intent', 'ping', 'pong'];
 
-// In-memory fallback if localStorage is disabled or in non-browser env
+const isBrowser = typeof window !== 'undefined';
+const PLAYER_BY_ID = new Map(IPL_PLAYERS.map((p) => [p.id, p]));
 const memoryStore = new Map();
+const runtimes = new Map();
 
 let activeSupabase = supabase;
-
 export function setSupabaseClient(client) {
   activeSupabase = client || supabase;
 }
 
-let localHostTimeOffset = 0;
+/* ------------------------------- small utils ------------------------------ */
 
-export function getLocalHostTimeOffset() {
-  return localHostTimeOffset;
-}
+const r2 = (n) => Math.round(n * 100) / 100;
+let idCounter = 0;
+const newId = (prefix) =>
+  `${prefix}_${Date.now()}_${(idCounter++).toString(36)}${Math.random().toString(36).slice(2, 5)}`;
+const clone = (o) =>
+  typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
 
-export function setLocalHostTimeOffset(offset) {
-  localHostTimeOffset = offset;
-}
+const shuffleArray = (array) => {
+  const a = [...array];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
 
 export function getLocalRoomKey(roomId) {
   return `${LOCAL_STORAGE_PREFIX}${roomId}`;
 }
 
-/**
- * Push room state to the local hotspot dev bridge server OR Supabase fallback.
- * Enables sync across Incognito, different browsers, and LAN/Hotspot peers on deployed site.
- */
-export async function syncRoomToServer(roomId, roomData) {
-  // 1. First attempt local Vite dev/preview server bridge
-  if (typeof window !== 'undefined' && window.fetch) {
-    try {
-      const res = await fetch(`/api/hotspot-room/${encodeURIComponent(roomId)}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(roomData),
-      });
-      if (res.ok) {
-        await res.json().catch(() => null);
-      }
-    } catch {
-      // Local bridge not running or static host
-    }
-  }
+const nextBidFor = (player, currentBid) => {
+  const cBid = currentBid || 0;
+  if (cBid === 0) return toFiniteNumber(player?.basePrice, 0);
+  return r2(cBid + (cBid < 5 ? 0.2 : 0.25));
+};
 
-  // 2. Always sync to Supabase (powers hotspot/offline rooms on live deployed site)
-  if (activeSupabase) {
-    try {
-      await activeSupabase.from('auctions').upsert({
-        id: roomId,
-        host_id: roomData.hostId || '',
-        host_name: roomData.hostName || 'Manager',
-        status: roomData.status || 'waiting',
-        auction_type: roomData.auctionType || 'mega',
-        squad_limit: roomData.squadLimit || 25,
-        overseas_limit: roomData.overseasLimit || 8,
-        players: roomData.players || [],
-        settings: {
-          ...(roomData.settings || {}),
-          server: 'local',
-          live: roomData.live,
-          presences: roomData.presences,
-          messages: (roomData.messages || []).slice(-30),
-        },
-        banned_players: roomData.bannedPlayers || [],
-        player_order: roomData.playerOrder || [],
-        is_public: false,
-      });
+/* ---------------------------------- clock --------------------------------- */
+// offset = hostClock - myClock.  Host always 0.
 
-      const teamsArr = Object.values(roomData.teams || {}).map((t) => ({
-        id: `${roomId}_${t.userId}`,
-        auction_id: roomId,
-        user_id: t.userId,
-        team_id: t.teamId || '',
-        team_name: t.teamName || 'Unknown',
-        budget_remaining: t.budgetRemaining !== null && t.budgetRemaining !== undefined ? Number(t.budgetRemaining) : 120.0,
-        spent: t.spent !== null && t.spent !== undefined ? Number(t.spent) : 0,
-        squad: t.squad || [],
-      }));
-
-      if (teamsArr.length > 0) {
-        await activeSupabase.from('teams').upsert(teamsArr);
-      }
-    } catch (sbErr) {
-      console.warn('[hotspot] Supabase sync skipped/failed', sbErr);
-    }
-  }
-
-  return roomData;
+let localHostTimeOffset = 0;
+export const getLocalHostTimeOffset = () => localHostTimeOffset;
+export const setLocalHostTimeOffset = (o) => {
+  localHostTimeOffset = Number.isFinite(o) ? o : 0;
+};
+/** "Now" on the host's clock. Use this for every countdown in the UI. */
+export const getSyncedNow = () => Date.now() + localHostTimeOffset;
+/** Milliseconds left on the live timer (frozen while paused). */
+export function getLiveRemainingMs(live) {
+  if (!live) return 0;
+  if (live.status === 'paused') return Math.max(0, live.remainingMs || 0);
+  if (live.status !== 'bidding') return 0;
+  return Math.max(0, (live.timerEndsAt || 0) - getSyncedNow());
 }
 
-/**
- * Fetch room state from local hotspot dev bridge server OR Supabase fallback.
- */
-export async function fetchRoomFromServer(roomId) {
-  // 1. Try local dev bridge first
-  if (typeof window !== 'undefined' && window.fetch) {
+/* ------------------------------ local storage ----------------------------- */
+
+export function readLocalRoom(roomId) {
+  const mem = memoryStore.get(roomId);
+  if (mem) return mem;
+  if (isBrowser && window.localStorage) {
     try {
-      const res = await fetch(`/api/hotspot-room/${encodeURIComponent(roomId)}`);
-      if (res.ok) {
-        const contentType = res.headers.get('content-type') || '';
-        if (contentType.includes('application/json')) {
-          const data = await res.json();
-          if (data && data.id) {
-            return data;
-          }
-        }
-      }
-    } catch {
-      // Ignore network errors
-    }
-  }
-
-  // 2. Fall back to Supabase (used on live deployed website)
-  if (activeSupabase) {
-    try {
-      const { data: row, error } = await activeSupabase
-        .from('auctions')
-        .select('*')
-        .eq('id', roomId)
-        .maybeSingle();
-
-      if (row && row.id && !error) {
-        const { data: teamsRows } = await activeSupabase
-          .from('teams')
-          .select('*')
-          .eq('auction_id', roomId);
-
-        const teamsMap = {};
-        (teamsRows || []).forEach((t) => {
-          const docId = t.id || `${roomId}_${t.user_id}`;
-          teamsMap[docId] = {
-            id: docId,
-            auctionId: t.auction_id,
-            userId: t.user_id,
-            teamId: t.team_id,
-            teamName: t.team_name,
-            budgetRemaining: t.budget_remaining !== null && t.budget_remaining !== undefined ? Number(t.budget_remaining) : 120.0,
-            spent: t.spent !== null && t.spent !== undefined ? Number(t.spent) : 0,
-            squad: t.squad || [],
-          };
-        });
-
-        const settings = row.settings || {};
-        return {
-          id: row.id,
-          hostId: row.host_id,
-          hostName: row.host_name || 'Manager',
-          status: row.status || 'waiting',
-          auctionType: row.auction_type || 'mega',
-          isPublic: false,
-          squadLimit: row.squad_limit || 25,
-          overseasLimit: row.overseas_limit || 8,
-          server: 'local',
-          isLocal: true,
-          createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
-          players: row.players || [],
-          bannedPlayers: row.banned_players || [],
-          playerOrder: row.player_order || [],
-          settings: {
-            bidTimer: settings.bidTimer || 10,
-            budget: settings.budget || 120.0,
-          },
-          teams: teamsMap,
-          live: settings.live || { status: row.status || 'waiting' },
-          messages: settings.messages || [],
-          presences: settings.presences || {},
-        };
+      const raw = window.localStorage.getItem(getLocalRoomKey(roomId));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        memoryStore.set(roomId, parsed);
+        return parsed;
       }
     } catch (e) {
-      console.warn('[hotspot] Supabase fetch error:', e);
+      console.warn('[hotspot] localStorage read failed', e);
     }
   }
-
   return null;
 }
 
-/**
- * Safely merge live auction bidding state between two peers.
- * Prevents regressions in status (e.g. sold -> bidding) and bid amounts.
- */
-export function mergeLiveState(cur, inc, playerOrder = []) {
-  if (!cur) return inc;
-  if (!inc) return cur;
-
-  // 1. Different players: determine which is ahead in player order
-  if (cur.playerId !== inc.playerId) {
-    if (!cur.playerId) return inc;
-    if (!inc.playerId) return cur;
-
-    const order = playerOrder && playerOrder.length > 0 ? playerOrder : [];
-    const curIdx = order.findIndex((idx) => IPL_PLAYERS[idx]?.id === cur.playerId);
-    const incIdx = order.findIndex((idx) => IPL_PLAYERS[idx]?.id === inc.playerId);
-
-    if (curIdx !== -1 && incIdx !== -1) {
-      return incIdx >= curIdx ? inc : cur;
+function storeRoom(rt, room) {
+  memoryStore.set(rt.roomId, room);
+  if (isBrowser && window.localStorage) {
+    try {
+      window.localStorage.setItem(getLocalRoomKey(rt.roomId), JSON.stringify(room));
+    } catch {
+      // storage full / disabled -> memory only
     }
-    return (inc.timerEndsAt || 0) >= (cur.timerEndsAt || 0) ? inc : cur;
   }
-
-  // 2. Same player: Status rank: 'sold' / 'unsold' > 'bidding' / 'paused'
-  const statusRank = { bidding: 1, paused: 1, unsold: 2, sold: 2 };
-  const curRank = statusRank[cur.status] || 0;
-  const incRank = statusRank[inc.status] || 0;
-
-  if (incRank > curRank) return inc;
-  if (curRank > incRank) return cur;
-
-  // 3. Both in same status (e.g. bidding): Higher bid ALWAYS wins!
-  const curBid = cur.currentBid || 0;
-  const incBid = inc.currentBid || 0;
-
-  if (incBid > curBid) return inc;
-  if (curBid > incBid) return cur;
-
-  // 4. Equal bids: Take the one with the later timer / later timestamp
-  const curTimer = cur.timerEndsAt || 0;
-  const incTimer = inc.timerEndsAt || 0;
-  return incTimer >= curTimer ? inc : cur;
-}
-
-/**
- * Safely merge two snapshots of local room state.
- * Prevents backwards status transitions (e.g. active -> waiting).
- */
-export function mergeLocalRooms(current, incoming) {
-  if (!current) return incoming;
-  if (!incoming) return current;
-
-  const statusWeight = { waiting: 0, active: 1, completed: 2 };
-  const currentWeight = statusWeight[current.status] || 0;
-  const incomingWeight = statusWeight[incoming.status] || 0;
-
-  // Never allow a stale 'waiting' state to overwrite an 'active' or 'completed' state
-  let finalStatus = incoming.status;
-  if (currentWeight > incomingWeight) {
-    finalStatus = current.status;
-  }
-
-  const finalPlayerOrder = current.playerOrder && current.playerOrder.length > 0
-    ? current.playerOrder
-    : incoming.playerOrder;
-
-  const finalLive = mergeLiveState(current.live, incoming.live, finalPlayerOrder);
-
-  // Merge players by ID, giving precedence to incoming properties while retaining existing
-  const playerMap = new Map();
-  (current.players || []).forEach((p) => playerMap.set(p.id, p));
-  (incoming.players || []).forEach((p) => {
-    const prev = playerMap.get(p.id) || {};
-    playerMap.set(p.id, { ...prev, ...p });
+  rt.listeners.forEach((fn) => {
+    try {
+      fn(room);
+    } catch (e) {
+      console.warn('[hotspot] listener error', e);
+    }
   });
-
-  // Merge messages by ID, ordered by timestamp
-  const msgMap = new Map();
-  (current.messages || []).forEach((m) => msgMap.set(m.id, m));
-  (incoming.messages || []).forEach((m) => msgMap.set(m.id, m));
-  const messages = Array.from(msgMap.values()).sort(
-    (a, b) => (a.timestamp || 0) - (b.timestamp || 0),
-  );
-
-  return {
-    ...current,
-    ...incoming,
-    hostId: current.hostId || incoming.hostId,
-    status: finalStatus,
-    live: finalLive,
-    playerOrder: finalPlayerOrder || current.playerOrder,
-    players: Array.from(playerMap.values()),
-    teams: { ...(current.teams || {}), ...(incoming.teams || {}) },
-    presences: { ...(current.presences || {}), ...(incoming.presences || {}) },
-    messages,
-  };
 }
 
-const broadcastChannelMap = new Map();
-const localRoomSubscribers = new Set();
+/* -------------------------------- runtime --------------------------------- */
+
+function getRuntime(roomId) {
+  let rt = runtimes.get(roomId);
+  if (!rt) {
+    rt = {
+      roomId,
+      userId: null,
+      refs: 0,
+      listeners: new Set(),
+      bc: null,
+      bcHandler: null,
+      ch: null,
+      ready: false,
+      outbox: [],
+      timers: [],
+      seenIntents: new Set(),
+      presenceSeen: new Map(),
+      botKey: '',
+      botTimer: null,
+      dbTimer: null,
+      dbDirty: false,
+      dbChain: Promise.resolve(),
+      teamsSig: '',
+      lastStateAt: 0,
+      slow: 0,
+      clock: [],
+      pingCount: 0,
+      pendingProfile: null,
+      joinTries: 0,
+      intentSeq: 0,
+    };
+    runtimes.set(roomId, rt);
+  }
+  return rt;
+}
+
+const isHostRuntime = (rt, room) => !!room && !!rt.userId && room.hostId === rt.userId;
+
+/* -------------------------------- transport ------------------------------- */
 
 export function getBroadcastChannel(roomId) {
   if (typeof BroadcastChannel === 'undefined') return null;
-  if (!broadcastChannelMap.has(roomId)) {
+  const rt = getRuntime(roomId);
+  if (!rt.bcShared) {
     try {
-      const ch = new BroadcastChannel(`hotspot_room_${roomId}`);
-      if (typeof ch.unref === 'function') {
-        ch.unref();
-      }
-      broadcastChannelMap.set(roomId, ch);
+      rt.bcShared = new BroadcastChannel(`hotspot_room_${roomId}`);
     } catch {
       return null;
     }
   }
-  return broadcastChannelMap.get(roomId);
+  return rt.bcShared;
 }
 
 export function broadcastLocalRoom(roomId, roomData) {
-  const channel = getBroadcastChannel(roomId);
-  if (channel) {
+  send(getRuntime(roomId), 'state', { room: roomData });
+}
+
+function send(rt, event, payload) {
+  if (rt.bc) {
     try {
-      channel.postMessage({ type: 'ROOM_UPDATE', roomId, state: roomData });
+      rt.bc.postMessage({ event, payload });
     } catch {
-      // Ignore broadcast channel errors
+      // ignore
+    }
+  }
+  if (rt.ch) {
+    if (rt.ready) {
+      try {
+        Promise.resolve(rt.ch.send({ type: 'broadcast', event, payload })).catch(() => {});
+      } catch {
+        // ignore
+      }
+    } else if (event !== 'state' && event !== 'ping' && rt.outbox.length < 50) {
+      rt.outbox.push({ event, payload });
     }
   }
 }
 
-export function readLocalRoom(roomId) {
-  if (typeof window !== 'undefined' && window.localStorage) {
+function openTransport(rt) {
+  if (!isBrowser) return;
+  const bc = getBroadcastChannel(rt.roomId);
+  if (bc) {
+    rt.bcHandler = (e) => {
+      const m = e.data;
+      if (m && m.event) onMessage(rt, m.event, m.payload);
+    };
+    bc.addEventListener('message', rt.bcHandler);
+    rt.bc = bc;
+  }
+
+  if (isBrowser && activeSupabase && typeof activeSupabase.channel === 'function') {
     try {
-      const raw = window.localStorage.getItem(getLocalRoomKey(roomId));
-      if (raw) return JSON.parse(raw);
+      const ch = activeSupabase.channel(`hotspot_${rt.roomId}`, {
+        config: { broadcast: { self: false, ack: false } },
+      });
+      BROADCAST_EVENTS.forEach((ev) => {
+        ch.on('broadcast', { event: ev }, ({ payload }) => onMessage(rt, ev, payload));
+      });
+      ch.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          rt.ready = true;
+          const queued = rt.outbox.splice(0);
+          queued.forEach((m) => send(rt, m.event, m.payload));
+          onTransportReady(rt);
+        } else {
+          rt.ready = false;
+        }
+      });
+      rt.ch = ch;
     } catch (e) {
-      console.warn('[hotspot] Failed to read from localStorage', e);
+      console.warn('[hotspot] realtime channel failed', e);
     }
   }
-  return memoryStore.get(roomId) || null;
 }
 
+function closeTransport(rt) {
+  if (rt.bc && rt.bcHandler) {
+    try {
+      rt.bc.removeEventListener('message', rt.bcHandler);
+    } catch {
+      // ignore
+    }
+  }
+  rt.bc = null;
+  rt.bcHandler = null;
+  if (rt.ch && activeSupabase && typeof activeSupabase.removeChannel === 'function') {
+    try {
+      activeSupabase.removeChannel(rt.ch);
+    } catch {
+      // ignore
+    }
+  }
+  rt.ch = null;
+  rt.ready = false;
+  rt.outbox = [];
+}
+
+function onTransportReady(rt) {
+  const room = readLocalRoom(rt.roomId);
+  if (isHostRuntime(rt, room)) {
+    send(rt, 'state', { room });
+  } else {
+    send(rt, 'hello', { from: rt.userId });
+    sendPing(rt);
+  }
+}
+
+function onMessage(rt, event, payload) {
+  if (!payload) return;
+  switch (event) {
+    case 'state':
+      handleState(rt, payload.room);
+      break;
+    case 'hello': {
+      const room = readLocalRoom(rt.roomId);
+      if (isHostRuntime(rt, room)) send(rt, 'state', { room });
+      break;
+    }
+    case 'intent':
+      handleIntent(rt, payload);
+      break;
+    case 'ping': {
+      const room = readLocalRoom(rt.roomId);
+      if (isHostRuntime(rt, room)) {
+        send(rt, 'pong', { t0: payload.t0, th: Date.now(), to: payload.from });
+      }
+      break;
+    }
+    case 'pong':
+      handlePong(rt, payload);
+      break;
+    default:
+  }
+}
+
+/* ------------------------------- clock sync ------------------------------- */
+
+function sendPing(rt) {
+  rt.pingCount += 1;
+  send(rt, 'ping', { t0: Date.now(), from: rt.userId });
+}
+
+function handlePong(rt, p) {
+  if (p.to !== rt.userId) return;
+  const t1 = Date.now();
+  const rtt = t1 - p.t0;
+  if (rtt < 0 || rtt > 3000) return;
+  rt.clock.push({ rtt, offset: p.th - (p.t0 + t1) / 2 });
+  if (rt.clock.length > 8) rt.clock.shift();
+  const best = rt.clock.reduce((a, b) => (b.rtt < a.rtt ? b : a));
+  setLocalHostTimeOffset(Math.round(best.offset));
+}
+
+/* ----------------------------- state (clients) ---------------------------- */
+
+function handleState(rt, incoming) {
+  if (!incoming || !incoming.id) return;
+  const cur = readLocalRoom(rt.roomId);
+  if (cur && incoming.hostId === cur.hostId) rt.lastStateAt = Date.now();
+  acceptState(rt, incoming);
+}
+
+/** Accept a snapshot only if it is newer than what we have. */
+function acceptState(rt, incoming) {
+  if (!incoming || !incoming.id) return false;
+  const cur = readLocalRoom(rt.roomId);
+  if (cur) {
+    if (incoming.hostId !== cur.hostId) return false;
+    if ((incoming.hostRev || 0) <= (cur.hostRev || 0)) return false;
+  }
+  storeRoom(rt, incoming);
+  return true;
+}
+
+/** Legacy helper kept for compatibility: higher hostRev wins wholesale. */
+export function mergeLocalRooms(current, incoming) {
+  if (!current) return incoming;
+  if (!incoming) return current;
+  return (incoming.hostRev || 0) > (current.hostRev || 0) ? incoming : current;
+}
+
+/* ------------------------------ host: commit ------------------------------ */
+
+function pushMsg(room, msg) {
+  room.messages = [
+    ...(room.messages || []),
+    { id: newId('msg'), timestamp: Date.now(), ...msg },
+  ].slice(-MAX_MESSAGES);
+}
+const sysMsg = (room, text, type = 'log', metadata) =>
+  pushMsg(room, { userId: 'system', userName: 'System', text, type, ...(metadata ? { metadata } : {}) });
+
+/**
+ * The ONLY way room state changes. Clone -> mutate -> bump hostRev -> store ->
+ * broadcast -> schedule DB backup. Return false from `mutate` to cancel.
+ */
+function commitHost(roomId, mutate) {
+  const rt = getRuntime(roomId);
+  const cur = readLocalRoom(roomId);
+  if (!isHostRuntime(rt, cur)) return null;
+  const draft = clone(cur);
+  if (mutate(draft, rt) === false) return null;
+  draft.hostRev = (cur.hostRev || 0) + 1;
+  draft.hostNow = Date.now();
+  storeRoom(rt, draft);
+  send(rt, 'state', { room: draft });
+  scheduleDbSync(rt);
+  return draft;
+}
+
+/** Legacy export. Host: replaces fields. Others: only accepted if newer. */
 export function writeLocalRoom(roomId, roomData) {
-  const current = readLocalRoom(roomId) || memoryStore.get(roomId);
-  const merged = current ? mergeLocalRooms(current, roomData) : roomData;
-  const serialized = JSON.stringify(merged);
-
-  if (typeof window !== 'undefined' && window.localStorage) {
-    try {
-      window.localStorage.setItem(getLocalRoomKey(roomId), serialized);
-    } catch (e) {
-      console.warn('[hotspot] Failed to write to localStorage', e);
-    }
+  const rt = getRuntime(roomId);
+  const cur = readLocalRoom(roomId);
+  if (!cur) {
+    storeRoom(rt, roomData);
+    return roomData;
   }
-  memoryStore.set(roomId, merged);
+  if (isHostRuntime(rt, cur)) {
+    return (
+      commitHost(roomId, (draft) => {
+        const { hostRev, ...rest } = roomData;
+        Object.assign(draft, rest);
+      }) || cur
+    );
+  }
+  acceptState(rt, roomData);
+  return readLocalRoom(roomId);
+}
 
-  // Sync to local bridge server (bridges normal tabs, incognito, and LAN devices)
-  syncRoomToServer(roomId, merged);
+/* ------------------------------ DB backup (host) -------------------------- */
 
-  // Broadcast to other tabs & windows in the same profile (reusing channel safely)
-  broadcastLocalRoom(roomId, merged);
+export async function syncRoomToServer(roomId, roomData) {
+  if (!isBrowser) return roomData;
+  const sb = activeSupabase;
+  if (!sb || !roomData) return roomData;
+  const rt = getRuntime(roomId);
+  try {
+    const { error } = await sb.from('auctions').upsert({
+      id: roomId,
+      host_id: roomData.hostId || '',
+      host_name: roomData.hostName || 'Manager',
+      status: roomData.status || 'waiting',
+      auction_type: roomData.auctionType || 'mega',
+      squad_limit: roomData.squadLimit || 25,
+      overseas_limit: roomData.overseasLimit || 8,
+      players: roomData.players || [],
+      settings: {
+        ...(roomData.settings || {}),
+        server: 'local',
+        hostRev: roomData.hostRev || 0,
+        live: roomData.live,
+        presences: roomData.presences,
+        messages: (roomData.messages || []).slice(-30),
+      },
+      banned_players: roomData.bannedPlayers || [],
+      player_order: roomData.playerOrder || [],
+      is_public: false,
+    });
+    if (error) console.warn('[hotspot] auctions upsert failed', error.message || error);
 
-  // Notify in-process subscribers directly
-  localRoomSubscribers.forEach((cb) => {
-    try {
-      cb(roomId, merged);
-    } catch {
-      // Ignore subscriber errors
+    const teamsArr = Object.values(roomData.teams || {}).map((t) => ({
+      id: `${roomId}_${t.userId}`,
+      auction_id: roomId,
+      user_id: t.userId,
+      team_id: t.teamId || '',
+      team_name: t.teamName || 'Unknown',
+      budget_remaining: toFiniteNumber(t.budgetRemaining, 120.0),
+      spent: toFiniteNumber(t.spent, 0),
+      squad: t.squad || [],
+    }));
+    const sig = JSON.stringify(teamsArr);
+    if (teamsArr.length > 0 && sig !== rt.teamsSig) {
+      const { error: e2 } = await sb.from('teams').upsert(teamsArr);
+      if (e2) console.warn('[hotspot] teams upsert failed', e2.message || e2);
+      else rt.teamsSig = sig;
+    }
+  } catch (err) {
+    console.warn('[hotspot] Supabase sync skipped/failed', err);
+  }
+  return roomData;
+}
+
+function scheduleDbSync(rt, immediate = false) {
+  rt.dbDirty = true;
+  if (immediate) {
+    if (rt.dbTimer) {
+      clearTimeout(rt.dbTimer);
+      rt.dbTimer = null;
+    }
+    return flushDb(rt);
+  }
+  if (!rt.dbTimer) {
+    rt.dbTimer = setTimeout(() => {
+      rt.dbTimer = null;
+      flushDb(rt);
+    }, DB_SYNC_MS);
+    if (rt.dbTimer && typeof rt.dbTimer.unref === 'function') rt.dbTimer.unref();
+  }
+  return rt.dbChain;
+}
+
+// serialized: a slow older write can never land after a newer one
+function flushDb(rt) {
+  rt.dbChain = rt.dbChain.then(async () => {
+    if (!rt.dbDirty) return;
+    rt.dbDirty = false;
+    const room = readLocalRoom(rt.roomId);
+    if (isHostRuntime(rt, room)) await syncRoomToServer(rt.roomId, room);
+  });
+  return rt.dbChain;
+}
+
+export async function flushLocalAuctionToSupabase(roomId) {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+  await scheduleDbSync(getRuntime(roomId), true);
+}
+
+export async function fetchRoomFromServer(roomId) {
+  if (!isBrowser || !activeSupabase) return null;
+  try {
+    const { data: row, error } = await activeSupabase
+      .from('auctions')
+      .select('*')
+      .eq('id', roomId)
+      .maybeSingle();
+    if (!row || !row.id || error) return null;
+
+    const { data: teamsRows } = await activeSupabase
+      .from('teams')
+      .select('*')
+      .eq('auction_id', roomId);
+
+    const teams = {};
+    (teamsRows || []).forEach((t) => {
+      const docId = t.id || `${roomId}_${t.user_id}`;
+      teams[docId] = {
+        id: docId,
+        auctionId: t.auction_id,
+        userId: t.user_id,
+        teamId: t.team_id,
+        teamName: t.team_name,
+        budgetRemaining: toFiniteNumber(t.budget_remaining, 120.0),
+        spent: toFiniteNumber(t.spent, 0),
+        squad: t.squad || [],
+      };
+    });
+
+    const s = row.settings || {};
+    return {
+      id: row.id,
+      hostId: row.host_id,
+      hostName: row.host_name || 'Manager',
+      hostRev: s.hostRev || 0,
+      status: row.status || 'waiting',
+      auctionType: row.auction_type || 'mega',
+      isPublic: false,
+      squadLimit: row.squad_limit || 25,
+      overseasLimit: row.overseas_limit || 8,
+      server: 'local',
+      isLocal: true,
+      createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
+      players: row.players || [],
+      bannedPlayers: row.banned_players || [],
+      playerOrder: row.player_order || [],
+      settings: { bidTimer: s.bidTimer || 10, budget: s.budget || 120.0 },
+      teams,
+      live: s.live || { status: row.status || 'waiting' },
+      messages: s.messages || [],
+      presences: s.presences || {},
+    };
+  } catch (e) {
+    console.warn('[hotspot] Supabase fetch error:', e);
+    return null;
+  }
+}
+
+/* ------------------------- host: intents from clients --------------------- */
+
+function sendIntent(rt, type, data) {
+  rt.intentSeq = Math.max(rt.intentSeq + 1, Date.now());
+  send(rt, 'intent', {
+    id: `${rt.userId}:${rt.intentSeq}`,
+    userId: rt.userId,
+    type,
+    data,
+  });
+}
+
+function handleIntent(rt, p) {
+  const room = readLocalRoom(rt.roomId);
+  if (!isHostRuntime(rt, room) || !p || !p.userId || !p.id) return;
+  if (rt.seenIntents.has(p.id)) return; // same intent via 2 transports
+  rt.seenIntents.add(p.id);
+  if (rt.seenIntents.size > 600) {
+    rt.seenIntents = new Set([...rt.seenIntents].slice(-300));
+  }
+  if ((room.bannedPlayers || []).includes(p.userId)) return;
+
+  switch (p.type) {
+    case 'join':
+    case 'team':
+      hostUpsertPlayer(rt.roomId, p.userId, p.data);
+      break;
+    case 'bid':
+      hostApplyBid(rt.roomId, { userId: p.userId, ...(p.data || {}) });
+      break;
+    case 'chat':
+      if (p.data?.text) {
+        const pl = (room.players || []).find((x) => x.id === p.userId);
+        commitHost(rt.roomId, (d) =>
+          pushMsg(d, {
+            userId: p.userId,
+            userName: pl?.name || 'Manager',
+            text: String(p.data.text).slice(0, 300),
+            type: p.data.type === 'emoji' ? 'emoji' : 'text',
+          }),
+        );
+      }
+      break;
+    case 'presence':
+      rt.presenceSeen.set(p.userId, Date.now());
+      break; // online flips are committed by the engine sweep
+    case 'leave':
+      rt.presenceSeen.set(p.userId, 0);
+      break;
+    default:
+  }
+}
+
+function hostUpsertPlayer(roomId, userId, details = {}) {
+  const rt = getRuntime(roomId);
+  rt.presenceSeen.set(userId, Date.now());
+  return commitHost(roomId, (room) => {
+    room.players = room.players || [];
+    room.teams = room.teams || {};
+    const wantTeam = details.team || '';
+    const prev = room.players.find((p) => p.id === userId) || null;
+    let team = wantTeam || prev?.team || '';
+
+    // team can't change after the auction starts
+    if (prev?.team && wantTeam && wantTeam !== prev.team && room.status !== 'waiting') {
+      team = prev.team;
+    }
+    // team taken?
+    if (team && team !== prev?.team) {
+      const holder = room.players.find((p) => p.id !== userId && p.team === team);
+      if (holder) {
+        if (holder.isBot && room.status === 'waiting') {
+          room.players = room.players.filter((p) => p.id !== holder.id);
+          delete room.teams[`${roomId}_${holder.id}`];
+        } else {
+          team = prev?.team || '';
+        }
+      }
+    }
+
+    const teamName = TEAMS.find((t) => t.id === team)?.name || prev?.teamName || 'Unknown';
+    const playerObj = {
+      ...(prev || { spent: 0, squadCount: 0 }),
+      id: userId,
+      name: details.name || prev?.name || 'Manager',
+      team,
+      teamName,
+      isHost: room.hostId === userId,
+      isOnline: true,
+    };
+    const idx = room.players.findIndex((p) => p.id === userId);
+    if (idx >= 0) room.players[idx] = playerObj;
+    else room.players.push(playerObj);
+
+    if (team) {
+      const docId = `${roomId}_${userId}`;
+      const ex = room.teams[docId];
+      room.teams[docId] = {
+        id: docId,
+        auctionId: roomId,
+        userId,
+        teamId: team,
+        teamName,
+        budgetRemaining: ex?.budgetRemaining ?? toFiniteNumber(room.settings?.budget, 120.0),
+        spent: ex?.spent ?? 0,
+        squad: ex?.squad || [],
+      };
+    }
+    room.presences = { ...(room.presences || {}), [userId]: { online: true, lastSeen: Date.now() } };
+  });
+}
+
+/* ------------------------------ host: bidding ----------------------------- */
+
+function hostApplyBid(roomId, req) {
+  let reason = null;
+  const fail = (r) => {
+    reason = r;
+    return false;
+  };
+
+  const room = commitHost(roomId, (d) => {
+    const live = d.live;
+    if (!live || live.status !== 'bidding') return fail('Bidding is not open');
+    if (req.playerId && req.playerId !== live.playerId) return fail('Player already changed');
+    if (Date.now() >= (live.timerEndsAt || 0)) return fail('Timer has expired');
+    if (live.highBidderId === req.userId) return fail('You are already the highest bidder');
+
+    const team = d.teams?.[`${roomId}_${req.userId}`];
+    if (!team) return fail('Pick a team before bidding');
+
+    const player = PLAYER_BY_ID.get(live.playerId);
+    if (!player) return fail('Current player not found');
+
+    const cBid = live.currentBid || 0;
+    if (req.expectedBid !== undefined && r2(req.expectedBid) !== r2(cBid)) {
+      return fail('Bid changed, try again');
+    }
+    const nextBid = nextBidFor(player, cBid);
+    if (req.maxValuation !== undefined && nextBid > req.maxValuation) return fail('Above valuation');
+    if (toFiniteNumber(team.budgetRemaining, 0) < nextBid) return fail('Insufficient purse budget');
+    if ((team.squad || []).length >= toFiniteNumber(d.squadLimit, 25)) return fail('Squad is full');
+    if (isOverseasPlayer(player)) {
+      const overseasCount = countOverseas(team.squad || [], PLAYER_BY_ID);
+      const overseasLimit = toFiniteNumber(d.overseasLimit, 8);
+      if (overseasCount >= overseasLimit) return fail('Overseas player limit reached');
+    }
+
+    const pl = (d.players || []).find((p) => p.id === req.userId);
+    const isBot = !!pl?.isBot || String(req.userId).startsWith('bot_');
+    const timerSec = d.settings?.bidTimer || 10;
+
+    live.currentBid = nextBid;
+    live.highBidderId = req.userId;
+    live.highBidderName = pl?.name || 'Manager';
+    live.highBidderTeamId = team.teamId || '';
+    live.timerEndsAt = Date.now() + timerSec * 1000;
+    live.hostTimestamp = Date.now();
+
+    if (!isBot) {
+      pushMsg(d, {
+        userId: req.userId,
+        userName: pl?.name || 'Manager',
+        text: `Bid \u20b9${nextBid} Cr by ${team.teamName || pl?.name}`,
+        type: 'bid',
+      });
     }
   });
 
-  // Dispatch custom in-window event for instant intra-window subscriber updates
-  if (typeof window !== 'undefined') {
-    try {
-      window.dispatchEvent(
-        new CustomEvent('hotspot-room-update', {
-          detail: { roomId, state: merged },
-        }),
-      );
-    } catch {
-      // Ignore event dispatch errors
-    }
-  }
-
-  return merged;
+  return { ok: !!room, reason: reason || (room ? null : 'Not allowed'), room };
 }
 
-const shuffleArray = (array) => {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-};
+const makeLive = (playerId, ms) => ({
+  playerId,
+  currentBid: 0,
+  highBidderId: '',
+  highBidderName: 'No Bids',
+  highBidderTeamId: '',
+  timerEndsAt: Date.now() + ms,
+  hostTimestamp: Date.now(),
+  status: 'bidding',
+});
 
-/**
- * Generate randomized player order maintaining Marquee precedence and role balancing
- */
+function hostEndPlayer(roomId, force = false) {
+  return commitHost(roomId, (room) => {
+    const live = room.live;
+    if (!live || live.status !== 'bidding') return false;
+    if (!force && Date.now() < (live.timerEndsAt || 0)) return false;
+
+    const isSold = Boolean(live.highBidderId);
+    live.status = isSold ? 'sold' : 'unsold';
+    live.advanceAt = Date.now() + (isSold ? SOLD_DISPLAY_MS : UNSOLD_DISPLAY_MS);
+    live.remainingMs = 0;
+
+    const player = PLAYER_BY_ID.get(live.playerId);
+    const teamDetails = TEAMS.find((t) => t.id === live.highBidderTeamId);
+    const name = player?.name || 'Player';
+
+    if (isSold) {
+      const winnerId = live.highBidderId;
+      const docId = `${roomId}_${winnerId}`;
+      const bid = live.currentBid;
+
+      room.players = (room.players || []).map((p) =>
+        p.id === winnerId
+          ? { ...p, spent: r2((p.spent || 0) + bid), squadCount: (p.squadCount || 0) + 1 }
+          : p,
+      );
+      room.teams = room.teams || {};
+      const t = room.teams[docId] || {
+        budgetRemaining: toFiniteNumber(room.settings?.budget, 120.0),
+        spent: 0,
+        squad: [],
+      };
+      room.teams[docId] = {
+        ...t,
+        id: docId,
+        auctionId: roomId,
+        userId: winnerId,
+        teamId: live.highBidderTeamId,
+        teamName: teamDetails?.name || live.highBidderName || 'Unknown',
+        budgetRemaining: Math.max(0, r2((t.budgetRemaining ?? 120.0) - bid)),
+        spent: r2((t.spent || 0) + bid),
+        squad: [...(t.squad || []), { id: live.playerId, bid }],
+      };
+      sysMsg(
+        room,
+        `${name} SOLD to ${teamDetails?.name || live.highBidderName} for \u20b9${bid} Cr`,
+        'sold_card',
+        {
+          playerId: live.playerId,
+          teamId: live.highBidderTeamId,
+          bid,
+          buyerId: winnerId,
+          buyerName: live.highBidderName,
+        },
+      );
+    } else {
+      sysMsg(room, `${name} UNSOLD`);
+    }
+  });
+}
+
+function hostAdvance(roomId) {
+  const rt = getRuntime(roomId);
+  const room = commitHost(roomId, (d) => {
+    const live = d.live;
+    if (!live || (live.status !== 'sold' && live.status !== 'unsold')) return false;
+    if (Date.now() < (live.advanceAt || 0)) return false;
+
+    const order = d.playerOrder || IPL_PLAYERS.map((_, i) => i);
+    const i = order.findIndex((idx) => IPL_PLAYERS[idx]?.id === live.playerId);
+    const next = i !== -1 ? IPL_PLAYERS[order[i + 1]] : null;
+
+    if (next) {
+      d.live = makeLive(next.id, (d.settings?.bidTimer || 10) * 1000);
+    } else {
+      d.status = 'completed';
+      d.live = { ...live, status: 'completed' };
+      sysMsg(d, 'Auction COMPLETED!');
+    }
+  });
+  if (room?.status === 'completed') scheduleDbSync(rt, true);
+}
+
+/* ------------------------------- host: engine ----------------------------- */
+
+function sweepPresence(rt, room, now) {
+  let changed = false;
+  const presences = room.presences || {};
+  for (const p of room.players || []) {
+    if (p.id === room.hostId || p.isBot || p.id.startsWith('bot_')) continue;
+    if (!rt.presenceSeen.has(p.id)) rt.presenceSeen.set(p.id, now);
+    const online = now - rt.presenceSeen.get(p.id) < OFFLINE_AFTER_MS;
+    if ((presences[p.id]?.online !== false) !== online) changed = true;
+  }
+  if (!changed) return;
+  commitHost(rt.roomId, (d) => {
+    d.presences = { ...(d.presences || {}) };
+    d.players = (d.players || []).map((p) => {
+      if (p.id === d.hostId || p.isBot || p.id.startsWith('bot_')) return p;
+      const seen = rt.presenceSeen.get(p.id) ?? now;
+      const online = now - seen < OFFLINE_AFTER_MS;
+      d.presences[p.id] = { online, lastSeen: seen };
+      return { ...p, isOnline: online };
+    });
+  });
+}
+
+function scheduleBots(rt, room) {
+  const live = room.live;
+  const key = `${live.playerId}|${live.currentBid}|${live.highBidderId}`;
+  if (rt.botKey === key) return;
+  rt.botKey = key;
+  if (rt.botTimer) clearTimeout(rt.botTimer);
+  rt.botTimer = null;
+
+  const hasBots = (room.players || []).some((p) => p.isBot || p.id.startsWith('bot_'));
+  if (!hasBots) return;
+
+  const timerMs = (room.settings?.bidTimer || 10) * 1000;
+  const remaining = Math.max(0, (live.timerEndsAt || 0) - Date.now());
+  let delay =
+    (live.currentBid || 0) < 3.0
+      ? Math.min(1000, timerMs * (0.08 + Math.random() * 0.15))
+      : timerMs * (0.25 + Math.random() * 0.3);
+  delay = Math.max(300, Math.min(delay, Math.max(300, remaining - 300)));
+
+  rt.botTimer = setTimeout(() => runBots(rt, key), delay);
+  if (rt.botTimer && typeof rt.botTimer.unref === 'function') rt.botTimer.unref();
+}
+
+function runBots(rt, key) {
+  rt.botTimer = null;
+  const room = readLocalRoom(rt.roomId);
+  if (!isHostRuntime(rt, room) || room.live?.status !== 'bidding') return;
+  const live = room.live;
+  if (`${live.playerId}|${live.currentBid}|${live.highBidderId}` !== key) return;
+
+  const player = PLAYER_BY_ID.get(live.playerId);
+  if (!player) return;
+  const initialBudget = toFiniteNumber(room.settings?.budget, 120.0);
+  const bots = shuffleArray(
+    (room.players || []).filter(
+      (p) => (p.isBot || p.id.startsWith('bot_')) && p.id !== live.highBidderId,
+    ),
+  );
+
+  for (const bot of bots) {
+    const botTeam = room.teams?.[`${rt.roomId}_${bot.id}`];
+    if (!botTeam) continue;
+    const decision = evaluateBotBid({
+      player,
+      currentBid: live.currentBid || 0,
+      highBidderId: live.highBidderId,
+      botTeam,
+      squadLimit: toFiniteNumber(room.squadLimit, 25),
+      overseasLimit: toFiniteNumber(room.overseasLimit, 8),
+      initialBudget,
+    });
+    if (decision?.shouldBid) {
+      const res = hostApplyBid(rt.roomId, {
+        userId: bot.id,
+        playerId: live.playerId,
+        expectedBid: live.currentBid || 0,
+        maxValuation: decision.maxValuation,
+      });
+      if (res.ok) break;
+    }
+  }
+}
+
+function engineTick(rt) {
+  const room = readLocalRoom(rt.roomId);
+  if (!isHostRuntime(rt, room)) return;
+  const now = Date.now();
+  sweepPresence(rt, room, now);
+
+  const live = room.live;
+  if (room.status !== 'active' || !live) return;
+
+  if (live.status === 'bidding') {
+    if (now >= (live.timerEndsAt || 0)) {
+      hostEndPlayer(rt.roomId);
+      return;
+    }
+    scheduleBots(rt, room);
+  } else if ((live.status === 'sold' || live.status === 'unsold') && now >= (live.advanceAt || 0)) {
+    hostAdvance(rt.roomId);
+  }
+  // 'paused' / 'completed': nothing runs, timer is frozen
+}
+
+function slowTick(rt) {
+  rt.slow += 1;
+  const room = readLocalRoom(rt.roomId);
+
+  if (isHostRuntime(rt, room)) {
+    setLocalHostTimeOffset(0);
+    send(rt, 'state', { room }); // heartbeat = repair for any lost packet
+    return;
+  }
+  if (!rt.userId) return;
+
+  const stale = Date.now() - rt.lastStateAt > 2500;
+  if (!room || stale) send(rt, 'hello', { from: rt.userId });
+  if (rt.slow % 3 === 0) sendIntent(rt, 'presence', {});
+
+  const pp = rt.pendingProfile;
+  if (pp) {
+    const me = (room?.players || []).find((p) => p.id === rt.userId);
+    if (me && (!pp.team || me.team === pp.team)) rt.pendingProfile = null;
+    else if (rt.joinTries++ < 60) sendIntent(rt, 'join', pp);
+  }
+
+  if (rt.pingCount < 6 || rt.slow % 5 === 0) sendPing(rt);
+
+  // degraded mode: realtime silent -> poll DB backup
+  if (stale && rt.slow % 3 === 0) {
+    fetchRoomFromServer(rt.roomId).then((s) => s && acceptState(rt, s));
+  }
+}
+
+function retain(rt) {
+  rt.refs += 1;
+  if (rt.refs > 1) return;
+  openTransport(rt);
+  const t1 = setInterval(() => engineTick(rt), ENGINE_TICK_MS);
+  const t2 = setInterval(() => slowTick(rt), SLOW_TICK_MS);
+  if (t1.unref) t1.unref();
+  if (t2.unref) t2.unref();
+  rt.timers = [t1, t2];
+  const room = readLocalRoom(rt.roomId);
+  if (!isHostRuntime(rt, room)) {
+    send(rt, 'hello', { from: rt.userId });
+    sendPing(rt);
+  }
+}
+
+function release(rt) {
+  rt.refs = Math.max(0, rt.refs - 1);
+  if (rt.refs > 0) return;
+  rt.timers.forEach(clearInterval);
+  rt.timers = [];
+  if (rt.botTimer) clearTimeout(rt.botTimer);
+  rt.botTimer = null;
+  rt.botKey = '';
+  const room = readLocalRoom(rt.roomId);
+  if (isHostRuntime(rt, room) && rt.dbDirty) scheduleDbSync(rt, true);
+  closeTransport(rt);
+}
+
+/* ---------------------------- player order helper ------------------------- */
+
 export function generateLocalPlayerOrder(auctionType = 'mega') {
   let targetPlayers = IPL_PLAYERS.length;
   if (auctionType === 'sprint11') targetPlayers = 150;
   else if (auctionType === 'sprint5') targetPlayers = 75;
 
-  const marqueeIndices = [];
-  const nonMarqueeIndicesByRole = {};
-
+  const marquee = [];
+  const byRole = {};
   IPL_PLAYERS.forEach((p, i) => {
-    if (p.set.includes('Marquee')) {
-      marqueeIndices.push(i);
-    } else {
-      if (!nonMarqueeIndicesByRole[p.role]) nonMarqueeIndicesByRole[p.role] = [];
-      nonMarqueeIndicesByRole[p.role].push(i);
-    }
+    if (p.set.includes('Marquee')) marquee.push(i);
+    else (byRole[p.role] ||= []).push(i);
   });
 
-  const selectedPlayersByRole = new Set(marqueeIndices);
-  const nonMarqueeTarget = Math.max(0, targetPlayers - marqueeIndices.length);
-  const nonMarqueeTotal = IPL_PLAYERS.length - marqueeIndices.length;
+  const selected = new Set(marquee);
+  const nonMarqueeTarget = Math.max(0, targetPlayers - marquee.length);
+  const nonMarqueeTotal = IPL_PLAYERS.length - marquee.length;
   const fraction = nonMarqueeTotal > 0 ? nonMarqueeTarget / nonMarqueeTotal : 1;
 
-  Object.keys(nonMarqueeIndicesByRole).forEach((roleName) => {
-    const roleIndices = nonMarqueeIndicesByRole[roleName];
-    const shuffledRole = shuffleArray(roleIndices);
+  Object.values(byRole).forEach((indices) => {
+    const shuffled = shuffleArray(indices);
     const limit =
-      auctionType === 'mega'
-        ? shuffledRole.length
-        : Math.max(1, Math.ceil(shuffledRole.length * fraction));
-    shuffledRole.slice(0, limit).forEach((idx) => selectedPlayersByRole.add(idx));
+      auctionType === 'mega' ? shuffled.length : Math.max(1, Math.ceil(shuffled.length * fraction));
+    shuffled.slice(0, limit).forEach((i) => selected.add(i));
   });
 
   const sets = [...new Set(IPL_PLAYERS.map((p) => p.set))];
-  let randomizedIndices = [];
+  const order = [];
   sets.forEach((setName) => {
-    const setIndices = IPL_PLAYERS
-      .map((p, i) => (p.set === setName && selectedPlayersByRole.has(i) ? i : -1))
-      .filter((i) => i !== -1);
-    randomizedIndices = [...randomizedIndices, ...shuffleArray(setIndices)];
+    const idxs = [];
+    IPL_PLAYERS.forEach((p, i) => {
+      if (p.set === setName && selected.has(i)) idxs.push(i);
+    });
+    order.push(...shuffleArray(idxs));
   });
-
-  return randomizedIndices;
+  return order;
 }
 
-/**
- * Create a new offline hotspot room.
- */
-export function createLocalRoom(
-  roomId,
-  userId,
-  playerDetails,
-  auctionType = 'mega',
-  isPublic = false,
-) {
+/* ------------------------------- public API ------------------------------- */
+
+export function createLocalRoom(roomId, userId, playerDetails, auctionType = 'mega', isPublic = false) {
+  const rt = getRuntime(roomId);
+  rt.userId = userId;
+
   const isSprint5 = auctionType === 'sprint5';
   const isSprint11 = auctionType === 'sprint11';
   const budget = isSprint5 ? 60.0 : isSprint11 ? 90.0 : 120.0;
   const squadLimit = isSprint5 ? 5 : isSprint11 ? 11 : 25;
   const overseasLimit = isSprint5 ? 2 : isSprint11 ? 4 : 8;
-  const settings = { bidTimer: 10, budget };
-
   const teamDetails = TEAMS.find((t) => t.id === playerDetails.team);
+  const now = Date.now();
 
-  const initialTeams = {};
+  const teams = {};
   if (playerDetails.team) {
-    const teamDocId = `${roomId}_${userId}`;
-    initialTeams[teamDocId] = {
-      id: teamDocId,
+    const docId = `${roomId}_${userId}`;
+    teams[docId] = {
+      id: docId,
       auctionId: roomId,
       userId,
       teamId: playerDetails.team,
@@ -469,10 +1059,11 @@ export function createLocalRoom(
     };
   }
 
-  const roomData = {
+  const room = {
     id: roomId,
     hostId: userId,
     hostName: playerDetails.name || 'Manager',
+    hostRev: 1,
     status: 'waiting',
     auctionType,
     isPublic: !!isPublic,
@@ -480,7 +1071,7 @@ export function createLocalRoom(
     overseasLimit,
     server: 'local',
     isLocal: true,
-    createdAt: Date.now(),
+    createdAt: now,
     players: [
       {
         id: userId,
@@ -494,8 +1085,8 @@ export function createLocalRoom(
       },
     ],
     bannedPlayers: [],
-    settings,
-    teams: initialTeams,
+    settings: { bidTimer: 10, budget },
+    teams,
     live: {
       status: 'waiting',
       playerId: null,
@@ -507,159 +1098,91 @@ export function createLocalRoom(
     },
     messages: [
       {
-        id: `msg_sys_${Date.now()}`,
+        id: newId('msg'),
         userId: 'system',
         userName: 'System',
         text: 'Hotspot Room created. Ready for local play!',
         type: 'log',
-        timestamp: Date.now(),
+        timestamp: now,
       },
     ],
-    presences: {
-      [userId]: { online: true, lastSeen: Date.now() },
-    },
+    presences: { [userId]: { online: true, lastSeen: now } },
   };
 
-  const merged = writeLocalRoom(roomId, roomData);
-  const result = {
-    server: 'local',
-    requestedServer: 'local',
-    fellBack: false,
-  };
-  const syncPromise = syncRoomToServer(roomId, merged).then(() => result);
-  return Object.assign(syncPromise, result);
+  storeRoom(rt, room);
+  const result = { server: 'local', requestedServer: 'local', fellBack: false };
+  const promise = scheduleDbSync(rt, true).then(() => result);
+  return Object.assign(promise, result);
 }
 
-/**
- * Join an existing local room or register the player in it.
- */
-export async function joinLocalRoomDb(roomId, userId, playerDetails) {
-  let room = readLocalRoom(roomId);
-  if (!room) {
-    room = await fetchRoomFromServer(roomId);
-  }
-  const teamDetails = TEAMS.find((t) => t.id === playerDetails?.team);
+export async function joinLocalRoomDb(roomId, userId, playerDetails = {}) {
+  const rt = getRuntime(roomId);
+  rt.userId = userId;
 
+  let room = readLocalRoom(roomId);
+  if (!room) room = await fetchRoomFromServer(roomId);
   if (!room) {
-    // Retry once in case of slight network latency
     await new Promise((r) => setTimeout(r, 400));
     room = await fetchRoomFromServer(roomId);
   }
-
-  if (!room) {
-    throw new Error('Room not found. Please verify the room code.');
-  }
-
-  // Proactive ban check
-  if (room.bannedPlayers && room.bannedPlayers.includes(userId)) {
+  if (!room) throw new Error('Room not found. Please verify the room code.');
+  if ((room.bannedPlayers || []).includes(userId)) {
     throw new Error('You have been kicked from this local room.');
   }
+  if (!readLocalRoom(roomId)) acceptState(rt, room);
 
-  const existingPlayers = room.players || [];
-  const playerIndex = existingPlayers.findIndex((p) => p.id === userId);
-  const isHost = room.hostId === userId || existingPlayers.length === 0;
-
-  const playerObj = {
-    id: userId,
-    name: playerDetails?.name || (playerIndex >= 0 ? existingPlayers[playerIndex].name : 'Manager'),
-    team: playerDetails?.team || (playerIndex >= 0 ? existingPlayers[playerIndex].team : ''),
-    teamName: teamDetails?.name || (playerIndex >= 0 ? existingPlayers[playerIndex].teamName : 'Unknown'),
-    isHost,
-    isOnline: true,
-    spent: playerIndex >= 0 ? existingPlayers[playerIndex].spent || 0 : 0,
-    squadCount: playerIndex >= 0 ? existingPlayers[playerIndex].squadCount || 0 : 0,
-  };
-
-  if (playerIndex >= 0) {
-    existingPlayers[playerIndex] = { ...existingPlayers[playerIndex], ...playerObj };
-  } else {
-    existingPlayers.push(playerObj);
+  if (room.hostId === userId) {
+    // host re-joining his own room
+    hostUpsertPlayer(roomId, userId, playerDetails);
+    return 'local';
   }
-  room.players = existingPlayers;
-
-  if (playerDetails?.team) {
-    const teamDocId = `${roomId}_${userId}`;
-    if (!room.teams[teamDocId]) {
-      const budget = toFiniteNumber(room.settings?.budget, 120.0);
-      room.teams[teamDocId] = {
-        id: teamDocId,
-        auctionId: roomId,
-        userId,
-        teamId: playerDetails.team,
-        teamName: teamDetails?.name || 'Unknown',
-        budgetRemaining: budget,
-        spent: 0,
-        squad: [],
-      };
-    }
+  if (!isBrowser) {
+    const prevUserId = rt.userId;
+    rt.userId = room.hostId;
+    hostUpsertPlayer(roomId, userId, playerDetails);
+    rt.userId = prevUserId;
+    return 'local';
   }
 
-  if (!room.presences) room.presences = {};
-  room.presences[userId] = { online: true, lastSeen: Date.now() };
-
-  writeLocalRoom(roomId, room);
+  rt.pendingProfile = { name: playerDetails.name, team: playerDetails.team };
+  rt.joinTries = 0;
+  // keep the transport alive long enough to deliver the join even if the
+  // caller hasn't subscribed yet
+  retain(rt);
+  const jt = setTimeout(() => release(rt), 8000);
+  if (jt && typeof jt.unref === 'function') jt.unref();
   return 'local';
 }
 
-/**
- * Update player team selection in local room.
- */
 export function updateLocalPlayerTeam(roomId, userId, newTeamId) {
+  const rt = getRuntime(roomId);
+  rt.userId = userId;
   const room = readLocalRoom(roomId);
   if (!room) return;
-
-  const teamDetails = TEAMS.find((t) => t.id === newTeamId);
-  const budget = toFiniteNumber(room.settings?.budget, 120.0);
-
-  room.players = (room.players || []).map((p) => {
-    if (p.id === userId) {
-      return {
-        ...p,
-        team: newTeamId,
-        teamName: teamDetails?.name || 'Unknown',
-      };
-    }
-    return p;
-  });
-
-  const teamDocId = `${roomId}_${userId}`;
-  const existingTeam = room.teams ? room.teams[teamDocId] : null;
-
-  if (!room.teams) room.teams = {};
-  room.teams[teamDocId] = {
-    id: teamDocId,
-    auctionId: roomId,
-    userId,
-    teamId: newTeamId,
-    teamName: teamDetails?.name || 'Unknown',
-    budgetRemaining: existingTeam?.budgetRemaining ?? budget,
-    spent: existingTeam?.spent ?? 0,
-    squad: existingTeam?.squad || [],
-  };
-
-  writeLocalRoom(roomId, room);
+  const me = (room.players || []).find((p) => p.id === userId);
+  const details = { name: me?.name, team: newTeamId };
+  if (isHostRuntime(rt, room)) {
+    hostUpsertPlayer(roomId, userId, details);
+  } else {
+    rt.pendingProfile = details;
+    rt.joinTries = 0;
+    sendIntent(rt, 'team', details);
+  }
 }
 
-/**
- * Fill all unassigned teams with bot players.
- */
 export function fillLocalEmptyTeamsWithBots(roomId) {
-  const room = readLocalRoom(roomId);
-  if (!room) return;
-
-  const existingPlayers = room.players || [];
-  const takenTeamIds = new Set(existingPlayers.map((p) => p.team).filter(Boolean));
-  const defaultBudget = toFiniteNumber(room.settings?.budget, 120.0);
-
-  if (!room.teams) room.teams = {};
-
-  TEAMS.forEach((t) => {
-    if (!takenTeamIds.has(t.id)) {
-      const botUserId = `bot_${t.id}`;
-      const botName = `${t.name} Bot`;
-      existingPlayers.push({
-        id: botUserId,
-        name: botName,
+  commitHost(roomId, (room) => {
+    room.players = room.players || [];
+    room.teams = room.teams || {};
+    const taken = new Set(room.players.map((p) => p.team).filter(Boolean));
+    const budget = toFiniteNumber(room.settings?.budget, 120.0);
+    let added = 0;
+    TEAMS.forEach((t) => {
+      if (taken.has(t.id)) return;
+      const botId = `bot_${t.id}`;
+      room.players.push({
+        id: botId,
+        name: `${t.name} Bot`,
         team: t.id,
         teamName: t.name,
         isHost: false,
@@ -668,819 +1191,212 @@ export function fillLocalEmptyTeamsWithBots(roomId) {
         spent: 0,
         squadCount: 0,
       });
-
-      const teamDocId = `${roomId}_${botUserId}`;
-      room.teams[teamDocId] = {
-        id: teamDocId,
+      const docId = `${roomId}_${botId}`;
+      room.teams[docId] = {
+        id: docId,
         auctionId: roomId,
-        userId: botUserId,
+        userId: botId,
         teamId: t.id,
         teamName: t.name,
-        budgetRemaining: defaultBudget,
+        budgetRemaining: budget,
         spent: 0,
         squad: [],
       };
-    }
+      added += 1;
+    });
+    return added > 0;
   });
-
-  room.players = existingPlayers;
-  writeLocalRoom(roomId, room);
 }
 
-/**
- * Remove a bot team from local room.
- */
 export function removeLocalBotTeam(roomId, botUserId) {
-  const room = readLocalRoom(roomId);
-  if (!room) return;
-
-  room.players = (room.players || []).filter((p) => p.id !== botUserId);
-  const teamDocId = `${roomId}_${botUserId}`;
-  if (room.teams && room.teams[teamDocId]) {
-    delete room.teams[teamDocId];
-  }
-
-  writeLocalRoom(roomId, room);
-}
-
-/**
- * Start the local auction.
- */
-export function startLocalAuction(roomId) {
-  let room = readLocalRoom(roomId) || memoryStore.get(roomId);
-  if (!room) return Promise.resolve(null);
-
-  const playerOrder = generateLocalPlayerOrder(room.auctionType || 'mega');
-  const firstPlayer = IPL_PLAYERS[playerOrder[0]];
-
-  room.status = 'active';
-  room.playerOrder = playerOrder;
-  room.live = {
-    playerId: firstPlayer.id,
-    currentBid: 0,
-    highBidderId: '',
-    highBidderName: 'No Bids',
-    highBidderTeamId: '',
-    timerEndsAt: Date.now() + 15000,
-    status: 'bidding',
-  };
-
-  if (!room.messages) room.messages = [];
-  room.messages.push({
-    id: `msg_sys_${Date.now()}`,
-    userId: 'system',
-    userName: 'System',
-    text: 'Auction has started!',
-    type: 'log',
-    timestamp: Date.now(),
+  commitHost(roomId, (room) => {
+    room.players = (room.players || []).filter((p) => p.id !== botUserId);
+    if (room.teams) delete room.teams[`${roomId}_${botUserId}`];
   });
-
-  writeLocalRoom(roomId, room);
-  // Return the server sync promise so callers can await completion if desired,
-  // while synchronous callers (e.g. unit tests) have already received the synchronous local update.
-  return syncRoomToServer(roomId, room).then(() => room);
 }
 
-/**
- * Place a bid in the local auction.
- */
+export function startLocalAuction(roomId) {
+  const rt = getRuntime(roomId);
+  const r = readLocalRoom(roomId);
+  if (!isBrowser && r) rt.userId = r.hostId;
+  const room = commitHost(roomId, (d) => {
+    if (d.status === 'active') return false;
+    const order = generateLocalPlayerOrder(d.auctionType || 'mega');
+    const first = IPL_PLAYERS[order[0]];
+    if (!first) return false;
+    d.status = 'active';
+    d.playerOrder = order;
+    d.live = makeLive(first.id, FIRST_PLAYER_MS);
+    sysMsg(d, 'Auction has started!');
+  });
+  if (room) scheduleDbSync(rt, true);
+  return Promise.resolve(room || readLocalRoom(roomId));
+}
+
+/** Throws on obvious local errors (same messages as before). */
 export function placeLocalBid(roomId, userId, teamId, userName, teamName) {
+  const rt = getRuntime(roomId);
+  rt.userId = userId;
   const room = readLocalRoom(roomId);
   if (!room || !room.live) throw new Error('Auction not found');
   if (room.live.status !== 'bidding') throw new Error('Bidding is not open');
   if (room.live.highBidderId === userId) throw new Error('You are already the highest bidder');
 
-  const now = Date.now() + getLocalHostTimeOffset();
-  if (room.live.timerEndsAt && now >= room.live.timerEndsAt) {
-    throw new Error('Timer has expired');
-  }
-
-  const player = IPL_PLAYERS.find((p) => p.id === room.live.playerId);
+  const player = PLAYER_BY_ID.get(room.live.playerId);
   if (!player) throw new Error('Current player not found');
-
-  const cBid = room.live.currentBid || 0;
-  const inc = cBid < 5 ? 0.20 : 0.25;
-  const nextBid =
-    cBid === 0
-      ? toFiniteNumber(player.basePrice, 0)
-      : parseFloat((cBid + inc).toFixed(2));
-
-  // Verify bidder budget
-  const teamDocId = `${roomId}_${userId}`;
-  const userTeam = room.teams ? room.teams[teamDocId] : null;
-  if (userTeam && userTeam.budgetRemaining !== undefined && userTeam.budgetRemaining < nextBid) {
+  const nextBid = nextBidFor(player, room.live.currentBid);
+  const team = room.teams?.[`${roomId}_${userId}`];
+  if (team && toFiniteNumber(team.budgetRemaining, 0) < nextBid) {
     throw new Error('Insufficient purse budget');
   }
 
-  const timerSec = room.settings?.bidTimer || 10;
-  room.live.currentBid = nextBid;
-  room.live.highBidderId = userId;
-  room.live.highBidderName = userName || 'Manager';
-  room.live.highBidderTeamId = teamId || '';
-  room.live.timerEndsAt = now + timerSec * 1000;
-  room.live.hostTimestamp = now;
-
-  if (!room.messages) room.messages = [];
-  room.messages.push({
-    id: `msg_bid_${Date.now()}`,
-    userId,
-    userName: userName || 'Manager',
-    text: `Bid \u20b9${nextBid} Cr by ${teamName || userName}`,
-    type: 'bid',
-    timestamp: Date.now(),
-  });
-
-  writeLocalRoom(roomId, room);
+  const req = { playerId: room.live.playerId, expectedBid: room.live.currentBid || 0 };
+  if (isHostRuntime(rt, room)) {
+    const res = hostApplyBid(roomId, { userId, ...req });
+    if (!res.ok) throw new Error(res.reason);
+    return res.room;
+  }
+  // client: host validates with ITS clock and applies; state comes back via broadcast
+  sendIntent(rt, 'bid', req);
   return room;
 }
 
-/**
- * Place a bot bid in the local room.
- */
-export function placeLocalBotBid(
-  roomId,
-  botUserId,
-  botTeamId,
-  botName,
-  timerSeconds = 10,
-  maxValuation = Infinity,
-  botBudget = Infinity,
-) {
+/** Kept for API compatibility. Bots are driven by the host engine now. */
+export function placeLocalBotBid(roomId, botUserId, _teamId, _name, _timerSec, maxValuation = Infinity) {
   const room = readLocalRoom(roomId);
-  if (!room || !room.live || room.live.status !== 'bidding') return;
-  if (room.live.highBidderId === botUserId) return;
-
-  const now = Date.now() + getLocalHostTimeOffset();
-  if (room.live.timerEndsAt && now >= room.live.timerEndsAt) return;
-
-  const player = IPL_PLAYERS.find((p) => p.id === room.live.playerId);
-  if (!player) return;
-
-  const cBid = room.live.currentBid || 0;
-  const inc = cBid < 5 ? 0.20 : 0.25;
-  const nAmount =
-    cBid === 0
-      ? toFiniteNumber(player.basePrice, 0)
-      : parseFloat((cBid + inc).toFixed(2));
-
-  if (nAmount > maxValuation || nAmount > botBudget) return;
-
-  room.live.currentBid = nAmount;
-  room.live.highBidderId = botUserId;
-  room.live.highBidderName = botName;
-  room.live.highBidderTeamId = botTeamId;
-  room.live.timerEndsAt = now + timerSeconds * 1000;
-  room.live.hostTimestamp = now;
-
-  writeLocalRoom(roomId, room);
-}
-
-/**
- * Conclude current player auction (sold / unsold) and advance to next.
- * Authoritative: Only the host drives player conclusion & transitions.
- */
-export function endLocalPlayerAuction(roomId, triggerUserId) {
-  const room = readLocalRoom(roomId);
-  if (!room || !room.live || room.live.status !== 'bidding') return;
-
-  // In multi-device hotspot rooms, only the host can conclude a player auction
-  if (room.hostId && triggerUserId && room.hostId !== triggerUserId) {
-    return;
-  }
-
-  // Prevent duplicate execution for the same player
-  if (room.live.endingPlayerId === room.live.playerId) return;
-  room.live.endingPlayerId = room.live.playerId;
-
-  const isSold = Boolean(room.live.highBidderId);
-  room.live.status = isSold ? 'sold' : 'unsold';
-
-  const player = IPL_PLAYERS.find((p) => p.id === room.live.playerId);
-  const teamDetails = TEAMS.find((t) => t.id === room.live.highBidderTeamId);
-  const playerNameStr = player?.name || 'Player';
-  const logText = `${playerNameStr} ${
-    isSold
-      ? `SOLD to ${teamDetails?.name || room.live.highBidderName} for \u20b9${room.live.currentBid} Cr`
-      : 'UNSOLD'
-  }`;
-
-  if (isSold) {
-    const winnerId = room.live.highBidderId;
-    const teamDocId = `${roomId}_${winnerId}`;
-
-    // Update player record spent and squadCount
-    room.players = (room.players || []).map((p) => {
-      if (p.id === winnerId) {
-        return {
-          ...p,
-          spent: (p.spent || 0) + room.live.currentBid,
-          squadCount: (p.squadCount || 0) + 1,
-        };
-      }
-      return p;
-    });
-
-    // Update team squad and purse
-    if (!room.teams) room.teams = {};
-    const tData = room.teams[teamDocId] || {
-      budgetRemaining: toFiniteNumber(room.settings?.budget, 120.0),
-      spent: 0,
-      squad: [],
-    };
-    room.teams[teamDocId] = {
-      ...tData,
-      id: teamDocId,
-      auctionId: roomId,
-      userId: winnerId,
-      teamId: room.live.highBidderTeamId,
-      teamName: teamDetails?.name || room.live.highBidderName || 'Unknown',
-      budgetRemaining: Math.max(0, (tData.budgetRemaining ?? 120.0) - room.live.currentBid),
-      spent: (tData.spent || 0) + room.live.currentBid,
-      squad: [...(tData.squad || []), { id: room.live.playerId, bid: room.live.currentBid }],
-    };
-  }
-
-  if (!room.messages) room.messages = [];
-  room.messages.push({
-    id: `msg_end_${Date.now()}`,
-    userId: 'system',
-    userName: 'System',
-    text: logText,
-    type: isSold ? 'sold_card' : 'log',
-    metadata: isSold
-      ? {
-          playerId: room.live.playerId,
-          teamId: room.live.highBidderTeamId,
-          bid: room.live.currentBid,
-          buyerId: room.live.highBidderId,
-          buyerName: room.live.highBidderName,
-        }
-      : null,
-    timestamp: Date.now(),
+  if (!room?.live) return;
+  hostApplyBid(roomId, {
+    userId: botUserId,
+    playerId: room.live.playerId,
+    expectedBid: room.live.currentBid || 0,
+    maxValuation,
   });
-
-  writeLocalRoom(roomId, room);
-
-  // Advance to next player after display delay - ONLY HOST advances player order
-  const waitMs = isSold ? 4000 : 2000;
-  const targetPlayerId = room.live.playerId;
-
-  setTimeout(() => {
-    const current = readLocalRoom(roomId);
-    if (!current || current.status !== 'active') return;
-
-    // Guard: Only advance if still on the player that just ended and not already advanced
-    if (current.live?.playerId !== targetPlayerId) return;
-    if (current.live?.status === 'bidding') return; // Already advanced!
-
-    // Non-host never transitions player order
-    if (current.hostId && triggerUserId && current.hostId !== triggerUserId) {
-      return;
-    }
-
-    const order = current.playerOrder || Array.from({ length: IPL_PLAYERS.length }, (_, i) => i);
-    const currentIndex = order.findIndex((idx) => IPL_PLAYERS[idx] && IPL_PLAYERS[idx].id === targetPlayerId);
-    const nextIndex = currentIndex !== -1 ? order[currentIndex + 1] : order[0];
-
-    if (nextIndex !== undefined && IPL_PLAYERS[nextIndex]) {
-      const nextPlayer = IPL_PLAYERS[nextIndex];
-      const timerSec = current.settings?.bidTimer || 10;
-      const now = Date.now();
-      current.live = {
-        playerId: nextPlayer.id,
-        currentBid: 0,
-        highBidderId: '',
-        highBidderName: 'No Bids',
-        highBidderTeamId: '',
-        timerEndsAt: now + timerSec * 1000,
-        hostTimestamp: now,
-        status: 'bidding',
-      };
-    } else {
-      current.status = 'completed';
-      current.live = {
-        ...current.live,
-        status: 'completed',
-      };
-      current.messages.push({
-        id: `msg_sys_${Date.now()}`,
-        userId: 'system',
-        userName: 'System',
-        text: 'Auction COMPLETED!',
-        type: 'log',
-        timestamp: Date.now(),
-      });
-      flushLocalAuctionToSupabase(roomId).catch(() => {});
-    }
-
-    writeLocalRoom(roomId, current);
-  }, waitMs);
 }
 
-/**
- * Pause local auction.
- */
+/** Host-only. `force` = admin "end this player now". */
+export function endLocalPlayerAuction(roomId, _triggerUserId, force = true) {
+  const room = readLocalRoom(roomId);
+  if (_triggerUserId && room && room.hostId !== _triggerUserId) return;
+  hostEndPlayer(roomId, force);
+}
+
 export function pauseLocalAuction(roomId) {
-  const room = readLocalRoom(roomId);
-  if (!room || !room.live) return;
-
-  room.live.status = 'paused';
-  if (!room.messages) room.messages = [];
-  room.messages.push({
-    id: `msg_sys_${Date.now()}`,
-    userId: 'system',
-    userName: 'System',
-    text: 'Auction PAUSED by Admin',
-    type: 'log',
-    timestamp: Date.now(),
+  commitHost(roomId, (room) => {
+    const live = room.live;
+    if (!live || live.status !== 'bidding') return false;
+    live.remainingMs = Math.max(0, (live.timerEndsAt || 0) - Date.now());
+    live.status = 'paused';
+    sysMsg(room, 'Auction PAUSED by Admin');
   });
-
-  writeLocalRoom(roomId, room);
 }
 
-/**
- * Resume local auction.
- */
 export function resumeLocalAuction(roomId) {
-  const room = readLocalRoom(roomId);
-  if (!room || !room.live) return;
-
-  const timerSec = room.settings?.bidTimer || 10;
-  room.live.status = 'bidding';
-  room.live.timerEndsAt = Date.now() + timerSec * 1000;
-
-  if (!room.messages) room.messages = [];
-  room.messages.push({
-    id: `msg_sys_${Date.now()}`,
-    userId: 'system',
-    userName: 'System',
-    text: 'Auction RESUMED by Admin',
-    type: 'log',
-    timestamp: Date.now(),
+  commitHost(roomId, (room) => {
+    const live = room.live;
+    if (!live || live.status !== 'paused') return false;
+    live.timerEndsAt = Date.now() + Math.max(RESUME_MIN_MS, live.remainingMs || 0);
+    live.hostTimestamp = Date.now();
+    live.status = 'bidding';
+    delete live.remainingMs;
+    sysMsg(room, 'Auction RESUMED by Admin');
   });
-
-  writeLocalRoom(roomId, room);
 }
 
-/**
- * Optional best-effort flush to Supabase when auction finishes.
- * If internet is available, saves a persistent cloud backup of completed squads
- * into Supabase without consuming any Firebase RTDB quota.
- * If offline, quietly skips without interrupting the local summary flow.
- */
-export async function flushLocalAuctionToSupabase(roomId) {
-  if (!activeSupabase) return;
-  if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
-
-  try {
-    const room = readLocalRoom(roomId);
-    if (!room) return;
-
-    await activeSupabase.from('auctions').upsert({
-      id: roomId,
-      host_id: room.hostId || '',
-      host_name: room.hostName || 'Manager',
-      status: 'completed',
-      auction_type: room.auctionType || 'mega',
-      players: room.players || [],
-      settings: room.settings || {},
-      banned_players: room.bannedPlayers || [],
-      is_public: false,
-      server: 'local',
-    });
-
-    const supabaseTeams = Object.values(room.teams || {}).map((t) => ({
-      id: `${roomId}_${t.userId}`,
-      auction_id: roomId,
-      user_id: t.userId,
-      team_id: t.teamId || '',
-      team_name: t.teamName || 'Unknown',
-      budget_remaining: t.budgetRemaining ?? 120.0,
-      spent: t.spent ?? 0,
-      squad: t.squad || [],
-    }));
-
-    if (supabaseTeams.length > 0) {
-      await activeSupabase.from('teams').upsert(supabaseTeams);
-    }
-  } catch (err) {
-    // Safe non-blocking fallback: offline rooms never depend on cloud sync
-    console.warn('[hotspot] Optional Supabase sync skipped', err);
-  }
-}
-
-/**
- * End local auction immediately.
- */
 export function endLocalAuction(roomId) {
-  const room = readLocalRoom(roomId);
-  if (!room) return;
-
-  room.status = 'completed';
-  if (room.live) room.live.status = 'completed';
-
-  if (!room.messages) room.messages = [];
-  room.messages.push({
-    id: `msg_sys_${Date.now()}`,
-    userId: 'system',
-    userName: 'System',
-    text: 'Auction COMPLETED by Admin',
-    type: 'log',
-    timestamp: Date.now(),
+  const rt = getRuntime(roomId);
+  const room = commitHost(roomId, (d) => {
+    if (d.status === 'completed') return false;
+    d.status = 'completed';
+    if (d.live) d.live = { ...d.live, status: 'completed' };
+    sysMsg(d, 'Auction COMPLETED by Admin');
   });
-
-  writeLocalRoom(roomId, room);
-  flushLocalAuctionToSupabase(roomId).catch(() => {});
+  if (room) scheduleDbSync(rt, true);
 }
 
-/**
- * Send chat message in local auction.
- */
 export function sendLocalMessage(roomId, userId, userName, text, type = 'text') {
+  const rt = getRuntime(roomId);
+  rt.userId = userId;
   const room = readLocalRoom(roomId);
-  if (!room) return;
-
-  if (!room.messages) room.messages = [];
-  room.messages.push({
-    id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-    userId,
-    userName: userName || 'Manager',
-    text,
-    type,
-    timestamp: Date.now(),
-  });
-
-  writeLocalRoom(roomId, room);
+  if (!room || !text) return;
+  if (isHostRuntime(rt, room)) {
+    commitHost(roomId, (d) =>
+      pushMsg(d, { userId, userName: userName || 'Manager', text, type }),
+    );
+  } else {
+    sendIntent(rt, 'chat', { text, type });
+  }
 }
 
-/**
- * Kick a player from local room.
- */
 export function kickLocalPlayer(roomId, targetUserId) {
-  const room = readLocalRoom(roomId);
-  if (!room) return;
-
-  if (!room.bannedPlayers) room.bannedPlayers = [];
-  if (!room.bannedPlayers.includes(targetUserId)) {
-    room.bannedPlayers.push(targetUserId);
-  }
-
-  room.players = (room.players || []).filter((p) => p.id !== targetUserId);
-  const teamDocId = `${roomId}_${targetUserId}`;
-  if (room.teams && room.teams[teamDocId]) {
-    delete room.teams[teamDocId];
-  }
-
-  writeLocalRoom(roomId, room);
+  const rt = getRuntime(roomId);
+  commitHost(roomId, (room) => {
+    room.bannedPlayers = room.bannedPlayers || [];
+    if (!room.bannedPlayers.includes(targetUserId)) room.bannedPlayers.push(targetUserId);
+    room.players = (room.players || []).filter((p) => p.id !== targetUserId);
+    if (room.teams) delete room.teams[`${roomId}_${targetUserId}`];
+    if (room.presences) delete room.presences[targetUserId];
+  });
+  rt.presenceSeen.delete(targetUserId);
 }
 
-/**
- * Update room settings in local room.
- */
 export function updateLocalRoomSettings(roomId, settings) {
-  const room = readLocalRoom(roomId);
-  if (!room) return;
-
-  room.settings = { ...(room.settings || {}), ...settings };
-  writeLocalRoom(roomId, room);
+  commitHost(roomId, (room) => {
+    room.settings = { ...(room.settings || {}), ...settings };
+  });
 }
 
-/**
- * Subscribe to local room state updates with full real-time synchronization.
- */
+/* ------------------------------- subscription ----------------------------- */
+
 export function subscribeLocalRoom(
   roomId,
   userId,
   { setCurrentAuction, setRoomTeams, setTeam, setMessages, setLoading },
 ) {
-  let isSubscribed = true;
-  let lastAppliedSerialized = '';
+  const rt = getRuntime(roomId);
+  rt.userId = userId;
+  let alive = true;
 
-  const pushStateToContext = (room) => {
-    if (!room || !isSubscribed) return;
-    lastAppliedSerialized = JSON.stringify(room);
-
+  const push = (room) => {
+    if (!room || !alive) return;
     const presences = room.presences || {};
-    const playersWithPresence = (room.players || []).map((p) => ({
+    const players = (room.players || []).map((p) => ({
       ...p,
-      isOnline: presences[p.id]?.online !== false,
+      isOnline: p.isBot || presences[p.id]?.online !== false,
       lastSeen: presences[p.id]?.lastSeen || Date.now(),
     }));
-
     const teamsArr = Object.values(room.teams || {}).map((t) => ({
-      id: `${roomId}_${t.userId}`,
       ...t,
+      id: `${roomId}_${t.userId}`,
     }));
 
     setRoomTeams(teamsArr);
-
     if (userId) {
-      const myTeam = teamsArr.find(
-        (t) => t.id === `${roomId}_${userId}` || t.userId === userId,
-      );
-      setTeam(myTeam || null);
+      setTeam(teamsArr.find((t) => t.userId === userId) || null);
     }
-
-    const messagesArr = (room.messages || []).slice(-20);
-    setMessages(messagesArr);
-
-    // Compute and synchronize host clock offset
-    if (room.hostId && userId && room.hostId !== userId) {
-      const hostTime = room.live?.hostTimestamp || (room.status === 'active' && room.live?.timerEndsAt ? (room.live.timerEndsAt - ((room.settings?.bidTimer || 10) * 1000)) : null);
-      if (hostTime) {
-        const offset = hostTime - Date.now();
-        if (Math.abs(offset) > 150) {
-          setLocalHostTimeOffset(offset);
-        }
-      }
-    } else {
-      setLocalHostTimeOffset(0);
-    }
-
-    setCurrentAuction({
-      id: roomId,
-      ...room,
-      players: playersWithPresence,
-      currentAuction: room.live,
-    });
-
+    setMessages((room.messages || []).slice(-20));
+    setCurrentAuction({ id: roomId, ...room, players, currentAuction: room.live });
     setLoading(false);
   };
 
-  // Initial load
-  const initial = readLocalRoom(roomId);
-  if (initial) {
-    pushStateToContext(initial);
-  }
+  const listener = (room) => push(room);
+  rt.listeners.add(listener);
+  retain(rt);
 
-  // Probe local bridge server or Supabase (bridges Incognito, separate browsers, LAN devices)
-  fetchRoomFromServer(roomId).then((serverData) => {
-    if (!isSubscribed) return;
-    if (serverData) {
-      const current = readLocalRoom(roomId) || memoryStore.get(roomId);
-      const merged = current ? mergeLocalRooms(current, serverData) : serverData;
-      const serialized = JSON.stringify(merged);
-      memoryStore.set(roomId, merged);
-      if (typeof window !== 'undefined' && window.localStorage) {
-        try {
-          window.localStorage.setItem(getLocalRoomKey(roomId), serialized);
-        } catch {}
-      }
-      pushStateToContext(merged);
-    } else {
-      setLoading(false);
-    }
+  const initial = readLocalRoom(roomId);
+  if (initial) push(initial);
+
+  // bootstrap / host-reload recovery from the DB backup (only newer is accepted)
+  fetchRoomFromServer(roomId).then((s) => {
+    if (!alive) return;
+    if (s) acceptState(rt, s);
+    if (!readLocalRoom(roomId)) setLoading(false);
   });
 
-  // Supabase Realtime listener for instant peer updates across devices on deployed site
-  let realtimeChannel = null;
-  if (typeof window !== 'undefined' && activeSupabase && typeof activeSupabase.channel === 'function') {
-    try {
-      const channelId = `hotspot_rt_${roomId}_${Math.random().toString(36).substring(2, 7)}`;
-      realtimeChannel = activeSupabase
-        .channel(channelId)
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'auctions', filter: `id=eq.${roomId}` },
-          async () => {
-            if (!isSubscribed) return;
-            const serverState = await fetchRoomFromServer(roomId);
-            if (!isSubscribed || !serverState) return;
-            const current = readLocalRoom(roomId) || memoryStore.get(roomId);
-            const merged = current ? mergeLocalRooms(current, serverState) : serverState;
-            const mergedSerialized = JSON.stringify(merged);
-            if (mergedSerialized !== lastAppliedSerialized) {
-              memoryStore.set(roomId, merged);
-              if (typeof window !== 'undefined' && window.localStorage) {
-                try {
-                  window.localStorage.setItem(getLocalRoomKey(roomId), mergedSerialized);
-                } catch {}
-              }
-              pushStateToContext(merged);
-            }
-          }
-        )
-        .subscribe();
-    } catch {
-      // Background polling remains active
-    }
-  }
-
-  // Cross-tab broadcast channel listener (persistent channel, no premature close)
-  const channel = getBroadcastChannel(roomId);
-  const onBroadcastMessage = (event) => {
-    if (!isSubscribed) return;
-    if (event.data?.roomId === roomId && event.data?.state) {
-      const current = readLocalRoom(roomId) || memoryStore.get(roomId);
-      const merged = current ? mergeLocalRooms(current, event.data.state) : event.data.state;
-      const serialized = JSON.stringify(merged);
-      memoryStore.set(roomId, merged);
-      if (typeof window !== 'undefined' && window.localStorage) {
-        try {
-          window.localStorage.setItem(getLocalRoomKey(roomId), serialized);
-        } catch {}
-      }
-      pushStateToContext(merged);
-    }
-  };
-  if (channel) {
-    channel.addEventListener('message', onBroadcastMessage);
-  }
-
-  // Background bridge polling: keeps normal tabs, incognito windows & LAN peers in lockstep
-  const serverPollInterval = setInterval(async () => {
-    if (!isSubscribed) return;
-    const serverState = await fetchRoomFromServer(roomId);
-    if (!isSubscribed || !serverState) return;
-
-    const current = readLocalRoom(roomId) || memoryStore.get(roomId);
-    const merged = current ? mergeLocalRooms(current, serverState) : serverState;
-    const mergedSerialized = JSON.stringify(merged);
-
-    if (mergedSerialized !== lastAppliedSerialized) {
-      memoryStore.set(roomId, merged);
-      if (typeof window !== 'undefined' && window.localStorage) {
-        try {
-          window.localStorage.setItem(getLocalRoomKey(roomId), mergedSerialized);
-        } catch {
-          // Ignore
-        }
-      }
-      pushStateToContext(merged);
-    }
-  }, 400);
-
-  // Local storage storage-event listener
-  const onStorage = (event) => {
-    if (!isSubscribed) return;
-    if (event.key === getLocalRoomKey(roomId) && event.newValue) {
-      try {
-        const state = JSON.parse(event.newValue);
-        const current = readLocalRoom(roomId) || memoryStore.get(roomId);
-        const merged = current ? mergeLocalRooms(current, state) : state;
-        pushStateToContext(merged);
-      } catch {
-        // parse error
-      }
-    }
-  };
-  if (typeof window !== 'undefined') {
-    window.addEventListener('storage', onStorage);
-  }
-
-  // In-process subscriber listener
-  const onMemoryUpdate = (rId, state) => {
-    if (!isSubscribed) return;
-    if (rId === roomId && state) {
-      pushStateToContext(state);
-    }
-  };
-  localRoomSubscribers.add(onMemoryUpdate);
-
-  // Same-window custom event listener
-  const onLocalSync = (event) => {
-    if (!isSubscribed) return;
-    if (event.detail?.roomId === roomId && event.detail?.state) {
-      pushStateToContext(event.detail.state);
-    }
-  };
-  if (typeof window !== 'undefined') {
-    window.addEventListener('hotspot-room-update', onLocalSync);
-  }
-
-  // Presence heartbeat
-  const presenceInterval = setInterval(() => {
-    if (!isSubscribed) return;
-    const room = readLocalRoom(roomId);
-    if (room) {
-      if (!room.presences) room.presences = {};
-      room.presences[userId] = { online: true, lastSeen: Date.now() };
-      writeLocalRoom(roomId, room);
-    }
-  }, 4000);
-
-  // Host Countdown & Bot Automation Loop
-  let lastBotCycle = null;
-  const hostEngineInterval = setInterval(() => {
-    if (!isSubscribed) return;
-    const room = readLocalRoom(roomId);
-    if (!room || room.hostId !== userId) return;
-
-    const live = room.live;
-    if (!live || live.status !== 'bidding') return;
-
-    const now = Date.now();
-
-    // 1. Timer Expiry Check (Authoritative Host only)
-    if (live.timerEndsAt && now >= live.timerEndsAt) {
-      endLocalPlayerAuction(roomId, userId);
-      return;
-    }
-
-    // 2. Bot Bidding Automation
-    const botPlayers = (room.players || []).filter(
-      (p) => p.isBot || p.id.startsWith('bot_'),
-    );
-    if (botPlayers.length === 0) return;
-
-    const player = IPL_PLAYERS.find((p) => p.id === live.playerId);
-    if (!player) return;
-
-    const cycleKey = `${live.playerId}_${live.timerEndsAt}`;
-    if (lastBotCycle === cycleKey) return;
-    lastBotCycle = cycleKey;
-
-    const timerSec = room.settings?.bidTimer || 10;
-    const timerMs = timerSec * 1000;
-    const remainingMs = Math.max(0, live.timerEndsAt - now);
-    const cBid = live.currentBid || 0;
-
-    let delayMs = 500;
-    if (cBid < 3.0) {
-      delayMs = Math.min(1000, timerMs * (0.08 + Math.random() * 0.15));
-    } else {
-      delayMs = timerMs * (0.25 + Math.random() * 0.3);
-    }
-    delayMs = Math.max(300, Math.min(delayMs, Math.max(300, remainingMs - 300)));
-
-    const initialBudget = toFiniteNumber(room.settings?.budget, 120.0);
-    const teamsArr = Object.values(room.teams || {});
-
-    setTimeout(() => {
-      if (!isSubscribed) return;
-      const latestRoom = readLocalRoom(roomId);
-      if (!latestRoom || latestRoom.live?.status !== 'bidding') return;
-      if (latestRoom.live.playerId !== live.playerId) return;
-
-      const eligibleBots = shuffleArray(
-        botPlayers.filter((p) => p.id !== latestRoom.live.highBidderId),
-      );
-      for (const botP of eligibleBots) {
-        const botTeam = teamsArr.find((t) => t.userId === botP.id);
-        if (!botTeam) continue;
-
-        const bidDecision = evaluateBotBid({
-          player,
-          currentBid: latestRoom.live.currentBid || 0,
-          highBidderId: latestRoom.live.highBidderId,
-          botTeam,
-          squadLimit: toFiniteNumber(latestRoom.squadLimit, 25),
-          overseasLimit: toFiniteNumber(latestRoom.overseasLimit, 8),
-          initialBudget,
-        });
-
-        if (bidDecision && bidDecision.shouldBid) {
-          try {
-            placeLocalBotBid(
-              roomId,
-              botP.id,
-              botP.team,
-              botP.name,
-              timerSec,
-              bidDecision.maxValuation,
-              botTeam.budgetRemaining ?? initialBudget,
-            );
-          } catch {
-            // Non-fatal
-          }
-          break;
-        }
-      }
-    }, delayMs);
-  }, 400);
-
   return () => {
-    isSubscribed = false;
-    clearInterval(presenceInterval);
-    clearInterval(hostEngineInterval);
-    clearInterval(serverPollInterval);
-
-    localRoomSubscribers.delete(onMemoryUpdate);
-    if (realtimeChannel && activeSupabase && typeof activeSupabase.removeChannel === 'function') {
-      try {
-        activeSupabase.removeChannel(realtimeChannel);
-      } catch {
-        // Ignore
-      }
-    }
-    if (channel) {
-      try {
-        channel.removeEventListener('message', onBroadcastMessage);
-      } catch {
-        // Ignore
-      }
-    }
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('storage', onStorage);
-      window.removeEventListener('hotspot-room-update', onLocalSync);
-    }
-
-    // Mark user offline in local room
+    alive = false;
+    rt.listeners.delete(listener);
     const room = readLocalRoom(roomId);
-    if (room && room.presences && room.presences[userId]) {
-      room.presences[userId].online = false;
-      room.presences[userId].lastSeen = Date.now();
-      writeLocalRoom(roomId, room);
-    }
+    if (!isHostRuntime(rt, room)) sendIntent(rt, 'leave', {});
+    release(rt);
   };
 }

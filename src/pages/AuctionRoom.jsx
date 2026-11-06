@@ -62,6 +62,7 @@ import {
    timerProgress,
    toFiniteNumber,
 } from '../lib/auctionDisplay';
+import { getLiveRemainingMs } from '../lib/localAuctionEngine';
 
 const AuctionRoom = () => {
    const { id } = useParams();
@@ -129,13 +130,19 @@ const AuctionRoom = () => {
    const timerTotal = configuredBidTimer > 0 ? configuredBidTimer : 10;
    const isTimerBidding = displayAuctionState?.status === 'bidding';
    const isTimerPaused = displayAuctionState?.status === 'paused';
-   const rawSecondsRemaining = isTimerBidding && displayAuctionState?.timerEndsAt
-      ? Math.ceil((displayAuctionState.timerEndsAt - getSyncedTime()) / 1000)
+   const isHotspotRoom = isHotspotRoomCode(id) || currentAuction?.server === 'local';
+   const rawMsRemaining = isHotspotRoom
+      ? getLiveRemainingMs(displayAuctionState)
+      : (isTimerPaused
+         ? Math.max(0, displayAuctionState?.remainingMs || 0)
+         : (isTimerBidding && displayAuctionState?.timerEndsAt ? Math.max(0, displayAuctionState.timerEndsAt - getSyncedTime()) : 0));
+   const rawSecondsRemaining = (isTimerBidding || isTimerPaused)
+      ? Math.ceil(rawMsRemaining / 1000)
       : 0;
-   const secondsRemaining = isTimerBidding
+   const secondsRemaining = (isTimerBidding || isTimerPaused)
       ? clampTimer(rawSecondsRemaining, timerTotal)
       : 0;
-   const timerPercent = isTimerBidding
+   const timerPercent = (isTimerBidding || isTimerPaused)
       ? timerProgress(rawSecondsRemaining, timerTotal)
       : 0;
 
@@ -724,15 +731,23 @@ const AuctionRoom = () => {
    }, [displayAuctionState?.playerId]);
 
    useEffect(() => {
-      if (currentAuction?.status !== 'active' || !displayAuctionState?.timerEndsAt || displayAuctionState?.status !== 'bidding') {
+      if (currentAuction?.status !== 'active' || !displayAuctionState || (displayAuctionState?.status !== 'bidding' && displayAuctionState?.status !== 'paused')) {
+         return;
+      }
+
+      if (displayAuctionState?.status === 'paused') {
+         setTimerTick((tick) => tick + 1);
          return;
       }
 
       // Reset beep tracking when timer resets (new bid / new player)
       lastBeepedSecRef.current = -1;
 
+      const isHotspot = isHotspotRoomCode(id) || currentAuction?.server === 'local';
       const interval = setInterval(() => {
-         const rawMs = displayAuctionState.timerEndsAt - getSyncedTime();
+         const rawMs = isHotspot
+            ? getLiveRemainingMs(displayAuctionState)
+            : (displayAuctionState.timerEndsAt - getSyncedTime());
          const diff = Math.max(0, Math.ceil(rawMs / 1000));
 
          if (diff <= 5 && diff > 0 && diff !== lastBeepedSecRef.current) {
@@ -741,11 +756,9 @@ const AuctionRoom = () => {
          }
 
          setTimerTick((tick) => tick + 1);
-         if (diff === 0) {
-            // Primary trigger: Admin/Host triggers end immediately when timer expires
-            // Fallback trigger: Non-host client triggers end if timer has expired by >1.5s (only in cloud RTDB rooms)
-            const isHotspot = isHotspotRoomCode(id) || currentAuction?.server === 'local';
-            const shouldTrigger = (isAdmin || (!isHotspot && rawMs < -1500)) && displayAuctionState.status === 'bidding' && !endTriggeredRef.current;
+         if (diff === 0 && !isHotspot) {
+            // For cloud RTDB rooms only: primary trigger is admin, fallback is non-host client after 1.5s
+            const shouldTrigger = (isAdmin || rawMs < -1500) && displayAuctionState.status === 'bidding' && !endTriggeredRef.current;
             if (shouldTrigger) {
                endTriggeredRef.current = true;
                clearInterval(interval);
@@ -757,7 +770,7 @@ const AuctionRoom = () => {
       }, 200);
 
       return () => clearInterval(interval);
-   }, [displayAuctionState?.timerEndsAt, displayAuctionState?.status, currentAuction?.status, isAdmin, id, endPlayerAuction, getSyncedTime]);
+   }, [displayAuctionState?.timerEndsAt, displayAuctionState?.status, displayAuctionState?.remainingMs, currentAuction?.status, isAdmin, id, endPlayerAuction, getSyncedTime]);
 
    const handleBid = async () => {
       if (isBiddingInFlight) return;
@@ -1395,13 +1408,16 @@ const AuctionRoom = () => {
                                              </div>
                                           </div>
                                           <div className={`w-12 h-12 sm:w-14 sm:h-14 xl:w-16 xl:h-16 rounded-full flex flex-col items-center justify-center transition-all duration-300 border-2 ${isTimerPaused
-                                             ? 'border-gray-500 bg-gray-500/10 text-gray-400'
+                                             ? 'border-yellow-500/50 bg-yellow-500/10 text-yellow-400'
                                              : secondsRemaining < 5
                                                 ? 'border-red-500 bg-red-500/10 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]'
                                                 : 'border-green-500/30 bg-green-500/5 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.1)]'
                                              }`}>
                                              {isTimerPaused ? (
-                                                <span className="text-[8px] sm:text-[9px] md:text-[10px] font-black leading-none tracking-wider">PAUSED</span>
+                                                <>
+                                                   <span className="text-base sm:text-lg xl:text-xl font-black leading-none">{secondsRemaining}</span>
+                                                   <span className="text-[6px] md:text-[7px] font-bold tracking-widest uppercase mt-0.5 text-yellow-400">PAUSED</span>
+                                                </>
                                              ) : (
                                                 <>
                                                    <span className="text-base sm:text-lg xl:text-xl font-black leading-none">{secondsRemaining}</span>
