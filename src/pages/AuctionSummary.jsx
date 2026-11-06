@@ -114,10 +114,9 @@ const AuctionSummary = () => {
     if (!id) return;
     let isMounted = true;
 
-    // Hotspot and local offline rooms load directly from local engine state via joinAuction
-    if (server === 'local' || isHotspotRoomCode(id)) {
+    // If live auction data is already present in memory from an active session, dismiss loading
+    if (currentAuction && roomTeams && roomTeams.length > 0) {
       setSummaryLoading(false);
-      return;
     }
 
     const fetchSummaryFromPersistentStore = async () => {

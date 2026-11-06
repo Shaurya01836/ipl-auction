@@ -610,7 +610,8 @@ export async function syncRoomToServer(roomId, roomData) {
       squad: t.squad || [],
     }));
     const sig = JSON.stringify(teamsArr);
-    if (teamsArr.length > 0 && sig !== rt.teamsSig) {
+    const isCompleted = roomData.status === 'completed';
+    if (teamsArr.length > 0 && (sig !== rt.teamsSig || isCompleted)) {
       const { error: e2 } = await sb.from('teams').upsert(teamsArr);
       if (e2) console.warn('[hotspot] teams upsert failed', e2.message || e2);
       else rt.teamsSig = sig;
@@ -687,6 +688,11 @@ export async function fetchRoomFromServer(roomId) {
     });
 
     const s = row.settings || {};
+    const live = s.live || { status: row.status || 'waiting' };
+    if (live.status === 'bidding' && (live.timerEndsAt || 0) < Date.now()) {
+      live.status = 'paused';
+      live.remainingMs = Math.max(RESUME_MIN_MS, (s.bidTimer || 10) * 1000);
+    }
     return {
       id: row.id,
       hostId: row.host_id,
@@ -705,7 +711,7 @@ export async function fetchRoomFromServer(roomId) {
       playerOrder: row.player_order || [],
       settings: { bidTimer: s.bidTimer || 10, budget: s.budget || 120.0 },
       teams,
-      live: s.live || { status: row.status || 'waiting' },
+      live,
       messages: s.messages || [],
       presences: s.presences || {},
     };
@@ -813,20 +819,18 @@ function hostUpsertPlayer(roomId, userId, details = {}) {
     if (idx >= 0) room.players[idx] = playerObj;
     else room.players.push(playerObj);
 
-    if (team) {
-      const docId = `${roomId}_${userId}`;
-      const ex = room.teams[docId];
-      room.teams[docId] = {
-        id: docId,
-        auctionId: roomId,
-        userId,
-        teamId: team,
-        teamName,
-        budgetRemaining: ex?.budgetRemaining ?? toFiniteNumber(room.settings?.budget, 120.0),
-        spent: ex?.spent ?? 0,
-        squad: ex?.squad || [],
-      };
-    }
+    const docId = `${roomId}_${userId}`;
+    const ex = room.teams[docId];
+    room.teams[docId] = {
+      id: docId,
+      auctionId: roomId,
+      userId,
+      teamId: team || ex?.teamId || '',
+      teamName: team ? teamName : (ex?.teamName || 'Unassigned'),
+      budgetRemaining: ex?.budgetRemaining ?? toFiniteNumber(room.settings?.budget, 120.0),
+      spent: ex?.spent ?? 0,
+      squad: ex?.squad || [],
+    };
     room.presences = { ...(room.presences || {}), [userId]: { online: true, lastSeen: Date.now() } };
   });
 }
@@ -1285,19 +1289,17 @@ export function createLocalRoom(roomId, userId, playerDetails, auctionType = 'me
   const now = Date.now();
 
   const teams = {};
-  if (playerDetails.team) {
-    const docId = `${roomId}_${userId}`;
-    teams[docId] = {
-      id: docId,
-      auctionId: roomId,
-      userId,
-      teamId: playerDetails.team,
-      teamName: teamDetails?.name || 'Unknown',
-      budgetRemaining: budget,
-      spent: 0,
-      squad: [],
-    };
-  }
+  const docId = `${roomId}_${userId}`;
+  teams[docId] = {
+    id: docId,
+    auctionId: roomId,
+    userId,
+    teamId: playerDetails.team || '',
+    teamName: teamDetails?.name || 'Unassigned',
+    budgetRemaining: budget,
+    spent: 0,
+    squad: [],
+  };
 
   const room = {
     id: roomId,
@@ -1530,17 +1532,21 @@ export function endLocalPlayerAuction(roomId, triggerUserId, force = false) {
 }
 
 export function pauseLocalAuction(roomId) {
-  commitHost(roomId, (room) => {
+  const rt = getRuntime(roomId);
+  const room = commitHost(roomId, (room) => {
     const live = room.live;
     if (!live || live.status !== 'bidding') return false;
     live.remainingMs = Math.max(0, (live.timerEndsAt || 0) - Date.now());
     live.status = 'paused';
     sysMsg(room, 'Auction PAUSED by Admin');
   });
+  if (room) scheduleDbSync(rt, true);
+  return room;
 }
 
 export function resumeLocalAuction(roomId) {
-  commitHost(roomId, (room) => {
+  const rt = getRuntime(roomId);
+  const room = commitHost(roomId, (room) => {
     const live = room.live;
     if (!live || live.status !== 'paused') return false;
     live.timerEndsAt = Date.now() + Math.max(RESUME_MIN_MS, live.remainingMs || 0);
@@ -1549,9 +1555,11 @@ export function resumeLocalAuction(roomId) {
     delete live.remainingMs;
     sysMsg(room, 'Auction RESUMED by Admin');
   });
+  if (room) scheduleDbSync(rt, true);
+  return room;
 }
 
-export function endLocalAuction(roomId) {
+export async function endLocalAuction(roomId) {
   const rt = getRuntime(roomId);
   const room = commitHost(roomId, (d) => {
     if (d.status === 'completed') return false;
@@ -1559,7 +1567,10 @@ export function endLocalAuction(roomId) {
     if (d.live) d.live = { ...d.live, status: 'completed' };
     sysMsg(d, 'Auction COMPLETED by Admin');
   });
-  if (room) scheduleDbSync(rt, true);
+  if (room) {
+    await scheduleDbSync(rt, true);
+  }
+  return room || readLocalRoom(roomId);
 }
 
 export function sendLocalMessage(roomId, userId, userName, text, type = 'text') {
