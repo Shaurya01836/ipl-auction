@@ -41,7 +41,8 @@ import {
    Clock,
    LogOut,
    Eye,
-   Radio
+   Radio,
+   SkipForward
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -62,7 +63,7 @@ import {
    timerProgress,
    toFiniteNumber,
 } from '../lib/auctionDisplay';
-import { getLiveRemainingMs } from '../lib/localAuctionEngine';
+import { getLiveRemainingMs, isInLastCall } from '../lib/localAuctionEngine';
 
 const AuctionRoom = () => {
    const { id } = useParams();
@@ -131,6 +132,7 @@ const AuctionRoom = () => {
    const isTimerBidding = displayAuctionState?.status === 'bidding';
    const isTimerPaused = displayAuctionState?.status === 'paused';
    const isHotspotRoom = isHotspotRoomCode(id) || currentAuction?.server === 'local';
+   const inLastCall = isHotspotRoom && isInLastCall(displayAuctionState);
    const rawMsRemaining = isHotspotRoom
       ? getLiveRemainingMs(displayAuctionState)
       : (isTimerPaused
@@ -824,7 +826,8 @@ const AuctionRoom = () => {
          await placeBid(nextBidAmount);
       } catch (err) {
          setOptimisticState(null);
-         setError(err.message);
+         setError(err?.message || 'Bid failed');
+         playBeep(220, 0.3);
          setTimeout(() => setError(''), 3000);
       } finally {
          setIsBiddingInFlight(false);
@@ -1045,6 +1048,15 @@ const AuctionRoom = () => {
                            <Pause size={13} /> <span className="hidden md:inline">Pause</span>
                         </button>
                      )}
+                     {displayAuctionState?.status === 'bidding' && (
+                        <button
+                           onClick={() => endPlayerAuction(id, true)}
+                           className="p-1 sm:px-2.5 sm:py-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-300 text-[10px] compact:text-[9px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1"
+                           title="Skip / End Current Player Now"
+                        >
+                           <SkipForward size={13} /> <span className="hidden md:inline">Skip Player</span>
+                        </button>
+                     )}
                      <button
                         onClick={() => setShowEndConfirm(true)}
                         className="p-1 sm:px-2.5 sm:py-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-300 text-[10px] compact:text-[9px] font-black uppercase tracking-widest hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/20 transition-all cursor-pointer flex items-center gap-1"
@@ -1226,6 +1238,20 @@ const AuctionRoom = () => {
                         </div>
                      </div>
                      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+                        {displayAuctionState?.status === 'sold' && (
+                           <div className="flex items-center gap-1 bg-green-500/20 border border-green-500/40 px-2 py-0.5 rounded-full animate-pulse">
+                              <span className="text-[7.5px] sm:text-[9px] font-black text-green-400 uppercase tracking-wider">
+                                 SOLD: {displayAuctionState?.highBidderName} (₹{formatCrores(displayAuctionState?.currentBid)} Cr)
+                              </span>
+                           </div>
+                        )}
+                        {displayAuctionState?.status === 'unsold' && (
+                           <div className="flex items-center gap-1 bg-red-500/20 border border-red-500/40 px-2 py-0.5 rounded-full animate-pulse">
+                              <span className="text-[7.5px] sm:text-[9px] font-black text-red-400 uppercase tracking-wider">
+                                 UNSOLD
+                              </span>
+                           </div>
+                        )}
                         <div className="w-px h-3.5 sm:h-4 bg-white/10 shrink-0" />
                         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                            <span className="text-[7.5px] sm:text-[9px] compact:text-[8px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Bidder:</span>
@@ -1338,6 +1364,14 @@ const AuctionRoom = () => {
                          })() : (
                            <motion.div key="player-card" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full flex-col gap-4 md:gap-6 flex">
                               <div className="bg-gradient-to-b from-[#161616] to-[#0f0f0f] border border-white/[0.08] rounded-[2rem] overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.6)] relative min-h-[400px] lg:min-h-0">
+                                 {isTimerPaused && (
+                                    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-30 flex flex-col items-center justify-center gap-2 pointer-events-none rounded-[2rem]">
+                                       <div className="bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 px-6 py-2.5 rounded-full font-black text-sm sm:text-base tracking-widest uppercase flex items-center gap-2 shadow-2xl">
+                                          <Pause size={18} className="animate-pulse" /> AUCTION PAUSED
+                                       </div>
+                                       <p className="text-gray-400 text-xs font-semibold">Waiting for Admin to resume...</p>
+                                    </div>
+                                 )}
                                  <div className="absolute top-0 inset-x-0 h-1 bg-white/5">
                                     <motion.div initial={{ width: "100%" }} animate={{ width: `${timerPercent}%` }} className={`h-full transition-colors duration-1000 ${isTimerPaused ? 'bg-gray-500' : secondsRemaining < 5 ? 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]'}`} />
                                  </div>
@@ -1409,15 +1443,21 @@ const AuctionRoom = () => {
                                           </div>
                                           <div className={`w-12 h-12 sm:w-14 sm:h-14 xl:w-16 xl:h-16 rounded-full flex flex-col items-center justify-center transition-all duration-300 border-2 ${isTimerPaused
                                              ? 'border-yellow-500/50 bg-yellow-500/10 text-yellow-400'
-                                             : secondsRemaining < 5
-                                                ? 'border-red-500 bg-red-500/10 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]'
-                                                : 'border-green-500/30 bg-green-500/5 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.1)]'
+                                             : inLastCall
+                                                ? 'border-red-500 bg-red-500/20 text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.4)] animate-pulse'
+                                                : secondsRemaining < 5
+                                                   ? 'border-red-500 bg-red-500/10 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]'
+                                                   : 'border-green-500/30 bg-green-500/5 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.1)]'
                                              }`}>
                                              {isTimerPaused ? (
                                                 <>
                                                    <span className="text-base sm:text-lg xl:text-xl font-black leading-none">{secondsRemaining}</span>
                                                    <span className="text-[6px] md:text-[7px] font-bold tracking-widest uppercase mt-0.5 text-yellow-400">PAUSED</span>
                                                 </>
+                                             ) : inLastCall ? (
+                                                <span className="text-[8px] sm:text-[9px] xl:text-[10px] font-black leading-tight text-red-400 uppercase text-center px-1">
+                                                   Last call...
+                                                </span>
                                              ) : (
                                                 <>
                                                    <span className="text-base sm:text-lg xl:text-xl font-black leading-none">{secondsRemaining}</span>
@@ -1462,7 +1502,7 @@ const AuctionRoom = () => {
                                     <div className="flex gap-3 md:gap-4">
                                        <button
                                           onClick={handleBid}
-                                          disabled={spectateMode || !team || secondsRemaining === 0 || displayAuctionState?.status !== 'bidding' || displayAuctionState?.highBidderId === user?.uid}
+                                          disabled={spectateMode || !team || displayAuctionState?.status !== 'bidding' || displayAuctionState?.highBidderId === user?.uid}
                                           className={`flex-1 h-12 sm:h-14 xl:h-18 font-black text-sm sm:text-base xl:text-xl rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale cursor-pointer ${spectateMode
                                              ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                                              : displayAuctionState?.highBidderId === user?.uid
@@ -1474,7 +1514,7 @@ const AuctionRoom = () => {
                                              <span className="flex items-center gap-2 text-xs xl:text-sm font-black uppercase tracking-widest text-blue-400">
                                                 <Eye size={18} /> Spectator View (Read Only)
                                              </span>
-                                          ) : displayAuctionState?.status === 'paused' ? 'PAUSED' : displayAuctionState?.highBidderId === user?.uid ? "LEADING BIDDER" : `PLACE BID: ₹${formatCrores(nextBidAmount)} Cr`}
+                                          ) : displayAuctionState?.status === 'paused' ? 'PAUSED' : displayAuctionState?.highBidderId === user?.uid ? "LEADING BIDDER" : inLastCall ? `LAST CALL — BID: ₹${formatCrores(nextBidAmount)} Cr` : `PLACE BID: ₹${formatCrores(nextBidAmount)} Cr`}
                                        </button>
                                        <button onClick={() => setShowPlayersOverlay(true)} className="w-12 h-12 sm:w-14 sm:h-14 xl:w-18 xl:h-18 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-all"><List size={20} /></button>
                                     </div>

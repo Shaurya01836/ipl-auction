@@ -1,11 +1,10 @@
-
 import { IPL_PLAYERS } from '../data/players.js';
 import { evaluateBotBid } from './botEngine.js';
 import { toFiniteNumber, countOverseas, isOverseasPlayer } from './auctionDisplay.js';
 import { supabase } from './supabase.js';
 
 /* ============================================================================
- * LOCAL / HOTSPOT AUCTION  (host-authoritative design)
+ * LOCAL / HOTSPOT AUCTION  (host-authoritative design)  -- v3
  *
  *  - The HOST device is the only "server". It alone owns: status, live bid,
  *    timer, players, teams, purse, messages.  Every host change bumps `hostRev`.
@@ -13,14 +12,23 @@ import { supabase } from './supabase.js';
  *    (join, pick team, bid, chat, presence) over Supabase Realtime Broadcast
  *    (+ BroadcastChannel for tabs of the same browser).
  *  - The host broadcasts full snapshots on every change + a 1s heartbeat.
- *    Clients accept a snapshot only if its hostRev is NEWER -> no stale
- *    overwrite, no ping-pong, no regression (sold -> bidding etc).
+ *    Clients accept a snapshot only if its hostRev is NEWER.
  *  - Clocks: clients run an NTP-style ping/pong against the host and keep the
- *    lowest-RTT sample as `offset`. Use getSyncedNow()/getLiveRemainingMs()
- *    in the UI. Timer expiry is decided ONLY by the host clock.
+ *    lowest-RTT sample as `offset`. Use getSyncedNow()/getLiveRemainingMs().
  *  - Pause stores `remainingMs`, resume continues from it.
- *  - The Supabase `auctions`/`teams` rows are a throttled, host-only backup
- *    (late joiners / reload recovery). Nobody else writes them.
+ *
+ *  v3 fixes
+ *  - LAST-SECOND BIDS: bids carry `sentAt` (host-clock estimate of the click).
+ *    The host accepts a bid that arrives up to BID_GRACE_MS after expiry if it
+ *    was SENT before expiry, and only ends the player after the grace window.
+ *  - STUCK AT 0: the host engine runs on a Web Worker ticker (not throttled in
+ *    background tabs), re-runs on tab-visible, holds a screen wake-lock, every
+ *    tick is try/catch-wrapped, timer expiry is evaluated BEFORE presence work,
+ *    and clients "nudge" the host if a timer is overdue.
+ *  - IDENTITY: rt.userId is only set by subscribe/create/join (or first use),
+ *    never overwritten by bid/chat/team helpers.
+ *  - Mutation errors are logged instead of silently wedging the engine.
+ *    Run  __hotspotDebug('<roomId>')  in the console for a state dump.
  * ========================================================================== */
 
 export const TEAMS = [
@@ -46,6 +54,9 @@ const FIRST_PLAYER_MS = 15000;
 const SOLD_DISPLAY_MS = 4000;
 const UNSOLD_DISPLAY_MS = 2000;
 const RESUME_MIN_MS = 3000;
+const BID_GRACE_MS = 800; // late-arrival window for bids SENT before expiry
+const SENT_AT_TOLERANCE_MS = 200; // clock-offset error allowance
+const CLIENT_NUDGE_AFTER_MS = 1500; // client asks host to re-check an overdue timer
 const BROADCAST_EVENTS = ['state', 'hello', 'intent', 'ping', 'pong'];
 
 const isBrowser = typeof window !== 'undefined';
@@ -66,6 +77,7 @@ const newId = (prefix) =>
   `${prefix}_${Date.now()}_${(idCounter++).toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 const clone = (o) =>
   typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
+const isBotPlayer = (p) => !!p && (!!p.isBot || String(p.id || '').startsWith('bot_'));
 
 const shuffleArray = (array) => {
   const a = [...array];
@@ -86,6 +98,84 @@ const nextBidFor = (player, currentBid) => {
   return r2(cBid + (cBid < 5 ? 0.2 : 0.25));
 };
 
+const safe = (name, fn) => () => {
+  try {
+    fn();
+  } catch (e) {
+    console.error(`[hotspot] ${name} failed`, e);
+  }
+};
+
+/**
+ * Interval that keeps firing when the tab is in the background. Uses a Web
+ * Worker timer (not subject to background-tab throttling); falls back to
+ * setInterval if workers / blob URLs are unavailable (CSP, tests, SSR).
+ */
+function createTicker(ms, fn) {
+  let stopped = false;
+  let worker = null;
+  let url = null;
+  let fallback = null;
+
+  const startFallback = () => {
+    if (fallback || stopped) return;
+    fallback = setInterval(fn, ms);
+    if (fallback && typeof fallback.unref === 'function') fallback.unref();
+  };
+
+  try {
+    if (
+      isBrowser &&
+      typeof Worker !== 'undefined' &&
+      typeof Blob !== 'undefined' &&
+      window.URL &&
+      typeof window.URL.createObjectURL === 'function'
+    ) {
+      const blob = new Blob([`setInterval(function(){postMessage(0)},${ms});`], {
+        type: 'application/javascript',
+      });
+      url = window.URL.createObjectURL(blob);
+      worker = new Worker(url);
+      worker.onmessage = () => {
+        if (!stopped) fn();
+      };
+      worker.onerror = () => {
+        try {
+          worker.terminate();
+        } catch {
+          // ignore
+        }
+        worker = null;
+        startFallback();
+      };
+    } else {
+      startFallback();
+    }
+  } catch {
+    worker = null;
+    startFallback();
+  }
+
+  return () => {
+    stopped = true;
+    if (worker) {
+      try {
+        worker.terminate();
+      } catch {
+        // ignore
+      }
+    }
+    if (url) {
+      try {
+        window.URL.revokeObjectURL(url);
+      } catch {
+        // ignore
+      }
+    }
+    if (fallback) clearInterval(fallback);
+  };
+}
+
 /* ---------------------------------- clock --------------------------------- */
 // offset = hostClock - myClock.  Host always 0.
 
@@ -102,6 +192,12 @@ export function getLiveRemainingMs(live) {
   if (live.status === 'paused') return Math.max(0, live.remainingMs || 0);
   if (live.status !== 'bidding') return 0;
   return Math.max(0, (live.timerEndsAt || 0) - getSyncedNow());
+}
+/** True during the short window after 0 when a late bid can still land. */
+export function isInLastCall(live) {
+  if (!live || live.status !== 'bidding') return false;
+  const over = getSyncedNow() - (live.timerEndsAt || 0);
+  return over >= 0 && over < BID_GRACE_MS;
 }
 
 /* ------------------------------ local storage ----------------------------- */
@@ -157,7 +253,9 @@ function getRuntime(roomId) {
       ch: null,
       ready: false,
       outbox: [],
-      timers: [],
+      stoppers: [],
+      cleanups: [],
+      wakeLock: null,
       seenIntents: new Set(),
       presenceSeen: new Map(),
       botKey: '',
@@ -173,13 +271,54 @@ function getRuntime(roomId) {
       pendingProfile: null,
       joinTries: 0,
       intentSeq: 0,
+      lastWarnAt: 0,
     };
     runtimes.set(roomId, rt);
   }
   return rt;
 }
 
+/** Identity is set explicitly by subscribe/create/join, or on first use only. */
+const ensureIdentity = (rt, userId) => {
+  if (!rt.userId && userId) rt.userId = userId;
+};
+
 const isHostRuntime = (rt, room) => !!room && !!rt.userId && room.hostId === rt.userId;
+
+function warnThrottled(rt, ...args) {
+  const now = Date.now();
+  if (now - rt.lastWarnAt < 3000) return;
+  rt.lastWarnAt = now;
+  console.error('[hotspot]', ...args);
+}
+
+/** Console helper: __hotspotDebug('ROOM_ID') */
+export function getHotspotDebug(roomId) {
+  const rt = runtimes.get(roomId);
+  const room = readLocalRoom(roomId);
+  const live = room?.live;
+  return {
+    userId: rt?.userId,
+    hostId: room?.hostId,
+    isHost: !!rt && isHostRuntime(rt, room),
+    refs: rt?.refs,
+    realtimeReady: rt?.ready,
+    hostRev: room?.hostRev,
+    status: room?.status,
+    live: live && {
+      status: live.status,
+      playerId: live.playerId,
+      currentBid: live.currentBid,
+      highBidderId: live.highBidderId,
+      overdueMs: live.timerEndsAt ? Date.now() - live.timerEndsAt : null,
+      advanceAt: live.advanceAt,
+    },
+    lastStateAgeMs: rt ? Date.now() - rt.lastStateAt : null,
+    clockOffsetMs: localHostTimeOffset,
+    dbDirty: rt?.dbDirty,
+  };
+}
+if (isBrowser) window.__hotspotDebug = getHotspotDebug;
 
 /* -------------------------------- transport ------------------------------- */
 
@@ -233,7 +372,7 @@ function openTransport(rt) {
     rt.bc = bc;
   }
 
-  if (isBrowser && activeSupabase && typeof activeSupabase.channel === 'function') {
+  if (activeSupabase && typeof activeSupabase.channel === 'function') {
     try {
       const ch = activeSupabase.channel(`hotspot_${rt.roomId}`, {
         config: { broadcast: { self: false, ack: false } },
@@ -292,29 +431,33 @@ function onTransportReady(rt) {
 
 function onMessage(rt, event, payload) {
   if (!payload) return;
-  switch (event) {
-    case 'state':
-      handleState(rt, payload.room);
-      break;
-    case 'hello': {
-      const room = readLocalRoom(rt.roomId);
-      if (isHostRuntime(rt, room)) send(rt, 'state', { room });
-      break;
-    }
-    case 'intent':
-      handleIntent(rt, payload);
-      break;
-    case 'ping': {
-      const room = readLocalRoom(rt.roomId);
-      if (isHostRuntime(rt, room)) {
-        send(rt, 'pong', { t0: payload.t0, th: Date.now(), to: payload.from });
+  try {
+    switch (event) {
+      case 'state':
+        handleState(rt, payload.room);
+        break;
+      case 'hello': {
+        const room = readLocalRoom(rt.roomId);
+        if (isHostRuntime(rt, room)) send(rt, 'state', { room });
+        break;
       }
-      break;
+      case 'intent':
+        handleIntent(rt, payload);
+        break;
+      case 'ping': {
+        const room = readLocalRoom(rt.roomId);
+        if (isHostRuntime(rt, room)) {
+          send(rt, 'pong', { t0: payload.t0, th: Date.now(), to: payload.from });
+        }
+        break;
+      }
+      case 'pong':
+        handlePong(rt, payload);
+        break;
+      default:
     }
-    case 'pong':
-      handlePong(rt, payload);
-      break;
-    default:
+  } catch (e) {
+    console.error(`[hotspot] handling "${event}" failed`, e);
   }
 }
 
@@ -378,13 +521,25 @@ const sysMsg = (room, text, type = 'log', metadata) =>
 /**
  * The ONLY way room state changes. Clone -> mutate -> bump hostRev -> store ->
  * broadcast -> schedule DB backup. Return false from `mutate` to cancel.
+ * Errors are logged (never swallowed silently).
  */
 function commitHost(roomId, mutate) {
   const rt = getRuntime(roomId);
   const cur = readLocalRoom(roomId);
-  if (!isHostRuntime(rt, cur)) return null;
-  const draft = clone(cur);
-  if (mutate(draft, rt) === false) return null;
+  if (!isHostRuntime(rt, cur)) {
+    if (cur && rt.userId) {
+      warnThrottled(rt, `commit ignored: not host (userId=${rt.userId}, hostId=${cur.hostId})`);
+    }
+    return null;
+  }
+  let draft;
+  try {
+    draft = clone(cur);
+    if (mutate(draft, rt) === false) return null;
+  } catch (e) {
+    console.error('[hotspot] state mutation failed', e);
+    return null;
+  }
   draft.hostRev = (cur.hostRev || 0) + 1;
   draft.hostNow = Date.now();
   storeRoom(rt, draft);
@@ -562,11 +717,11 @@ export async function fetchRoomFromServer(roomId) {
 
 /* ------------------------- host: intents from clients --------------------- */
 
-function sendIntent(rt, type, data) {
+function sendIntent(rt, type, data, actor = rt.userId) {
   rt.intentSeq = Math.max(rt.intentSeq + 1, Date.now());
   send(rt, 'intent', {
-    id: `${rt.userId}:${rt.intentSeq}`,
-    userId: rt.userId,
+    id: `${actor}:${rt.intentSeq}`,
+    userId: actor,
     type,
     data,
   });
@@ -609,6 +764,10 @@ function handleIntent(rt, p) {
     case 'leave':
       rt.presenceSeen.set(p.userId, 0);
       break;
+    case 'nudge':
+      // a client sees an overdue timer: re-run the engine right now
+      safe('nudge engine', () => engineTick(rt))();
+      break;
     default:
   }
 }
@@ -631,7 +790,7 @@ function hostUpsertPlayer(roomId, userId, details = {}) {
     if (team && team !== prev?.team) {
       const holder = room.players.find((p) => p.id !== userId && p.team === team);
       if (holder) {
-        if (holder.isBot && room.status === 'waiting') {
+        if (isBotPlayer(holder) && room.status === 'waiting') {
           room.players = room.players.filter((p) => p.id !== holder.id);
           delete room.teams[`${roomId}_${holder.id}`];
         } else {
@@ -685,7 +844,19 @@ function hostApplyBid(roomId, req) {
     const live = d.live;
     if (!live || live.status !== 'bidding') return fail('Bidding is not open');
     if (req.playerId && req.playerId !== live.playerId) return fail('Player already changed');
-    if (Date.now() >= (live.timerEndsAt || 0)) return fail('Timer has expired');
+
+    // Expiry with grace: a bid SENT before the timer ended (by the sender's
+    // synced clock) still counts if it lands within BID_GRACE_MS.
+    const now = Date.now();
+    const endsAt = live.timerEndsAt || 0;
+    if (now >= endsAt) {
+      const inGrace =
+        now < endsAt + BID_GRACE_MS &&
+        typeof req.sentAt === 'number' &&
+        req.sentAt <= endsAt + SENT_AT_TOLERANCE_MS;
+      if (!inGrace) return fail('Timer has expired');
+    }
+
     if (live.highBidderId === req.userId) return fail('You are already the highest bidder');
 
     const team = d.teams?.[`${roomId}_${req.userId}`];
@@ -709,7 +880,7 @@ function hostApplyBid(roomId, req) {
     }
 
     const pl = (d.players || []).find((p) => p.id === req.userId);
-    const isBot = !!pl?.isBot || String(req.userId).startsWith('bot_');
+    const isBot = isBotPlayer(pl) || String(req.userId).startsWith('bot_');
     const timerSec = d.settings?.bidTimer || 10;
 
     live.currentBid = nextBid;
@@ -747,7 +918,8 @@ function hostEndPlayer(roomId, force = false) {
   return commitHost(roomId, (room) => {
     const live = room.live;
     if (!live || live.status !== 'bidding') return false;
-    if (!force && Date.now() < (live.timerEndsAt || 0)) return false;
+    // only end after the late-bid grace window (unless admin forces it)
+    if (!force && Date.now() < (live.timerEndsAt || 0) + BID_GRACE_MS) return false;
 
     const isSold = Boolean(live.highBidderId);
     live.status = isSold ? 'sold' : 'unsold';
@@ -831,7 +1003,7 @@ function sweepPresence(rt, room, now) {
   let changed = false;
   const presences = room.presences || {};
   for (const p of room.players || []) {
-    if (p.id === room.hostId || p.isBot || p.id.startsWith('bot_')) continue;
+    if (p.id === room.hostId || isBotPlayer(p)) continue;
     if (!rt.presenceSeen.has(p.id)) rt.presenceSeen.set(p.id, now);
     const online = now - rt.presenceSeen.get(p.id) < OFFLINE_AFTER_MS;
     if ((presences[p.id]?.online !== false) !== online) changed = true;
@@ -840,7 +1012,7 @@ function sweepPresence(rt, room, now) {
   commitHost(rt.roomId, (d) => {
     d.presences = { ...(d.presences || {}) };
     d.players = (d.players || []).map((p) => {
-      if (p.id === d.hostId || p.isBot || p.id.startsWith('bot_')) return p;
+      if (p.id === d.hostId || isBotPlayer(p)) return p;
       const seen = rt.presenceSeen.get(p.id) ?? now;
       const online = now - seen < OFFLINE_AFTER_MS;
       d.presences[p.id] = { online, lastSeen: seen };
@@ -857,8 +1029,7 @@ function scheduleBots(rt, room) {
   if (rt.botTimer) clearTimeout(rt.botTimer);
   rt.botTimer = null;
 
-  const hasBots = (room.players || []).some((p) => p.isBot || p.id.startsWith('bot_'));
-  if (!hasBots) return;
+  if (!(room.players || []).some(isBotPlayer)) return;
 
   const timerMs = (room.settings?.bidTimer || 10) * 1000;
   const remaining = Math.max(0, (live.timerEndsAt || 0) - Date.now());
@@ -868,7 +1039,7 @@ function scheduleBots(rt, room) {
       : timerMs * (0.25 + Math.random() * 0.3);
   delay = Math.max(300, Math.min(delay, Math.max(300, remaining - 300)));
 
-  rt.botTimer = setTimeout(() => runBots(rt, key), delay);
+  rt.botTimer = setTimeout(safe('bots', () => runBots(rt, key)), delay);
   if (rt.botTimer && typeof rt.botTimer.unref === 'function') rt.botTimer.unref();
 }
 
@@ -883,9 +1054,7 @@ function runBots(rt, key) {
   if (!player) return;
   const initialBudget = toFiniteNumber(room.settings?.budget, 120.0);
   const bots = shuffleArray(
-    (room.players || []).filter(
-      (p) => (p.isBot || p.id.startsWith('bot_')) && p.id !== live.highBidderId,
-    ),
+    (room.players || []).filter((p) => isBotPlayer(p) && p.id !== live.highBidderId),
   );
 
   for (const bot of bots) {
@@ -914,23 +1083,52 @@ function runBots(rt, key) {
 
 function engineTick(rt) {
   const room = readLocalRoom(rt.roomId);
-  if (!isHostRuntime(rt, room)) return;
-  const now = Date.now();
-  sweepPresence(rt, room, now);
-
-  const live = room.live;
-  if (room.status !== 'active' || !live) return;
-
-  if (live.status === 'bidding') {
-    if (now >= (live.timerEndsAt || 0)) {
-      hostEndPlayer(rt.roomId);
-      return;
-    }
-    scheduleBots(rt, room);
-  } else if ((live.status === 'sold' || live.status === 'unsold') && now >= (live.advanceAt || 0)) {
-    hostAdvance(rt.roomId);
+  if (!isHostRuntime(rt, room)) {
+    if (room && rt.userId) warnThrottled(rt, `engine idle: not host (userId=${rt.userId}, hostId=${room.hostId})`);
+    return;
   }
-  // 'paused' / 'completed': nothing runs, timer is frozen
+  const now = Date.now();
+  const live = room.live;
+
+  // 1) TIMERS FIRST - nothing else may be able to block these.
+  if (room.status === 'active' && live) {
+    if (live.status === 'bidding') {
+      if (now >= (live.timerEndsAt || 0) + BID_GRACE_MS) {
+        const ended = hostEndPlayer(rt.roomId);
+        if (!ended && now > (live.timerEndsAt || 0) + BID_GRACE_MS + 2000) {
+          // watchdog: overdue by > 2s and the normal path failed -> force once more
+          warnThrottled(rt, 'timer overdue, forcing end', getHotspotDebug(rt.roomId));
+          hostEndPlayer(rt.roomId, true);
+        }
+      } else {
+        scheduleBots(rt, room);
+      }
+    } else if ((live.status === 'sold' || live.status === 'unsold') && now >= (live.advanceAt || 0)) {
+      hostAdvance(rt.roomId);
+    }
+    // 'paused' / 'completed': nothing runs, timer is frozen
+  }
+
+  // 2) housekeeping, isolated so it can never wedge the timers
+  try {
+    sweepPresence(rt, readLocalRoom(rt.roomId) || room, now);
+  } catch (e) {
+    console.error('[hotspot] presence sweep failed', e);
+  }
+}
+
+function ensureWakeLock(rt) {
+  if (!isBrowser || rt.wakeLock || typeof navigator === 'undefined' || !navigator.wakeLock) return;
+  if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+  navigator.wakeLock
+    .request('screen')
+    .then((lock) => {
+      rt.wakeLock = lock;
+      lock.addEventListener('release', () => {
+        rt.wakeLock = null;
+      });
+    })
+    .catch(() => {});
 }
 
 function slowTick(rt) {
@@ -939,6 +1137,7 @@ function slowTick(rt) {
 
   if (isHostRuntime(rt, room)) {
     setLocalHostTimeOffset(0);
+    ensureWakeLock(rt); // keep the host screen awake so it keeps running
     send(rt, 'state', { room }); // heartbeat = repair for any lost packet
     return;
   }
@@ -955,10 +1154,20 @@ function slowTick(rt) {
     else if (rt.joinTries++ < 60) sendIntent(rt, 'join', pp);
   }
 
+  // timer overdue on my screen but state hasn't moved: poke the host
+  const live = room?.live;
+  if (
+    live?.status === 'bidding' &&
+    getSyncedNow() > (live.timerEndsAt || 0) + BID_GRACE_MS + CLIENT_NUDGE_AFTER_MS
+  ) {
+    sendIntent(rt, 'nudge', {});
+    send(rt, 'hello', { from: rt.userId });
+  }
+
   if (rt.pingCount < 6 || rt.slow % 5 === 0) sendPing(rt);
 
   // degraded mode: realtime silent -> poll DB backup
-  if (stale && rt.slow % 3 === 0) {
+  if ((stale || (live?.status === 'bidding' && getSyncedNow() > (live.timerEndsAt || 0) + 3000)) && rt.slow % 3 === 0) {
     fetchRoomFromServer(rt.roomId).then((s) => s && acceptState(rt, s));
   }
 }
@@ -967,23 +1176,54 @@ function retain(rt) {
   rt.refs += 1;
   if (rt.refs > 1) return;
   openTransport(rt);
-  const t1 = setInterval(() => engineTick(rt), ENGINE_TICK_MS);
-  const t2 = setInterval(() => slowTick(rt), SLOW_TICK_MS);
-  if (t1.unref) t1.unref();
-  if (t2.unref) t2.unref();
-  rt.timers = [t1, t2];
+
+  rt.stoppers = [
+    createTicker(ENGINE_TICK_MS, safe('engine tick', () => engineTick(rt))),
+    createTicker(SLOW_TICK_MS, safe('slow tick', () => slowTick(rt))),
+  ];
+
+  if (isBrowser && typeof document !== 'undefined') {
+    // catch up instantly when the tab/app comes back or the network returns
+    const wake = safe('wake handler', () => {
+      if (document.visibilityState === 'hidden') return;
+      engineTick(rt);
+      slowTick(rt);
+      ensureWakeLock(rt);
+    });
+    document.addEventListener('visibilitychange', wake);
+    window.addEventListener('online', wake);
+    window.addEventListener('focus', wake);
+    rt.cleanups = [
+      () => document.removeEventListener('visibilitychange', wake),
+      () => window.removeEventListener('online', wake),
+      () => window.removeEventListener('focus', wake),
+    ];
+  }
+
   const room = readLocalRoom(rt.roomId);
   if (!isHostRuntime(rt, room)) {
     send(rt, 'hello', { from: rt.userId });
     sendPing(rt);
+  } else {
+    ensureWakeLock(rt);
   }
 }
 
 function release(rt) {
   rt.refs = Math.max(0, rt.refs - 1);
   if (rt.refs > 0) return;
-  rt.timers.forEach(clearInterval);
-  rt.timers = [];
+  rt.stoppers.forEach((stop) => stop());
+  rt.stoppers = [];
+  rt.cleanups.forEach((fn) => fn());
+  rt.cleanups = [];
+  if (rt.wakeLock) {
+    try {
+      Promise.resolve(rt.wakeLock.release()).catch(() => {});
+    } catch {
+      // ignore
+    }
+    rt.wakeLock = null;
+  }
   if (rt.botTimer) clearTimeout(rt.botTimer);
   rt.botTimer = null;
   rt.botKey = '';
@@ -1156,17 +1396,17 @@ export async function joinLocalRoomDb(roomId, userId, playerDetails = {}) {
 
 export function updateLocalPlayerTeam(roomId, userId, newTeamId) {
   const rt = getRuntime(roomId);
-  rt.userId = userId;
+  ensureIdentity(rt, userId);
   const room = readLocalRoom(roomId);
   if (!room) return;
   const me = (room.players || []).find((p) => p.id === userId);
   const details = { name: me?.name, team: newTeamId };
-  if (isHostRuntime(rt, room)) {
+  if (isHostRuntime(rt, room) && room.hostId === userId) {
     hostUpsertPlayer(roomId, userId, details);
   } else {
     rt.pendingProfile = details;
     rt.joinTries = 0;
-    sendIntent(rt, 'team', details);
+    sendIntent(rt, 'team', details, userId);
   }
 }
 
@@ -1236,7 +1476,7 @@ export function startLocalAuction(roomId) {
 /** Throws on obvious local errors (same messages as before). */
 export function placeLocalBid(roomId, userId, teamId, userName, teamName) {
   const rt = getRuntime(roomId);
-  rt.userId = userId;
+  ensureIdentity(rt, userId);
   const room = readLocalRoom(roomId);
   if (!room || !room.live) throw new Error('Auction not found');
   if (room.live.status !== 'bidding') throw new Error('Bidding is not open');
@@ -1250,14 +1490,19 @@ export function placeLocalBid(roomId, userId, teamId, userName, teamName) {
     throw new Error('Insufficient purse budget');
   }
 
-  const req = { playerId: room.live.playerId, expectedBid: room.live.currentBid || 0 };
-  if (isHostRuntime(rt, room)) {
+  // sentAt = moment of the click on the host's clock (used for the grace window)
+  const req = {
+    playerId: room.live.playerId,
+    expectedBid: room.live.currentBid || 0,
+    sentAt: getSyncedNow(),
+  };
+  if (isHostRuntime(rt, room) && room.hostId === userId) {
     const res = hostApplyBid(roomId, { userId, ...req });
     if (!res.ok) throw new Error(res.reason);
     return res.room;
   }
   // client: host validates with ITS clock and applies; state comes back via broadcast
-  sendIntent(rt, 'bid', req);
+  sendIntent(rt, 'bid', req, userId);
   return room;
 }
 
@@ -1273,10 +1518,14 @@ export function placeLocalBotBid(roomId, botUserId, _teamId, _name, _timerSec, m
   });
 }
 
-/** Host-only. `force` = admin "end this player now". */
-export function endLocalPlayerAuction(roomId, _triggerUserId, force = true) {
+/**
+ * Host-only. The engine ends players by itself - the UI should NOT call this
+ * when the countdown hits 0. `force=true` is for an admin "skip / end now"
+ * button; the default respects the late-bid grace window.
+ */
+export function endLocalPlayerAuction(roomId, triggerUserId, force = false) {
   const room = readLocalRoom(roomId);
-  if (_triggerUserId && room && room.hostId !== _triggerUserId) return;
+  if (triggerUserId && room && room.hostId !== triggerUserId) return;
   hostEndPlayer(roomId, force);
 }
 
@@ -1315,7 +1564,7 @@ export function endLocalAuction(roomId) {
 
 export function sendLocalMessage(roomId, userId, userName, text, type = 'text') {
   const rt = getRuntime(roomId);
-  rt.userId = userId;
+  ensureIdentity(rt, userId);
   const room = readLocalRoom(roomId);
   if (!room || !text) return;
   if (isHostRuntime(rt, room)) {
@@ -1323,7 +1572,7 @@ export function sendLocalMessage(roomId, userId, userName, text, type = 'text') 
       pushMsg(d, { userId, userName: userName || 'Manager', text, type }),
     );
   } else {
-    sendIntent(rt, 'chat', { text, type });
+    sendIntent(rt, 'chat', { text, type }, userId);
   }
 }
 
