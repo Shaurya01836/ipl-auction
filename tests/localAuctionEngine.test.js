@@ -264,4 +264,25 @@ test('endLocalPlayerAuction ignores calls from non-host users', () => {
   assert.equal(room.live.status, 'bidding'); // Still bidding, not ended by guest!
 });
 
+test('createLocalRoom without a preselected team initializes user in room.teams for history sync', () => {
+  const roomId = 'HOTSPOT-NOTEAM-TEST';
+  createLocalRoom(roomId, 'host_noteam', { name: 'Host Without Team' }, 'mega');
+
+  const room = readLocalRoom(roomId);
+  assert.ok(room.teams[`${roomId}_host_noteam`]);
+  assert.equal(room.teams[`${roomId}_host_noteam`].userId, 'host_noteam');
+  assert.equal(room.teams[`${roomId}_host_noteam`].teamName, 'Unassigned');
+});
+
+test('endLocalAuction marks status as completed and resolves', async () => {
+  const roomId = 'HOTSPOT-ASYNC-END';
+  createLocalRoom(roomId, 'host_async', { name: 'Host', team: 'CSK' }, 'mega');
+  startLocalAuction(roomId);
+
+  const completedRoom = await endLocalAuction(roomId);
+  assert.equal(completedRoom.status, 'completed');
+  assert.equal(completedRoom.live.status, 'completed');
+});
+
+
 

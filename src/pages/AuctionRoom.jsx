@@ -40,9 +40,7 @@ import {
    Trophy,
    Clock,
    LogOut,
-   Eye,
-   Radio,
-   SkipForward
+   Eye
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -391,7 +389,25 @@ const AuctionRoom = () => {
       const status = displayAuctionState.status;
       const highBidderTeamId = displayAuctionState.highBidderTeamId;
 
+      if (status === 'paused') {
+         if (lastSpokenStatusRef.current !== 'paused') {
+            lastSpokenStatusRef.current = 'paused';
+            if ('speechSynthesis' in window) {
+               window.speechSynthesis.cancel();
+            }
+            speak("Auction paused by Admin.");
+         }
+         return;
+      }
+
       if (status === 'bidding') {
+         // Resuming from pause
+         if (lastSpokenStatusRef.current === 'paused') {
+            lastSpokenStatusRef.current = 'bidding';
+            speak("Auction resumed. Bidding is open.");
+            return;
+         }
+
          // 1. A new player is up for bidding
          if (lastSpokenPlayerIdRef.current !== playerId) {
             lastSpokenPlayerIdRef.current = playerId;
@@ -534,6 +550,7 @@ const AuctionRoom = () => {
 
    const audioCtxRef = useRef(null);
    const playBeep = (freq = 440, duration = 0.1) => {
+      if (displayAuctionState?.status === 'paused') return;
       try {
          if (!audioCtxRef.current) {
             audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
@@ -1001,13 +1018,6 @@ const AuctionRoom = () => {
                <div className="flex items-center gap-1">
                   <span className="text-gray-500 text-[8px] sm:text-[10px] compact:text-[9px] font-black uppercase tracking-widest hidden xs:inline">ID:</span>
                   <span className="text-white font-mono font-bold tracking-widest text-[10px] sm:text-sm compact:text-xs">{id}</span>
-                  {(server === 'local' || isHotspotRoomCode(id)) && (
-                     <div className="flex items-center gap-1 px-1.5 py-0.5 sm:px-2.5 sm:py-0.5 bg-[#ff5500]/15 border border-[#ff5500]/30 rounded-full text-[#ff5500] font-black text-[7px] sm:text-[8px] uppercase tracking-widest ml-1 shrink-0">
-                        <Radio size={9} className="animate-pulse" />
-                        <span className="hidden sm:inline">OFFLINE HOTSPOT</span>
-                        <span className="sm:hidden">HOTSPOT</span>
-                     </div>
-                  )}
                   {spectateMode && (
                      <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 font-black text-[8px] sm:text-[9px] compact:text-[8px] uppercase tracking-widest ml-1 shrink-0">
                         <Eye size={10} />
@@ -1033,7 +1043,10 @@ const AuctionRoom = () => {
                   <div className="flex items-center gap-1 sm:gap-2">
                      {displayAuctionState?.status === 'paused' ? (
                         <button
-                           onClick={() => resumeAuction(id)}
+                           onClick={() => {
+                              if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                              resumeAuction(id);
+                           }}
                            className="p-1 sm:px-2.5 sm:py-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-300 text-[10px] compact:text-[9px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1"
                            title="Resume Auction"
                         >
@@ -1041,20 +1054,14 @@ const AuctionRoom = () => {
                         </button>
                      ) : (
                         <button
-                           onClick={() => pauseAuction(id)}
+                           onClick={() => {
+                              if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                              pauseAuction(id);
+                           }}
                            className="p-1 sm:px-2.5 sm:py-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-300 text-[10px] compact:text-[9px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1"
                            title="Pause Auction"
                         >
                            <Pause size={13} /> <span className="hidden md:inline">Pause</span>
-                        </button>
-                     )}
-                     {displayAuctionState?.status === 'bidding' && (
-                        <button
-                           onClick={() => endPlayerAuction(id, true)}
-                           className="p-1 sm:px-2.5 sm:py-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-300 text-[10px] compact:text-[9px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1"
-                           title="Skip / End Current Player Now"
-                        >
-                           <SkipForward size={13} /> <span className="hidden md:inline">Skip Player</span>
                         </button>
                      )}
                      <button

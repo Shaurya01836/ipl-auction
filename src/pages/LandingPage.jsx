@@ -78,6 +78,7 @@ const LandingPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [historyFilter, setHistoryFilter] = useState("all");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -367,10 +368,10 @@ const LandingPage = () => {
     [publicRooms, selectedServer],
   );
 
-  const filteredHistory = useMemo(
-    () => historyData.filter((session) => session.server === selectedServer),
-    [historyData, selectedServer],
-  );
+  const filteredHistory = useMemo(() => {
+    if (historyFilter === "all") return historyData;
+    return historyData.filter((session) => session.server === historyFilter);
+  }, [historyData, historyFilter]);
 
   // Confirm + delete an individual session from Supabase history & public list
   const handleDeleteHistory = async () => {
@@ -1439,6 +1440,60 @@ const LandingPage = () => {
                     Refresh
                   </button>
                 </div>
+                {historyData.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setHistoryFilter("all")}
+                      className={`px-2 py-1 rounded-md text-[8px] sm:text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                        historyFilter === "all"
+                          ? "bg-blue-600 text-white shadow-sm"
+                          : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+                      }`}
+                    >
+                      All ({historyData.length})
+                    </button>
+                    {historyData.some((s) => s.server === "local") && (
+                      <button
+                        type="button"
+                        onClick={() => setHistoryFilter("local")}
+                        className={`px-2 py-1 rounded-md text-[8px] sm:text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 ${
+                          historyFilter === "local"
+                            ? "bg-purple-600 text-white shadow-sm"
+                            : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+                        }`}
+                      >
+                        <Wifi size={9} /> Offline ({historyData.filter((s) => s.server === "local").length})
+                      </button>
+                    )}
+                    {historyData.some((s) => s.server === "primary") && (
+                      <button
+                        type="button"
+                        onClick={() => setHistoryFilter("primary")}
+                        className={`px-2 py-1 rounded-md text-[8px] sm:text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                          historyFilter === "primary"
+                            ? "bg-blue-600 text-white shadow-sm"
+                            : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+                        }`}
+                      >
+                        Server 1 ({historyData.filter((s) => s.server === "primary").length})
+                      </button>
+                    )}
+                    {historyData.some((s) => s.server === "secondary") && (
+                      <button
+                        type="button"
+                        onClick={() => setHistoryFilter("secondary")}
+                        className={`px-2 py-1 rounded-md text-[8px] sm:text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                          historyFilter === "secondary"
+                            ? "bg-blue-600 text-white shadow-sm"
+                            : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+                        }`}
+                      >
+                        Server 2 ({historyData.filter((s) => s.server === "secondary").length})
+                      </button>
+                    )}
+                  </div>
+                )}
                 {historyError && filteredHistory.length > 0 && (
                   <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/20">
                     <span className="text-[9px] font-bold text-red-400">
@@ -1494,11 +1549,22 @@ const LandingPage = () => {
                       />
                     </div>
                     <h2 className="text-xs sm:text-sm font-black text-gray-400 uppercase tracking-widest mb-1">
-                      No Auctions Yet
+                      {historyData.length > 0 ? "No Matching Auctions" : "No Auctions Yet"}
                     </h2>
-                    <p className="text-[9px] sm:text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                      Create or join a room on this server to start bidding!
+                    <p className="text-[9px] sm:text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-3">
+                      {historyData.length > 0
+                        ? "No auctions found for this filter tab."
+                        : "Create or join a room to start bidding!"}
                     </p>
+                    {historyData.length > 0 && historyFilter !== "all" && (
+                      <button
+                        type="button"
+                        onClick={() => setHistoryFilter("all")}
+                        className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-black text-[9px] uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                      >
+                        Show All Auctions ({historyData.length})
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <>
@@ -1554,6 +1620,15 @@ const LandingPage = () => {
                                   <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 mt-0.5">
                                     <span className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wider shrink-0">
                                       Room: {session.roomId}
+                                    </span>
+                                    <span
+                                      className={`text-[7px] sm:text-[8px] font-black uppercase px-1.5 py-0.5 rounded shrink-0 flex items-center gap-0.5 ${
+                                        session.server === "local"
+                                          ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
+                                          : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                                      }`}
+                                    >
+                                      {session.server === "local" ? "Offline" : session.server === "secondary" ? "Server 2" : "Server 1"}
                                     </span>
                                     <span className="text-[7px] sm:text-[8px] font-black uppercase px-1.5 py-0.5 rounded shrink-0 bg-gray-500/10 text-gray-400">
                                       {session.mode}

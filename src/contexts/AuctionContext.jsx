@@ -1486,7 +1486,7 @@ export const AuctionProvider = ({ children }) => {
   const endAuction = useCallback(async (roomId) => {
     if (!user || !currentAuction || currentAuction.hostId !== user.uid) return;
     if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
-      return endLocalAuctionEngine(roomId);
+      return await endLocalAuctionEngine(roomId);
     }
 
     await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { status: 'completed' });
