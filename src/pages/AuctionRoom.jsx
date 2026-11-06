@@ -743,8 +743,9 @@ const AuctionRoom = () => {
          setTimerTick((tick) => tick + 1);
          if (diff === 0) {
             // Primary trigger: Admin/Host triggers end immediately when timer expires
-            // Fallback trigger: Non-host client triggers end if timer has expired by >1.5s (host tab closed/lagged)
-            const shouldTrigger = (isAdmin || rawMs < -1500) && displayAuctionState.status === 'bidding' && !endTriggeredRef.current;
+            // Fallback trigger: Non-host client triggers end if timer has expired by >1.5s (only in cloud RTDB rooms)
+            const isHotspot = isHotspotRoomCode(id) || currentAuction?.server === 'local';
+            const shouldTrigger = (isAdmin || (!isHotspot && rawMs < -1500)) && displayAuctionState.status === 'bidding' && !endTriggeredRef.current;
             if (shouldTrigger) {
                endTriggeredRef.current = true;
                clearInterval(interval);
