@@ -512,9 +512,9 @@ export const AuctionProvider = ({ children }) => {
 
   }, [getSyncedTime]);
 
-  const endPlayerAuction = useCallback(async (roomId) => {
+  const endPlayerAuction = useCallback(async (roomId, force = false) => {
     if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
-      return endLocalPlayerAuctionEngine(roomId, user?.uid);
+      return endLocalPlayerAuctionEngine(roomId, user?.uid, force);
     }
 
     // Prevent duplicate calls from the timer interval
