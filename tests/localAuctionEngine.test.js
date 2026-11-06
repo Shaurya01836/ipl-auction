@@ -212,3 +212,55 @@ test('subscribeLocalRoom syncs auction start state to subscriber', () => {
   unsubscribe();
 });
 
+test('mergeLocalRooms preserves higher bids and prevents stale regression', () => {
+  const current = {
+    id: 'HOTSPOT-BID-TEST',
+    status: 'active',
+    live: { playerId: 10, currentBid: 4.5, highBidderId: 'host_1', status: 'bidding', timerEndsAt: 5000 },
+    playerOrder: [10, 11, 12],
+  };
+
+  const staleIncoming = {
+    id: 'HOTSPOT-BID-TEST',
+    status: 'active',
+    live: { playerId: 10, currentBid: 4.25, highBidderId: 'guest_1', status: 'bidding', timerEndsAt: 4000 },
+    playerOrder: [10, 11, 12],
+  };
+
+  const merged = mergeLocalRooms(current, staleIncoming);
+  assert.equal(merged.live.currentBid, 4.5);
+  assert.equal(merged.live.highBidderId, 'host_1');
+});
+
+test('mergeLocalRooms prevents sold status from regressing back to bidding', () => {
+  const current = {
+    id: 'HOTSPOT-SOLD-TEST',
+    status: 'active',
+    live: { playerId: 10, currentBid: 5.0, highBidderId: 'host_1', status: 'sold', timerEndsAt: 5000 },
+    playerOrder: [10, 11, 12],
+  };
+
+  const staleIncoming = {
+    id: 'HOTSPOT-SOLD-TEST',
+    status: 'active',
+    live: { playerId: 10, currentBid: 5.0, highBidderId: 'host_1', status: 'bidding', timerEndsAt: 4000 },
+    playerOrder: [10, 11, 12],
+  };
+
+  const merged = mergeLocalRooms(current, staleIncoming);
+  assert.equal(merged.live.status, 'sold');
+});
+
+test('endLocalPlayerAuction ignores calls from non-host users', () => {
+  const roomId = 'HOTSPOT-AUTH-TEST';
+  createLocalRoom(roomId, 'host_user', { name: 'Host', team: 'MI' }, 'mega');
+  startLocalAuction(roomId);
+
+  // Non-host attempts to end player auction
+  endLocalPlayerAuction(roomId, 'guest_user');
+
+  const room = readLocalRoom(roomId);
+  assert.equal(room.live.status, 'bidding'); // Still bidding, not ended by guest!
+});
+
+

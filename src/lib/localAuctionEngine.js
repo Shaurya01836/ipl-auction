@@ -27,6 +27,16 @@ export function setSupabaseClient(client) {
   activeSupabase = client || supabase;
 }
 
+let localHostTimeOffset = 0;
+
+export function getLocalHostTimeOffset() {
+  return localHostTimeOffset;
+}
+
+export function setLocalHostTimeOffset(offset) {
+  localHostTimeOffset = offset;
+}
+
 export function getLocalRoomKey(roomId) {
   return `${LOCAL_STORAGE_PREFIX}${roomId}`;
 }
@@ -185,6 +195,50 @@ export async function fetchRoomFromServer(roomId) {
 }
 
 /**
+ * Safely merge live auction bidding state between two peers.
+ * Prevents regressions in status (e.g. sold -> bidding) and bid amounts.
+ */
+export function mergeLiveState(cur, inc, playerOrder = []) {
+  if (!cur) return inc;
+  if (!inc) return cur;
+
+  // 1. Different players: determine which is ahead in player order
+  if (cur.playerId !== inc.playerId) {
+    if (!cur.playerId) return inc;
+    if (!inc.playerId) return cur;
+
+    const order = playerOrder && playerOrder.length > 0 ? playerOrder : [];
+    const curIdx = order.findIndex((idx) => IPL_PLAYERS[idx]?.id === cur.playerId);
+    const incIdx = order.findIndex((idx) => IPL_PLAYERS[idx]?.id === inc.playerId);
+
+    if (curIdx !== -1 && incIdx !== -1) {
+      return incIdx >= curIdx ? inc : cur;
+    }
+    return (inc.timerEndsAt || 0) >= (cur.timerEndsAt || 0) ? inc : cur;
+  }
+
+  // 2. Same player: Status rank: 'sold' / 'unsold' > 'bidding' / 'paused'
+  const statusRank = { bidding: 1, paused: 1, unsold: 2, sold: 2 };
+  const curRank = statusRank[cur.status] || 0;
+  const incRank = statusRank[inc.status] || 0;
+
+  if (incRank > curRank) return inc;
+  if (curRank > incRank) return cur;
+
+  // 3. Both in same status (e.g. bidding): Higher bid ALWAYS wins!
+  const curBid = cur.currentBid || 0;
+  const incBid = inc.currentBid || 0;
+
+  if (incBid > curBid) return inc;
+  if (curBid > incBid) return cur;
+
+  // 4. Equal bids: Take the one with the later timer / later timestamp
+  const curTimer = cur.timerEndsAt || 0;
+  const incTimer = inc.timerEndsAt || 0;
+  return incTimer >= curTimer ? inc : cur;
+}
+
+/**
  * Safely merge two snapshots of local room state.
  * Prevents backwards status transitions (e.g. active -> waiting).
  */
@@ -198,14 +252,15 @@ export function mergeLocalRooms(current, incoming) {
 
   // Never allow a stale 'waiting' state to overwrite an 'active' or 'completed' state
   let finalStatus = incoming.status;
-  let finalLive = incoming.live;
-  let finalPlayerOrder = incoming.playerOrder;
-
   if (currentWeight > incomingWeight) {
     finalStatus = current.status;
-    finalLive = current.live;
-    finalPlayerOrder = current.playerOrder || incoming.playerOrder;
   }
+
+  const finalPlayerOrder = current.playerOrder && current.playerOrder.length > 0
+    ? current.playerOrder
+    : incoming.playerOrder;
+
+  const finalLive = mergeLiveState(current.live, incoming.live, finalPlayerOrder);
 
   // Merge players by ID, giving precedence to incoming properties while retaining existing
   const playerMap = new Map();
@@ -695,7 +750,7 @@ export function placeLocalBid(roomId, userId, teamId, userName, teamName) {
   if (room.live.status !== 'bidding') throw new Error('Bidding is not open');
   if (room.live.highBidderId === userId) throw new Error('You are already the highest bidder');
 
-  const now = Date.now();
+  const now = Date.now() + getLocalHostTimeOffset();
   if (room.live.timerEndsAt && now >= room.live.timerEndsAt) {
     throw new Error('Timer has expired');
   }
@@ -723,6 +778,7 @@ export function placeLocalBid(roomId, userId, teamId, userName, teamName) {
   room.live.highBidderName = userName || 'Manager';
   room.live.highBidderTeamId = teamId || '';
   room.live.timerEndsAt = now + timerSec * 1000;
+  room.live.hostTimestamp = now;
 
   if (!room.messages) room.messages = [];
   room.messages.push({
@@ -754,7 +810,7 @@ export function placeLocalBotBid(
   if (!room || !room.live || room.live.status !== 'bidding') return;
   if (room.live.highBidderId === botUserId) return;
 
-  const now = Date.now();
+  const now = Date.now() + getLocalHostTimeOffset();
   if (room.live.timerEndsAt && now >= room.live.timerEndsAt) return;
 
   const player = IPL_PLAYERS.find((p) => p.id === room.live.playerId);
@@ -774,19 +830,27 @@ export function placeLocalBotBid(
   room.live.highBidderName = botName;
   room.live.highBidderTeamId = botTeamId;
   room.live.timerEndsAt = now + timerSeconds * 1000;
+  room.live.hostTimestamp = now;
 
   writeLocalRoom(roomId, room);
 }
 
 /**
  * Conclude current player auction (sold / unsold) and advance to next.
+ * Authoritative: Only the host drives player conclusion & transitions.
  */
-export function endLocalPlayerAuction(roomId) {
+export function endLocalPlayerAuction(roomId, triggerUserId) {
   const room = readLocalRoom(roomId);
   if (!room || !room.live || room.live.status !== 'bidding') return;
 
-  const now = Date.now();
-  if (room.live.timerEndsAt && now < room.live.timerEndsAt) return;
+  // In multi-device hotspot rooms, only the host can conclude a player auction
+  if (room.hostId && triggerUserId && room.hostId !== triggerUserId) {
+    return;
+  }
+
+  // Prevent duplicate execution for the same player
+  if (room.live.endingPlayerId === room.live.playerId) return;
+  room.live.endingPlayerId = room.live.playerId;
 
   const isSold = Boolean(room.live.highBidderId);
   room.live.status = isSold ? 'sold' : 'unsold';
@@ -857,27 +921,39 @@ export function endLocalPlayerAuction(roomId) {
 
   writeLocalRoom(roomId, room);
 
-  // Advance to next player after display delay
+  // Advance to next player after display delay - ONLY HOST advances player order
   const waitMs = isSold ? 4000 : 2000;
+  const targetPlayerId = room.live.playerId;
+
   setTimeout(() => {
     const current = readLocalRoom(roomId);
     if (!current || current.status !== 'active') return;
 
-    const currentPlayerId = current.live.playerId;
+    // Guard: Only advance if still on the player that just ended and not already advanced
+    if (current.live?.playerId !== targetPlayerId) return;
+    if (current.live?.status === 'bidding') return; // Already advanced!
+
+    // Non-host never transitions player order
+    if (current.hostId && triggerUserId && current.hostId !== triggerUserId) {
+      return;
+    }
+
     const order = current.playerOrder || Array.from({ length: IPL_PLAYERS.length }, (_, i) => i);
-    const currentIndex = order.findIndex((idx) => IPL_PLAYERS[idx] && IPL_PLAYERS[idx].id === currentPlayerId);
+    const currentIndex = order.findIndex((idx) => IPL_PLAYERS[idx] && IPL_PLAYERS[idx].id === targetPlayerId);
     const nextIndex = currentIndex !== -1 ? order[currentIndex + 1] : order[0];
 
     if (nextIndex !== undefined && IPL_PLAYERS[nextIndex]) {
       const nextPlayer = IPL_PLAYERS[nextIndex];
       const timerSec = current.settings?.bidTimer || 10;
+      const now = Date.now();
       current.live = {
         playerId: nextPlayer.id,
         currentBid: 0,
         highBidderId: '',
         highBidderName: 'No Bids',
         highBidderTeamId: '',
-        timerEndsAt: Date.now() + timerSec * 1000,
+        timerEndsAt: now + timerSec * 1000,
+        hostTimestamp: now,
         status: 'bidding',
       };
     } else {
@@ -1108,6 +1184,19 @@ export function subscribeLocalRoom(
     const messagesArr = (room.messages || []).slice(-20);
     setMessages(messagesArr);
 
+    // Compute and synchronize host clock offset
+    if (room.hostId && userId && room.hostId !== userId) {
+      const hostTime = room.live?.hostTimestamp || (room.status === 'active' && room.live?.timerEndsAt ? (room.live.timerEndsAt - ((room.settings?.bidTimer || 10) * 1000)) : null);
+      if (hostTime) {
+        const offset = hostTime - Date.now();
+        if (Math.abs(offset) > 150) {
+          setLocalHostTimeOffset(offset);
+        }
+      }
+    } else {
+      setLocalHostTimeOffset(0);
+    }
+
     setCurrentAuction({
       id: roomId,
       ...room,
@@ -1219,7 +1308,7 @@ export function subscribeLocalRoom(
       }
       pushStateToContext(merged);
     }
-  }, 800);
+  }, 400);
 
   // Local storage storage-event listener
   const onStorage = (event) => {
@@ -1282,9 +1371,9 @@ export function subscribeLocalRoom(
 
     const now = Date.now();
 
-    // 1. Timer Expiry Check
+    // 1. Timer Expiry Check (Authoritative Host only)
     if (live.timerEndsAt && now >= live.timerEndsAt) {
-      endLocalPlayerAuction(roomId);
+      endLocalPlayerAuction(roomId, userId);
       return;
     }
 

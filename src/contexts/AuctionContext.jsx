@@ -71,6 +71,7 @@ import {
   kickLocalPlayer as kickLocalPlayerEngine,
   updateLocalRoomSettings as updateLocalRoomSettingsEngine,
   setSupabaseClient,
+  getLocalHostTimeOffset,
 } from '../lib/localAuctionEngine';
 
 if (typeof supabase !== 'undefined' && supabase) {
@@ -142,7 +143,7 @@ export const AuctionProvider = ({ children }) => {
   // getServerTime() returns Date.now() + serverOffset, synced across all clients.
   const getSyncedTime = useCallback(() => {
     if (currentAuction?.server === 'local' || isHotspotRoomCode(currentAuction?.id)) {
-      return Date.now();
+      return Date.now() + getLocalHostTimeOffset();
     }
     return getServerTime();
   }, [currentAuction?.server, currentAuction?.id]);
@@ -513,7 +514,7 @@ export const AuctionProvider = ({ children }) => {
 
   const endPlayerAuction = useCallback(async (roomId) => {
     if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
-      return endLocalPlayerAuctionEngine(roomId);
+      return endLocalPlayerAuctionEngine(roomId, user?.uid);
     }
 
     // Prevent duplicate calls from the timer interval
