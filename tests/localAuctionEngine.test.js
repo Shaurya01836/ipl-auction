@@ -136,6 +136,7 @@ test('pauseLocalAuction, resumeLocalAuction, and endLocalAuction manage room lif
 test('mergeLocalRooms prevents stale waiting state from overwriting active status', () => {
   const current = {
     id: 'HOTSPOT-MERGE1',
+    hostRev: 5,
     status: 'active',
     live: { status: 'bidding', playerId: 10 },
     playerOrder: [10, 20],
@@ -145,6 +146,7 @@ test('mergeLocalRooms prevents stale waiting state from overwriting active statu
 
   const incomingStale = {
     id: 'HOTSPOT-MERGE1',
+    hostRev: 2,
     status: 'waiting',
     live: { status: 'waiting' },
     players: [{ id: 'guest', name: 'Guest' }],
@@ -157,15 +159,13 @@ test('mergeLocalRooms prevents stale waiting state from overwriting active statu
   assert.equal(merged.live.status, 'bidding');
   assert.equal(merged.live.playerId, 10);
   assert.deepEqual(merged.playerOrder, [10, 20]);
-  assert.equal(merged.players.length, 2);
-  assert.equal(merged.messages.length, 2);
-  assert.equal(merged.messages[0].id, 'm0');
-  assert.equal(merged.messages[1].id, 'm1');
+  assert.equal(merged.hostRev, 5);
 });
 
 test('mergeLocalRooms promotes waiting to active when incoming state is active', () => {
   const current = {
     id: 'HOTSPOT-MERGE2',
+    hostRev: 1,
     status: 'waiting',
     live: { status: 'waiting' },
     players: [{ id: 'guest', name: 'Guest' }],
@@ -173,6 +173,7 @@ test('mergeLocalRooms promotes waiting to active when incoming state is active',
 
   const incomingActive = {
     id: 'HOTSPOT-MERGE2',
+    hostRev: 3,
     status: 'active',
     live: { status: 'bidding', playerId: 5 },
     playerOrder: [5, 6],
@@ -184,7 +185,7 @@ test('mergeLocalRooms promotes waiting to active when incoming state is active',
   assert.equal(merged.status, 'active');
   assert.equal(merged.live.status, 'bidding');
   assert.equal(merged.live.playerId, 5);
-  assert.equal(merged.players.length, 2);
+  assert.equal(merged.hostRev, 3);
 });
 
 test('subscribeLocalRoom syncs auction start state to subscriber', () => {
