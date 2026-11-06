@@ -1,6 +1,7 @@
 import { IPL_PLAYERS } from '../data/players.js';
 import { evaluateBotBid } from './botEngine.js';
 import { toFiniteNumber } from './auctionDisplay.js';
+import { supabase } from './supabase.js';
 
 export const TEAMS = [
   { id: 'MI', name: 'Mumbai Indians', color: 'bg-blue-600' },
@@ -20,10 +21,10 @@ const LOCAL_STORAGE_PREFIX = 'ipl-auction:local-room:';
 // In-memory fallback if localStorage is disabled or in non-browser env
 const memoryStore = new Map();
 
-let activeSupabase = null;
+let activeSupabase = supabase;
 
 export function setSupabaseClient(client) {
-  activeSupabase = client;
+  activeSupabase = client || supabase;
 }
 
 export function getLocalRoomKey(roomId) {
@@ -31,42 +32,155 @@ export function getLocalRoomKey(roomId) {
 }
 
 /**
- * Push room state to the local hotspot dev bridge server.
- * Enables sync across Incognito, different browsers, and other devices on local Wi-Fi.
+ * Push room state to the local hotspot dev bridge server OR Supabase fallback.
+ * Enables sync across Incognito, different browsers, and LAN/Hotspot peers on deployed site.
  */
 export async function syncRoomToServer(roomId, roomData) {
-  if (typeof window === 'undefined' || !window.fetch) return null;
-  try {
-    const res = await fetch(`/api/hotspot-room/${encodeURIComponent(roomId)}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(roomData),
-    });
-    if (res.ok) {
-      return await res.json();
+  // 1. First attempt local Vite dev/preview server bridge
+  if (typeof window !== 'undefined' && window.fetch) {
+    try {
+      const res = await fetch(`/api/hotspot-room/${encodeURIComponent(roomId)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(roomData),
+      });
+      if (res.ok) {
+        await res.json().catch(() => null);
+      }
+    } catch {
+      // Local bridge not running or static host
     }
-  } catch {
-    // Ignore fetch errors (e.g. offline or static server)
   }
-  return null;
+
+  // 2. Always sync to Supabase (powers hotspot/offline rooms on live deployed site)
+  if (activeSupabase) {
+    try {
+      await activeSupabase.from('auctions').upsert({
+        id: roomId,
+        host_id: roomData.hostId || '',
+        host_name: roomData.hostName || 'Manager',
+        status: roomData.status || 'waiting',
+        auction_type: roomData.auctionType || 'mega',
+        squad_limit: roomData.squadLimit || 25,
+        overseas_limit: roomData.overseasLimit || 8,
+        players: roomData.players || [],
+        settings: {
+          ...(roomData.settings || {}),
+          server: 'local',
+          live: roomData.live,
+          presences: roomData.presences,
+          messages: (roomData.messages || []).slice(-30),
+        },
+        banned_players: roomData.bannedPlayers || [],
+        player_order: roomData.playerOrder || [],
+        is_public: false,
+      });
+
+      const teamsArr = Object.values(roomData.teams || {}).map((t) => ({
+        id: `${roomId}_${t.userId}`,
+        auction_id: roomId,
+        user_id: t.userId,
+        team_id: t.teamId || '',
+        team_name: t.teamName || 'Unknown',
+        budget_remaining: t.budgetRemaining !== null && t.budgetRemaining !== undefined ? Number(t.budgetRemaining) : 120.0,
+        spent: t.spent !== null && t.spent !== undefined ? Number(t.spent) : 0,
+        squad: t.squad || [],
+      }));
+
+      if (teamsArr.length > 0) {
+        await activeSupabase.from('teams').upsert(teamsArr);
+      }
+    } catch (sbErr) {
+      console.warn('[hotspot] Supabase sync skipped/failed', sbErr);
+    }
+  }
+
+  return roomData;
 }
 
 /**
- * Fetch room state from the local hotspot dev bridge server.
+ * Fetch room state from local hotspot dev bridge server OR Supabase fallback.
  */
 export async function fetchRoomFromServer(roomId) {
-  if (typeof window === 'undefined' || !window.fetch) return null;
-  try {
-    const res = await fetch(`/api/hotspot-room/${encodeURIComponent(roomId)}`);
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.id) {
-        return data;
+  // 1. Try local dev bridge first
+  if (typeof window !== 'undefined' && window.fetch) {
+    try {
+      const res = await fetch(`/api/hotspot-room/${encodeURIComponent(roomId)}`);
+      if (res.ok) {
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const data = await res.json();
+          if (data && data.id) {
+            return data;
+          }
+        }
       }
+    } catch {
+      // Ignore network errors
     }
-  } catch {
-    // Ignore network errors
   }
+
+  // 2. Fall back to Supabase (used on live deployed website)
+  if (activeSupabase) {
+    try {
+      const { data: row, error } = await activeSupabase
+        .from('auctions')
+        .select('*')
+        .eq('id', roomId)
+        .maybeSingle();
+
+      if (row && row.id && !error) {
+        const { data: teamsRows } = await activeSupabase
+          .from('teams')
+          .select('*')
+          .eq('auction_id', roomId);
+
+        const teamsMap = {};
+        (teamsRows || []).forEach((t) => {
+          const docId = t.id || `${roomId}_${t.user_id}`;
+          teamsMap[docId] = {
+            id: docId,
+            auctionId: t.auction_id,
+            userId: t.user_id,
+            teamId: t.team_id,
+            teamName: t.team_name,
+            budgetRemaining: t.budget_remaining !== null && t.budget_remaining !== undefined ? Number(t.budget_remaining) : 120.0,
+            spent: t.spent !== null && t.spent !== undefined ? Number(t.spent) : 0,
+            squad: t.squad || [],
+          };
+        });
+
+        const settings = row.settings || {};
+        return {
+          id: row.id,
+          hostId: row.host_id,
+          hostName: row.host_name || 'Manager',
+          status: row.status || 'waiting',
+          auctionType: row.auction_type || 'mega',
+          isPublic: false,
+          squadLimit: row.squad_limit || 25,
+          overseasLimit: row.overseas_limit || 8,
+          server: 'local',
+          isLocal: true,
+          createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
+          players: row.players || [],
+          bannedPlayers: row.banned_players || [],
+          playerOrder: row.player_order || [],
+          settings: {
+            bidTimer: settings.bidTimer || 10,
+            budget: settings.budget || 120.0,
+          },
+          teams: teamsMap,
+          live: settings.live || { status: row.status || 'waiting' },
+          messages: settings.messages || [],
+          presences: settings.presences || {},
+        };
+      }
+    } catch (e) {
+      console.warn('[hotspot] Supabase fetch error:', e);
+    }
+  }
+
   return null;
 }
 
@@ -112,6 +226,7 @@ export function mergeLocalRooms(current, incoming) {
   return {
     ...current,
     ...incoming,
+    hostId: current.hostId || incoming.hostId,
     status: finalStatus,
     live: finalLive,
     playerOrder: finalPlayerOrder || current.playerOrder,
@@ -350,12 +465,14 @@ export function createLocalRoom(
     },
   };
 
-  writeLocalRoom(roomId, roomData);
-  return {
+  const merged = writeLocalRoom(roomId, roomData);
+  const result = {
     server: 'local',
     requestedServer: 'local',
     fellBack: false,
   };
+  const syncPromise = syncRoomToServer(roomId, merged).then(() => result);
+  return Object.assign(syncPromise, result);
 }
 
 /**
@@ -369,28 +486,13 @@ export async function joinLocalRoomDb(roomId, userId, playerDetails) {
   const teamDetails = TEAMS.find((t) => t.id === playerDetails?.team);
 
   if (!room) {
-    // If joining a local room without an existing template, initialize as host/guest
-    const budget = 120.0;
-    room = {
-      id: roomId,
-      hostId: userId,
-      hostName: playerDetails?.name || 'Manager',
-      status: 'waiting',
-      auctionType: 'mega',
-      isPublic: false,
-      squadLimit: 25,
-      overseasLimit: 8,
-      server: 'local',
-      isLocal: true,
-      createdAt: Date.now(),
-      players: [],
-      bannedPlayers: [],
-      settings: { bidTimer: 10, budget },
-      teams: {},
-      live: { status: 'waiting' },
-      messages: [],
-      presences: {},
-    };
+    // Retry once in case of slight network latency
+    await new Promise((r) => setTimeout(r, 400));
+    room = await fetchRoomFromServer(roomId);
+  }
+
+  if (!room) {
+    throw new Error('Room not found. Please verify the room code.');
   }
 
   // Proactive ban check
@@ -1022,7 +1124,7 @@ export function subscribeLocalRoom(
     pushStateToContext(initial);
   }
 
-  // Probe local bridge server (bridges Incognito, separate browsers, LAN devices)
+  // Probe local bridge server or Supabase (bridges Incognito, separate browsers, LAN devices)
   fetchRoomFromServer(roomId).then((serverData) => {
     if (!isSubscribed) return;
     if (serverData) {
@@ -1036,15 +1138,44 @@ export function subscribeLocalRoom(
         } catch {}
       }
       pushStateToContext(merged);
-    } else if (!readLocalRoom(roomId)) {
-      // If room truly does not exist on server either, initialize template
-      joinLocalRoomDb(roomId, userId, { name: 'Manager' }).then(() => {
-        if (!isSubscribed) return;
-        const fresh = readLocalRoom(roomId);
-        if (fresh) pushStateToContext(fresh);
-      });
+    } else {
+      setLoading(false);
     }
   });
+
+  // Supabase Realtime listener for instant peer updates across devices on deployed site
+  let realtimeChannel = null;
+  if (typeof window !== 'undefined' && activeSupabase && typeof activeSupabase.channel === 'function') {
+    try {
+      const channelId = `hotspot_rt_${roomId}_${Math.random().toString(36).substring(2, 7)}`;
+      realtimeChannel = activeSupabase
+        .channel(channelId)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'auctions', filter: `id=eq.${roomId}` },
+          async () => {
+            if (!isSubscribed) return;
+            const serverState = await fetchRoomFromServer(roomId);
+            if (!isSubscribed || !serverState) return;
+            const current = readLocalRoom(roomId) || memoryStore.get(roomId);
+            const merged = current ? mergeLocalRooms(current, serverState) : serverState;
+            const mergedSerialized = JSON.stringify(merged);
+            if (mergedSerialized !== lastAppliedSerialized) {
+              memoryStore.set(roomId, merged);
+              if (typeof window !== 'undefined' && window.localStorage) {
+                try {
+                  window.localStorage.setItem(getLocalRoomKey(roomId), mergedSerialized);
+                } catch {}
+              }
+              pushStateToContext(merged);
+            }
+          }
+        )
+        .subscribe();
+    } catch {
+      // Background polling remains active
+    }
+  }
 
   // Cross-tab broadcast channel listener (persistent channel, no premature close)
   const channel = getBroadcastChannel(roomId);
@@ -1236,6 +1367,13 @@ export function subscribeLocalRoom(
     clearInterval(serverPollInterval);
 
     localRoomSubscribers.delete(onMemoryUpdate);
+    if (realtimeChannel && activeSupabase && typeof activeSupabase.removeChannel === 'function') {
+      try {
+        activeSupabase.removeChannel(realtimeChannel);
+      } catch {
+        // Ignore
+      }
+    }
     if (channel) {
       try {
         channel.removeEventListener('message', onBroadcastMessage);
