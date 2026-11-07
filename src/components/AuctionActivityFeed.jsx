@@ -108,7 +108,7 @@ export default function AuctionActivityFeed({ activeCount = 0 }) {
         </h2>
         
         {/* Active Hubs Counter right under title */}
-        <div className="flex items-center gap-2 mt-2 select-none">
+        {/* <div className="flex items-center gap-2 mt-2 select-none">
           <span className="w-5 flex justify-center">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -118,7 +118,7 @@ export default function AuctionActivityFeed({ activeCount = 0 }) {
           <span className="text-[10px] font-pixel text-green-400 uppercase tracking-widest leading-none mt-[1px]">
            {activeCount !== undefined && activeCount !== null ? activeCount : fakeCount}+ Active rooms
           </span>
-        </div>
+        </div> */}
 
         {/* Divider Line */}
         <div className="w-full h-px bg-white/10 my-4" />

@@ -47,6 +47,7 @@ import AuctionActivityFeed from "../components/AuctionActivityFeed";
 import LocalPlayRoadmap from "../components/LocalPlayRoadmap";
 import Footer from "../components/Footer";
 import ServerSwitcher from "../components/ServerSwitcher";
+import ServerNoticeBanner from "../components/ServerNoticeBanner";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import {
   computeTeamSpent,
@@ -63,6 +64,9 @@ const LandingPage = () => {
   );
   const [selectedTeam, setSelectedTeam] = useState("MI");
   const [activeTab, setActiveTab] = useState("new");
+  // Temporarily locked to offline/hotspot mode (online cloud paused)
+  const [hostingType, setHostingType] = useState("hotspot");
+  /*
   const [hostingType, setHostingType] = useState(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -72,6 +76,7 @@ const LandingPage = () => {
     }
     return "cloud";
   });
+  */
   const [auctionType, setAuctionType] = useState("mega"); 
   const [isPublicRoom, setIsPublicRoom] = useState(true);
   const [roomCode, setRoomCode] = useState("");
@@ -219,9 +224,11 @@ const LandingPage = () => {
     }
   };
 
+  /* Temporarily paused public lobbies fetch for offline-only mode
   useEffect(() => {
     fetchPublicLobbies();
   }, []);
+  */
 
   // Fetch auction history directly from Supabase
   const historyRequestRef = useRef(false);
@@ -467,6 +474,25 @@ const LandingPage = () => {
       const displayName = user.displayName || "Manager";
 
       if (activeTab === "new") {
+        // Offline / Hotspot Mode: Always create local room
+        const localRoomId = `HOTSPOT-${generateRoomCode(4)}`;
+        try {
+          await createRoom(
+            localRoomId,
+            user.uid,
+            { name: displayName, team: selectedTeam },
+            auctionType,
+            false,
+            'local',
+          );
+        } catch {
+          // non-fatal
+        }
+        setIsSubmitting(false);
+        navigate(`/lobby/${localRoomId}?local=true&server=local`);
+        return;
+
+        /* Temporarily commented out for offline-only mode:
         if (hostingType === "hotspot") {
           const localRoomId = `HOTSPOT-${generateRoomCode(4)}`;
           try {
@@ -526,12 +552,19 @@ const LandingPage = () => {
           setTimeout(() => setNotice(""), 6000);
         }
         navigate(withServerParam(`/lobby/${newRoomId}`, actualServer));
+        */
       } else if (activeTab === "join") {
         if (!roomCode) {
           setIsSubmitting(false);
           return;
         }
         const code = normalizeRoomCode(roomCode);
+        // Offline / Hotspot Mode: Always join as local room
+        setIsSubmitting(false);
+        navigate(`/lobby/${code}?local=true&server=local`);
+        return;
+
+        /* Temporarily commented out for offline-only mode:
         if (isHotspotRoomCode(code) || selectedServer === 'local') {
           setIsSubmitting(false);
           navigate(`/lobby/${code}?local=true&server=local`);
@@ -544,6 +577,7 @@ const LandingPage = () => {
         const actualServer = resolvedServer || selectedServer;
         setSelectedServer(actualServer);
         navigate(withServerParam(`/lobby/${code}`, actualServer));
+        */
       }
     } catch (error) {
       // createRoom/joinRoomDb may have opened a probe socket before failing.
@@ -560,17 +594,33 @@ const LandingPage = () => {
   // ─── Not Signed In: Show Google / Guest Login ───
   if (!user) {
     return (
-      <main className="relative min-h-screen bg-[#050505] flex flex-col items-center justify-center pt-10 px-4 font-sans text-white overflow-x-hidden">
-        <GithubStarButton />
-        <BuyMeACoffee />
+      <div className="relative min-h-screen bg-[#050505] flex flex-col font-sans text-white overflow-x-hidden">
+        {/* Banner at the top of everything */}
+        <ServerNoticeBanner
+          onTryHotspot={async () => {
+            try {
+              await loginAsGuest("Local Manager");
+              setActiveTab("new");
+              setHostingType("hotspot");
+              window.scrollTo({ top: 380, behavior: "smooth" });
+            } catch {
+              setIsGuestMode(true);
+            }
+          }}
+          onOpenFeedback={() => window.dispatchEvent(new CustomEvent('open-feedback-modal'))}
+        />
 
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-orange-800/20  md:bg-orange-700/20 blur-[120px] rounded-full" />
-          <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://res.cloudinary.com/drl6ky9as/image/upload/v1792012081/texture_os1ukf.jpg')] opacity-[0.25]" />
-        </div>
+        <main className="relative flex-1 flex flex-col items-center justify-start pt-6 sm:pt-8 px-4">
+          <GithubStarButton />
+          <BuyMeACoffee />
 
-        <div className="text-center mb-4 z-10 relative max-w-3xl px-4 mt-10">
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-orange-800/20  md:bg-orange-700/20 blur-[120px] rounded-full" />
+            <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://res.cloudinary.com/drl6ky9as/image/upload/v1792012081/texture_os1ukf.jpg')] opacity-[0.25]" />
+          </div>
+
+        <div className="text-center mb-4 z-10 relative max-w-3xl px-4 mt-4 sm:mt-6">
           <h1 className="sr-only">
             IPL Auction Simulator & Game - Live IPL Mega Auction 2026
           </h1>
@@ -604,7 +654,7 @@ const LandingPage = () => {
         </div>
 
         {/* Subtle gradient line / Faded Divider */}
-        <div className="w-full max-w-4xl h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-4 mt-10 z-10 relative" />
+        <div className="w-full max-w-4xl h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-4 mt-8 z-10 relative" />
 
         <div className="w-full max-w-6xl bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-3 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10 relative mt-2">
           {/* Subtle Orange Glow behind panel */}
@@ -749,24 +799,36 @@ const LandingPage = () => {
           }}
         />
         <Footer />
-      </main>
+        </main>
+      </div>
     );
   }
 
   // ─── Signed In: Show Create / Join / History ───
   return (
-    <main className="relative min-h-screen bg-[#050505] flex flex-col items-center justify-center pt-10 px-4 font-sans text-white overflow-x-hidden">
-      <GithubStarButton />
-      <BuyMeACoffee />
+    <div className="relative min-h-screen bg-[#050505] flex flex-col font-sans text-white overflow-x-hidden">
+      {/* Banner at the top of everything */}
+      <ServerNoticeBanner
+        onTryHotspot={() => {
+          setActiveTab("new");
+          setHostingType("hotspot");
+          window.scrollTo({ top: 380, behavior: "smooth" });
+        }}
+        onOpenFeedback={() => window.dispatchEvent(new CustomEvent('open-feedback-modal'))}
+      />
 
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-orange-800/20  md:bg-orange-700/20 blur-[120px] rounded-full" />
-        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://res.cloudinary.com/drl6ky9as/image/upload/v1792012081/texture_os1ukf.jpg')] opacity-[0.25]" />
-      </div>
+      <main className="relative flex-1 flex flex-col items-center justify-start pt-6 sm:pt-8 px-4">
+        <GithubStarButton />
+        <BuyMeACoffee />
+
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-orange-800/20  md:bg-orange-700/20 blur-[120px] rounded-full" />
+          <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://res.cloudinary.com/drl6ky9as/image/upload/v1792012081/texture_os1ukf.jpg')] opacity-[0.25]" />
+        </div>
 
       {/* Hero */}
-      <div className="text-center mb-4 z-10 relative max-w-3xl px-4 mt-10">
+      <div className="text-center mb-4 z-10 relative max-w-3xl px-4 mt-4 sm:mt-6">
         <h1 className="sr-only">
           IPL Auction Simulator & Game - Live IPL Mega Auction 2026
         </h1>
@@ -800,7 +862,7 @@ const LandingPage = () => {
       </div>
 
       {/* Subtle gradient line / Faded Divider */}
-      <div className="w-full max-w-4xl h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-4 mt-10 z-10 relative" />
+      <div className="w-full max-w-4xl h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-4 mt-8 z-10 relative" />
 
       <div className="w-full max-w-6xl bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-3 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10 relative mt-2">
         {/* Subtle Orange Glow behind panel */}
@@ -814,7 +876,8 @@ const LandingPage = () => {
 
           {/* Right Side: Create/Join/History form */}
           <div className="lg:col-span-7 w-full p-4 sm:p-6 md:p-8 flex flex-col">
-            {availableServers.length > 1 && (
+            {/* ServerSwitcher temporarily commented out for offline-only mode
+            availableServers.length > 1 && (
               <div className="flex items-center justify-between gap-3 mb-3 sm:mb-4">
                 <div className="min-w-0">
                   <span className="text-[9px] sm:text-[10px] font-black text-gray-500 uppercase tracking-widest">
@@ -830,7 +893,8 @@ const LandingPage = () => {
                   onChange={handleServerChange}
                 />
               </div>
-            )}
+            )
+            */}
             {/* Flat Tab Bar Navigation: Create / Join / History */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-white/5 mb-5 sm:mb-8 gap-3 sm:gap-4">
               <div className="flex">
@@ -855,11 +919,13 @@ const LandingPage = () => {
                   }`}
                 >
                   <span>Join</span>
+                  {/* Public lobby count temporarily commented out for offline-only mode
                   {serverRoomCount > 0 && (
                     <span className="bg-[#ff5500]/20 text-[#ff5500] text-[9px] px-1.5 py-0.2 rounded-full font-extrabold ml-0.5">
                       {serverRoomCount}
                     </span>
                   )}
+                  */}
                 </button>
                 <button
                   type="button"
@@ -902,7 +968,7 @@ const LandingPage = () => {
                 onSubmit={handleFormSubmit}
                 className="space-y-4 sm:space-y-6"
               >
-                {/* Hosting Type Switch: Cloud Server vs Offline / Hotspot */}
+                {/* Hosting Type Switch: Temporarily locked to Offline / Hotspot
                 <div className="p-1 bg-white/[0.03] border border-white/5 rounded-xl sm:rounded-2xl flex items-center gap-1 mb-2">
                   <button
                     type="button"
@@ -933,6 +999,17 @@ const LandingPage = () => {
                       Zero Limits
                     </span>
                   </button>
+                </div>
+                */}
+                <div className="p-2.5 bg-white/[0.02] border border-white/10 rounded-xl mb-2 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] sm:text-xs font-black uppercase text-white tracking-wider flex items-center gap-1.5">
+                      <span>Offline / Hotspot Mode</span>
+                    </span>
+                  </div>
+                  <span className="text-[8px] font-mono uppercase text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold">
+                    Zero Cloud Quotas
+                  </span>
                 </div>
 
                 <div>
@@ -1146,16 +1223,12 @@ const LandingPage = () => {
                   <div className="p-2.5 sm:p-4 bg-white/[0.02] border border-white/5 rounded-xl sm:rounded-2xl flex items-center justify-between gap-2.5 sm:gap-3">
                     <div className="min-w-0 flex-1">
                       <h2 className="text-[9.5px] sm:text-[11px] font-black uppercase text-white tracking-wider flex items-center gap-1.5 truncate">
-                        <Radio size={13} className="text-[#ff5500] shrink-0" />
                         <span>Local Hotspot Network</span>
                       </h2>
                       <p className="text-[7.5px] sm:text-[9px] text-gray-400 font-medium leading-tight mt-0.5">
                         Friends connect to your Wi-Fi hotspot • Zero data used
                       </p>
                     </div>
-                    <span className="text-[7.5px] sm:text-[8px] font-mono uppercase text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg font-bold shrink-0">
-                      Zero Quotas
-                    </span>
                   </div>
                 )}
 
@@ -1271,6 +1344,7 @@ const LandingPage = () => {
                   </button>
                 </form>
 
+                {/* Public Lobbies Directory Section - Temporarily paused for offline mode
                 <div className="relative py-1 sm:py-2 flex items-center justify-center">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-white/5" />
@@ -1280,9 +1354,7 @@ const LandingPage = () => {
                   </span>
                 </div>
 
-                {/* Public Lobbies Directory Section */}
                 <div className="space-y-2.5 sm:space-y-3 pt-0 sm:pt-1">
-                  {/* Responsive Search & Filter Bar */}
                   <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center justify-between">
                     <div className="relative w-full sm:flex-1 flex gap-2">
                       <input
@@ -1328,7 +1400,6 @@ const LandingPage = () => {
                     </div>
                   </div>
 
-                  {/* Responsive Lobbies Directory List */}
                   {lobbiesLoading ? (
                     <div className="flex flex-col items-center justify-center py-6 sm:py-8 text-gray-400">
                       <Loader2
@@ -1357,7 +1428,6 @@ const LandingPage = () => {
                           className="p-2 sm:p-3 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 hover:border-white/10 rounded-xl transition-all duration-200 flex flex-row items-center justify-between gap-2 sm:gap-3 group"
                         >
                           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                            {/* Clean Room Code Pill */}
                             <div className="px-1.5 sm:px-2.5 py-1 sm:py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-400 font-mono font-black text-[9px] sm:text-xs tracking-wider shrink-0">
                               {room.roomId}
                             </div>
@@ -1401,6 +1471,7 @@ const LandingPage = () => {
                                 withServerParam(
                                   `/lobby/${room.roomId}`,
                                   room.server,
+                                HiggsServer
                                 ),
                               );
                             }}
@@ -1416,6 +1487,12 @@ const LandingPage = () => {
                       ))}
                     </div>
                   )}
+                </div>
+                */}
+                <div className="p-3 bg-white/[0.02] border border-white/5 rounded-xl text-center">
+                  <p className="text-[10px] sm:text-xs text-gray-400 font-medium">
+                    To join a friend's offline auction, connect to their <strong className="text-white">Wi-Fi Hotspot</strong> and enter their room code above.
+                  </p>
                 </div>
               </div>
             )}
@@ -1901,7 +1978,8 @@ const LandingPage = () => {
         }}
       />
       <Footer />
-    </main>
+      </main>
+    </div>
   );
 };
 

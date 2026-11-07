@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquarePlus, X, Send, Star, CheckCircle2, Loader2 } from 'lucide-react';
@@ -25,6 +25,12 @@ const FeedbackModal = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const handleOpen = () => setIsOpen(true);
+    window.addEventListener('open-feedback-modal', handleOpen);
+    return () => window.removeEventListener('open-feedback-modal', handleOpen);
+  }, []);
 
   // Show feedback button strictly on landing page only
   if (location.pathname !== '/') return null;
