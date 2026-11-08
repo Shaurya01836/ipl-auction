@@ -1,11 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { isUserAdmin } from '../lib/adminAuth';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   const { user } = useAuth();
-  const isAdmin = user && user.email && user.email.trim().toLowerCase() === import.meta.env.VITE_ADMIN_EMAIL?.trim().toLowerCase();
+  const isAdmin = isUserAdmin(user, import.meta.env.VITE_ADMIN_EMAIL);
 
   return (
     <footer className="mt-16 sm:mt-32 w-full mx-auto border-t border-white/10 z-10 relative flex flex-col font-mono">

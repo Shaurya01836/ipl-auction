@@ -10,10 +10,7 @@ import {
   TrendingUp,
   Target,
   Wifi,
-  Sparkles,
   BookOpen,
-  HelpCircle,
-  Shield,
   ArrowRight,
 } from 'lucide-react';
 import Footer from '../components/Footer';
@@ -37,8 +34,8 @@ const FAQS = [
     a: 'Our proprietary bot valuation algorithm evaluates each player based on their T20 impact rating, set tier (Marquee, Capped Indian, Overseas Specialist, Uncapped), existing squad needs, and remaining purse capacity. Bots preserve mandatory budget for unfilled squad slots, hesitate realistically at high prices, and deploy clutch bids when rival bids stall.',
   },
   {
-    q: 'How does the Offline / Hotspot Mode work without internet?',
-    a: 'Offline / Hotspot Mode runs on an in-memory client engine and local network bridge. By connecting your friends to your phone hotspot or local Wi-Fi, auction room state synchronizes between your devices at sub-5ms LAN speed with zero mobile data consumed, zero Firebase RTDB quota, and zero cloud latency.',
+    q: 'How does Hotspot Mode work?',
+    a: 'Hotspot Mode runs auction logic directly on the host device rather than a central cloud database. Bids and state are relayed between devices using lightweight Supabase Realtime messaging, bypassing Firebase RTDB quota caps completely. Note: Active internet connectivity is required for cross-device multiplayer, though solo play against AI bots can run offline once the app has loaded.',
   },
   {
     q: 'What happens if a player disconnects during a live auction?',
@@ -390,26 +387,26 @@ const GameGuide = () => {
               </div>
             </section>
 
-            {/* 3. Offline / Hotspot Mode */}
+            {/* 3. Host-Powered Hotspot Mode */}
             <section id="hotspot" className="scroll-mt-24">
-              <h2 className="text-xl font-semibold text-white mb-2">3. Offline & Hotspot mode</h2>
+              <h2 className="text-xl font-semibold text-white mb-2">3. Host-Powered Hotspot mode</h2>
               <p className="text-sm text-gray-400 mb-6 leading-relaxed">
-                Host auctions anywhere without an active internet connection or external cloud database.
+                Host auctions powered directly by the host device's browser engine, bypassing cloud database caps.
               </p>
 
               <div className="border border-white/10 rounded-md p-5 bg-white/[0.01] mb-4">
                 <div className="flex items-center gap-2 mb-3 text-[#ff5500]">
                   <Wifi size={18} />
-                  <h3 className="text-sm font-semibold text-white">Zero-Cloud Local Synchronisation</h3>
+                  <h3 className="text-sm font-semibold text-white">Host-Authoritative Auction Engine</h3>
                 </div>
                 <p className="text-xs text-gray-400 leading-relaxed mb-4">
-                  Hotspot Mode runs on an in-memory client engine and local network bridge. Devices connected to the same phone hotspot or local Wi-Fi router synchronize bidding events directly at sub-5ms latency with zero mobile data consumption.
+                  Hotspot Mode executes auction timers, purse calculations, and AI bot bids locally in the host's browser engine, using Supabase Realtime as a lightweight messaging relay. Each participating device requires internet connectivity to exchange bids with the host.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-white/10 text-xs">
                   <div className="p-3 rounded bg-white/[0.02] border border-white/5">
-                    <span className="font-bold text-white block mb-1">Step 1: Enable Hotspot</span>
-                    <span className="text-gray-400">Turn on personal hotspot on one phone or connect everyone to one Wi-Fi.</span>
+                    <span className="font-bold text-white block mb-1">Step 1: Network Setup</span>
+                    <span className="text-gray-400">Connect devices to the same Wi-Fi or hotspot. Active internet connectivity is required for all devices.</span>
                   </div>
                   <div className="p-3 rounded bg-white/[0.02] border border-white/5">
                     <span className="font-bold text-white block mb-1">Step 2: Host Room</span>
@@ -417,7 +414,7 @@ const GameGuide = () => {
                   </div>
                   <div className="p-3 rounded bg-white/[0.02] border border-white/5">
                     <span className="font-bold text-white block mb-1">Step 3: Join & Draft</span>
-                    <span className="text-gray-400">Other players open the site on their browser, enter the code, and bid with zero lag.</span>
+                    <span className="text-gray-400">Other players open the site on their browser, enter the code, and participate via the host engine.</span>
                   </div>
                 </div>
               </div>

@@ -4,7 +4,6 @@ import {
   createLocalRoom,
   readLocalRoom,
   joinLocalRoomDb,
-  updateLocalPlayerTeam,
   fillLocalEmptyTeamsWithBots,
   removeLocalBotTeam,
   startLocalAuction,
@@ -131,6 +130,27 @@ test('pauseLocalAuction, resumeLocalAuction, and endLocalAuction manage room lif
   room = readLocalRoom(roomId);
   assert.equal(room.status, 'completed');
   assert.equal(room.live.status, 'completed');
+});
+
+test('pauseLocalAuction rejects pause when less than 2 seconds remaining or when not bidding', () => {
+  const roomId = 'HOTSPOT-PAUSE-GUARD';
+  createLocalRoom(roomId, 'user_host', { name: 'Host', team: 'MI' }, 'mega');
+  startLocalAuction(roomId);
+
+  let room = readLocalRoom(roomId);
+  // Simulate timer with only 1.5 seconds remaining
+  room.live.timerEndsAt = Date.now() + 1500;
+
+  pauseLocalAuction(roomId);
+  room = readLocalRoom(roomId);
+  // Status should remain 'bidding', not transition to 'paused'
+  assert.equal(room.live.status, 'bidding');
+
+  // Simulate sold state
+  room.live.status = 'sold';
+  pauseLocalAuction(roomId);
+  room = readLocalRoom(roomId);
+  assert.equal(room.live.status, 'sold');
 });
 
 test('mergeLocalRooms prevents stale waiting state from overwriting active status', () => {
@@ -282,6 +302,26 @@ test('endLocalAuction marks status as completed and resolves', async () => {
   const completedRoom = await endLocalAuction(roomId);
   assert.equal(completedRoom.status, 'completed');
   assert.equal(completedRoom.live.status, 'completed');
+});
+
+test('placeLocalBid rejects if player is already in manager squad', () => {
+  const roomId = 'HOTSPOT-DUPSQUAD-TEST';
+  createLocalRoom(roomId, 'user_host', { name: 'Host Manager', team: 'CSK' }, 'mega');
+  startLocalAuction(roomId);
+
+  const room = readLocalRoom(roomId);
+  const currentPlayerId = room.live.playerId;
+
+  // Manually put current player into user's squad
+  room.teams[`${roomId}_user_host`].squad = [{ id: currentPlayerId, bid: 5.0 }];
+
+  assert.throws(
+    () => {
+      placeLocalBid(roomId, 'user_host', 'CSK', 'Host Manager', 'CSK');
+    },
+    /already in your squad/,
+    'Must throw error when player is already in squad',
+  );
 });
 
 

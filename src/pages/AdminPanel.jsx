@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useQuota } from '../contexts/QuotaContext';
+import { isUserAdmin } from '../lib/adminAuth';
 import { db } from '../lib/firebase';
 import { supabase } from '../lib/supabase';
 import { collection, getDocs, deleteDoc, updateDoc, doc, query, orderBy } from 'firebase/firestore';
@@ -153,12 +155,10 @@ const AdminPanel = () => {
   useDocumentTitle('Admin Control Hub | CrickAuction', 'Administrative management panel.', true);
   const navigate = useNavigate();
   const { user, loginWithGoogle, logout } = useAuth();
+  const { handleFirebaseError } = useQuota();
 
   const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
-  const isAdmin = useMemo(() => {
-    if (!user || !user.email) return false;
-    return user.email.trim().toLowerCase() === adminEmail?.trim().toLowerCase();
-  }, [user, adminEmail]);
+  const isAdmin = useMemo(() => isUserAdmin(user, adminEmail), [user, adminEmail]);
 
   // Data states
   const [loading, setLoading] = useState(true);
@@ -340,6 +340,7 @@ const AdminPanel = () => {
       setLastUpdated(new Date());
     } catch (err) {
       console.error('Error fetching admin data:', err);
+      handleFirebaseError(err);
       setError('Failed to load dashboard data. Please check connection and permissions.');
     } finally {
       setLoading(false);
@@ -616,15 +617,11 @@ const AdminPanel = () => {
           </div>
 
           <h2 className="text-lg sm:text-xl font-black uppercase tracking-[0.2em] text-white mb-2">
-            Access Denied
+            403 — Access Denied
           </h2>
-          <p className="text-xs text-gray-400 font-medium leading-relaxed mb-4">
-            Logged in as <span className="text-white font-bold">{user.email}</span>. This account does not have administrator privileges.
+          <p className="text-xs text-gray-400 font-medium leading-relaxed mb-6">
+            Logged in as <span className="text-white font-bold">{user.email}</span>. You do not have permission to view or manage the administrator control hub.
           </p>
-
-          <div className="bg-red-500/5 border border-red-500/10 rounded-xl p-3 text-[10px] text-red-400 font-bold uppercase tracking-wider mb-6">
-            Required Admin Email: {adminEmail || 'Not configured'}
-          </div>
 
           <div className="space-y-3">
             <button

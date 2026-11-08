@@ -8,14 +8,9 @@ import {
   Radio,
   Users,
   Award,
-  BookOpen,
   ExternalLink,
   Code2,
-  Cpu,
-  Trophy,
   ArrowRight,
-  Coins,
-  Sparkles,
 } from 'lucide-react';
 import Footer from '../components/Footer';
 import useDocumentTitle from '../hooks/useDocumentTitle';
@@ -238,15 +233,15 @@ const AboutUs = () => {
             <section id="hotspot" className="scroll-mt-24">
               <h2 className="text-xl font-semibold text-white mb-2">3. Zero-Cloud Engineering</h2>
               <p className="text-sm text-gray-400 mb-6 leading-relaxed">
-                Offline Hotspot mode delivers local-area network gaming without reliance on external cloud servers.
+                Hotspot mode delivers host-authoritative gaming that bypasses cloud database connection limits.
               </p>
 
               <div className="border border-white/10 rounded-md p-5 sm:p-6 bg-white/[0.01] space-y-4">
                 <p className="text-sm text-gray-300 leading-relaxed">
-                  Most modern multiplayer web applications rely exclusively on cloud databases like Firebase or WebSockets hosted on centralized servers. If internet connectivity drops, or cloud rate limits are reached, gameplay freezes.
+                  Traditional multiplayer rooms rely exclusively on cloud databases like Firebase RTDB with 100-user room caps. When cloud rate limits are reached, gameplay freezes.
                 </p>
                 <p className="text-sm text-gray-300 leading-relaxed">
-                  To eliminate this dependency, CrickAuction includes an in-memory local network engine. By connecting to a shared mobile hotspot or local Wi-Fi router, participants synchronize state directly over LAN with sub-5ms latency and zero mobile data consumed. Once the auction concludes, squads can optionally be archived or exported as custom high-resolution cards.
+                  To eliminate this dependency, CrickAuction includes an in-memory host engine. The host device executes all auction logic and rules locally, while participants synchronize state through lightweight Supabase Realtime messaging relays (active internet required). Once the auction concludes, squads can optionally be archived or exported as custom high-resolution cards.
                 </p>
               </div>
             </section>

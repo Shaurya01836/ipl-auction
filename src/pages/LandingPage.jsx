@@ -44,10 +44,8 @@ import GithubStarButton from "../components/GithubStarButton";
 import BuyMeACoffee from "../components/BuyMeACoffee";
 import ConfirmDialog from "../components/ConfirmDialog";
 import AuctionActivityFeed from "../components/AuctionActivityFeed";
-import LocalPlayRoadmap from "../components/LocalPlayRoadmap";
 import Footer from "../components/Footer";
 import ServerSwitcher from "../components/ServerSwitcher";
-import ServerNoticeBanner from "../components/ServerNoticeBanner";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import {
   computeTeamSpent,
@@ -64,19 +62,7 @@ const LandingPage = () => {
   );
   const [selectedTeam, setSelectedTeam] = useState("MI");
   const [activeTab, setActiveTab] = useState("new");
-  // Temporarily locked to offline/hotspot mode (online cloud paused)
-  const [hostingType, setHostingType] = useState("hotspot");
-  /*
-  const [hostingType, setHostingType] = useState(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("mode") === "hotspot" || params.get("hotspot") === "true") {
-        return "hotspot";
-      }
-    }
-    return "cloud";
-  });
-  */
+  const [hostingType, setHostingType] = useState("cloud");
   const [auctionType, setAuctionType] = useState("mega"); 
   const [isPublicRoom, setIsPublicRoom] = useState(true);
   const [roomCode, setRoomCode] = useState("");
@@ -224,11 +210,9 @@ const LandingPage = () => {
     }
   };
 
-  /* Temporarily paused public lobbies fetch for offline-only mode
   useEffect(() => {
     fetchPublicLobbies();
   }, []);
-  */
 
   // Fetch auction history directly from Supabase
   const historyRequestRef = useRef(false);
@@ -474,25 +458,6 @@ const LandingPage = () => {
       const displayName = user.displayName || "Manager";
 
       if (activeTab === "new") {
-        // Offline / Hotspot Mode: Always create local room
-        const localRoomId = `HOTSPOT-${generateRoomCode(4)}`;
-        try {
-          await createRoom(
-            localRoomId,
-            user.uid,
-            { name: displayName, team: selectedTeam },
-            auctionType,
-            false,
-            'local',
-          );
-        } catch {
-          // non-fatal
-        }
-        setIsSubmitting(false);
-        navigate(`/lobby/${localRoomId}?local=true&server=local`);
-        return;
-
-        /* Temporarily commented out for offline-only mode:
         if (hostingType === "hotspot") {
           const localRoomId = `HOTSPOT-${generateRoomCode(4)}`;
           try {
@@ -552,19 +517,12 @@ const LandingPage = () => {
           setTimeout(() => setNotice(""), 6000);
         }
         navigate(withServerParam(`/lobby/${newRoomId}`, actualServer));
-        */
       } else if (activeTab === "join") {
         if (!roomCode) {
           setIsSubmitting(false);
           return;
         }
         const code = normalizeRoomCode(roomCode);
-        // Offline / Hotspot Mode: Always join as local room
-        setIsSubmitting(false);
-        navigate(`/lobby/${code}?local=true&server=local`);
-        return;
-
-        /* Temporarily commented out for offline-only mode:
         if (isHotspotRoomCode(code) || selectedServer === 'local') {
           setIsSubmitting(false);
           navigate(`/lobby/${code}?local=true&server=local`);
@@ -577,7 +535,6 @@ const LandingPage = () => {
         const actualServer = resolvedServer || selectedServer;
         setSelectedServer(actualServer);
         navigate(withServerParam(`/lobby/${code}`, actualServer));
-        */
       }
     } catch (error) {
       // createRoom/joinRoomDb may have opened a probe socket before failing.
@@ -594,25 +551,9 @@ const LandingPage = () => {
   // ─── Not Signed In: Show Google / Guest Login ───
   if (!user) {
     return (
-      <div className="relative min-h-screen bg-[#050505] flex flex-col font-sans text-white overflow-x-hidden">
-        {/* Banner at the top of everything */}
-        <ServerNoticeBanner
-          onTryHotspot={async () => {
-            try {
-              await loginAsGuest("Local Manager");
-              setActiveTab("new");
-              setHostingType("hotspot");
-              window.scrollTo({ top: 380, behavior: "smooth" });
-            } catch {
-              setIsGuestMode(true);
-            }
-          }}
-          onOpenFeedback={() => window.dispatchEvent(new CustomEvent('open-feedback-modal'))}
-        />
-
-        <main className="relative flex-1 flex flex-col items-center justify-start pt-6 sm:pt-8 px-4">
-          <GithubStarButton />
-          <BuyMeACoffee />
+      <main className="relative min-h-screen bg-[#050505] flex flex-col items-center justify-start pt-6 sm:pt-8 px-4 font-sans text-white overflow-x-hidden">
+        <GithubStarButton />
+        <BuyMeACoffee />
 
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-orange-800/20  md:bg-orange-700/20 blur-[120px] rounded-full" />
@@ -715,22 +656,6 @@ const LandingPage = () => {
                   >
                     <Users size={18} /> Join as Guest
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        await loginAsGuest("Local Manager");
-                        setActiveTab("new");
-                        setHostingType("hotspot");
-                      } catch {
-                        setIsGuestMode(true);
-                      }
-                    }}
-                    className="w-full h-12 sm:h-14 bg-gradient-to-r from-[#ff5500]/10 via-[#ff5500]/15 to-transparent border border-[#ff5500]/30 hover:border-[#ff5500]/60 rounded-xl flex items-center justify-center gap-2 text-[#ff5500] hover:text-white transition-all font-black uppercase tracking-[0.12rem] sm:tracking-[0.16rem] text-[10px] sm:text-xs cursor-pointer active:scale-[0.98]"
-                  >
-                    <Radio size={16} /> Play Offline / Hotspot Mode
-                  </button>
                 </div>
               ) : (
                 <form onSubmit={handleGuestSignIn} className="w-full space-y-4">
@@ -786,37 +711,14 @@ const LandingPage = () => {
           </div>
         </div>
 
-        <LocalPlayRoadmap
-          onSelectOfflineMode={async () => {
-            try {
-              await loginAsGuest("Local Manager");
-              setActiveTab("new");
-              setHostingType("hotspot");
-              window.scrollTo({ top: 380, behavior: "smooth" });
-            } catch {
-              setIsGuestMode(true);
-            }
-          }}
-        />
         <Footer />
-        </main>
-      </div>
+      </main>
     );
   }
 
   // ─── Signed In: Show Create / Join / History ───
   return (
     <div className="relative min-h-screen bg-[#050505] flex flex-col font-sans text-white overflow-x-hidden">
-      {/* Banner at the top of everything */}
-      <ServerNoticeBanner
-        onTryHotspot={() => {
-          setActiveTab("new");
-          setHostingType("hotspot");
-          window.scrollTo({ top: 380, behavior: "smooth" });
-        }}
-        onOpenFeedback={() => window.dispatchEvent(new CustomEvent('open-feedback-modal'))}
-      />
-
       <main className="relative flex-1 flex flex-col items-center justify-start pt-6 sm:pt-8 px-4">
         <GithubStarButton />
         <BuyMeACoffee />
@@ -876,8 +778,7 @@ const LandingPage = () => {
 
           {/* Right Side: Create/Join/History form */}
           <div className="lg:col-span-7 w-full p-4 sm:p-6 md:p-8 flex flex-col">
-            {/* ServerSwitcher temporarily commented out for offline-only mode
-            availableServers.length > 1 && (
+            {availableServers.length > 1 && (
               <div className="flex items-center justify-between gap-3 mb-3 sm:mb-4">
                 <div className="min-w-0">
                   <span className="text-[9px] sm:text-[10px] font-black text-gray-500 uppercase tracking-widest">
@@ -893,8 +794,7 @@ const LandingPage = () => {
                   onChange={handleServerChange}
                 />
               </div>
-            )
-            */}
+            )}
             {/* Flat Tab Bar Navigation: Create / Join / History */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-white/5 mb-5 sm:mb-8 gap-3 sm:gap-4">
               <div className="flex">
@@ -919,13 +819,11 @@ const LandingPage = () => {
                   }`}
                 >
                   <span>Join</span>
-                  {/* Public lobby count temporarily commented out for offline-only mode
                   {serverRoomCount > 0 && (
                     <span className="bg-[#ff5500]/20 text-[#ff5500] text-[9px] px-1.5 py-0.2 rounded-full font-extrabold ml-0.5">
                       {serverRoomCount}
                     </span>
                   )}
-                  */}
                 </button>
                 <button
                   type="button"
@@ -968,50 +866,6 @@ const LandingPage = () => {
                 onSubmit={handleFormSubmit}
                 className="space-y-4 sm:space-y-6"
               >
-                {/* Hosting Type Switch: Temporarily locked to Offline / Hotspot
-                <div className="p-1 bg-white/[0.03] border border-white/5 rounded-xl sm:rounded-2xl flex items-center gap-1 mb-2">
-                  <button
-                    type="button"
-                    onClick={() => setHostingType("cloud")}
-                    className={`flex-1 py-2 sm:py-2.5 px-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
-                      hostingType === "cloud"
-                        ? "bg-[#1b1b1b] border border-white/10 text-white shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
-                        : "text-gray-400 hover:text-white"
-                    }`}
-                  >
-                    <Globe size={13} className={hostingType === "cloud" ? "text-blue-400 shrink-0" : "text-gray-500 shrink-0"} />
-                    <span className="truncate">Cloud Server</span>
-                    <span className="text-[8px] font-mono text-gray-500 hidden sm:inline">(Firebase)</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setHostingType("hotspot")}
-                    className={`flex-1 py-2 sm:py-2.5 px-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
-                      hostingType === "hotspot"
-                        ? "bg-[#ff5500] text-white shadow-[0_2px_12px_rgba(255,85,0,0.35)]"
-                        : "text-gray-400 hover:text-white"
-                    }`}
-                  >
-                    <Radio size={13} className="shrink-0" />
-                    <span className="truncate">Offline / Hotspot</span>
-                    <span className="bg-black/30 text-white text-[7px] sm:text-[8px] px-1.5 py-0.5 rounded-full font-mono uppercase font-black shrink-0 hidden xs:inline sm:inline">
-                      Zero Limits
-                    </span>
-                  </button>
-                </div>
-                */}
-                <div className="p-2.5 bg-white/[0.02] border border-white/10 rounded-xl mb-2 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] sm:text-xs font-black uppercase text-white tracking-wider flex items-center gap-1.5">
-                      <span>Offline / Hotspot Mode</span>
-                    </span>
-                  </div>
-                  <span className="text-[8px] font-mono uppercase text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold">
-                    Zero Cloud Quotas
-                  </span>
-                </div>
-
                 <div>
                   <div className="mb-2.5 sm:mb-4 ml-1">
                     <h2 className="text-[11px] sm:text-[13px] font-black uppercase text-gray-400 tracking-wider">
@@ -1193,44 +1047,31 @@ const LandingPage = () => {
                   </div>
                 </div>
 
-                {/* Room Visibility Toggle (Cloud Only) */}
-                {hostingType === "cloud" ? (
-                  <div className="p-3 sm:p-4 bg-white/[0.02] border border-white/5 rounded-xl sm:rounded-2xl flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <h2 className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider flex items-center gap-1.5">
-                        Public Room Visibility
-                      </h2>
-                      <p className="text-[8px] sm:text-[9px] text-gray-400 font-medium">
-                        {isPublicRoom
-                          ? "Listed in the Public Rooms Directory for anyone to join"
-                          : "Private room — accessible only via Room Code link"}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setIsPublicRoom(!isPublicRoom)}
-                      aria-label="Toggle public room visibility"
-                      className={`w-10 h-5 sm:w-12 sm:h-6 rounded-full transition-colors p-1 flex items-center cursor-pointer shrink-0 ${
-                        isPublicRoom
-                          ? "bg-orange-600 justify-end"
-                          : "bg-white/10 justify-start"
-                      }`}
-                    >
-                      <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-white shadow-md" />
-                    </button>
+                {/* Room Visibility Toggle */}
+                <div className="p-3 sm:p-4 bg-white/[0.02] border border-white/5 rounded-xl sm:rounded-2xl flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <h2 className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider flex items-center gap-1.5">
+                      Public Room Visibility
+                    </h2>
+                    <p className="text-[8px] sm:text-[9px] text-gray-400 font-medium">
+                      {isPublicRoom
+                        ? "Listed in the Public Rooms Directory for anyone to join"
+                        : "Private room — accessible only via Room Code link"}
+                    </p>
                   </div>
-                ) : (
-                  <div className="p-2.5 sm:p-4 bg-white/[0.02] border border-white/5 rounded-xl sm:rounded-2xl flex items-center justify-between gap-2.5 sm:gap-3">
-                    <div className="min-w-0 flex-1">
-                      <h2 className="text-[9.5px] sm:text-[11px] font-black uppercase text-white tracking-wider flex items-center gap-1.5 truncate">
-                        <span>Local Hotspot Network</span>
-                      </h2>
-                      <p className="text-[7.5px] sm:text-[9px] text-gray-400 font-medium leading-tight mt-0.5">
-                        Friends connect to your Wi-Fi hotspot • Zero data used
-                      </p>
-                    </div>
-                  </div>
-                )}
+                  <button
+                    type="button"
+                    onClick={() => setIsPublicRoom(!isPublicRoom)}
+                    aria-label="Toggle public room visibility"
+                    className={`w-10 h-5 sm:w-12 sm:h-6 rounded-full transition-colors p-1 flex items-center cursor-pointer shrink-0 ${
+                      isPublicRoom
+                        ? "bg-orange-600 justify-end"
+                        : "bg-white/10 justify-start"
+                    }`}
+                  >
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-white shadow-md" />
+                  </button>
+                </div>
 
                 <div className="pt-1 sm:pt-2">
                   <button
@@ -1244,14 +1085,7 @@ const LandingPage = () => {
                         <Loader2 size={18} className="animate-spin" />
                       ) : (
                         <>
-                          {hostingType === "hotspot" ? (
-                            <>
-                              <Radio size={14} />
-                              <span>Start Hotspot Auction</span>
-                            </>
-                          ) : (
-                            <span>Start Auction</span>
-                          )}
+                          <span>Start Auction</span>
                           <ChevronRight
                             size={16}
                             className="group-hover/submit:translate-x-1 transition-transform"
@@ -1286,7 +1120,7 @@ const LandingPage = () => {
                       value={roomCode}
                       onChange={(e) => setRoomCode(e.target.value)}
                       className="w-full bg-[#111] border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3.5 focus:outline-none focus:border-orange-500/50 transition-all text-white font-black uppercase tracking-[0.25em] sm:tracking-[0.4em] text-center text-sm sm:text-base placeholder:tracking-normal placeholder:text-[10px] sm:placeholder:text-xs placeholder:text-gray-500"
-                      placeholder="e.g. AB12CD or HOTSPOT-4921"
+                      placeholder="e.g. AB12CD"
                     />
                   </div>
 
@@ -1295,10 +1129,10 @@ const LandingPage = () => {
                     <div className="p-2 sm:p-2.5 rounded-xl bg-[#ff5500]/10 border border-[#ff5500]/30 flex flex-wrap items-center justify-between gap-1.5 text-[8.5px] sm:text-[10px] font-mono text-[#ff5500]">
                       <div className="flex items-center gap-1.5 font-bold min-w-0">
                         <Radio size={12} className="animate-pulse shrink-0" />
-                        <span className="truncate">Offline / Hotspot Room Detected</span>
+                        <span className="truncate">Hotspot Room Detected</span>
                       </div>
                       <span className="text-emerald-400 font-bold uppercase shrink-0 text-[7.5px] sm:text-[9px]">
-                        Direct LAN • Zero Quota
+                        Host Engine • Zero Cloud Cap
                       </span>
                     </div>
                   ) : roomCode.trim() ? (
@@ -1344,7 +1178,7 @@ const LandingPage = () => {
                   </button>
                 </form>
 
-                {/* Public Lobbies Directory Section - Temporarily paused for offline mode
+                {/* Public Lobbies Directory Section */}
                 <div className="relative py-1 sm:py-2 flex items-center justify-center">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-white/5" />
@@ -1471,7 +1305,6 @@ const LandingPage = () => {
                                 withServerParam(
                                   `/lobby/${room.roomId}`,
                                   room.server,
-                                HiggsServer
                                 ),
                               );
                             }}
@@ -1487,12 +1320,6 @@ const LandingPage = () => {
                       ))}
                     </div>
                   )}
-                </div>
-                */}
-                <div className="p-3 bg-white/[0.02] border border-white/5 rounded-xl text-center">
-                  <p className="text-[10px] sm:text-xs text-gray-400 font-medium">
-                    To join a friend's offline auction, connect to their <strong className="text-white">Wi-Fi Hotspot</strong> and enter their room code above.
-                  </p>
                 </div>
               </div>
             )}
@@ -1970,13 +1797,6 @@ const LandingPage = () => {
         onCancel={() => setSessionToDelete(null)}
       />
 
-      <LocalPlayRoadmap
-        onSelectOfflineMode={() => {
-          setActiveTab("new");
-          setHostingType("hotspot");
-          window.scrollTo({ top: 380, behavior: "smooth" });
-        }}
-      />
       <Footer />
       </main>
     </div>

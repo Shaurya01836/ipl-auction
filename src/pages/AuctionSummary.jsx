@@ -1,12 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuction } from '../contexts/AuctionContext';
-import { useAuth } from '../contexts/AuthContext';
+import { useQuota } from '../contexts/QuotaContext';
 import { IPL_PLAYERS } from '../data/players';
 import { TEAMS } from '../data/teams';
 import { toPng } from 'html-to-image';
 import { supabase } from '../lib/supabase';
-import { db } from '../lib/firebase';
+import { db, getRtdb, goOnlineServer } from '../lib/firebase';
+import { ref, get } from 'firebase/database';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import {
   Trophy,
@@ -16,7 +17,6 @@ import {
   Share2,
   CheckCircle2,
   Wifi,
-  History,
   LayoutGrid,
   Zap,
   Download,
@@ -26,6 +26,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import SquadRating from '../components/SquadRating';
 import useRoomServer from '../hooks/useRoomServer';
 import { isHotspotRoomCode } from '../lib/roomCodes';
+import { readLocalRoom } from '../lib/localAuctionEngine';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import {
   computeTeamSpent,
@@ -40,8 +41,8 @@ const AuctionSummary = () => {
   useDocumentTitle(`Auction Summary #${id || ''} | CrickAuction`, 'Final squad rosters and auction summary.', true);
   const navigate = useNavigate();
   const { server, ready: serverReady } = useRoomServer(id);
-  const { currentAuction, roomTeams, loading, joinAuction } = useAuction();
-  const { user } = useAuth();
+  const { currentAuction, roomTeams } = useAuction();
+  const { handleFirebaseError } = useQuota();
   
   const [activeTab, setActiveTab] = useState('squads');
   const [expandedTeam, setExpandedTeam] = useState(null);
@@ -104,18 +105,15 @@ const AuctionSummary = () => {
   };
 
 
-  useEffect(() => {
-    if (!serverReady || !id || !user?.uid) return;
-    const unsub = joinAuction(id, user.uid, server);
-    return () => unsub();
-  }, [id, user?.uid, joinAuction, server, serverReady]);
+  // Note: AuctionSummary is for completed auctions; persistent store (Supabase/Firestore/Local)
+  // is authoritative, avoiding unnecessary RTDB connections or quota usage.
 
   useEffect(() => {
     if (!id) return;
     let isMounted = true;
 
-    // If live auction data is already present in memory from an active session, dismiss loading
-    if (currentAuction && roomTeams && roomTeams.length > 0) {
+    // If live auction data is already present in memory from this active session, dismiss loading
+    if (currentAuction && currentAuction.id === id && roomTeams && roomTeams.length > 0) {
       setSummaryLoading(false);
     }
 
@@ -123,6 +121,21 @@ const AuctionSummary = () => {
       setSummaryLoading(true);
       setSummaryError(null);
       try {
+        // 1. Check offline hotspot room storage first if applicable
+        if (isHotspotRoomCode(id) || server === 'local') {
+          const localRoom = readLocalRoom(id);
+          if (localRoom && isMounted) {
+            setDbAuction(localRoom);
+            const teams = Array.isArray(localRoom.teams)
+              ? localRoom.teams
+              : Object.values(localRoom.teams || {});
+            setDbTeams(teams);
+            setSummaryLoading(false);
+            return;
+          }
+        }
+
+        // 2. Persistent Supabase store
         if (supabase) {
           // Optimized egress: Exclude heavy player_order column
           const { data: aData, error: auctionError } = await supabase
@@ -151,8 +164,10 @@ const AuctionSummary = () => {
               settings: aData.settings || { budget: 120, bidTimer: 10 }
             });
 
-            if (tData && tData.length > 0) {
-              setDbTeams(tData.map(t => ({
+            const parsedTeams = (tData || []).map(t => {
+              const rawSquad = t.squad;
+              const squadArr = Array.isArray(rawSquad) ? rawSquad : (rawSquad ? Object.values(rawSquad) : []);
+              return {
                 id: t.id,
                 auctionId: t.auction_id,
                 userId: t.user_id,
@@ -160,12 +175,83 @@ const AuctionSummary = () => {
                 teamName: t.team_name,
                 budgetRemaining: t.budget_remaining ?? null,
                 spent: toFiniteNumber(t.spent, 0),
-                squad: t.squad || []
-              })));
+                squad: squadArr
+              };
+            });
+
+            // If Supabase teams already have sold players, use them immediately
+            if (parsedTeams.some(t => t.squad && t.squad.length > 0)) {
+              setDbTeams(parsedTeams);
+              setSummaryLoading(false);
+              return;
             }
+
+            // Fallback to RTDB if Supabase flush hasn't arrived or squads are empty
+            try {
+              goOnlineServer(server);
+              const rtdbInstance = getRtdb(server);
+              const rtdbTeamsSnap = await get(ref(rtdbInstance, `auctions/${id}/teams`));
+              if (rtdbTeamsSnap.exists()) {
+                const teamsObj = rtdbTeamsSnap.val() || {};
+                const rtdbTeams = Object.entries(teamsObj).map(([docId, t]) => {
+                  const rawSquad = t.squad;
+                  return {
+                    id: docId,
+                    auctionId: id,
+                    userId: t.userId,
+                    teamId: t.teamId,
+                    teamName: t.teamName,
+                    budgetRemaining: t.budgetRemaining ?? null,
+                    spent: toFiniteNumber(t.spent, 0),
+                    squad: Array.isArray(rawSquad) ? rawSquad : (rawSquad ? Object.values(rawSquad) : [])
+                  };
+                });
+                if (rtdbTeams.length > 0) {
+                  setDbTeams(rtdbTeams);
+                  setSummaryLoading(false);
+                  return;
+                }
+              }
+            } catch (rtdbErr) {
+              console.warn('[summary] RTDB teams fallback error', rtdbErr);
+            }
+
+            setDbTeams(parsedTeams);
             setSummaryLoading(false);
             return;
           }
+        }
+
+        // 3. Fallback to RTDB directly before Firestore
+        try {
+          goOnlineServer(server);
+          const rtdbInstance = getRtdb(server);
+          const [roomSnap, teamsSnap] = await Promise.all([
+            get(ref(rtdbInstance, `auctions/${id}/room`)),
+            get(ref(rtdbInstance, `auctions/${id}/teams`))
+          ]);
+          if (roomSnap.exists() && isMounted) {
+            setDbAuction({ id, ...roomSnap.val() });
+            const teamsObj = teamsSnap.exists() ? teamsSnap.val() : {};
+            const rtdbTeams = Object.entries(teamsObj).map(([docId, t]) => {
+              const rawSquad = t.squad;
+              return {
+                id: docId,
+                auctionId: id,
+                userId: t.userId,
+                teamId: t.teamId,
+                teamName: t.teamName,
+                budgetRemaining: t.budgetRemaining ?? null,
+                spent: toFiniteNumber(t.spent, 0),
+                squad: Array.isArray(rawSquad) ? rawSquad : (rawSquad ? Object.values(rawSquad) : [])
+              };
+            });
+            setDbTeams(rtdbTeams);
+            setSummaryLoading(false);
+            return;
+          }
+        } catch (rtdbErr) {
+          console.warn('[summary] RTDB direct fetch error', rtdbErr);
         }
 
         const roomDoc = await getDoc(doc(db, 'auctions', id));
@@ -182,6 +268,7 @@ const AuctionSummary = () => {
         }
       } catch (err) {
         console.error('[summary] Failed to load auction summary', err);
+        handleFirebaseError(err);
         if (isMounted) {
           setSummaryError('Could not load the auction summary. Please try again.');
         }
@@ -195,13 +282,15 @@ const AuctionSummary = () => {
     return () => { isMounted = false; };
   }, [id, summaryReloadKey]);
 
-  const activeAuction = currentAuction || dbAuction;
-  const activeTeams = (roomTeams && roomTeams.length > 0) ? roomTeams : dbTeams;
+  const activeAuction = (currentAuction && currentAuction.id === id) ? currentAuction : dbAuction;
+  const activeTeams = (roomTeams && roomTeams.length > 0 && currentAuction?.id === id) ? roomTeams : dbTeams;
 
   // Derived Data
   const allSoldPlayers = useMemo(() => {
-    return activeTeams.flatMap(rt => 
-      (rt.squad || []).map(s => {
+    return (activeTeams || []).flatMap(rt => {
+      const rawSquad = rt.squad;
+      const squadArr = Array.isArray(rawSquad) ? rawSquad : (rawSquad ? Object.values(rawSquad) : []);
+      return squadArr.map(s => {
         const pid = typeof s === 'string' ? s : s.id;
         // Legacy string entries have no bid information: keep it unknown (null)
         // instead of fabricating a 0 value.
@@ -218,8 +307,8 @@ const AuctionSummary = () => {
           teamColor: teamInfo?.color,
           teamTextColor: teamInfo?.textColor
         };
-      }).filter(p => p && p.id)
-    ).sort((a, b) => toFiniteNumber(b.bidVal, -1) - toFiniteNumber(a.bidVal, -1));
+      }).filter(p => p && p.id);
+    }).sort((a, b) => toFiniteNumber(b.bidVal, -1) - toFiniteNumber(a.bidVal, -1));
   }, [activeTeams]);
 
   const topPlayers = allSoldPlayers.slice(0, 5);
@@ -243,7 +332,7 @@ const AuctionSummary = () => {
     );
   }
 
-  if (!serverReady || (loading && !activeAuction) || (!activeAuction && summaryLoading)) {
+  if (!serverReady || (!activeAuction && summaryLoading)) {
     return (
       <div className="h-screen-safe bg-[#050505] text-white flex flex-col items-center justify-center p-8 text-center">
         <div className="w-20 h-20 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin mb-8" />
@@ -418,7 +507,9 @@ const AuctionSummary = () => {
                 const manager = activeAuction?.players?.find(p => p.team === t.id);
                 const isExpanded = expandedTeam === t.id;
                 
-                const squad = (teamDoc?.squad || []).map(s => {
+                const rawSquad = teamDoc?.squad;
+                const squadArr = Array.isArray(rawSquad) ? rawSquad : (rawSquad ? Object.values(rawSquad) : []);
+                const squad = squadArr.map(s => {
                   const pid = typeof s === 'string' ? s : s.id;
                   const bid = typeof s === 'string' ? null : (s.bid ?? null);
                   const playerInfo = IPL_PLAYERS.find(p => p.id === pid);

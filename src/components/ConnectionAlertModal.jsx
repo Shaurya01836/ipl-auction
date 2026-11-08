@@ -18,13 +18,31 @@ const COPY = {
     badge: 'Cloud Capacity Reached',
     title: 'Cloud Server Full',
     body: 'Firebase’s free plan (100 simultaneous managers) is currently full. Your internet is fine!',
-    hint: 'Seats free up as managers leave. Or play immediately with zero server caps below:',
+    hint: 'Seats free up as managers leave. Or host immediately without cloud limits below:',
   },
   unreachable: {
     badge: 'Server Unreachable',
     title: 'Can’t Reach Cloud',
-    body: 'We couldn’t reach the cloud auction server right now. Your internet is fine.',
-    hint: 'You can wait for auto-reconnect, or switch to zero-cloud Hotspot Mode below:',
+    body: 'We couldn’t reach the cloud auction server right now. Check your internet connection or try again.',
+    hint: 'You can wait for auto-reconnect, or switch to Host-Engine Mode below:',
+  },
+  offline: {
+    badge: 'No Internet Connection',
+    title: 'Internet Disconnected',
+    body: 'You appear to be offline. Cross-device multiplayer requires an active internet connection to synchronize bids.',
+    hint: 'Please check your Wi-Fi or mobile data connection to resume.',
+  },
+  supabase_disconnected: {
+    badge: 'Realtime Disconnected',
+    title: 'Relay Dropped',
+    body: 'Lost connection to the Supabase Realtime messaging relay. Reconnecting automatically...',
+    hint: 'Auction state is preserved on the host. Live bidding will resume once reconnected.',
+  },
+  reconnected: {
+    badge: 'Reconnected',
+    title: 'Connection Restored',
+    body: 'Successfully reconnected to the multiplayer relay! Synchronizing current auction state...',
+    hint: 'Resuming live bidding.',
   },
 };
 
@@ -65,7 +83,9 @@ function AlertDialog({ problem }) {
     retry();
   }, [secondsLeft, retry]);
 
-  const copy = COPY[problem] ?? COPY.unreachable;
+  const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+  const activeReason = isOffline ? 'offline' : problem;
+  const copy = COPY[activeReason] ?? COPY.unreachable;
 
   return (
     <div
@@ -106,29 +126,29 @@ function AlertDialog({ problem }) {
                 {copy.body}
               </p>
 
-              {/* Offline / Hotspot Mode Promotion Card */}
+              {/* Hotspot / Host Mode Promotion Card */}
               <div className="my-3.5 border-t border-white/10 pt-4">
                 <div className="flex items-center justify-between gap-2 mb-1.5">
                   <div className="flex items-center gap-2">
                     <span className="text-[11px] font-black uppercase text-white tracking-wider">
-                      Play Hotspot & Wi-Fi Mode
+                      Play Hotspot / Host Mode
                     </span>
                   </div>
                   <span className="text-[8px] font-mono font-bold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-1.5 py-0.5 rounded-md">
-                    ZERO LIMITS
+                    BYPASS CLOUD CAPS
                   </span>
                 </div>
 
                 <p className="text-[11px] text-gray-300 leading-relaxed">
-                  Host an auction on your mobile hotspot or Wi-Fi with friends. Zero cloud limits, sub-5ms bid response, and no data recharge required!
+                  Host an auction on your device with lightweight Supabase Realtime messaging. Bypasses Firebase RTDB server limits! (Requires active internet for all players).
                 </p>
 
                 <div className="mt-2.5 pt-2 border-t border-white/5 flex items-center gap-3 text-[9px] font-mono text-gray-400">
                   <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-                    <CheckCircle2 size={11} className="shrink-0" /> No server cap
+                    <CheckCircle2 size={11} className="shrink-0" /> No Firebase cap
                   </span>
                   <span className="flex items-center gap-1 text-amber-400 font-semibold">
-                    <Zap size={11} className="shrink-0" /> Zero lag
+                    <Zap size={11} className="shrink-0" /> Host engine
                   </span>
                 </div>
               </div>
@@ -147,7 +167,7 @@ function AlertDialog({ problem }) {
                 <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/hotspot:translate-y-0 transition-transform duration-300" />
                 <span className="relative flex items-center justify-center gap-2">
                   <Radio size={14} className="animate-pulse" />
-                  <span>Play Offline / Hotspot Mode</span>
+                  <span>Play Hotspot / Host Mode</span>
                   <ArrowRight size={13} className="group-hover/hotspot:translate-x-1 transition-transform" />
                 </span>
               </button>

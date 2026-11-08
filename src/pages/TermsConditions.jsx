@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Home, ChevronRight } from 'lucide-react';
 import Footer from '../components/Footer';
 import useDocumentTitle from '../hooks/useDocumentTitle';

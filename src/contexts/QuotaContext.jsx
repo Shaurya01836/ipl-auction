@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import { isQuotaError } from '../lib/quota';
 
 const QuotaContext = createContext();
 
@@ -6,7 +7,7 @@ export const QuotaProvider = ({ children }) => {
   const [isQuotaExceeded, setIsQuotaExceeded] = useState(false);
   const [quotaErrorMessage, setQuotaErrorMessage] = useState('');
 
-  const triggerQuotaError = useCallback((message) => {
+  const triggerQuotaError = useCallback((message = "Server daily free limit reached.") => {
     setIsQuotaExceeded(true);
     if (message) setQuotaErrorMessage(message);
   }, []);
@@ -17,65 +18,12 @@ export const QuotaProvider = ({ children }) => {
   }, []);
 
   const handleFirebaseError = useCallback((error) => {
-    if (!error) return;
-    const errString = String(error.code || error.message || error).toLowerCase();
-    
-    // Check for Firebase Quota / Resource limit keywords
-    if (
-      errString.includes('resource-exhausted') ||
-      errString.includes('quota') ||
-      errString.includes('limit exceeded') ||
-      errString.includes('over-quota')
-    ) {
+    if (!error) return false;
+    if (isQuotaError(error)) {
       triggerQuotaError("Server daily free limit reached.");
+      return true;
     }
-  }, [triggerQuotaError]);
-
-  useEffect(() => {
-    const checkErrorText = (text) => {
-      const lower = String(text || '').toLowerCase();
-      if (
-        lower.includes('resource-exhausted') ||
-        lower.includes('quota exceeded') ||
-        lower.includes('quota-exceeded') ||
-        lower.includes('over-quota')
-      ) {
-        triggerQuotaError("Server daily free limit reached.");
-      }
-    };
-
-    // 1. Intercept Unhandled Promise Rejections (e.g. setDoc, getDoc rejections)
-    const handleRejection = (event) => {
-      const reason = event.reason;
-      checkErrorText(reason?.code || reason?.message || reason);
-    };
-
-    // 2. Intercept Global Uncaught Errors
-    const handleError = (event) => {
-      checkErrorText(event.error?.code || event.error?.message || event.message);
-    };
-
-    // 3. Intercept console.error (Firebase SDK logs Firestore stream quota failures directly to console.error)
-    const originalConsoleError = console.error;
-    console.error = (...args) => {
-      originalConsoleError.apply(console, args);
-      const fullText = args.map(a => {
-        if (typeof a === 'object' && a !== null) {
-          return (a.code || a.message || JSON.stringify(a));
-        }
-        return String(a);
-      }).join(' ');
-      checkErrorText(fullText);
-    };
-
-    window.addEventListener('unhandledrejection', handleRejection);
-    window.addEventListener('error', handleError);
-
-    return () => {
-      console.error = originalConsoleError;
-      window.removeEventListener('unhandledrejection', handleRejection);
-      window.removeEventListener('error', handleError);
-    };
+    return false;
   }, [triggerQuotaError]);
 
   return (
@@ -100,4 +48,6 @@ export const useQuota = () => {
   }
   return context;
 };
+
+export { isQuotaError };
 

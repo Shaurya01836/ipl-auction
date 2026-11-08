@@ -7,24 +7,14 @@ import {
   Users,
   Crown,
   UserMinus,
-  LogOut,
   Home,
-  Gavel,
   ShieldAlert,
   Copy,
   MessageSquare,
-  Settings as SettingsIcon,
   CheckCircle2,
   Check,
-  Rocket,
-  TrendingUp,
   Zap,
-  Star,
   Bot,
-  ChevronDown,
-  ChevronUp,
-  Brain,
-  Sparkles,
   Info,
   X,
   Eye
@@ -38,7 +28,6 @@ import Footer from '../components/Footer';
 import PageLoader from '../components/PageLoader';
 import useRoomServer from '../hooks/useRoomServer';
 import { withServerParam } from '../lib/auctionServers';
-import { isHotspotRoomCode } from '../lib/roomCodes';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 // Small-screen detection (matches the 767px breakpoint used in index.css).

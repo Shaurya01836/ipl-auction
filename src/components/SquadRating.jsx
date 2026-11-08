@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Trophy, Users, Star } from 'lucide-react';
+import { Users, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { IPL_PLAYERS } from '../data/players';
 import { TEAMS } from '../data/teams';
@@ -16,9 +16,10 @@ const SquadRating = ({ roomTeams = [], currentAuction }) => {
   const calculatedLeaderboard = useMemo(() => {
     return roomTeams.map(team => {
       const { userId, userName, teamId, squad = [] } = team;
+      const squadArr = Array.isArray(squad) ? squad : (squad ? Object.values(squad) : []);
 
       let totalRating = 0;
-      const normalizedPlayers = squad.map(p => typeof p === 'string' ? p : (p?.id || p));
+      const normalizedPlayers = squadArr.map(p => typeof p === 'string' ? p : (p?.id || p));
 
       normalizedPlayers.forEach(pId => {
         const playerInfo = IPL_PLAYERS.find(p => p.id === pId);

@@ -1,45 +1,30 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { toPng } from 'html-to-image';
 import { TEAM_SLOGANS } from '../data/slogans';
 import confetti from 'canvas-confetti';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useAuction } from '../contexts/AuctionContext';
 import { useAuth } from '../contexts/AuthContext';
 import { IPL_PLAYERS } from '../data/players';
 import {
-   Wallet,
    History,
-   Star,
    AlertCircle,
    Timer,
-   ChevronRight,
-   TrendingUp,
-   Share2,
    Copy,
    MessageSquare,
    Settings as SettingsIcon,
    Home,
    Pause,
    XCircle,
-   Rocket,
    Users,
-   LayoutGrid,
-   Heart,
-   Wifi,
    List,
    Download,
    Gavel,
    X,
    CheckCircle2,
    PlayCircle,
-   Filter,
-   Search,
    ChevronDown,
-   Play,
    ShieldAlert,
-   Trophy,
-   Clock,
-   LogOut,
    Eye
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -48,20 +33,19 @@ import { TEAMS } from '../data/teams';
 import TextChat from '../components/TextChat';
 import PageLoader from '../components/PageLoader';
 import ConfirmDialog from '../components/ConfirmDialog';
+import AuctionCountdown from '../components/AuctionCountdown';
 import useRoomServer from '../hooks/useRoomServer';
 import { withServerParam } from '../lib/auctionServers';
 import { isHotspotRoomCode } from '../lib/roomCodes';
 import useDocumentTitle from '../hooks/useDocumentTitle';
+import { getLiveRemainingMs, isInLastCall } from '../lib/localAuctionEngine';
 import {
-   clampTimer,
    computeTeamSpent,
    countOverseas,
    formatCrores,
    isOverseasPlayer,
-   timerProgress,
    toFiniteNumber,
 } from '../lib/auctionDisplay';
-import { getLiveRemainingMs, isInLastCall } from '../lib/localAuctionEngine';
 
 const AuctionRoom = () => {
    const { id } = useParams();
@@ -86,9 +70,6 @@ const AuctionRoom = () => {
       getSyncedTime
    } = useAuction();
    const { user } = useAuth();
-   // UI-only tick used to re-render the derived countdown. The authoritative
-   // deadline remains displayAuctionState.timerEndsAt + getSyncedTime().
-   const [, setTimerTick] = useState(0);
    const [error, setError] = useState('');
    const [copied, setCopied] = useState(false);
    const [showPlayersOverlay, setShowPlayersOverlay] = useState(false);
@@ -114,37 +95,36 @@ const AuctionRoom = () => {
       return params.get('spectate') === 'true';
    });
 
-   // Clear optimistic state when DB catches up
+   // Clear optimistic state when DB catches up, player changes, or lot finalizes
    useEffect(() => {
-      if (optimisticState && currentAuction?.currentAuction?.currentBid >= optimisticState.currentBid) {
+      if (!optimisticState) return;
+      const dbLive = currentAuction?.currentAuction;
+      if (!dbLive) return;
+
+      const shouldClear =
+         dbLive.playerId !== optimisticState.playerId ||
+         dbLive.currentBid >= optimisticState.currentBid ||
+         dbLive.status !== 'bidding' ||
+         dbLive.highBidderId === user?.uid;
+
+      if (shouldClear) {
          setOptimisticState(null);
       }
-   }, [currentAuction?.currentAuction?.currentBid, optimisticState]);
+   }, [
+      currentAuction?.currentAuction?.currentBid,
+      currentAuction?.currentAuction?.playerId,
+      currentAuction?.currentAuction?.status,
+      currentAuction?.currentAuction?.highBidderId,
+      optimisticState,
+      user?.uid
+   ]);
 
    const displayAuctionState = optimisticState || currentAuction?.currentAuction;
 
-   // Display-only timer derivation. Never write to timerEndsAt here: the
-   // deadline and bid acceptance remain owned by AuctionContext/RTDB.
    const configuredBidTimer = toFiniteNumber(currentAuction?.settings?.bidTimer, 10);
-   const timerTotal = configuredBidTimer > 0 ? configuredBidTimer : 10;
-   const isTimerBidding = displayAuctionState?.status === 'bidding';
    const isTimerPaused = displayAuctionState?.status === 'paused';
    const isHotspotRoom = isHotspotRoomCode(id) || currentAuction?.server === 'local';
    const inLastCall = isHotspotRoom && isInLastCall(displayAuctionState);
-   const rawMsRemaining = isHotspotRoom
-      ? getLiveRemainingMs(displayAuctionState)
-      : (isTimerPaused
-         ? Math.max(0, displayAuctionState?.remainingMs || 0)
-         : (isTimerBidding && displayAuctionState?.timerEndsAt ? Math.max(0, displayAuctionState.timerEndsAt - getSyncedTime()) : 0));
-   const rawSecondsRemaining = (isTimerBidding || isTimerPaused)
-      ? Math.ceil(rawMsRemaining / 1000)
-      : 0;
-   const secondsRemaining = (isTimerBidding || isTimerPaused)
-      ? clampTimer(rawSecondsRemaining, timerTotal)
-      : 0;
-   const timerPercent = (isTimerBidding || isTimerPaused)
-      ? timerProgress(rawSecondsRemaining, timerTotal)
-      : 0;
 
    // Real-time team ratings calculated entirely in browser memory (0 DB / infra cost)
    const liveTeamRatings = useMemo(() => {
@@ -218,11 +198,13 @@ const AuctionRoom = () => {
    }, []);
 
 
-   // Sync completion status
+   // Sync room status (redirect if waiting or completed)
    useEffect(() => {
       if (!serverReady) return;
       if (currentAuction?.status === 'completed') {
          navigate(withServerParam(`/summary/${id}`, server), { replace: true });
+      } else if (currentAuction?.status === 'waiting') {
+         navigate(withServerParam(`/lobby/${id}`, server), { replace: true });
       }
    }, [currentAuction?.status, id, navigate, server, serverReady]);
 
@@ -549,7 +531,7 @@ const AuctionRoom = () => {
    }, [currentAuction, user]);
 
    const audioCtxRef = useRef(null);
-   const playBeep = (freq = 440, duration = 0.1) => {
+   const playBeep = useCallback((freq = 440, duration = 0.1) => {
       if (displayAuctionState?.status === 'paused') return;
       try {
          if (!audioCtxRef.current) {
@@ -575,7 +557,7 @@ const AuctionRoom = () => {
       } catch {
          // AudioContext can be unavailable or blocked; beeps are non-critical.
       }
-   };
+   }, [displayAuctionState?.status]);
 
    // Release only resources owned by this component when it unmounts.
    useEffect(() => {
@@ -738,58 +720,7 @@ const AuctionRoom = () => {
 
 
 
-   const lastBeepedSecRef = useRef(-1);
-   const endTriggeredRef = useRef(false);
 
-   // Reset the end-trigger lock ONLY when a genuinely new player comes up for auction.
-   // Bug Fix 3: Previously this also reset on timerEndsAt changes, which happens on every bid
-   // (including optimistic UI updates). That re-armed the trigger mid-countdown and could cause
-   // endPlayerAuction to fire twice in quick succession under aggressive bidding.
-   useEffect(() => {
-      endTriggeredRef.current = false;
-   }, [displayAuctionState?.playerId]);
-
-   useEffect(() => {
-      if (currentAuction?.status !== 'active' || !displayAuctionState || (displayAuctionState?.status !== 'bidding' && displayAuctionState?.status !== 'paused')) {
-         return;
-      }
-
-      if (displayAuctionState?.status === 'paused') {
-         setTimerTick((tick) => tick + 1);
-         return;
-      }
-
-      // Reset beep tracking when timer resets (new bid / new player)
-      lastBeepedSecRef.current = -1;
-
-      const isHotspot = isHotspotRoomCode(id) || currentAuction?.server === 'local';
-      const interval = setInterval(() => {
-         const rawMs = isHotspot
-            ? getLiveRemainingMs(displayAuctionState)
-            : (displayAuctionState.timerEndsAt - getSyncedTime());
-         const diff = Math.max(0, Math.ceil(rawMs / 1000));
-
-         if (diff <= 5 && diff > 0 && diff !== lastBeepedSecRef.current) {
-            lastBeepedSecRef.current = diff;
-            playBeep(diff === 1 ? 880 : 440, 0.1);
-         }
-
-         setTimerTick((tick) => tick + 1);
-         if (diff === 0 && !isHotspot) {
-            // For cloud RTDB rooms only: primary trigger is admin, fallback is non-host client after 1.5s
-            const shouldTrigger = (isAdmin || rawMs < -1500) && displayAuctionState.status === 'bidding' && !endTriggeredRef.current;
-            if (shouldTrigger) {
-               endTriggeredRef.current = true;
-               clearInterval(interval);
-               setTimeout(() => {
-                  endPlayerAuction(id);
-               }, 300);
-            }
-         }
-      }, 200);
-
-      return () => clearInterval(interval);
-   }, [displayAuctionState?.timerEndsAt, displayAuctionState?.status, displayAuctionState?.remainingMs, currentAuction?.status, isAdmin, id, endPlayerAuction, getSyncedTime]);
 
    const handleBid = async () => {
       if (isBiddingInFlight) return;
@@ -848,6 +779,8 @@ const AuctionRoom = () => {
          setTimeout(() => setError(''), 3000);
       } finally {
          setIsBiddingInFlight(false);
+         // Safety: ensure optimistic state never outlives the bid request
+         setTimeout(() => setOptimisticState(null), 1000);
       }
    };
 
@@ -857,7 +790,9 @@ const AuctionRoom = () => {
       setTimeout(() => setCopied(false), 2000);
    };
 
-   if (currentAuction?.status === 'completed') return null;
+   if (currentAuction?.id === id && currentAuction?.status === 'completed') {
+      return <Navigate to={withServerParam(`/summary/${id}`, server)} replace />;
+   }
 
    if (banError) {
       return (
@@ -895,10 +830,14 @@ const AuctionRoom = () => {
       return <PageLoader />;
    }
 
-   if (!serverReady || loading) {
+   if (!serverReady || loading || !currentAuction || currentAuction.id !== id) {
       return (
          <PageLoader />
       );
+   }
+
+   if (currentAuction?.status === 'completed') {
+      return <Navigate to={withServerParam(`/summary/${id}`, server)} replace />;
    }
 
    // Manual team selection for late joiners
@@ -1054,12 +993,17 @@ const AuctionRoom = () => {
                         </button>
                      ) : (
                         <button
+                           disabled={displayAuctionState?.status !== 'bidding'}
                            onClick={() => {
+                              const remainingMs = isHotspotRoom
+                                 ? getLiveRemainingMs(displayAuctionState)
+                                 : (displayAuctionState?.timerEndsAt || 0) - getSyncedTime();
+                              if (displayAuctionState?.status !== 'bidding' || remainingMs < 2000) return;
                               if ('speechSynthesis' in window) window.speechSynthesis.cancel();
                               pauseAuction(id);
                            }}
-                           className="p-1 sm:px-2.5 sm:py-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-300 text-[10px] compact:text-[9px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1"
-                           title="Pause Auction"
+                           className="p-1 sm:px-2.5 sm:py-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-300 text-[10px] compact:text-[9px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer flex items-center gap-1"
+                           title={displayAuctionState?.status !== 'bidding' ? "Cannot pause outside bidding" : "Pause Auction"}
                         >
                            <Pause size={13} /> <span className="hidden md:inline">Pause</span>
                         </button>
@@ -1199,9 +1143,6 @@ const AuctionRoom = () => {
                                                                   <div className="overflow-hidden">
                                                                      <div className="flex items-center gap-1">
                                                                         <h5 className="text-[10px] compact:text-[9px] font-semibold text-gray-200 truncate max-w-[80px]">{p?.name}</h5>
-                                                                        {p?.rating && (
-                                                                           <span className="text-[8px] compact:text-[7px] text-amber-400/80 font-medium">★{p.rating}</span>
-                                                                        )}
                                                                      </div>
                                                                   </div>
                                                                </div>
@@ -1245,20 +1186,6 @@ const AuctionRoom = () => {
                         </div>
                      </div>
                      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-                        {displayAuctionState?.status === 'sold' && (
-                           <div className="flex items-center gap-1 bg-green-500/20 border border-green-500/40 px-2 py-0.5 rounded-full animate-pulse">
-                              <span className="text-[7.5px] sm:text-[9px] font-black text-green-400 uppercase tracking-wider">
-                                 SOLD: {displayAuctionState?.highBidderName} (₹{formatCrores(displayAuctionState?.currentBid)} Cr)
-                              </span>
-                           </div>
-                        )}
-                        {displayAuctionState?.status === 'unsold' && (
-                           <div className="flex items-center gap-1 bg-red-500/20 border border-red-500/40 px-2 py-0.5 rounded-full animate-pulse">
-                              <span className="text-[7.5px] sm:text-[9px] font-black text-red-400 uppercase tracking-wider">
-                                 UNSOLD
-                              </span>
-                           </div>
-                        )}
                         <div className="w-px h-3.5 sm:h-4 bg-white/10 shrink-0" />
                         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                            <span className="text-[7.5px] sm:text-[9px] compact:text-[8px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Bidder:</span>
@@ -1379,9 +1306,6 @@ const AuctionRoom = () => {
                                        <p className="text-gray-400 text-xs font-semibold">Waiting for Admin to resume...</p>
                                     </div>
                                  )}
-                                 <div className="absolute top-0 inset-x-0 h-1 bg-white/5">
-                                    <motion.div initial={{ width: "100%" }} animate={{ width: `${timerPercent}%` }} className={`h-full transition-colors duration-1000 ${isTimerPaused ? 'bg-gray-500' : secondsRemaining < 5 ? 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]'}`} />
-                                 </div>
                                  <div className="p-4 sm:p-6 lg:p-5 xl:p-10 flex flex-col lg:flex-row items-center gap-4 sm:gap-6 lg:gap-5 xl:gap-10">
                                     <div className="w-28 h-28 sm:w-36 sm:h-36 lg:w-36 lg:h-48 xl:w-60 xl:h-80 bg-gradient-to-b from-white/10 to-transparent rounded-2xl sm:rounded-[2rem] overflow-hidden border border-white/10 relative z-10 shadow-[0_12px_40px_rgba(0,0,0,0.4)] group hover:scale-[1.02] transition-transform duration-500 shrink-0">
                                        <img src={currentPlayer.image} alt={currentPlayer.name} decoding="async" className="w-full h-full object-cover" />
@@ -1448,30 +1372,16 @@ const AuctionRoom = () => {
                                                 )}
                                              </div>
                                           </div>
-                                          <div className={`w-12 h-12 sm:w-14 sm:h-14 xl:w-16 xl:h-16 rounded-full flex flex-col items-center justify-center transition-all duration-300 border-2 ${isTimerPaused
-                                             ? 'border-yellow-500/50 bg-yellow-500/10 text-yellow-400'
-                                             : inLastCall
-                                                ? 'border-red-500 bg-red-500/20 text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.4)] animate-pulse'
-                                                : secondsRemaining < 5
-                                                   ? 'border-red-500 bg-red-500/10 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]'
-                                                   : 'border-green-500/30 bg-green-500/5 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.1)]'
-                                             }`}>
-                                             {isTimerPaused ? (
-                                                <>
-                                                   <span className="text-base sm:text-lg xl:text-xl font-black leading-none">{secondsRemaining}</span>
-                                                   <span className="text-[6px] md:text-[7px] font-bold tracking-widest uppercase mt-0.5 text-yellow-400">PAUSED</span>
-                                                </>
-                                             ) : inLastCall ? (
-                                                <span className="text-[8px] sm:text-[9px] xl:text-[10px] font-black leading-tight text-red-400 uppercase text-center px-1">
-                                                   Last call...
-                                                </span>
-                                             ) : (
-                                                <>
-                                                   <span className="text-base sm:text-lg xl:text-xl font-black leading-none">{secondsRemaining}</span>
-                                                   <span className="text-[6px] md:text-[7px] font-bold tracking-widest uppercase mt-0.5">Sec</span>
-                                                </>
-                                             )}
-                                          </div>
+                                          <AuctionCountdown
+                                             displayAuctionState={displayAuctionState}
+                                             configuredBidTimer={configuredBidTimer}
+                                             isHotspotRoom={isHotspotRoom}
+                                             isAdmin={isAdmin}
+                                             roomId={id}
+                                             endPlayerAuction={endPlayerAuction}
+                                             getSyncedTime={getSyncedTime}
+                                             playBeep={playBeep}
+                                          />
                                        </div>
                                     </div>
                                  </div>
@@ -1575,7 +1485,13 @@ const AuctionRoom = () => {
                               <div className="absolute left-6 sm:left-10 top-6 bottom-6 w-[1px] bg-white/5 pointer-events-none" />
 
                               <div className="space-y-3 sm:space-y-4 relative">
-                                 {[...messages.filter(m => m.type === 'log' || m.type === 'sold_card').filter(m => !m.text.includes('New bid:'))].reverse().map((msg, index) => {
+                                 {[...messages.filter(m => m.type === 'log' || m.type === 'sold_card').filter(m => !m.text.includes('New bid:'))]
+                                    .sort((a, b) => {
+                                       const ta = typeof a.timestamp === 'number' ? a.timestamp : (a.timestamp?.toDate ? a.timestamp.toDate().getTime() : 0);
+                                       const tb = typeof b.timestamp === 'number' ? b.timestamp : (b.timestamp?.toDate ? b.timestamp.toDate().getTime() : 0);
+                                       return tb - ta;
+                                    })
+                                    .map((msg, index) => {
                                     const isSold = msg.type === 'sold_card';
 
                                     // Relative timestamp

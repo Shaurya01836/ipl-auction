@@ -4,8 +4,6 @@ import {
   X,
   Copy,
   Check,
-  Pizza,
-  Rocket,
   Heart
 } from 'lucide-react';
 

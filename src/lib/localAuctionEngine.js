@@ -876,6 +876,9 @@ function hostApplyBid(roomId, req) {
     const nextBid = nextBidFor(player, cBid);
     if (req.maxValuation !== undefined && nextBid > req.maxValuation) return fail('Above valuation');
     if (toFiniteNumber(team.budgetRemaining, 0) < nextBid) return fail('Insufficient purse budget');
+    if ((team.squad || []).some((p) => (typeof p === 'string' ? p : p?.id) === live.playerId)) {
+      return fail('This player is already in your squad');
+    }
     if ((team.squad || []).length >= toFiniteNumber(d.squadLimit, 25)) return fail('Squad is full');
     if (isOverseasPlayer(player)) {
       const overseasCount = countOverseas(team.squad || [], PLAYER_BY_ID);
@@ -1491,6 +1494,9 @@ export function placeLocalBid(roomId, userId, teamId, userName, teamName) {
   if (team && toFiniteNumber(team.budgetRemaining, 0) < nextBid) {
     throw new Error('Insufficient purse budget');
   }
+  if (team && (team.squad || []).some((p) => (typeof p === 'string' ? p : p?.id) === room.live.playerId)) {
+    throw new Error('This player is already in your squad');
+  }
 
   // sentAt = moment of the click on the host's clock (used for the grace window)
   const req = {
@@ -1536,7 +1542,9 @@ export function pauseLocalAuction(roomId) {
   const room = commitHost(roomId, (room) => {
     const live = room.live;
     if (!live || live.status !== 'bidding') return false;
-    live.remainingMs = Math.max(0, (live.timerEndsAt || 0) - Date.now());
+    const remaining = (live.timerEndsAt || 0) - Date.now();
+    if (remaining < 2000) return false;
+    live.remainingMs = Math.max(0, remaining);
     live.status = 'paused';
     sysMsg(room, 'Auction PAUSED by Admin');
   });

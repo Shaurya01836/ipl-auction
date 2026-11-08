@@ -7,6 +7,7 @@ import {
   countOverseas,
   formatCrores,
   isOverseasPlayer,
+  r2,
   resolveSquadPlayer,
   shouldStickToBottom,
   timerProgress,
@@ -127,4 +128,16 @@ test('shouldStickToBottom respects the near-bottom threshold', () => {
   assert.equal(shouldStickToBottom(1000, 570, 400, 48), true);
   assert.equal(shouldStickToBottom(0, 0, 0), true);
   assert.equal(shouldStickToBottom(undefined, undefined, undefined), true);
+});
+
+test('r2 rounds to two decimal places and handles floating point drift', () => {
+  assert.equal(r2(0), 0);
+  assert.equal(r2(12.345), 12.35);
+  assert.equal(r2(12.344), 12.34);
+  assert.equal(r2(0.1 + 0.2), 0.3);
+  assert.equal(r2(104.80000000000001), 104.8);
+  assert.equal(r2(15.200000000000003), 15.2);
+  assert.equal(r2(null), 0);
+  assert.equal(r2(undefined), 0);
+  assert.equal(r2('45.678'), 45.68);
 });

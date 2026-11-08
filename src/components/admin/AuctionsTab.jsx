@@ -95,14 +95,20 @@ const AuctionsTab = ({
                   <div className="flex items-center gap-2">
                     <Link
                       to={withServerParam(
-                        `/auction/${auc.id}`,
+                        auc.status === 'completed'
+                          ? `/summary/${auc.id}`
+                          : `/auction/${auc.id}`,
                         getAuctionServer(auc),
                       )}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-blue-400 hover:text-white bg-blue-500/10 border border-blue-500/20 px-2.5 py-1.5 rounded-xl transition-all"
+                      className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-xl transition-all ${
+                        auc.status === 'completed'
+                          ? 'text-emerald-400 hover:text-white bg-emerald-500/10 border border-emerald-500/20'
+                          : 'text-blue-400 hover:text-white bg-blue-500/10 border border-blue-500/20'
+                      }`}
                     >
-                      View <ExternalLink className="w-3 h-3" />
+                      {auc.status === 'completed' ? 'Summary' : 'View'} <ExternalLink className="w-3 h-3" />
                     </Link>
 
                     <button
@@ -153,14 +159,20 @@ const AuctionsTab = ({
                       <td className="py-4 px-6 text-right space-x-2">
                         <Link
                           to={withServerParam(
-                            `/auction/${auc.id}`,
+                            auc.status === 'completed'
+                              ? `/summary/${auc.id}`
+                              : `/auction/${auc.id}`,
                             getAuctionServer(auc),
                           )}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-blue-400 hover:text-white bg-blue-500/10 border border-blue-500/20 px-2.5 py-1.5 rounded-xl transition-all"
+                          className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-xl transition-all ${
+                            auc.status === 'completed'
+                              ? 'text-emerald-400 hover:text-white bg-emerald-500/10 border border-emerald-500/20'
+                              : 'text-blue-400 hover:text-white bg-blue-500/10 border border-blue-500/20'
+                          }`}
                         >
-                          View <ExternalLink className="w-3 h-3" />
+                          {auc.status === 'completed' ? 'Summary' : 'View'} <ExternalLink className="w-3 h-3" />
                         </Link>
 
                         <button

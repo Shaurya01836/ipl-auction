@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { Home, HelpCircle, Trophy, Gavel, ArrowLeft } from 'lucide-react'
+import { Home, HelpCircle, Trophy } from 'lucide-react'
 import { motion } from 'framer-motion'
 import useDocumentTitle from '../hooks/useDocumentTitle'
 import Footer from '../components/Footer'

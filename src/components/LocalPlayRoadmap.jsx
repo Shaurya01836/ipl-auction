@@ -13,7 +13,7 @@ import {
 const LocalPlayRoadmap = ({ onSelectOfflineMode }) => {
   return (
     <section
-      aria-label="How to play offline with mobile hotspot"
+      aria-label="How to play with Hotspot mode"
       className="w-full max-w-6xl rounded-3xl sm:rounded-[2.5rem] p-3 sm:p-5  z-10 relative mt-10 sm:mt-16"
     >
       {/* Ambient background glows */}
@@ -35,9 +35,8 @@ const LocalPlayRoadmap = ({ onSelectOfflineMode }) => {
             </h2>
 
             <p className="text-[11px] sm:text-xs md:text-sm text-gray-400 font-medium mt-1.5 leading-relaxed">
-              Currently, cloud auctions use Firebase RTDB, which has strict connection and bandwidth limits.
-              With <strong className="text-gray-200">Offline Mode</strong>, you can host auctions right on your personal
-              mobile hotspot with zero cloud limits, zero lag, and zero internet data used!
+              Cloud auctions use Firebase RTDB with simultaneous user limits.
+              With <strong className="text-gray-200">Hotspot Mode</strong>, the auction engine runs on the host device with real-time multiplayer relayed via lightweight Supabase Realtime messaging—bypassing cloud database caps!
             </p>
           </div>
 
@@ -55,7 +54,7 @@ const LocalPlayRoadmap = ({ onSelectOfflineMode }) => {
           )}
         </div>
 
-        {/* ── 3 Simple Steps: How to Play Offline ── */}
+        {/* ── 3 Simple Steps: How Hotspot Mode Works ── */}
         <div className="relative z-10 pt-5 sm:pt-6">
           <div className="flex items-center gap-2 mb-3.5">
 
@@ -72,15 +71,15 @@ const LocalPlayRoadmap = ({ onSelectOfflineMode }) => {
 
                 </div>
                 <h4 className="text-xs sm:text-sm font-black uppercase text-white mb-1">
-                  Turn On Mobile Hotspot
+                  Connect to Network
                 </h4>
                 <p className="text-[11px] text-gray-400 leading-relaxed">
-                  Turn on your phone's personal hotspot (or connect to any Wi-Fi). <span className="text-gray-300 font-semibold">No active mobile data or recharge is needed!</span>
+                  Turn on your personal hotspot or connect everyone to the same Wi-Fi. <span className="text-gray-300 font-semibold">An active internet connection is required on all devices to sync multiplayer bids.</span>
                 </p>
               </div>
               <div className="mt-3 pt-2.5 border-t border-white/5 text-[9px] font-mono uppercase text-emerald-400 font-bold flex items-center gap-1.5">
 
-                <span>Zero mobile data consumed</span>
+                <span>Bypasses Firebase Quotas</span>
               </div>
             </div>
 
@@ -91,15 +90,15 @@ const LocalPlayRoadmap = ({ onSelectOfflineMode }) => {
 
                 </div>
                 <h4 className="text-xs sm:text-sm font-black uppercase text-white mb-1">
-                  Friends Connect Wi-Fi
+                  Friends Join with Code
                 </h4>
                 <p className="text-[11px] text-gray-400 leading-relaxed">
-                  Friends open their Wi-Fi settings and connect to your phone's hotspot. Works across Android, iPhone, Windows & Mac.
+                  Friends open CrickAuction in their browser and enter the 4-digit code. Initial room discovery connects through Supabase Realtime.
                 </p>
               </div>
               <div className="mt-3 pt-2.5 border-t border-white/5 text-[9px] font-mono uppercase text-blue-400 font-bold flex items-center gap-1.5">
 
-                <span>Instant local connection</span>
+                <span>Lightweight Relay</span>
               </div>
             </div>
 
@@ -109,15 +108,15 @@ const LocalPlayRoadmap = ({ onSelectOfflineMode }) => {
                 <div className="flex items-center justify-between mb-2.5">
                 </div>
                 <h4 className="text-xs sm:text-sm font-black uppercase text-white mb-1">
-                  Start & Bid with Zero Lag
+                  Host-Powered Bidding
                 </h4>
                 <p className="text-[11px] text-gray-400 leading-relaxed">
-                  Toggle <strong className="text-white">Offline / Hotspot</strong> in the Create tab. Your friends enter the room code to bid instantly at LAN speed.
+                  Auction timers, purse mathematics, and bot AI execute directly on the host device. Solo play against bots works offline once loaded.
                 </p>
               </div>
               <div className="mt-3 pt-2.5 border-t border-white/5 text-[9px] font-mono uppercase text-amber-400 font-bold flex items-center gap-1.5">
 
-                <span>Sub-5ms paddle latency</span>
+                <span>Host Engine Simulation</span>
               </div>
             </div>
           </div>

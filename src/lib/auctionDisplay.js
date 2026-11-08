@@ -20,6 +20,14 @@ export const toFiniteNumber = (value, fallback = 0) => {
 };
 
 /**
+ * Round a numeric value to two decimal places (e.g. for purse and bid calculations).
+ */
+export const r2 = (value) => {
+  const num = toFiniteNumber(value, 0);
+  return Math.round((num + Number.EPSILON) * 100) / 100;
+};
+
+/**
  * Canonical overseas rule for Crick Auction:
  * only the exact country code "IND" is Indian. Missing, empty, or any other
  * country value is overseas.
