@@ -39,6 +39,7 @@ import { withServerParam } from '../lib/auctionServers';
 import { isHotspotRoomCode } from '../lib/roomCodes';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import { getLiveRemainingMs, isInLastCall } from '../lib/localAuctionEngine';
+import { getNextBidAmount } from '../lib/auctionRules';
 import {
    computeTeamSpent,
    countOverseas,
@@ -287,10 +288,11 @@ const AuctionRoom = () => {
             const voices = window.speechSynthesis.getVoices();
 
             const targetPatterns = [
+               "Microsoft David",
+               "David",
                "Google US English",
                "Google UK English Male",
                "Google UK English Female",
-               "Microsoft David",
                "Neerja",
                "Daniel",
                "Samantha",
@@ -313,6 +315,15 @@ const AuctionRoom = () => {
             });
             filtered = Array.from(uniqueMap.values());
 
+            // Prioritize David at the top
+            filtered.sort((a, b) => {
+               const aDavid = a.name.toLowerCase().includes("david");
+               const bDavid = b.name.toLowerCase().includes("david");
+               if (aDavid && !bDavid) return -1;
+               if (!aDavid && bDavid) return 1;
+               return 0;
+            });
+
             if (filtered.length === 0) {
                filtered = voices.filter(v => v.lang.startsWith('en')).slice(0, 5);
             } else {
@@ -321,15 +332,15 @@ const AuctionRoom = () => {
 
             setAvailableVoices(filtered);
 
-            // Set default selected voice
+            // Set default selected voice (default to David)
             if (!selectedVoiceName && filtered.length > 0) {
-               const defaultVoice = filtered.find(v =>
-                  v.name.includes("Neerja") ||
-                  v.name.includes("Daniel") ||
-                  v.name.includes("Rishi") ||
-                  v.name.includes("David") ||
-                  v.name.includes("Google US")
-               ) || filtered[0];
+               const defaultVoice = filtered.find(v => v.name.toLowerCase().includes("david")) ||
+                  filtered.find(v =>
+                     v.name.includes("Neerja") ||
+                     v.name.includes("Daniel") ||
+                     v.name.includes("Rishi") ||
+                     v.name.includes("Google US")
+                  ) || filtered[0];
 
                if (defaultVoice) {
                   setSelectedVoiceName(defaultVoice.name);
@@ -352,7 +363,7 @@ const AuctionRoom = () => {
          const utterance = new SpeechSynthesisUtterance(text);
          const voices = window.speechSynthesis.getVoices();
 
-         const chosenVoice = voices.find(v => v.name === selectedVoiceName) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+         const chosenVoice = voices.find(v => v.name === selectedVoiceName) || voices.find(v => v.name.toLowerCase().includes("david")) || voices.find(v => v.lang.startsWith('en')) || voices[0];
          if (chosenVoice) {
             utterance.voice = chosenVoice;
          }
@@ -438,8 +449,7 @@ const AuctionRoom = () => {
 
    const isAdmin = currentAuction?.hostId === user?.uid;
    const currentBid = displayAuctionState?.currentBid || 0;
-   const increment = currentBid < 5 ? 0.20 : 0.25;
-   const nextBidAmount = currentBid === 0 ? (currentPlayer?.basePrice || 0) : currentBid + increment;
+   const nextBidAmount = getNextBidAmount(currentPlayer, currentBid);
    const playerCategories = useMemo(() => {
       const soldIds = new Set();
       const soldWithBids = {};

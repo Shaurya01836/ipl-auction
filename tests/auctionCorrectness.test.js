@@ -1,53 +1,36 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { r2, toFiniteNumber } from '../src/lib/auctionDisplay.js';
+import {
+  transactAdvance,
+  transactBid,
+  transactRoomPlayersSale,
+  transactSale,
+  transactTeamSale,
+} from '../src/lib/auctionTransactions.js';
+import { normalizeSquad } from '../src/lib/auctionRules.js';
 
-// Helper simulating the Firebase RTDB transaction update function on auctions/{id}/live
+// Production live-bid transaction, with the same inputs the old local
+// simulation used so these tests now guard the shipped function.
 function runLiveBidTransaction(currentData, { userId, userName, teamId, authoritativeBudget, basePrice, timerSeconds = 10, now }) {
-  if (!currentData) return currentData;
-  if (currentData.status !== 'bidding') return undefined; // abort
-  if (currentData.highBidderId === userId) return undefined; // abort self-outbid
-
-  // Server-side guard: reject late bids if timer has already expired
-  if (currentData.timerEndsAt && now >= currentData.timerEndsAt) {
-    return undefined; // abort transaction
-  }
-
-  const cBid = currentData.currentBid || 0;
-  const inc = cBid < 5 ? 0.20 : 0.25;
-  const nAmount = cBid === 0
-    ? toFiniteNumber(basePrice, 0)
-    : r2(cBid + inc);
-
-  // Guard: abort retried transaction if updated bid exceeds user's budget
-  if (nAmount > authoritativeBudget) return undefined;
-
-  return {
-    ...currentData,
-    currentBid: nAmount,
-    highBidderId: userId,
-    highBidderName: userName,
-    highBidderTeamId: teamId,
-    timerEndsAt: now + timerSeconds * 1000,
-  };
+  return transactBid(currentData, {
+    userId,
+    userName,
+    teamId,
+    playerId: currentData?.playerId,
+    now,
+    timerMs: timerSeconds * 1000,
+    budget: authoritativeBudget,
+    basePrice,
+  });
 }
 
-// Helper simulating sale transaction on auctions/{id}/live
+// Production sale transaction on auctions/{id}/live.
 function runLiveEndTransaction(currentData, now) {
-  if (!currentData) return currentData;
-  if (currentData.status !== 'bidding') return undefined; // abort
-  if (currentData.timerEndsAt && now < currentData.timerEndsAt) {
-    return undefined; // abort if timer still running
-  }
-
-  const isSold = Boolean(currentData.highBidderId);
-  return {
-    ...currentData,
-    status: isSold ? 'sold' : 'unsold',
-  };
+  return transactSale(currentData, now);
 }
 
-// Helper simulating production sale finalization with deterministic durable idempotency
+// Production sale finalization: team transaction + monotonic room stats.
 function processSaleFinalization({ roomPlayers, teamData, auctionState, defaultBudget = 120.0 }) {
   const isSold = auctionState.status === 'sold';
   let updatedPlayers = null;
@@ -55,37 +38,26 @@ function processSaleFinalization({ roomPlayers, teamData, auctionState, defaultB
   const lotMsgKey = `lot_${auctionState.playerId}`;
 
   if (isSold) {
-    const tData = teamData || {};
-    const existingSquad = (tData.squad || []).filter(
-      (item) => (typeof item === 'string' ? item : item?.id) !== auctionState.playerId,
-    );
-    const deduplicatedSquad = [...existingSquad, { id: auctionState.playerId, bid: auctionState.currentBid }];
-    const totalSpent = deduplicatedSquad.reduce(
-      (sum, item) => r2(sum + toFiniteNumber(typeof item === 'object' ? item.bid : 0, 0)),
-      0,
-    );
-    const budgetRemaining = Math.max(0, r2(defaultBudget - totalSpent));
+    newTeamData = transactTeamSale(teamData, {
+      roomId: 'room-1',
+      playerId: auctionState.playerId,
+      bid: auctionState.currentBid,
+      winnerId: auctionState.highBidderId,
+      winnerTeamId: auctionState.highBidderTeamId,
+      winnerName: auctionState.highBidderName,
+      initialBudget: defaultBudget,
+    });
 
     if (roomPlayers) {
-      updatedPlayers = roomPlayers.map((p) => {
-        if (p.id === auctionState.highBidderId) {
-          return {
-            ...p,
-            spent: totalSpent,
-            squadCount: deduplicatedSquad.length,
-          };
-        }
-        return p;
-      });
+      updatedPlayers = transactRoomPlayersSale(
+        { players: roomPlayers },
+        {
+          winnerId: auctionState.highBidderId,
+          totalSpent: toFiniteNumber(newTeamData?.spent, 0),
+          squadCount: normalizeSquad(newTeamData?.squad).length,
+        },
+      ).players;
     }
-
-    newTeamData = {
-      userId: auctionState.highBidderId,
-      teamId: auctionState.highBidderTeamId || tData.teamId || '',
-      budgetRemaining,
-      spent: totalSpent,
-      squad: deduplicatedSquad,
-    };
   }
 
   const messageEntry = {
@@ -455,21 +427,13 @@ test('data consistency: failed multipath write preserves live sold status and ro
 });
 
 test('advanceToNextPlayer: atomic transaction prevents advancing next player twice', () => {
-  // Simulating liveRef transaction in advanceToNextPlayer
+  // Production liveRef transaction in advanceToNextPlayer.
   function advancePlayerTransaction(currentLive, { currentPlayerId, nextPlayerId, bidTimer = 10, now = Date.now() }) {
-    if (!currentLive) return currentLive;
-    // Guard: Only advance if liveRef is STILL pointing to the lot that just finalized and is in sold/unsold state
-    if (currentLive.playerId !== currentPlayerId) return undefined; // abort: already advanced by another client!
-    if (currentLive.status !== 'sold' && currentLive.status !== 'unsold') return undefined; // abort: already bidding!
-
-    return {
-      playerId: nextPlayerId,
-      currentBid: 0,
-      highBidderId: '',
-      highBidderName: 'No Bids',
+    return transactAdvance(currentLive, {
+      currentPlayerId,
+      nextPlayerId,
       timerEndsAt: now + bidTimer * 1000,
-      status: 'bidding',
-    };
+    });
   }
 
   let liveState = {
@@ -623,43 +587,17 @@ test('retry after successful multipath write but lost acknowledgment is complete
   assert.equal(retryResult.messageEntry.key, 'lot_p-hardik', 'Message key must remain identical');
 });
 
-// Helper simulating production RTDB transaction on teams/{teamDocId}
+// Production team transaction on teams/{teamDocId}.
 function runTeamFinalizationTransaction(currentTeam, { auctionState, initialBudget = 120.0 }) {
-  const baseTeam = currentTeam || {
-    auctionId: 'room-1',
-    userId: auctionState.highBidderId,
-    teamId: auctionState.highBidderTeamId || '',
-    teamName: auctionState.highBidderName || 'Unknown',
-    squad: [],
-    spent: 0,
-    budgetRemaining: initialBudget,
-  };
-
-  const currentSquad = Array.isArray(baseTeam.squad) ? baseTeam.squad : [];
-  const alreadyInSquad = currentSquad.some(
-    (item) => (typeof item === 'string' ? item : item?.id) === auctionState.playerId,
-  );
-
-  // If player already present in squad, abort mutation to prevent overwriting newer purchases
-  if (alreadyInSquad) {
-    return currentTeam;
-  }
-
-  const updatedSquad = [...currentSquad, { id: auctionState.playerId, bid: auctionState.currentBid }];
-  const totalSpent = updatedSquad.reduce(
-    (sum, item) => r2(sum + toFiniteNumber(typeof item === 'object' ? item.bid : 0, 0)),
-    0,
-  );
-  const budgetRemaining = Math.max(0, r2(initialBudget - totalSpent));
-
-  return {
-    ...baseTeam,
-    teamId: auctionState.highBidderTeamId || baseTeam.teamId || '',
-    teamName: auctionState.highBidderName || baseTeam.teamName || 'Unknown',
-    budgetRemaining,
-    spent: totalSpent,
-    squad: updatedSquad,
-  };
+  return transactTeamSale(currentTeam, {
+    roomId: 'room-1',
+    playerId: auctionState.playerId,
+    bid: auctionState.currentBid,
+    winnerId: auctionState.highBidderId,
+    winnerTeamId: auctionState.highBidderTeamId,
+    winnerName: auctionState.highBidderName,
+    initialBudget,
+  });
 }
 
 test('stale recovery protection: delayed recovery for Player 1 does not overwrite Player 2 or roll back team purse', () => {

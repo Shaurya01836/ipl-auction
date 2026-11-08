@@ -1,6 +1,7 @@
 import { IPL_PLAYERS } from '../data/players.js';
 import { evaluateBotBid } from './botEngine.js';
-import { toFiniteNumber, countOverseas, isOverseasPlayer } from './auctionDisplay.js';
+import { toFiniteNumber } from './auctionDisplay.js';
+import { getNextBidAmount, getSquadConstraintError } from './auctionRules.js';
 import { supabase } from './supabase.js';
 
 /* ============================================================================
@@ -79,7 +80,7 @@ const clone = (o) =>
   typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
 const isBotPlayer = (p) => !!p && (!!p.isBot || String(p.id || '').startsWith('bot_'));
 
-const shuffleArray = (array) => {
+export const shuffleArray = (array) => {
   const a = [...array];
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -91,12 +92,6 @@ const shuffleArray = (array) => {
 export function getLocalRoomKey(roomId) {
   return `${LOCAL_STORAGE_PREFIX}${roomId}`;
 }
-
-const nextBidFor = (player, currentBid) => {
-  const cBid = currentBid || 0;
-  if (cBid === 0) return toFiniteNumber(player?.basePrice, 0);
-  return r2(cBid + (cBid < 5 ? 0.2 : 0.25));
-};
 
 const safe = (name, fn) => () => {
   try {
@@ -488,14 +483,17 @@ function handleState(rt, incoming) {
   acceptState(rt, incoming);
 }
 
+/** A snapshot may replace the current room only when it is genuinely newer. */
+export function shouldAcceptState(current, incoming) {
+  if (!incoming || !incoming.id) return false;
+  if (!current) return true;
+  if (incoming.hostId !== current.hostId) return false;
+  return (incoming.hostRev || 0) > (current.hostRev || 0);
+}
+
 /** Accept a snapshot only if it is newer than what we have. */
 function acceptState(rt, incoming) {
-  if (!incoming || !incoming.id) return false;
-  const cur = readLocalRoom(rt.roomId);
-  if (cur) {
-    if (incoming.hostId !== cur.hostId) return false;
-    if ((incoming.hostRev || 0) <= (cur.hostRev || 0)) return false;
-  }
+  if (!shouldAcceptState(readLocalRoom(rt.roomId), incoming)) return false;
   storeRoom(rt, incoming);
   return true;
 }
@@ -873,18 +871,18 @@ function hostApplyBid(roomId, req) {
     if (req.expectedBid !== undefined && r2(req.expectedBid) !== r2(cBid)) {
       return fail('Bid changed, try again');
     }
-    const nextBid = nextBidFor(player, cBid);
+    const nextBid = getNextBidAmount(player, cBid);
     if (req.maxValuation !== undefined && nextBid > req.maxValuation) return fail('Above valuation');
     if (toFiniteNumber(team.budgetRemaining, 0) < nextBid) return fail('Insufficient purse budget');
-    if ((team.squad || []).some((p) => (typeof p === 'string' ? p : p?.id) === live.playerId)) {
-      return fail('This player is already in your squad');
-    }
-    if ((team.squad || []).length >= toFiniteNumber(d.squadLimit, 25)) return fail('Squad is full');
-    if (isOverseasPlayer(player)) {
-      const overseasCount = countOverseas(team.squad || [], PLAYER_BY_ID);
-      const overseasLimit = toFiniteNumber(d.overseasLimit, 8);
-      if (overseasCount >= overseasLimit) return fail('Overseas player limit reached');
-    }
+
+    const constraintError = getSquadConstraintError({
+      team,
+      player,
+      squadLimit: d.squadLimit,
+      overseasLimit: d.overseasLimit,
+      playerIndex: PLAYER_BY_ID,
+    });
+    if (constraintError) return fail(constraintError);
 
     const pl = (d.players || []).find((p) => p.id === req.userId);
     const isBot = isBotPlayer(pl) || String(req.userId).startsWith('bot_');
@@ -1205,6 +1203,20 @@ function retain(rt) {
       () => window.removeEventListener('online', wake),
       () => window.removeEventListener('focus', wake),
     ];
+
+    // A second host tab writes the same localStorage key. Without this listener
+    // its in-memory copy stays stale and a later mutation can roll the room back.
+    const storageKey = getLocalRoomKey(rt.roomId);
+    const onStorage = (event) => {
+      if (event.key !== storageKey || !event.newValue) return;
+      try {
+        acceptState(rt, JSON.parse(event.newValue));
+      } catch {
+        // Ignore malformed payloads written by an older version.
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    rt.cleanups.push(() => window.removeEventListener('storage', onStorage));
   }
 
   const room = readLocalRoom(rt.roomId);
@@ -1489,7 +1501,7 @@ export function placeLocalBid(roomId, userId, teamId, userName, teamName) {
 
   const player = PLAYER_BY_ID.get(room.live.playerId);
   if (!player) throw new Error('Current player not found');
-  const nextBid = nextBidFor(player, room.live.currentBid);
+  const nextBid = getNextBidAmount(player, room.live.currentBid);
   const team = room.teams?.[`${roomId}_${userId}`];
   if (team && toFiniteNumber(team.budgetRemaining, 0) < nextBid) {
     throw new Error('Insufficient purse budget');

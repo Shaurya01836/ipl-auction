@@ -1,6 +1,7 @@
 import { IPL_PLAYERS } from '../data/players.js';
 import { TEAMS } from '../data/teams.js';
 import { countOverseas, isOverseasPlayer, toFiniteNumber } from './auctionDisplay.js';
+import { getNextBidAmount } from './auctionRules.js';
 
 /**
  * Player Set → Tier Multipliers
@@ -196,9 +197,7 @@ export function evaluateBotBid({
   if (currentRoleCount >= maxPerRole && slotsRemaining > 1) return null;
 
   // 5. Calculate the next incremental bid amount
-  const cBid = toFiniteNumber(currentBid, 0);
-  const increment = cBid < 5 ? 0.20 : 0.25;
-  const nextBid = cBid === 0 ? toFiniteNumber(player.basePrice, 0.30) : parseFloat((cBid + increment).toFixed(2));
+  const nextBid = getNextBidAmount(player, currentBid);
 
   // 6. Budget check
   const budgetRemaining = botTeam.budgetRemaining ?? initialBudget;
