@@ -1,13 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  countAuctionTeams,
   finalizedLotRecoveryDelay,
+  generatePlayerOrder,
   getNextBidAmount,
   getSquadConstraintError,
   getStartDisposition,
   mapRoomPlayers,
   mergeRoomPlayer,
+  resolveDisconnectAction,
+  shouldArmDisconnectPause,
 } from '../src/lib/auctionRules.js';
+import { pausedRemainingMs } from '../src/lib/auctionDisplay.js';
+import { IPL_PLAYERS } from '../src/data/players.js';
 import {
   transactBid,
   transactRoomPlayersSale,
@@ -15,7 +21,6 @@ import {
   transactTeamSale,
 } from '../src/lib/auctionTransactions.js';
 import { createServerSessionTracker } from '../src/lib/serverSessions.js';
-import { shouldAcceptState } from '../src/lib/localAuctionEngine.js';
 
 const biddingLot = (overrides = {}) => ({
   status: 'bidding',
@@ -41,6 +46,31 @@ test('a delayed bid click cannot land on the next lot', () => {
   });
 
   assert.equal(result, undefined, 'transaction must abort when the playerId changed');
+});
+
+test('mega player order contains every player exactly once', () => {
+  const order = generatePlayerOrder('mega');
+  assert.equal(order.length, IPL_PLAYERS.length);
+  assert.equal(new Set(order).size, IPL_PLAYERS.length);
+});
+
+test('team count includes human and bot franchises, not teamless spectators', () => {
+  assert.equal(countAuctionTeams([]), 0);
+  assert.equal(countAuctionTeams([{ id: 'host', team: 'MI' }]), 1);
+  assert.equal(
+    countAuctionTeams([
+      { id: 'host', team: 'MI' },
+      { id: 'bot_CSK', team: 'CSK', isBot: true },
+    ]),
+    2,
+  );
+  assert.equal(
+    countAuctionTeams([
+      { id: 'host', team: 'MI' },
+      { id: 'spectator', team: '' },
+    ]),
+    1,
+  );
 });
 
 test('opening bid uses base price and later increments stay rounded', () => {
@@ -226,13 +256,113 @@ test('closing a room on a server with another live session keeps the socket onli
   assert.equal(sessions.size(), 0);
 });
 
-test('a peer never accepts an older or foreign-host local snapshot', () => {
-  const current = { id: 'HOTSPOT-1', hostId: 'host-1', hostRev: 5 };
+test('server-side disconnect auto-pause: arms only for connected host primary tab during bidding', () => {
+  const base = {
+    socketConnected: true,
+    isHost: true,
+    isPrimaryTab: true,
+    roomStatus: 'active',
+    liveStatus: 'bidding',
+    playerId: 'p-1',
+  };
 
-  assert.equal(shouldAcceptState(null, current), true);
-  assert.equal(shouldAcceptState(current, { ...current, hostRev: 6 }), true);
-  assert.equal(shouldAcceptState(current, { ...current, hostRev: 5 }), false);
-  assert.equal(shouldAcceptState(current, { ...current, hostRev: 4 }), false);
-  assert.equal(shouldAcceptState(current, { ...current, hostId: 'host-2', hostRev: 6 }), false);
-  assert.equal(shouldAcceptState(current, null), false);
+  assert.equal(shouldArmDisconnectPause(base), true, 'must arm when all conditions met');
+
+  assert.equal(shouldArmDisconnectPause({ ...base, socketConnected: false }), false, 'must not arm when disconnected');
+  assert.equal(shouldArmDisconnectPause({ ...base, isHost: false }), false, 'must not arm for non-host');
+  assert.equal(shouldArmDisconnectPause({ ...base, isPrimaryTab: false }), false, 'must not arm for secondary host tab');
+  assert.equal(shouldArmDisconnectPause({ ...base, roomStatus: 'waiting' }), false, 'must not arm in lobby');
+  assert.equal(shouldArmDisconnectPause({ ...base, roomStatus: 'completed' }), false, 'must not arm when auction completed');
+  assert.equal(shouldArmDisconnectPause({ ...base, liveStatus: 'paused' }), false, 'must not arm when already paused');
+  assert.equal(shouldArmDisconnectPause({ ...base, liveStatus: 'sold' }), false, 'must not arm when lot sold');
+  assert.equal(shouldArmDisconnectPause({ ...base, liveStatus: 'unsold' }), false, 'must not arm when lot unsold');
+  assert.equal(shouldArmDisconnectPause({ ...base, liveStatus: 'completed' }), false, 'must not arm when lot completed');
+  assert.equal(shouldArmDisconnectPause({ ...base, playerId: null }), false, 'must not arm without valid player');
 });
+
+test('server-side disconnect auto-pause: lifecycle actions prevent stale operations and re-arm on lot change', () => {
+  // Fresh arm
+  assert.equal(
+    resolveDisconnectAction({
+      shouldArm: true,
+      currentlyArmed: false,
+      armedLotId: null,
+      currentLotId: 'p-1',
+    }),
+    'arm',
+  );
+
+  // Already armed for same player -> no-op
+  assert.equal(
+    resolveDisconnectAction({
+      shouldArm: true,
+      currentlyArmed: true,
+      armedLotId: 'p-1',
+      currentLotId: 'p-1',
+    }),
+    'none',
+  );
+
+  // Advanced to next player -> must re-arm (cancel old, arm new)
+  assert.equal(
+    resolveDisconnectAction({
+      shouldArm: true,
+      currentlyArmed: true,
+      armedLotId: 'p-1',
+      currentLotId: 'p-2',
+    }),
+    'rearm',
+  );
+
+  // Status became paused/sold/completed -> cancel armed operation
+  assert.equal(
+    resolveDisconnectAction({
+      shouldArm: false,
+      currentlyArmed: true,
+      armedLotId: 'p-1',
+      currentLotId: 'p-1',
+    }),
+    'cancel',
+  );
+
+  // Already not armed -> no-op
+  assert.equal(
+    resolveDisconnectAction({
+      shouldArm: false,
+      currentlyArmed: false,
+      armedLotId: null,
+      currentLotId: 'p-1',
+    }),
+    'none',
+  );
+});
+
+test('server-side disconnect auto-pause: preserved remaining time derived accurately from pausedAt', () => {
+  // Server disconnect pause sets pausedAt
+  const disconnectPausedLive = {
+    status: 'paused',
+    timerEndsAt: 25000,
+    pausedAt: 17000,
+    playerId: 'p-1',
+  };
+  assert.equal(pausedRemainingMs(disconnectPausedLive), 8000, 'must accurately derive remainingMs from timerEndsAt - pausedAt');
+
+  // Disconnect after expiration clamps cleanly to 0
+  const expiredDisconnectLive = {
+    status: 'paused',
+    timerEndsAt: 10000,
+    pausedAt: 12000,
+    playerId: 'p-1',
+  };
+  assert.equal(pausedRemainingMs(expiredDisconnectLive), 0, 'expired timer must clamp to 0');
+
+  // Manual pause priority: explicit remainingMs takes precedence
+  const manualPausedLive = {
+    status: 'paused',
+    remainingMs: 5500,
+    timerEndsAt: 25000,
+    pausedAt: 17000,
+  };
+  assert.equal(pausedRemainingMs(manualPausedLive), 5500, 'explicit remainingMs takes precedence over pausedAt');
+});
+

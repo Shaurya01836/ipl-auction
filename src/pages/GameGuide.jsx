@@ -9,7 +9,6 @@ import {
   Users,
   TrendingUp,
   Target,
-  Wifi,
   BookOpen,
   ArrowRight,
 } from 'lucide-react';
@@ -34,10 +33,6 @@ const FAQS = [
     a: 'Our proprietary bot valuation algorithm evaluates each player based on their T20 impact rating, set tier (Marquee, Capped Indian, Overseas Specialist, Uncapped), existing squad needs, and remaining purse capacity. Bots preserve mandatory budget for unfilled squad slots, hesitate realistically at high prices, and deploy clutch bids when rival bids stall.',
   },
   {
-    q: 'How does Hotspot Mode work?',
-    a: 'Hotspot Mode runs auction logic directly on the host device rather than a central cloud database. Bids and state are relayed between devices using lightweight Supabase Realtime messaging, bypassing Firebase RTDB quota caps completely. Note: Active internet connectivity is required for cross-device multiplayer, though solo play against AI bots can run offline once the app has loaded.',
-  },
-  {
     q: 'What happens if a player disconnects during a live auction?',
     a: 'The game uses real-time state synchronization. If a player refreshes their browser or briefly loses connection, they will seamlessly rejoin the live bidding room with the exact current purse and squad state intact.',
   },
@@ -47,7 +42,7 @@ const FAQS = [
   },
   {
     q: 'Is CrickAuction completely free to play?',
-    a: 'Yes! CrickAuction is a 100% free community cricket simulation platform. You can create unlimited cloud or local hotspot rooms, draft championship squads with friends, and export custom high-resolution squad cards with zero paywalls.',
+    a: 'Yes! CrickAuction is a 100% free community cricket simulation platform. You can create unlimited auction rooms, draft championship squads with friends, and export custom high-resolution squad cards with zero paywalls.',
   },
 ];
 
@@ -78,7 +73,7 @@ const STRATEGY_PLAYBOOKS = [
 const GameGuide = () => {
   useDocumentTitle(
     'Rulebook & Game Guide | CrickAuction',
-    'Comprehensive IPL Mega Auction 2026 rules, purse mathematics, atomic bidding increments, franchise playbooks, AI bot engine, and offline hotspot mode.'
+    'Comprehensive IPL Mega Auction 2026 rules, purse mathematics, atomic bidding increments, franchise playbooks, and AI bot engine.'
   );
 
   useEffect(() => {
@@ -95,11 +90,10 @@ const GameGuide = () => {
   const sections = [
     { id: 'modes', label: '1. Game modes' },
     { id: 'how-to-play', label: '2. How to play' },
-    { id: 'hotspot', label: '3. Offline / Hotspot mode' },
-    { id: 'purse-rules', label: '4. Purse rules & bid tiers' },
-    { id: 'playbooks', label: '5. Franchise playbooks' },
-    { id: 'bots', label: '6. AI bot engine' },
-    { id: 'faq', label: '7. FAQ' },
+    { id: 'purse-rules', label: '3. Purse rules & bid tiers' },
+    { id: 'playbooks', label: '4. Franchise playbooks' },
+    { id: 'bots', label: '5. AI bot engine' },
+    { id: 'faq', label: '6. FAQ' },
   ];
 
   useEffect(() => {
@@ -174,7 +168,7 @@ const GameGuide = () => {
     {
       step: '1',
       title: 'Create or join a room',
-      desc: 'Host a fresh auction room or join using a 6-character room code (e.g. CRICK-8J1V or HOTSPOT-4K2M). Choose your preferred franchise crest and colors.',
+      desc: 'Host a fresh auction room or join using a 6-character room code (e.g. CRICK-8J1V). Choose your preferred franchise crest and colors.',
     },
     {
       step: '2',
@@ -387,42 +381,9 @@ const GameGuide = () => {
               </div>
             </section>
 
-            {/* 3. Host-Powered Hotspot Mode */}
-            <section id="hotspot" className="scroll-mt-24">
-              <h2 className="text-xl font-semibold text-white mb-2">3. Host-Powered Hotspot mode</h2>
-              <p className="text-sm text-gray-400 mb-6 leading-relaxed">
-                Host auctions powered directly by the host device's browser engine, bypassing cloud database caps.
-              </p>
-
-              <div className="border border-white/10 rounded-md p-5 bg-white/[0.01] mb-4">
-                <div className="flex items-center gap-2 mb-3 text-[#ff5500]">
-                  <Wifi size={18} />
-                  <h3 className="text-sm font-semibold text-white">Host-Authoritative Auction Engine</h3>
-                </div>
-                <p className="text-xs text-gray-400 leading-relaxed mb-4">
-                  Hotspot Mode executes auction timers, purse calculations, and AI bot bids locally in the host's browser engine, using Supabase Realtime as a lightweight messaging relay. Each participating device requires internet connectivity to exchange bids with the host.
-                </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-white/10 text-xs">
-                  <div className="p-3 rounded bg-white/[0.02] border border-white/5">
-                    <span className="font-bold text-white block mb-1">Step 1: Network Setup</span>
-                    <span className="text-gray-400">Connect devices to the same Wi-Fi or hotspot. Active internet connectivity is required for all devices.</span>
-                  </div>
-                  <div className="p-3 rounded bg-white/[0.02] border border-white/5">
-                    <span className="font-bold text-white block mb-1">Step 2: Host Room</span>
-                    <span className="text-gray-400">On the home page, select "Hotspot Mode" to generate a HOTSPOT-XXXX room code.</span>
-                  </div>
-                  <div className="p-3 rounded bg-white/[0.02] border border-white/5">
-                    <span className="font-bold text-white block mb-1">Step 3: Join & Draft</span>
-                    <span className="text-gray-400">Other players open the site on their browser, enter the code, and participate via the host engine.</span>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* 4. Purse Rules & Bid Tiers */}
+            {/* 3. Purse Rules & Bid Tiers */}
             <section id="purse-rules" className="scroll-mt-24">
-              <h2 className="text-xl font-semibold text-white mb-2">4. Purse rules & bid tiers</h2>
+              <h2 className="text-xl font-semibold text-white mb-2">3. Purse rules & bid tiers</h2>
               <p className="text-sm text-gray-400 mb-6 leading-relaxed">
                 Rules mirror official IPL Mega Auction guidelines for salary caps, minimum squads, and paddle increments.
               </p>
@@ -474,7 +435,7 @@ const GameGuide = () => {
 
             {/* 5. Franchise Strategy Playbooks */}
             <section id="playbooks" className="scroll-mt-24">
-              <h2 className="text-xl font-semibold text-white mb-2">5. Franchise bidding playbooks</h2>
+              <h2 className="text-xl font-semibold text-white mb-2">4. Franchise bidding playbooks</h2>
               <p className="text-sm text-gray-400 mb-6 leading-relaxed">
                 Proven team construction archetypes utilized by championship analysts.
               </p>
@@ -510,7 +471,7 @@ const GameGuide = () => {
 
             {/* 6. AI Bot Engine */}
             <section id="bots" className="scroll-mt-24">
-              <h2 className="text-xl font-semibold text-white mb-2">6. Autonomous AI bot engine</h2>
+              <h2 className="text-xl font-semibold text-white mb-2">5. Autonomous AI bot engine</h2>
               <p className="text-sm text-gray-400 mb-6 leading-relaxed">
                 When friends are unavailable, our proprietary bot algorithms step in with distinct bidding personas.
               </p>
@@ -527,7 +488,7 @@ const GameGuide = () => {
 
             {/* 7. FAQ */}
             <section id="faq" className="scroll-mt-24">
-              <h2 className="text-xl font-semibold text-white mb-2">7. Frequently asked questions</h2>
+              <h2 className="text-xl font-semibold text-white mb-2">6. Frequently asked questions</h2>
               <p className="text-sm text-gray-400 mb-6 leading-relaxed">
                 Everything you need to know regarding auction rules, bots, technical synchronization, and costs.
               </p>

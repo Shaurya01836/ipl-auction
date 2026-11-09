@@ -25,8 +25,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import SquadRating from '../components/SquadRating';
 import useRoomServer from '../hooks/useRoomServer';
-import { isHotspotRoomCode } from '../lib/roomCodes';
-import { readLocalRoom } from '../lib/localAuctionEngine';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import {
   computeTeamSpent,
@@ -105,8 +103,9 @@ const AuctionSummary = () => {
   };
 
 
-  // Note: AuctionSummary is for completed auctions; persistent store (Supabase/Firestore/Local)
-  // is authoritative, avoiding unnecessary RTDB connections or quota usage.
+  // Note: AuctionSummary is for completed auctions; the persistent store
+  // (Supabase/Firestore) is authoritative, avoiding unnecessary RTDB
+  // connections or quota usage.
 
   useEffect(() => {
     if (!id) return;
@@ -121,21 +120,7 @@ const AuctionSummary = () => {
       setSummaryLoading(true);
       setSummaryError(null);
       try {
-        // 1. Check offline hotspot room storage first if applicable
-        if (isHotspotRoomCode(id) || server === 'local') {
-          const localRoom = readLocalRoom(id);
-          if (localRoom && isMounted) {
-            setDbAuction(localRoom);
-            const teams = Array.isArray(localRoom.teams)
-              ? localRoom.teams
-              : Object.values(localRoom.teams || {});
-            setDbTeams(teams);
-            setSummaryLoading(false);
-            return;
-          }
-        }
-
-        // 2. Persistent Supabase store
+        // 1. Persistent Supabase store
         if (supabase) {
           // Optimized egress: Exclude heavy player_order column
           const { data: aData, error: auctionError } = await supabase
@@ -222,7 +207,7 @@ const AuctionSummary = () => {
           }
         }
 
-        // 3. Fallback to RTDB directly before Firestore
+        // 2. Fallback to RTDB directly before Firestore
         try {
           goOnlineServer(server);
           const rtdbInstance = getRtdb(server);

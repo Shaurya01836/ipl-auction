@@ -1,10 +1,56 @@
+import { IPL_PLAYERS } from '../data/players.js';
 import { countOverseas, isOverseasPlayer, r2, toFiniteNumber } from './auctionDisplay.js';
 
 /**
- * Pure auction rules shared by the cloud (RTDB) and hotspot (host-authoritative)
- * engines. Keeping these in one place stops the two bidding paths from drifting
- * apart and lets the regression tests exercise the real logic.
+ * Pure auction rules used by the cloud (RTDB) engine. Keeping these in one
+ * place lets the regression tests exercise the real logic.
  */
+
+export const shuffleArray = (array) => {
+  const a = [...array];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+
+/** Build the shuffled lot order for an auction type, grouped by player set. */
+export function generatePlayerOrder(auctionType = 'mega') {
+  let targetPlayers = IPL_PLAYERS.length;
+  if (auctionType === 'sprint11') targetPlayers = 150;
+  else if (auctionType === 'sprint5') targetPlayers = 75;
+
+  const marquee = [];
+  const byRole = {};
+  IPL_PLAYERS.forEach((p, i) => {
+    if (p.set.includes('Marquee')) marquee.push(i);
+    else (byRole[p.role] ||= []).push(i);
+  });
+
+  const selected = new Set(marquee);
+  const nonMarqueeTarget = Math.max(0, targetPlayers - marquee.length);
+  const nonMarqueeTotal = IPL_PLAYERS.length - marquee.length;
+  const fraction = nonMarqueeTotal > 0 ? nonMarqueeTarget / nonMarqueeTotal : 1;
+
+  Object.values(byRole).forEach((indices) => {
+    const shuffled = shuffleArray(indices);
+    const limit =
+      auctionType === 'mega' ? shuffled.length : Math.max(1, Math.ceil(shuffled.length * fraction));
+    shuffled.slice(0, limit).forEach((i) => selected.add(i));
+  });
+
+  const sets = [...new Set(IPL_PLAYERS.map((p) => p.set))];
+  const order = [];
+  sets.forEach((setName) => {
+    const idxs = [];
+    IPL_PLAYERS.forEach((p, i) => {
+      if (p.set === setName && selected.has(i)) idxs.push(i);
+    });
+    order.push(...shuffleArray(idxs));
+  });
+  return order;
+}
 
 export const normalizeSquad = (squad) => mapRoomPlayers(squad, (entry) => entry);
 
@@ -19,6 +65,13 @@ export function mapRoomPlayers(players, mapper) {
       ? Object.values(players)
       : [];
   return list.filter(Boolean).map(mapper);
+}
+
+export const MIN_TEAMS_TO_START = 2;
+
+/** Distinct franchises in the room. Human and bot managers both carry `team`. */
+export function countAuctionTeams(players) {
+  return new Set(mapRoomPlayers(players, (player) => player.team).filter(Boolean)).size;
 }
 
 /** Base price for the opening bid, otherwise the next increment (rounded). */
@@ -105,3 +158,57 @@ export function finalizedLotRecoveryDelay(status) {
   if (status === 'unsold') return 3000;
   return null;
 }
+
+/**
+ * Decision predicate for server-side host-disconnect auto-pause.
+ * The server-side onDisconnect fallback must only be armed when:
+ * 1. The client socket is actively connected.
+ * 2. The client is the host.
+ * 3. This tab is the designated primary tab for this host session.
+ * 4. The room is actively running (not waiting/completed).
+ * 5. The live lot is actively bidding (not paused/sold/unsold/completed).
+ * 6. A valid lot/player is active.
+ */
+export function shouldArmDisconnectPause({
+  socketConnected,
+  isHost,
+  isPrimaryTab = true,
+  roomStatus,
+  liveStatus,
+  playerId,
+}) {
+  return Boolean(
+    socketConnected &&
+    isHost &&
+    isPrimaryTab &&
+    roomStatus === 'active' &&
+    liveStatus === 'bidding' &&
+    playerId,
+  );
+}
+
+/**
+ * Action resolver for the onDisconnect lifecycle.
+ * Prevents stale operations from lingering or overwriting newer lots/completed rooms.
+ */
+export function resolveDisconnectAction({
+  shouldArm,
+  currentlyArmed,
+  armedLotId,
+  currentLotId,
+}) {
+  if (shouldArm) {
+    if (currentlyArmed && armedLotId !== currentLotId) {
+      return 'rearm';
+    }
+    if (!currentlyArmed) {
+      return 'arm';
+    }
+    return 'none';
+  }
+  if (currentlyArmed) {
+    return 'cancel';
+  }
+  return 'none';
+}
+

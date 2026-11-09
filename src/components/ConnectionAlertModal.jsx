@@ -1,14 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Home, RefreshCw, Radio, ArrowRight, Zap, CheckCircle2 } from 'lucide-react';
+import { Home, RefreshCw } from 'lucide-react';
 import { useConnectionAlert } from '../contexts/ConnectionAlertContext';
 
 /**
  * Shown when the app cannot reach the Realtime Database: either the project has
  * hit its simultaneous-connection ceiling, or the connection could not be
  * established at all.
- *
- * Promotes the zero-cloud Offline / Hotspot Mode so users can immediately
- * host and play auctions with friends without waiting for cloud seats.
  */
 
 const AUTO_RETRY_SECONDS = 30;
@@ -18,31 +15,19 @@ const COPY = {
     badge: 'Cloud Capacity Reached',
     title: 'Cloud Server Full',
     body: 'Firebase’s free plan (100 simultaneous managers) is currently full. Your internet is fine!',
-    hint: 'Seats free up as managers leave. Or host immediately without cloud limits below:',
+    hint: 'Seats free up as managers leave. You can wait for auto-reconnect or retry now.',
   },
   unreachable: {
     badge: 'Server Unreachable',
     title: 'Can’t Reach Cloud',
     body: 'We couldn’t reach the cloud auction server right now. Check your internet connection or try again.',
-    hint: 'You can wait for auto-reconnect, or switch to Host-Engine Mode below:',
+    hint: 'You can wait for auto-reconnect or retry now.',
   },
   offline: {
     badge: 'No Internet Connection',
     title: 'Internet Disconnected',
     body: 'You appear to be offline. Cross-device multiplayer requires an active internet connection to synchronize bids.',
     hint: 'Please check your Wi-Fi or mobile data connection to resume.',
-  },
-  supabase_disconnected: {
-    badge: 'Realtime Disconnected',
-    title: 'Relay Dropped',
-    body: 'Lost connection to the Supabase Realtime messaging relay. Reconnecting automatically...',
-    hint: 'Auction state is preserved on the host. Live bidding will resume once reconnected.',
-  },
-  reconnected: {
-    badge: 'Reconnected',
-    title: 'Connection Restored',
-    body: 'Successfully reconnected to the multiplayer relay! Synchronizing current auction state...',
-    hint: 'Resuming live bidding.',
   },
 };
 
@@ -54,10 +39,6 @@ function AlertDialog({ problem }) {
 
   const goHome = () => {
     window.location.href = '/';
-  };
-
-  const playHotspotMode = () => {
-    window.location.href = '/?mode=hotspot';
   };
 
   useEffect(() => {
@@ -126,58 +107,17 @@ function AlertDialog({ problem }) {
                 {copy.body}
               </p>
 
-              {/* Hotspot / Host Mode Promotion Card */}
-              <div className="my-3.5 border-t border-white/10 pt-4">
-                <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-black uppercase text-white tracking-wider">
-                      Play Hotspot / Host Mode
-                    </span>
-                  </div>
-                  <span className="text-[8px] font-mono font-bold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-1.5 py-0.5 rounded-md">
-                    BYPASS CLOUD CAPS
-                  </span>
-                </div>
-
-                <p className="text-[11px] text-gray-300 leading-relaxed">
-                  Host an auction on your device with lightweight Supabase Realtime messaging. Bypasses Firebase RTDB server limits! (Requires active internet for all players).
-                </p>
-
-                <div className="mt-2.5 pt-2 border-t border-white/5 flex items-center gap-3 text-[9px] font-mono text-gray-400">
-                  <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-                    <CheckCircle2 size={11} className="shrink-0" /> No Firebase cap
-                  </span>
-                  <span className="flex items-center gap-1 text-amber-400 font-semibold">
-                    <Zap size={11} className="shrink-0" /> Host engine
-                  </span>
-                </div>
-              </div>
-
-              <p className="text-[11px] leading-relaxed text-gray-500">{copy.hint}</p>
+              <p className="mt-3.5 border-t border-white/10 pt-4 text-[11px] leading-relaxed text-gray-500">{copy.hint}</p>
             </div>
 
             {/* Pinned actions */}
             <div className="shrink-0 border-t border-white/5 px-5 pb-[calc(1.1rem_+_env(safe-area-inset-bottom))] pt-3 sm:px-7 sm:pb-6 sm:pt-3.5 space-y-2">
-              {/* Primary Call to Action: Play Hotspot Mode */}
-              <button
-                type="button"
-                onClick={playHotspotMode}
-                className="group/hotspot relative flex h-12 w-full touch-manipulation items-center justify-center overflow-hidden rounded-xl border border-orange-500/40 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] text-xs font-black uppercase tracking-[0.14em] text-white transition-all active:scale-[0.98] cursor-pointer"
-              >
-                <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/hotspot:translate-y-0 transition-transform duration-300" />
-                <span className="relative flex items-center justify-center gap-2">
-                  <Radio size={14} className="animate-pulse" />
-                  <span>Play Hotspot / Host Mode</span>
-                  <ArrowRight size={13} className="group-hover/hotspot:translate-x-1 transition-transform" />
-                </span>
-              </button>
-
               <div className="flex gap-2">
                 <button
                   ref={retryButtonRef}
                   type="button"
                   onClick={retry}
-                  className="flex h-10 flex-1 touch-manipulation items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/5 text-[10px] font-black uppercase tracking-[0.12em] text-gray-300 hover:bg-white/10 hover:text-white transition-all active:scale-[0.98] cursor-pointer"
+                  className="flex h-12 flex-1 touch-manipulation items-center justify-center gap-1.5 rounded-xl border border-orange-500/40 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] text-[10px] font-black uppercase tracking-[0.12em] text-white transition-all active:scale-[0.98] cursor-pointer"
                 >
                   <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
                   <span>Reconnect Cloud</span>
@@ -188,7 +128,7 @@ function AlertDialog({ problem }) {
                   onClick={goHome}
                   aria-label="Go to home page"
                   title="Home"
-                  className="flex h-10 w-12 shrink-0 touch-manipulation items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 transition-all active:scale-[0.98] cursor-pointer"
+                  className="flex h-12 w-12 shrink-0 touch-manipulation items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 transition-all active:scale-[0.98] cursor-pointer"
                 >
                   <Home className="h-3.5 w-3.5" aria-hidden="true" />
                 </button>

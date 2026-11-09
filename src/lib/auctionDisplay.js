@@ -99,6 +99,19 @@ export const computeTeamSpent = ({ budget, budgetRemaining, spent } = {}) => {
 };
 
 /**
+ * Frozen remaining time for a paused lot. A server-side host-disconnect pause
+ * stores pausedAt instead of remainingMs, so derive it from timerEndsAt.
+ */
+export const pausedRemainingMs = (live) => {
+  if (!live) return 0;
+  if (live.remainingMs != null) return Math.max(0, toFiniteNumber(live.remainingMs, 0));
+  if (live.pausedAt != null) {
+    return Math.max(0, toFiniteNumber(live.timerEndsAt, 0) - toFiniteNumber(live.pausedAt, 0));
+  }
+  return 0;
+};
+
+/**
  * Clamp a countdown to the configured timer range.
  */
 export const clampTimer = (secondsLeft, totalSeconds) => {

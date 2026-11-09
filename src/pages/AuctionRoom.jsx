@@ -36,9 +36,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import AuctionCountdown from '../components/AuctionCountdown';
 import useRoomServer from '../hooks/useRoomServer';
 import { withServerParam } from '../lib/auctionServers';
-import { isHotspotRoomCode } from '../lib/roomCodes';
 import useDocumentTitle from '../hooks/useDocumentTitle';
-import { getLiveRemainingMs, isInLastCall } from '../lib/localAuctionEngine';
 import { getNextBidAmount } from '../lib/auctionRules';
 import {
    computeTeamSpent,
@@ -124,8 +122,6 @@ const AuctionRoom = () => {
 
    const configuredBidTimer = toFiniteNumber(currentAuction?.settings?.bidTimer, 10);
    const isTimerPaused = displayAuctionState?.status === 'paused';
-   const isHotspotRoom = isHotspotRoomCode(id) || currentAuction?.server === 'local';
-   const inLastCall = isHotspotRoom && isInLastCall(displayAuctionState);
 
    // Real-time team ratings calculated entirely in browser memory (0 DB / infra cost)
    const liveTeamRatings = useMemo(() => {
@@ -1005,9 +1001,7 @@ const AuctionRoom = () => {
                         <button
                            disabled={displayAuctionState?.status !== 'bidding'}
                            onClick={() => {
-                              const remainingMs = isHotspotRoom
-                                 ? getLiveRemainingMs(displayAuctionState)
-                                 : (displayAuctionState?.timerEndsAt || 0) - getSyncedTime();
+                              const remainingMs = (displayAuctionState?.timerEndsAt || 0) - getSyncedTime();
                               if (displayAuctionState?.status !== 'bidding' || remainingMs < 2000) return;
                               if ('speechSynthesis' in window) window.speechSynthesis.cancel();
                               pauseAuction(id);
@@ -1385,7 +1379,6 @@ const AuctionRoom = () => {
                                           <AuctionCountdown
                                              displayAuctionState={displayAuctionState}
                                              configuredBidTimer={configuredBidTimer}
-                                             isHotspotRoom={isHotspotRoom}
                                              isAdmin={isAdmin}
                                              roomId={id}
                                              endPlayerAuction={endPlayerAuction}
@@ -1441,7 +1434,7 @@ const AuctionRoom = () => {
                                              <span className="flex items-center gap-2 text-xs xl:text-sm font-black uppercase tracking-widest text-blue-400">
                                                 <Eye size={18} /> Spectator View (Read Only)
                                              </span>
-                                          ) : displayAuctionState?.status === 'paused' ? 'PAUSED' : displayAuctionState?.highBidderId === user?.uid ? "LEADING BIDDER" : inLastCall ? `LAST CALL — BID: ₹${formatCrores(nextBidAmount)} Cr` : `PLACE BID: ₹${formatCrores(nextBidAmount)} Cr`}
+                                          ) : displayAuctionState?.status === 'paused' ? 'PAUSED' : displayAuctionState?.highBidderId === user?.uid ? "LEADING BIDDER" : `PLACE BID: ₹${formatCrores(nextBidAmount)} Cr`}
                                        </button>
                                        <button onClick={() => setShowPlayersOverlay(true)} className="w-12 h-12 sm:w-14 sm:h-14 xl:w-18 xl:h-18 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-all"><List size={20} /></button>
                                     </div>

@@ -22,6 +22,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { TEAMS } from '../data/teams';
+import { countAuctionTeams, MIN_TEAMS_TO_START } from '../lib/auctionRules';
 import { formatCrores, toFiniteNumber } from '../lib/auctionDisplay';
 import TextChat from '../components/TextChat';
 import Footer from '../components/Footer';
@@ -75,6 +76,8 @@ const Lobby = () => {
 
   const isAdmin = currentAuction?.hostId === user?.uid;
   const players = currentAuction?.players || [];
+  const teamCount = countAuctionTeams(players);
+  const canStartAuction = teamCount >= MIN_TEAMS_TO_START;
 
   const teamAssignments = players.reduce((acc, p) => {
     if (p.team) acc[p.team] = p.name;
@@ -201,7 +204,7 @@ const Lobby = () => {
 
   // ─── Handlers ───
   const handleStartAuction = async () => {
-    if (isAdmin) {
+    if (isAdmin && canStartAuction) {
       setIsStarting(true);
       setActionError(null);
       try {
@@ -577,7 +580,8 @@ const Lobby = () => {
             </button>
             <button
               onClick={handleStartAuction}
-              disabled={isStarting}
+              disabled={isStarting || !canStartAuction}
+              title={!canStartAuction ? `Add at least ${MIN_TEAMS_TO_START} teams to start` : undefined}
               className="relative overflow-hidden group shrink-0 px-3 sm:px-4 md:px-8 py-2 sm:py-2.5 md:py-3 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] rounded-xl sm:rounded-2xl font-black text-[9px] sm:text-[10px] md:text-xs uppercase tracking-wider md:tracking-widest shadow-[0_10px_30px_rgba(255,85,0,0.3)] disabled:opacity-50 transition-all active:scale-95 cursor-pointer whitespace-nowrap"
             >
               <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />

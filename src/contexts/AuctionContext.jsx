@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import {
   db,
   getActiveServer,
+  getAvailableServers,
   getRtdb,
   getServerTime,
   goOfflineServer,
@@ -39,14 +40,20 @@ import { useAuth } from './AuthContext';
 import { useQuota } from './QuotaContext';
 import { useConnectionAlert } from './ConnectionAlertContext';
 import { shouldReportConnectionTrouble } from '../lib/connectionAlerts';
-import { toFiniteNumber } from '../lib/auctionDisplay';
+import { pausedRemainingMs, toFiniteNumber } from '../lib/auctionDisplay';
 import {
+  countAuctionTeams,
   finalizedLotRecoveryDelay,
+  generatePlayerOrder,
   getNextBidAmount,
   getSquadConstraintError,
   getStartDisposition,
   mapRoomPlayers,
   mergeRoomPlayer,
+  MIN_TEAMS_TO_START,
+  resolveDisconnectAction,
+  shouldArmDisconnectPause,
+  shuffleArray,
 } from '../lib/auctionRules';
 import {
   transactAdvance,
@@ -70,34 +77,6 @@ import {
   insertAuctionWithServer,
   upsertAuctionWithServer,
 } from '../lib/auctionServerDirectory';
-import { isHotspotRoomCode } from '../lib/roomCodes';
-import {
-  createLocalRoom,
-  generateLocalPlayerOrder,
-  joinLocalRoomDb as joinLocalRoomDbEngine,
-  subscribeLocalRoom,
-  updateLocalPlayerTeam as updateLocalPlayerTeamEngine,
-  fillLocalEmptyTeamsWithBots as fillLocalEmptyTeamsWithBotsEngine,
-  removeLocalBotTeam as removeLocalBotTeamEngine,
-  startLocalAuction as startLocalAuctionEngine,
-  placeLocalBid as placeLocalBidEngine,
-  endLocalPlayerAuction as endLocalPlayerAuctionEngine,
-  pauseLocalAuction as pauseLocalAuctionEngine,
-  resumeLocalAuction as resumeLocalAuctionEngine,
-  endLocalAuction as endLocalAuctionEngine,
-  sendLocalMessage as sendLocalMessageEngine,
-  kickLocalPlayer as kickLocalPlayerEngine,
-  updateLocalRoomSettings as updateLocalRoomSettingsEngine,
-  setSupabaseClient,
-  getLocalHostTimeOffset,
-  shuffleArray,
-} from '../lib/localAuctionEngine';
-
-if (typeof supabase !== 'undefined' && supabase) {
-  setSupabaseClient(supabase);
-}
-
-
 const TEAMS = [
   { id: 'MI', name: 'Mumbai Indians', color: 'bg-blue-600' },
   { id: 'CSK', name: 'Chennai Super Kings', color: 'bg-yellow-400 text-black' },
@@ -116,6 +95,16 @@ const createRoomCodeTakenError = () => {
   error.code = 'ROOM_CODE_TAKEN';
   return error;
 };
+
+// One write path for manual and host-offline pauses. The transaction keeps the
+// pause idempotent when several peers notice the same presence transition.
+const pauseLiveLot = (rtdbInstance, roomId, nowMs) =>
+  runTransactionRtdb(ref(rtdbInstance, `auctions/${roomId}/live`), (live) => {
+    if (!live || live.status !== 'bidding') return;
+    const remainingMs = (live.timerEndsAt || 0) - nowMs;
+    if (remainingMs < 2000) return;
+    return { ...live, status: 'paused', remainingMs: Math.max(0, remainingMs) };
+  });
 
 const mapSupabaseAuction = (sData) => ({
   id: sData.id,
@@ -153,14 +142,9 @@ export const AuctionProvider = ({ children }) => {
   }
 
 
-  // Server-authoritative time using Firebase RTDB offset (or local time for hotspot rooms).
-  // getServerTime() returns Date.now() + serverOffset, synced across all clients.
-  const getSyncedTime = useCallback(() => {
-    if (currentAuction?.server === 'local' || isHotspotRoomCode(currentAuction?.id)) {
-      return Date.now() + getLocalHostTimeOffset();
-    }
-    return getServerTime();
-  }, [currentAuction?.server, currentAuction?.id]);
+  // Server-authoritative time: getServerTime() returns Date.now() + serverOffset,
+  // synced across all clients.
+  const getSyncedTime = useCallback(() => getServerTime(), []);
 
   // Create a new room in DB (RTDB + Supabase index, zero Firestore load)
   const createRoom = useCallback(async (
@@ -171,10 +155,6 @@ export const AuctionProvider = ({ children }) => {
     isPublic = true,
     server = DEFAULT_AUCTION_SERVER,
   ) => {
-    if (server === 'local' || isHotspotRoomCode(roomId)) {
-      return createLocalRoom(roomId, userId, playerDetails, auctionType, isPublic);
-    }
-
     const requestedServer = normalizeServer(server);
 
     // A full free-plan database never opens its socket. Probe the chosen server
@@ -197,11 +177,16 @@ export const AuctionProvider = ({ children }) => {
     let connected = await tryServer(actualServer);
 
     if (!connected) {
-      const fallbackServer =
-        actualServer === PRIMARY_SERVER ? SECONDARY_SERVER : PRIMARY_SERVER;
-      if (fallbackServer !== actualServer && (await tryServer(fallbackServer))) {
-        actualServer = fallbackServer;
-        connected = true;
+      const candidates = getAvailableServers()
+        .map((s) => s.id)
+        .filter((id) => id !== actualServer);
+
+      for (const candidate of candidates) {
+        if (await tryServer(candidate)) {
+          actualServer = candidate;
+          connected = true;
+          break;
+        }
       }
     }
 
@@ -210,7 +195,7 @@ export const AuctionProvider = ({ children }) => {
       // whichever server is active now, not just the originally requested one.
       goOfflineServer(getActiveServer());
       throw new Error(
-        'Both auction servers are at capacity right now. Please try again in a minute.',
+        'All auction servers are at capacity right now. Please try again in a minute.',
       );
     }
 
@@ -436,10 +421,6 @@ export const AuctionProvider = ({ children }) => {
   }, [currentAuction?.server]);
 
   const startAuction = useCallback(async (roomId) => {
-    if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
-      return await startLocalAuctionEngine(roomId);
-    }
-
     try {
       const rtdbRoomRef = ref(rtdb, `auctions/${roomId}/room`);
       const liveRef = ref(rtdb, `auctions/${roomId}/live`);
@@ -461,10 +442,19 @@ export const AuctionProvider = ({ children }) => {
       }
       if (disposition === 'missing') throw new Error('Room not found!');
 
+      // A fresh auction needs at least two franchises. Recovery of an already
+      // active room is exempt so a completed start can always be healed.
+      if (
+        disposition === 'start' &&
+        countAuctionTeams(roomData.players) < MIN_TEAMS_TO_START
+      ) {
+        throw new Error(`Add at least ${MIN_TEAMS_TO_START} teams to start the auction.`);
+      }
+
       let playerOrder =
         Array.isArray(roomData.playerOrder) && roomData.playerOrder.length > 0
           ? roomData.playerOrder
-          : generateLocalPlayerOrder(roomData.auctionType || 'mega');
+          : generatePlayerOrder(roomData.auctionType || 'mega');
       if (playerOrder.length === 0) {
         throw new Error('No players available for this auction.');
       }
@@ -555,11 +545,7 @@ export const AuctionProvider = ({ children }) => {
     }
   }, [getSyncedTime, handleFirebaseError]);
 
-  const endPlayerAuction = useCallback(async (roomId, force = false) => {
-    if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
-      return endLocalPlayerAuctionEngine(roomId, user?.uid, force);
-    }
-
+  const endPlayerAuction = useCallback(async (roomId) => {
     // Prevent duplicate calls from the timer interval
     if (endingPlayerRef.current) return;
     endingPlayerRef.current = true;
@@ -695,11 +681,20 @@ export const AuctionProvider = ({ children }) => {
           } else {
             const server = normalizeServer(currentAuction?.server || getActiveServer());
             const rtdbInstance = getRtdb(server);
-            // 1. Mark the lot completed so pending transactions abort cleanly.
-            await updateRtdb(ref(rtdbInstance, `auctions/${roomId}/live`), { status: 'completed' });
-            // 2. Mark the room completed (triggers redirect to /summary).
+            // 1. Cancel onDisconnect so a connection drop does not auto-pause an ending auction.
+            await onDisconnect(ref(rtdbInstance, `auctions/${roomId}/live`)).cancel().catch(() => {});
+            // 2. Mark the room completed (authoritative status, triggers redirect to /summary).
             await updateRtdb(ref(rtdbInstance, `auctions/${roomId}/room`), { status: 'completed' });
-            // 3. Persist the completed room. Keep the RTDB copy if this failed:
+            // 3. Mark the lot completed (or paused as fallback if deployed database rules haven't whitelisted 'completed' yet)
+            //    so pending timers/transactions abort cleanly without blocking completion.
+            try {
+              await updateRtdb(ref(rtdbInstance, `auctions/${roomId}/live`), { status: 'completed' });
+            } catch {
+              try {
+                await updateRtdb(ref(rtdbInstance, `auctions/${roomId}/live`), { status: 'paused' });
+              } catch {}
+            }
+            // 4. Persist the completed room. Keep the RTDB copy if this failed:
             //    AuctionSummary can still reconstruct the result from it.
             const persisted = await flushAuctionToFirestore(roomId, server);
 
@@ -734,7 +729,6 @@ export const AuctionProvider = ({ children }) => {
   const liveLotStatus = currentAuction?.currentAuction?.status;
   useEffect(() => {
     if (!currentAuction?.id) return undefined;
-    if (currentAuction.server === 'local' || isHotspotRoomCode(currentAuction.id)) return undefined;
 
     const delay = finalizedLotRecoveryDelay(liveLotStatus);
     if (!delay) return undefined;
@@ -760,10 +754,6 @@ export const AuctionProvider = ({ children }) => {
   }, [currentAuction?.id, currentAuction?.server, liveLotStatus, endPlayerAuction]);
 
   const joinRoomDb = useCallback(async (roomId, userId, playerDetails, serverHint) => {
-    if (serverHint === 'local' || isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
-      return joinLocalRoomDbEngine(roomId, userId, playerDetails);
-    }
-
     const teamDetails = TEAMS.find(t => t.id === playerDetails.team);
 
     let targetServer = normalizeServer(serverHint, null);
@@ -812,20 +802,29 @@ export const AuctionProvider = ({ children }) => {
       const directoryServer = directoryRecord
         ? getAuctionServer(directoryRecord)
         : null;
-      const otherServer =
-        targetServer === PRIMARY_SERVER ? SECONDARY_SERVER : PRIMARY_SERVER;
-      const nextServer = directoryRecord
-        ? directoryServer
-        : otherServer;
 
       if (
-        nextServer &&
-        nextServer !== targetServer &&
-        isServerAvailable(nextServer)
+        directoryServer &&
+        directoryServer !== targetServer &&
+        isServerAvailable(directoryServer)
       ) {
-        targetServer = nextServer;
+        targetServer = directoryServer;
         goOnlineServer(targetServer);
         connected = await waitForServerConnection(rtdb, 6000);
+      } else {
+        const otherServers = getAvailableServers()
+          .map((s) => s.id)
+          .filter((id) => id !== targetServer);
+
+        for (const candidate of otherServers) {
+          goOnlineServer(candidate);
+          const probeConnected = await waitForServerConnection(rtdb, 4000);
+          if (probeConnected) {
+            targetServer = candidate;
+            connected = true;
+            break;
+          }
+        }
       }
     }
 
@@ -846,22 +845,6 @@ export const AuctionProvider = ({ children }) => {
       }
     }
 
-    // If the directory is unavailable too, a bare code can still be a room on
-    // the other server (e.g. a create whose Supabase mirror failed). Probe the
-    // other database once before declaring the room missing.
-    if (!rtdbRoomSnap.exists() && !directoryRecord) {
-      const otherServer =
-        targetServer === PRIMARY_SERVER ? SECONDARY_SERVER : PRIMARY_SERVER;
-      if (isServerAvailable(otherServer)) {
-        targetServer = otherServer;
-        goOnlineServer(targetServer);
-        connected = await waitForServerConnection(rtdb, 6000);
-        if (connected) {
-          rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
-        }
-      }
-    }
-
     if (!rtdbRoomSnap.exists() && directoryRecord) {
       const directoryServer = getAuctionServer(directoryRecord);
       if (!isServerAvailable(directoryServer)) {
@@ -879,6 +862,30 @@ export const AuctionProvider = ({ children }) => {
           );
         }
         rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
+      }
+    }
+
+    // Multi-server probe: if the room is absent from the target database, check
+    // all other configured servers so legacy, unmirrored, or misrouted rooms still load.
+    if (!rtdbRoomSnap.exists()) {
+      const candidates = getAvailableServers()
+        .map((s) => s.id)
+        .filter((id) => id !== targetServer);
+
+      for (const candidate of candidates) {
+        if (isServerAvailable(candidate)) {
+          goOnlineServer(candidate);
+          const probeConnected = await waitForServerConnection(getRtdb(candidate), 3000);
+          if (probeConnected) {
+            const probeSnap = await get(ref(getRtdb(candidate), `auctions/${roomId}/room`));
+            if (probeSnap.exists()) {
+              targetServer = candidate;
+              connected = true;
+              rtdbRoomSnap = probeSnap;
+              break;
+            }
+          }
+        }
       }
     }
 
@@ -964,10 +971,6 @@ export const AuctionProvider = ({ children }) => {
 
   // Kick a player from the room
   const kickPlayer = useCallback(async (roomId, playerObj) => {
-    if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
-      return kickLocalPlayerEngine(roomId, playerObj?.id);
-    }
-
     try {
       // 1+2. Remove the player and ban them in one transaction so a concurrent
       // join cannot resurrect the kicked manager's roster entry.
@@ -1020,17 +1023,6 @@ export const AuctionProvider = ({ children }) => {
   const joinAuction = useCallback((auctionId, userId, serverHint) => {
     if (!userId) return () => {};
 
-    if (serverHint === 'local' || isHotspotRoomCode(auctionId)) {
-      setLoading(true);
-      return subscribeLocalRoom(auctionId, userId, {
-        setCurrentAuction,
-        setRoomTeams,
-        setTeam,
-        setMessages,
-        setLoading,
-      });
-    }
-
     const preferredServer = normalizeServer(serverHint || getActiveServer());
     const roomServer = isServerAvailable(preferredServer)
       ? preferredServer
@@ -1040,6 +1032,9 @@ export const AuctionProvider = ({ children }) => {
     } catch {
       // The watchdog below reports an unusable socket.
     }
+    // Keep the room's database; the exported `rtdb` binding can move if another
+    // room on a different server is opened before this cleanup runs.
+    const roomRtdb = getRtdb(roomServer);
 
     setLoading(true);
     const sessions = serverSessionsRef.current;
@@ -1083,8 +1078,9 @@ export const AuctionProvider = ({ children }) => {
 
     // ─── Real Presence Logic ───
     // Track online status in RTDB
-    const myPresenceRef = ref(rtdb, `auctions/${auctionId}/presence/${userId}`);
-    const connectedRef = ref(rtdb, '.info/connected');
+    const myPresenceRef = ref(roomRtdb, `auctions/${auctionId}/presence/${userId}`);
+    const connectedRef = ref(roomRtdb, '.info/connected');
+    const roomLiveRef = ref(roomRtdb, `auctions/${auctionId}/live`);
     
     // ── Bug Fix: Declare shared state vars BEFORE any onValue subscriptions that reference them ──
     // Previously currentRoomData was declared at line 658 but referenced inside the onValue(connectedRef)
@@ -1093,6 +1089,104 @@ export const AuctionProvider = ({ children }) => {
     let currentRoomData = null;
     let currentRtdbData = null;
     let currentPresences = {};
+    let presenceLoaded = false;
+    let hostWasOnline = null; // true -> false is the only auto-pause trigger
+    let disconnectPauseArmed = false;
+    let armedLotId = null;
+
+    // Multi-tab coordination for host onDisconnect handling:
+    // Only the primary host tab arms onDisconnect to avoid background tabs
+    // accidentally pausing the lot when closed.
+    const tabId = Math.random().toString(36).slice(2);
+    let isPrimaryHostTab = true;
+    let hostChannel = null;
+
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        hostChannel = new BroadcastChannel(`auction_host_${auctionId}_${userId}`);
+        hostChannel.onmessage = (event) => {
+          const msg = event?.data;
+          if (!msg) return;
+          if (msg.type === 'claim_primary') {
+            if (msg.tabId !== tabId && isPrimaryHostTab) {
+              isPrimaryHostTab = false;
+              disarmDisconnectPause();
+            }
+          } else if (msg.type === 'release_primary') {
+            if (msg.tabId !== tabId && !isPrimaryHostTab && socketConnected) {
+              isPrimaryHostTab = true;
+              syncDisconnectPause();
+            }
+          }
+        };
+        hostChannel.postMessage({ type: 'claim_primary', tabId });
+      } catch {
+        // BroadcastChannel unavailable
+      }
+    }
+
+    const disarmDisconnectPause = () => {
+      if (disconnectPauseArmed) {
+        disconnectPauseArmed = false;
+        armedLotId = null;
+        onDisconnect(roomLiveRef).cancel().catch(() => {});
+      }
+    };
+
+    // Server-side fallback: if the host's connection drops mid-lot (tab closed,
+    // crash, network loss), RTDB writes the pause itself even with no peers left.
+    // The timestamp lets resume/display recover the exact remaining time.
+    const syncDisconnectPause = () => {
+      const isHost = currentRoomData?.hostId === userId;
+      const currentLotId = currentRtdbData?.playerId;
+
+      const shouldArm = shouldArmDisconnectPause({
+        socketConnected,
+        isHost,
+        isPrimaryTab: isPrimaryHostTab,
+        roomStatus: currentRoomData?.status,
+        liveStatus: currentRtdbData?.status,
+        playerId: currentLotId,
+      });
+
+      const action = resolveDisconnectAction({
+        shouldArm,
+        currentlyArmed: disconnectPauseArmed,
+        armedLotId,
+        currentLotId,
+      });
+
+      if (action === 'rearm') {
+        onDisconnect(roomLiveRef).cancel().catch(() => {});
+        disconnectPauseArmed = true;
+        armedLotId = currentLotId;
+        onDisconnect(roomLiveRef)
+          .update({
+            status: 'paused',
+            pausedAt: serverTimestampRtdb(),
+            remainingMs: null,
+          })
+          .catch(() => {
+            disconnectPauseArmed = false;
+            armedLotId = null;
+          });
+      } else if (action === 'arm') {
+        disconnectPauseArmed = true;
+        armedLotId = currentLotId;
+        onDisconnect(roomLiveRef)
+          .update({
+            status: 'paused',
+            pausedAt: serverTimestampRtdb(),
+            remainingMs: null,
+          })
+          .catch(() => {
+            disconnectPauseArmed = false;
+            armedLotId = null;
+          });
+      } else if (action === 'cancel') {
+        disarmDisconnectPause();
+      }
+    };
 
     // Set presence status on connect/disconnect
     const unsubConnected = onValue(connectedRef, async (snap) => {
@@ -1113,6 +1207,14 @@ export const AuctionProvider = ({ children }) => {
           lastSeen: serverTimestampRtdb() 
         });
 
+        // Re-arm the live-lot fallback after a reconnect. The server discards
+        // onDisconnect operations once it runs them, so this is the safe reset.
+        disconnectPauseArmed = false;
+        armedLotId = null;
+        syncDisconnectPause();
+      } else {
+        disconnectPauseArmed = false;
+        armedLotId = null;
       }
     });
 
@@ -1151,14 +1253,43 @@ export const AuctionProvider = ({ children }) => {
         // one client writes per transition. Peers/spectators can be the reporter
         // too, which is what lets an abrupt host disconnect be reflected (the
         // RTDB onDisconnect flips presence server-side even if the host crashes).
-        if (Object.keys(currentPresences).length > 0) {
-          const reporterId = Object.keys(currentPresences)
-            .filter((uid) => currentPresences[uid]?.online)
-            .sort()[0];
-          if (reporterId === userId) {
-            syncHostOnline(!!currentPresences[currentRoomData.hostId]?.online);
-          }
+        const reporterId = Object.keys(currentPresences)
+          .filter((uid) => currentPresences[uid]?.online)
+          .sort()[0];
+        if (reporterId === userId) {
+          syncHostOnline(!!currentPresences[currentRoomData.hostId]?.online);
         }
+
+        // Host went online -> offline: pause the live lot. This reuses the
+        // presence node that host_online mirrors, so it adds no listener and no
+        // Supabase call. One elected reporter writes; the pause transaction is
+        // idempotent if the election changes during the transition.
+        if (presenceLoaded && currentRoomData.hostId && currentRoomData.hostId !== userId) {
+          const hostOnline = !!currentPresences[currentRoomData.hostId]?.online;
+          const isReporter = !reporterId || reporterId === userId;
+          if (hostWasOnline === true && !hostOnline && isReporter) {
+            void pauseLiveLot(roomRtdb, auctionId, getSyncedTime());
+          }
+          hostWasOnline = hostOnline;
+        }
+
+        // Multiple host tabs recovery: if another host tab abruptly died and caused
+        // a server-side disconnect pause (pausedAt without remainingMs), but this host tab
+        // is still connected and online, take over leadership and resume the lot.
+        if (
+          presenceLoaded &&
+          currentRoomData.hostId === userId &&
+          !isPrimaryHostTab &&
+          socketConnected &&
+          currentRtdbData?.status === 'paused' &&
+          currentRtdbData?.pausedAt &&
+          currentRtdbData?.remainingMs == null
+        ) {
+          isPrimaryHostTab = true;
+          void resumeAuction(auctionId);
+        }
+
+        syncDisconnectPause();
 
         setCurrentAuction({ 
           id: auctionId, 
@@ -1170,16 +1301,25 @@ export const AuctionProvider = ({ children }) => {
     };
 
     // Presence listener (all users' presence)
-    const presenceRef = ref(rtdb, `auctions/${auctionId}/presence`);
+    const presenceRef = ref(roomRtdb, `auctions/${auctionId}/presence`);
     const unsubPresence = onValue(presenceRef, (snap) => {
       currentPresences = snap.val() || {};
+      presenceLoaded = true;
+      if (socketConnected && userId && currentPresences[userId]?.online === false) {
+        // Multi-tab/reconnect healing: if this tab is connected but presence says false,
+        // restore online status so peers don't trigger a false offline pause.
+        set(myPresenceRef, {
+          online: true,
+          lastSeen: serverTimestampRtdb(),
+        });
+      }
       checkAndSet();
     });
 
     let didFallbackFetch = false;
     let didTeamsFallback = false;
 
-    const unsubAuction = onValue(ref(rtdb, `auctions/${auctionId}/room`), async (snapshot) => {
+    const unsubAuction = onValue(ref(roomRtdb, `auctions/${auctionId}/room`), async (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
         
@@ -1191,7 +1331,7 @@ export const AuctionProvider = ({ children }) => {
 
         auctionLoaded = true;
         if (!data.playerOrder) {
-          get(ref(rtdb, `auctions/${auctionId}/playerOrder`)).then(oSnap => {
+          get(ref(roomRtdb, `auctions/${auctionId}/playerOrder`)).then(oSnap => {
             if (!alive) return;
             if (oSnap.exists()) data.playerOrder = oSnap.val();
             currentRoomData = data;
@@ -1233,7 +1373,7 @@ export const AuctionProvider = ({ children }) => {
               // Only restore a genuinely absent room. Writing unconditionally
               // could overwrite a live auction with a stale directory snapshot.
               await runTransactionRtdb(
-                ref(rtdb, `auctions/${auctionId}/room`),
+                ref(roomRtdb, `auctions/${auctionId}/room`),
                 (current) => current ?? data,
               );
             } else {
@@ -1248,7 +1388,7 @@ export const AuctionProvider = ({ children }) => {
       handleFirebaseError(error);
     });
 
-    const unsubLive = onValue(ref(rtdb, `auctions/${auctionId}/live`), (snapshot) => {
+    const unsubLive = onValue(ref(roomRtdb, `auctions/${auctionId}/live`), (snapshot) => {
       currentRtdbData = snapshot.val();
       checkAndSet();
     }, (error) => {
@@ -1256,7 +1396,7 @@ export const AuctionProvider = ({ children }) => {
     });
 
 
-    const unsubTeams = onValue(ref(rtdb, `auctions/${auctionId}/teams`), async (snapshot) => {
+    const unsubTeams = onValue(ref(roomRtdb, `auctions/${auctionId}/teams`), async (snapshot) => {
       if (snapshot.exists()) {
         teamsLoaded = true;
         const teamsObj = snapshot.val();
@@ -1316,7 +1456,7 @@ export const AuctionProvider = ({ children }) => {
               await Promise.all(
                 teamsArr.map((team) =>
                   runTransactionRtdb(
-                    ref(rtdb, `auctions/${auctionId}/teams/${team.id}`),
+                    ref(roomRtdb, `auctions/${auctionId}/teams/${team.id}`),
                     (current) => current ?? team,
                   ),
                 ),
@@ -1330,7 +1470,7 @@ export const AuctionProvider = ({ children }) => {
       handleFirebaseError(error);
     });
 
-    const msgQuery = queryRtdb(ref(rtdb, `auctions/${auctionId}/messages`), limitToLast(50));
+    const msgQuery = queryRtdb(ref(roomRtdb, `auctions/${auctionId}/messages`), limitToLast(50));
     const unsubMessages = onValue(msgQuery, (snapshot) => {
       messagesLoaded = true;
       if (snapshot.exists()) {
@@ -1362,6 +1502,15 @@ export const AuctionProvider = ({ children }) => {
       pendingTimeouts.clear();
       sessions.release(roomServer);
 
+      if (hostChannel) {
+        try {
+          if (isPrimaryHostTab) {
+            hostChannel.postMessage({ type: 'release_primary', tabId });
+          }
+          hostChannel.close();
+        } catch {}
+      }
+
       clearInterval(watchdog);
       unsubConnected();
       unsubPresence();
@@ -1377,6 +1526,12 @@ export const AuctionProvider = ({ children }) => {
       // otherwise the peer-elected presence mirror handles offline transitions.
       if (currentRoomData && currentRoomData.hostId === userId) {
         syncHostOnline(false);
+        // The socket stays open for a few seconds after unmount, so onDisconnect
+        // does not fire yet. Pause directly; peers do the same on the presence flip.
+        void pauseLiveLot(roomRtdb, auctionId, getSyncedTime());
+        // Clean navigation away from the room disarms onDisconnect so it does not
+        // fire 5s later when the delayed socket closure runs.
+        disarmDisconnectPause();
       }
 
       setCurrentAuction(null);
@@ -1395,15 +1550,6 @@ export const AuctionProvider = ({ children }) => {
 
   const sendMessage = useCallback(async (roomId, text, type = 'text') => {
     if (!user) return;
-    if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
-      return sendLocalMessageEngine(
-        roomId,
-        user.uid,
-        user.displayName || 'Manager',
-        text,
-        type,
-      );
-    }
     const msgRef = ref(rtdb, `auctions/${roomId}/messages`);
     await push(msgRef, {
       userId: user.uid,
@@ -1425,16 +1571,6 @@ export const AuctionProvider = ({ children }) => {
     }
     if (currentAuction.currentAuction?.status !== 'bidding') throw new Error("Auction is not accepting bids right now.");
     if (currentAuction.currentAuction?.highBidderId === user.uid) throw new Error("You are already the highest bidder!");
-
-    if (currentAuction.server === 'local' || isHotspotRoomCode(currentAuction.id)) {
-      return placeLocalBidEngine(
-        currentAuction.id,
-        user.uid,
-        team.teamId,
-        user.displayName || 'Manager',
-        team.teamName,
-      );
-    }
 
     const currentPlayerId = currentAuction.currentAuction?.playerId;
     const player = IPL_PLAYERS.find(p => p.id === currentPlayerId);
@@ -1492,10 +1628,6 @@ export const AuctionProvider = ({ children }) => {
   }, [currentAuction, user, team, getSyncedTime, handleFirebaseError]);
 
   const updatePlayerTeam = useCallback(async (roomId, userId, newTeamId) => {
-    if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
-      return updateLocalPlayerTeamEngine(roomId, userId, newTeamId);
-    }
-
     const rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
     if (!rtdbRoomSnap.exists()) return;
     
@@ -1541,32 +1673,14 @@ export const AuctionProvider = ({ children }) => {
   }, []);
   
   const updateRoomSettings = useCallback(async (roomId, settings) => {
-    if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
-      return updateLocalRoomSettingsEngine(roomId, settings);
-    }
     await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { settings });
-  }, [currentAuction?.server]);
+  }, []);
 
   const pauseAuction = useCallback(async (roomId) => {
     if (!user || !currentAuction || currentAuction.hostId !== user.uid) return;
-    if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
-      return pauseLocalAuctionEngine(roomId);
-    }
-
-    const liveRef = ref(rtdb, `auctions/${roomId}/live`);
-    const now = getSyncedTime();
 
     // Prevent pause race condition: only pause if actively bidding and > 2s remaining
-    const tx = await runTransactionRtdb(liveRef, (currentLive) => {
-      if (!currentLive || currentLive.status !== 'bidding') return;
-      const remainingMs = (currentLive.timerEndsAt || 0) - now;
-      if (remainingMs < 2000) return;
-      return {
-        ...currentLive,
-        status: 'paused',
-        remainingMs: Math.max(0, remainingMs)
-      };
-    });
+    const tx = await pauseLiveLot(rtdb, roomId, getSyncedTime());
 
     if (!tx.committed) return;
 
@@ -1582,9 +1696,6 @@ export const AuctionProvider = ({ children }) => {
 
   const resumeAuction = useCallback(async (roomId) => {
     if (!user || !currentAuction || currentAuction.hostId !== user.uid) return;
-    if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
-      return resumeLocalAuctionEngine(roomId);
-    }
     
     const liveRef = ref(rtdb, `auctions/${roomId}/live`);
     const now = getSyncedTime();
@@ -1592,12 +1703,17 @@ export const AuctionProvider = ({ children }) => {
     // Only resume if currently paused; restore remainingMs (minimum 2s)
     const tx = await runTransactionRtdb(liveRef, (currentLive) => {
       if (!currentLive || currentLive.status !== 'paused') return;
-      const resumeMs = Math.max(2000, currentLive.remainingMs || (currentAuction.settings?.bidTimer || 10) * 1000);
+      // A server-side disconnect pause carries only pausedAt, not remainingMs.
+      const resumeMs = Math.max(
+        2000,
+        pausedRemainingMs(currentLive) || (currentAuction.settings?.bidTimer || 10) * 1000,
+      );
       return {
         ...currentLive,
         status: 'bidding',
         timerEndsAt: now + resumeMs,
-        remainingMs: null
+        remainingMs: null,
+        pausedAt: null
       };
     });
 
@@ -1615,17 +1731,14 @@ export const AuctionProvider = ({ children }) => {
 
   const endAuction = useCallback(async (roomId) => {
     if (!user || !currentAuction || currentAuction.hostId !== user.uid) return;
-    if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
-      return await endLocalAuctionEngine(roomId);
-    }
 
     const server = normalizeServer(currentAuction?.server || getActiveServer());
     const rtdbInstance = getRtdb(server);
 
-    // 1. Mark the lot completed so pending timers/transactions abort cleanly.
-    await updateRtdb(ref(rtdbInstance, `auctions/${roomId}/live`), { status: 'completed' });
+    // 1. Cancel onDisconnect immediately so it cannot fire on an ending auction.
+    await onDisconnect(ref(rtdbInstance, `auctions/${roomId}/live`)).cancel().catch(() => {});
 
-    // 2. Mark the room completed (triggers redirect to /summary).
+    // 2. Mark the room completed (authoritative status, triggers redirect to /summary).
     await updateRtdb(ref(rtdbInstance, `auctions/${roomId}/room`), { status: 'completed' });
     await push(ref(rtdbInstance, `auctions/${roomId}/messages`), {
       userId: 'system',
@@ -1634,6 +1747,16 @@ export const AuctionProvider = ({ children }) => {
       type: 'log',
       timestamp: serverTimestampRtdb()
     });
+
+    // 3. Mark the lot completed (or paused as fallback if deployed database rules haven't whitelisted 'completed' yet)
+    //    so pending timers/transactions abort cleanly without blocking completion.
+    try {
+      await updateRtdb(ref(rtdbInstance, `auctions/${roomId}/live`), { status: 'completed' });
+    } catch {
+      try {
+        await updateRtdb(ref(rtdbInstance, `auctions/${roomId}/live`), { status: 'paused' });
+      } catch {}
+    }
 
     // 3. Delete only after the completed snapshot reached Supabase.
     const persisted = await flushAuctionToFirestore(roomId, server);
@@ -1727,10 +1850,6 @@ export const AuctionProvider = ({ children }) => {
   }, []);
 
   const removeBotTeam = useCallback(async (roomId, botUserId) => {
-    if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
-      return removeLocalBotTeamEngine(roomId, botUserId);
-    }
-
     const rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
     if (!rtdbRoomSnap.exists()) return;
 
@@ -1744,10 +1863,6 @@ export const AuctionProvider = ({ children }) => {
   }, []);
 
   const fillEmptyTeamsWithBots = useCallback(async (roomId) => {
-    if (isHotspotRoomCode(roomId) || currentAuction?.server === 'local') {
-      return fillLocalEmptyTeamsWithBotsEngine(roomId);
-    }
-
     const rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
     if (!rtdbRoomSnap.exists()) return;
     const data = rtdbRoomSnap.val();
@@ -1813,10 +1928,6 @@ export const AuctionProvider = ({ children }) => {
   // Host Bidding Bot Loop Effect (Cloud RTDB)
   useEffect(() => {
     if (!currentAuction || !user || currentAuction.hostId !== user.uid) {
-      cancelBotTimer();
-      return;
-    }
-    if (currentAuction.server === 'local' || isHotspotRoomCode(currentAuction.id)) {
       cancelBotTimer();
       return;
     }

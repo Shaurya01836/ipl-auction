@@ -1,8 +1,9 @@
 import React from 'react';
 
 /**
- * Small segmented control for choosing which RTDB new rooms/history use.
- * It never opens a database connection; it only filters Supabase-backed views.
+ * Segmented control for choosing which RTDB new rooms/history use.
+ * - Mobile/Tablet (< lg): full-width 4-column grid on the next line for easy tapping.
+ * - Desktop/Laptop (>= lg): compact inline segmented control on the same line as the header.
  */
 export default function ServerSwitcher({ servers, value, onChange, className = '' }) {
   if (!servers || servers.length < 2) return null;
@@ -11,7 +12,7 @@ export default function ServerSwitcher({ servers, value, onChange, className = '
     <div
       role="group"
       aria-label="Auction server"
-      className={`inline-flex items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.02] p-0.5 ${className}`}
+      className={`grid grid-cols-4 lg:inline-flex items-center gap-1 lg:gap-0.5 rounded-lg border border-white/10 bg-white/[0.02] p-1 lg:p-0.5 w-full lg:w-auto shrink-0 ${className}`}
     >
       {servers.map((server) => {
         const active = server.id === value;
@@ -22,19 +23,13 @@ export default function ServerSwitcher({ servers, value, onChange, className = '
             onClick={() => onChange?.(server.id)}
             aria-pressed={active}
             title={server.description}
-            className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer sm:px-2.5 ${
+            className={`flex items-center justify-center rounded-md px-1.5 lg:px-2.5 py-2 lg:py-1 text-[8.5px] lg:text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap text-center ${
               active
-                ? 'bg-[#ff5500]/15 text-[#ff5500] border border-[#ff5500]/25'
-                : 'border border-transparent text-gray-400 hover:text-gray-200'
+                ? 'bg-[#ff5500]/15 text-[#ff5500] border border-[#ff5500]/25 shadow-sm'
+                : 'border border-transparent text-gray-400 hover:text-gray-200 hover:bg-white/[0.02]'
             }`}
           >
             <span>{server.label}</span>
-            <span
-              className={`text-[7px] font-bold tracking-wide ${
-                active ? 'text-orange-300/80' : 'text-gray-600'
-              }`}
-            >
-            </span>
           </button>
         );
       })}

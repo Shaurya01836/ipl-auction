@@ -10,7 +10,7 @@ import {
   isServerAvailable,
 } from "../lib/firebase";
 import { supabase } from "../lib/supabase";
-import { generateRoomCode, normalizeRoomCode, isHotspotRoomCode } from "../lib/roomCodes";
+import { generateRoomCode, normalizeRoomCode } from "../lib/roomCodes";
 import { ref, remove } from "firebase/database";
 import {
   DEFAULT_AUCTION_SERVER,
@@ -18,6 +18,7 @@ import {
   getPreferredServer,
   getServerFromSearch,
   getServerMeta,
+  normalizeServer,
   setPreferredServer,
   withServerParam,
 } from "../lib/auctionServers";
@@ -33,7 +34,6 @@ import {
   Check,
   Star,
   Wifi,
-  Radio,
   Globe,
   History,
   Trash2,
@@ -62,7 +62,6 @@ const LandingPage = () => {
   );
   const [selectedTeam, setSelectedTeam] = useState("MI");
   const [activeTab, setActiveTab] = useState("new");
-  const [hostingType, setHostingType] = useState("cloud");
   const [auctionType, setAuctionType] = useState("mega"); 
   const [isPublicRoom, setIsPublicRoom] = useState(true);
   const [roomCode, setRoomCode] = useState("");
@@ -70,16 +69,6 @@ const LandingPage = () => {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [historyFilter, setHistoryFilter] = useState("all");
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("mode") === "hotspot" || params.get("hotspot") === "true") {
-      setHostingType("hotspot");
-      setActiveTab("new");
-      window.scrollTo({ top: 380, behavior: "smooth" });
-    }
-  }, []);
 
   const availableServers = useMemo(() => getAvailableServers(), []);
   const [selectedServer, setSelectedServer] = useState(() => {
@@ -361,7 +350,11 @@ const LandingPage = () => {
 
   const filteredHistory = useMemo(() => {
     if (historyFilter === "all") return historyData;
-    return historyData.filter((session) => session.server === historyFilter);
+    return historyData.filter(
+      (session) =>
+        session.server === historyFilter ||
+        normalizeServer(session.server) === historyFilter,
+    );
   }, [historyData, historyFilter]);
 
   // Confirm + delete an individual session from Supabase history & public list
@@ -458,24 +451,6 @@ const LandingPage = () => {
       const displayName = user.displayName || "Manager";
 
       if (activeTab === "new") {
-        if (hostingType === "hotspot") {
-          const localRoomId = `HOTSPOT-${generateRoomCode(4)}`;
-          try {
-            await createRoom(
-              localRoomId,
-              user.uid,
-              { name: displayName, team: selectedTeam },
-              auctionType,
-              false,
-              'local',
-            );
-          } catch {
-            // non-fatal
-          }
-          setIsSubmitting(false);
-          navigate(`/lobby/${localRoomId}?local=true&server=local`);
-          return;
-        }
         let newRoomId = null;
         let result = null;
 
@@ -523,11 +498,6 @@ const LandingPage = () => {
           return;
         }
         const code = normalizeRoomCode(roomCode);
-        if (isHotspotRoomCode(code) || selectedServer === 'local') {
-          setIsSubmitting(false);
-          navigate(`/lobby/${code}?local=true&server=local`);
-          return;
-        }
         const resolvedServer = await joinRoomDb(code, user.uid, {
           name: displayName,
           team: "",
@@ -779,20 +749,22 @@ const LandingPage = () => {
           {/* Right Side: Create/Join/History form */}
           <div className="lg:col-span-7 w-full p-4 sm:p-6 md:p-8 flex flex-col">
             {availableServers.length > 1 && (
-              <div className="flex items-center justify-between gap-3 mb-3 sm:mb-4">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-4 mb-4 sm:mb-6">
                 <div className="min-w-0">
-                  <span className="text-[9px] sm:text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                  <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest block">
                     Auction Server
                   </span>
-                  <p className="text-[8px] sm:text-[9px] text-gray-500 font-medium">
+                  <p className="text-[8px] sm:text-[9px] text-gray-500 font-medium mt-0.5">
                     Lobbies and history are separate per server.
                   </p>
                 </div>
-                <ServerSwitcher
-                  servers={availableServers}
-                  value={selectedServer}
-                  onChange={handleServerChange}
-                />
+                <div className="w-full lg:w-auto">
+                  <ServerSwitcher
+                    servers={availableServers}
+                    value={selectedServer}
+                    onChange={handleServerChange}
+                  />
+                </div>
               </div>
             )}
             {/* Flat Tab Bar Navigation: Create / Join / History */}
@@ -1109,10 +1081,10 @@ const LandingPage = () => {
                   <div className="relative group">
                     <div className="flex items-center justify-between mb-1.5 sm:mb-2 ml-1">
                       <label className="block text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-[0.18em] sm:tracking-[0.2em]">
-                        Room Code (Universal)
+                        Room Code
                       </label>
                       <span className="text-[8px] font-mono text-gray-500 uppercase">
-                        Cloud & Hotspot Ready
+                        Cloud Room
                       </span>
                     </div>
                     <input
@@ -1124,18 +1096,7 @@ const LandingPage = () => {
                     />
                   </div>
 
-                  {/* Smart Universal Auto-Detection Indicator */}
-                  {roomCode.trim() && isHotspotRoomCode(roomCode) ? (
-                    <div className="p-2 sm:p-2.5 rounded-xl bg-[#ff5500]/10 border border-[#ff5500]/30 flex flex-wrap items-center justify-between gap-1.5 text-[8.5px] sm:text-[10px] font-mono text-[#ff5500]">
-                      <div className="flex items-center gap-1.5 font-bold min-w-0">
-                        <Radio size={12} className="animate-pulse shrink-0" />
-                        <span className="truncate">Hotspot Room Detected</span>
-                      </div>
-                      <span className="text-emerald-400 font-bold uppercase shrink-0 text-[7.5px] sm:text-[9px]">
-                        Host Engine • Zero Cloud Cap
-                      </span>
-                    </div>
-                  ) : roomCode.trim() ? (
+                  {roomCode.trim() ? (
                     <div className="p-2 sm:p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 flex flex-wrap items-center justify-between gap-1.5 text-[8.5px] sm:text-[10px] font-mono text-blue-400">
                       <div className="flex items-center gap-1.5 font-bold min-w-0">
                         <Globe size={12} className="shrink-0" />
@@ -1156,15 +1117,6 @@ const LandingPage = () => {
                     <div className="relative flex items-center justify-center gap-2 sm:gap-3 text-white font-black uppercase tracking-[0.16em] sm:tracking-[0.2em] text-[10px] sm:text-xs">
                       {isSubmitting ? (
                         <Loader2 size={18} className="animate-spin" />
-                      ) : isHotspotRoomCode(roomCode) ? (
-                        <>
-                          <Radio size={14} />
-                          <span>Connect to Local Hotspot Room</span>
-                          <ChevronRight
-                            size={16}
-                            className="group-hover/submit:translate-x-1 transition-transform"
-                          />
-                        </>
                       ) : (
                         <>
                           <span>Join by Code</span>
@@ -1349,7 +1301,7 @@ const LandingPage = () => {
                     <button
                       type="button"
                       onClick={() => setHistoryFilter("all")}
-                      className={`px-2 py-1 rounded-md text-[8px] sm:text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                      className={`px-2 py-1 rounded-md text-[8px] sm:text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
                         historyFilter === "all"
                           ? "bg-blue-600 text-white shadow-sm"
                           : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
@@ -1357,45 +1309,24 @@ const LandingPage = () => {
                     >
                       All ({historyData.length})
                     </button>
-                    {historyData.some((s) => s.server === "local") && (
-                      <button
-                        type="button"
-                        onClick={() => setHistoryFilter("local")}
-                        className={`px-2 py-1 rounded-md text-[8px] sm:text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 ${
-                          historyFilter === "local"
-                            ? "bg-purple-600 text-white shadow-sm"
-                            : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
-                        }`}
-                      >
-                        <Wifi size={9} /> Offline ({historyData.filter((s) => s.server === "local").length})
-                      </button>
-                    )}
-                    {historyData.some((s) => s.server === "primary") && (
-                      <button
-                        type="button"
-                        onClick={() => setHistoryFilter("primary")}
-                        className={`px-2 py-1 rounded-md text-[8px] sm:text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
-                          historyFilter === "primary"
-                            ? "bg-blue-600 text-white shadow-sm"
-                            : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
-                        }`}
-                      >
-                        Server 1 ({historyData.filter((s) => s.server === "primary").length})
-                      </button>
-                    )}
-                    {historyData.some((s) => s.server === "secondary") && (
-                      <button
-                        type="button"
-                        onClick={() => setHistoryFilter("secondary")}
-                        className={`px-2 py-1 rounded-md text-[8px] sm:text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
-                          historyFilter === "secondary"
-                            ? "bg-blue-600 text-white shadow-sm"
-                            : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
-                        }`}
-                      >
-                        Server 2 ({historyData.filter((s) => s.server === "secondary").length})
-                      </button>
-                    )}
+                    {availableServers.map((serverKey) => {
+                      const count = historyData.filter((s) => normalizeServer(s.server) === serverKey).length;
+                      if (count === 0) return null;
+                      return (
+                        <button
+                          key={serverKey}
+                          type="button"
+                          onClick={() => setHistoryFilter(serverKey)}
+                          className={`px-2 py-1 rounded-md text-[8px] sm:text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
+                            historyFilter === serverKey
+                              ? "bg-blue-600 text-white shadow-sm"
+                              : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+                          }`}
+                        >
+                          {getServerMeta(serverKey).label} ({count})
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
                 {historyError && filteredHistory.length > 0 && (
@@ -1525,14 +1456,8 @@ const LandingPage = () => {
                                     <span className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wider shrink-0">
                                       Room: {session.roomId}
                                     </span>
-                                    <span
-                                      className={`text-[7px] sm:text-[8px] font-black uppercase px-1.5 py-0.5 rounded shrink-0 flex items-center gap-0.5 ${
-                                        session.server === "local"
-                                          ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
-                                          : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
-                                      }`}
-                                    >
-                                      {session.server === "local" ? "Offline" : session.server === "secondary" ? "Server 2" : "Server 1"}
+                                    <span className="text-[7px] sm:text-[8px] font-black uppercase px-1.5 py-0.5 rounded shrink-0 bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                      {getServerMeta(session.server).label}
                                     </span>
                                     <span className="text-[7px] sm:text-[8px] font-black uppercase px-1.5 py-0.5 rounded shrink-0 bg-gray-500/10 text-gray-400">
                                       {session.mode}

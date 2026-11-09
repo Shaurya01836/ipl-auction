@@ -3,6 +3,12 @@ import assert from 'node:assert/strict';
 import {
   AUCTION_SERVERS,
   DEFAULT_AUCTION_SERVER,
+  PRIMARY_SERVER,
+  SECONDARY_SERVER,
+  SERVER_1,
+  SERVER_2,
+  SERVER_3,
+  SERVER_4,
   getAuctionServer,
   getServerFromSearch,
   getServerMeta,
@@ -10,55 +16,64 @@ import {
   withServerParam,
 } from '../src/lib/auctionServers.js';
 
-test('normalizeServer accepts known ids and falls back safely', () => {
-  assert.equal(normalizeServer('primary'), 'primary');
-  assert.equal(normalizeServer('secondary'), 'secondary');
-  assert.equal(normalizeServer('local'), 'local');
+test('normalizeServer accepts known ids and aliases, and falls back safely', () => {
+  assert.equal(normalizeServer('server-1'), SERVER_1);
+  assert.equal(normalizeServer('server-2'), SERVER_2);
+  assert.equal(normalizeServer('server-3'), SERVER_3);
+  assert.equal(normalizeServer('server-4'), SERVER_4);
+  assert.equal(normalizeServer('primary'), SERVER_1);
+  assert.equal(normalizeServer('secondary'), SERVER_2);
   assert.equal(normalizeServer('nope'), DEFAULT_AUCTION_SERVER);
   assert.equal(normalizeServer(undefined), DEFAULT_AUCTION_SERVER);
   assert.equal(normalizeServer('nope', null), null);
 });
 
-test('getAuctionServer supports both the column and settings fallback', () => {
-  assert.equal(getAuctionServer({ server: 'secondary' }), 'secondary');
-  assert.equal(
-    getAuctionServer({ settings: { server: 'secondary' } }),
-    'secondary',
-  );
-  assert.equal(getAuctionServer({ settings: {} }), 'primary');
-  assert.equal(getAuctionServer(null), 'primary');
+test('getAuctionServer routes modern and legacy directory records', () => {
+  // Modern records
+  assert.equal(getAuctionServer({ server: 'server-2' }), SERVER_2);
+  assert.equal(getAuctionServer({ settings: { server: 'server-3' } }), SERVER_3);
+  // Legacy aliases mapped to preserve existing rooms on paypact and ipl-auction-3
+  assert.equal(getAuctionServer({ settings: { server: 'primary' } }), SERVER_4);
+  assert.equal(getAuctionServer({ settings: { server: 'secondary' } }), SERVER_3);
+  assert.equal(getAuctionServer({ settings: {} }), DEFAULT_AUCTION_SERVER);
+  assert.equal(getAuctionServer(null), DEFAULT_AUCTION_SERVER);
 });
 
 test('settings.server wins over a migration default on the top-level column', () => {
   assert.equal(
     getAuctionServer({
-      server: 'primary',
-      settings: { server: 'secondary' },
+      server: 'server-1',
+      settings: { server: 'server-2' },
     }),
-    'secondary',
+    SERVER_2,
   );
 });
 
 test('getServerFromSearch only accepts known server values', () => {
-  assert.equal(getServerFromSearch('?server=secondary'), 'secondary');
-  assert.equal(getServerFromSearch('?server=local'), 'local');
-  assert.equal(getServerFromSearch('?foo=1&server=primary'), 'primary');
+  assert.equal(getServerFromSearch('?server=server-2'), SERVER_2);
+  assert.equal(getServerFromSearch('?foo=1&server=server-3'), SERVER_3);
+  assert.equal(getServerFromSearch('?foo=1&server=primary'), SERVER_1);
   assert.equal(getServerFromSearch('?server=bogus'), null);
   assert.equal(getServerFromSearch(''), null);
 });
 
 test('withServerParam preserves existing query strings and hashes', () => {
   assert.equal(
-    withServerParam('/lobby/K7M2QX', 'secondary'),
-    '/lobby/K7M2QX?server=secondary',
+    withServerParam('/lobby/K7M2QX', 'server-2'),
+    '/lobby/K7M2QX?server=server-2',
   );
   assert.equal(
-    withServerParam('/lobby/K7M2QX?foo=1#team', 'primary'),
-    '/lobby/K7M2QX?foo=1&server=primary#team',
+    withServerParam('/lobby/K7M2QX?foo=1#team', 'server-1'),
+    '/lobby/K7M2QX?foo=1&server=server-1#team',
   );
 });
 
-test('server metadata is stable and always has a fallback', () => {
+test('server metadata covers all 4 servers and always has a fallback', () => {
+  assert.equal(AUCTION_SERVERS.length, 4);
+  assert.equal(getServerMeta('server-1').label, 'Server 1');
+  assert.equal(getServerMeta('server-2').label, 'Server 2');
+  assert.equal(getServerMeta('server-3').label, 'Server 3');
+  assert.equal(getServerMeta('server-4').label, 'Server 4');
   assert.equal(getServerMeta('secondary').label, 'Server 2');
   assert.equal(getServerMeta('unknown').id, AUCTION_SERVERS[0].id);
 });

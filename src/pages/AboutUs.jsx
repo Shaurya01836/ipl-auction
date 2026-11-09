@@ -18,7 +18,7 @@ import useDocumentTitle from '../hooks/useDocumentTitle';
 const AboutUs = () => {
   useDocumentTitle(
     'About Us | CrickAuction — The Premier IPL Auction Simulator',
-    'Learn about CrickAuction, our platform mission, AI bot valuation engine, local hotspot technology, and engineering standards.'
+    'Learn about CrickAuction, our platform mission, AI bot valuation engine, realtime architecture, and engineering standards.'
   );
 
   useEffect(() => {
@@ -30,10 +30,9 @@ const AboutUs = () => {
   const sections = [
     { id: 'mission', label: '1. Mission & Philosophy' },
     { id: 'architecture', label: '2. Simulation Architecture' },
-    { id: 'hotspot', label: '3. Zero-Cloud Engineering' },
-    { id: 'roster-rules', label: '4. Purse & Roster Integrity' },
-    { id: 'creator', label: '5. Creator & Standards' },
-    { id: 'disclaimer', label: '6. Non-Affiliation Disclaimer' },
+    { id: 'roster-rules', label: '3. Purse & Roster Integrity' },
+    { id: 'creator', label: '4. Creator & Standards' },
+    { id: 'disclaimer', label: '5. Non-Affiliation Disclaimer' },
   ];
 
   useEffect(() => {
@@ -229,26 +228,9 @@ const AboutUs = () => {
               </div>
             </section>
 
-            {/* 3. Hotspot & Zero-Cloud Engineering */}
-            <section id="hotspot" className="scroll-mt-24">
-              <h2 className="text-xl font-semibold text-white mb-2">3. Zero-Cloud Engineering</h2>
-              <p className="text-sm text-gray-400 mb-6 leading-relaxed">
-                Hotspot mode delivers host-authoritative gaming that bypasses cloud database connection limits.
-              </p>
-
-              <div className="border border-white/10 rounded-md p-5 sm:p-6 bg-white/[0.01] space-y-4">
-                <p className="text-sm text-gray-300 leading-relaxed">
-                  Traditional multiplayer rooms rely exclusively on cloud databases like Firebase RTDB with 100-user room caps. When cloud rate limits are reached, gameplay freezes.
-                </p>
-                <p className="text-sm text-gray-300 leading-relaxed">
-                  To eliminate this dependency, CrickAuction includes an in-memory host engine. The host device executes all auction logic and rules locally, while participants synchronize state through lightweight Supabase Realtime messaging relays (active internet required). Once the auction concludes, squads can optionally be archived or exported as custom high-resolution cards.
-                </p>
-              </div>
-            </section>
-
-            {/* 4. Roster & Purse Accuracy */}
+            {/* 3. Roster & Purse Accuracy */}
             <section id="roster-rules" className="scroll-mt-24">
-              <h2 className="text-xl font-semibold text-white mb-2">4. Purse & Roster Integrity</h2>
+              <h2 className="text-xl font-semibold text-white mb-2">3. Purse & Roster Integrity</h2>
               <p className="text-sm text-gray-400 mb-6 leading-relaxed">
                 Accurate mathematical compliance with official BCCI regulations.
               </p>
@@ -276,9 +258,9 @@ const AboutUs = () => {
               </div>
             </section>
 
-            {/* 5. Creator & Standards */}
+            {/* 4. Creator & Standards */}
             <section id="creator" className="scroll-mt-24">
-              <h2 className="text-xl font-semibold text-white mb-2">5. Creator & Standards</h2>
+              <h2 className="text-xl font-semibold text-white mb-2">4. Creator & Standards</h2>
               <p className="text-sm text-gray-400 mb-6 leading-relaxed">
                 The developer and engineering philosophy behind the project.
               </p>
@@ -320,9 +302,9 @@ const AboutUs = () => {
               </div>
             </section>
 
-            {/* 6. Non-Affiliation Disclaimer */}
+            {/* 5. Non-Affiliation Disclaimer */}
             <section id="disclaimer" className="scroll-mt-24">
-              <h2 className="text-xl font-semibold text-white mb-2">6. Non-Affiliation Disclaimer</h2>
+              <h2 className="text-xl font-semibold text-white mb-2">5. Non-Affiliation Disclaimer</h2>
               <div className="border border-white/10 rounded-md p-5 bg-white/[0.01] text-xs text-gray-400 leading-relaxed space-y-2">
                 <p>
                   CrickAuction is an independent fan-created simulation project developed strictly for educational and entertainment purposes. CrickAuction is not affiliated with, endorsed by, or sponsored by the Board of Control for Cricket in India (BCCI), the Indian Premier League (IPL), or any participating franchise.

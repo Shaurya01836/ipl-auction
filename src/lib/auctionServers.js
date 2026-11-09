@@ -7,38 +7,60 @@
  * so it can be unit-tested with plain `node --test`.
  */
 
-export const PRIMARY_SERVER = 'primary';
-export const SECONDARY_SERVER = 'secondary';
-export const LOCAL_SERVER = 'local';
-export const DEFAULT_AUCTION_SERVER = PRIMARY_SERVER;
+export const SERVER_1 = 'server-1'; // Main: ipl-auction-1cdbc
+export const SERVER_2 = 'server-2'; // Node 2: ipl-auction-2-947e7
+export const SERVER_3 = 'server-3'; // Node 3: ipl-auction-3
+export const SERVER_4 = 'server-4'; // Node 4: paypact-b5b52
+
+export const PRIMARY_SERVER = SERVER_1;
+export const SECONDARY_SERVER = SERVER_2;
+export const DEFAULT_AUCTION_SERVER = SERVER_1;
 
 export const AUCTION_SERVERS = Object.freeze([
   {
-    id: PRIMARY_SERVER,
+    id: SERVER_1,
     label: 'Server 1',
     shortLabel: 'S1',
-    description: 'Main',
+    description: 'Main (1cdbc)',
+    databaseUrl: 'https://ipl-auction-1cdbc-default-rtdb.asia-southeast1.firebasedatabase.app',
+    projectId: 'ipl-auction-1cdbc',
   },
   {
-    id: SECONDARY_SERVER,
+    id: SERVER_2,
     label: 'Server 2',
     shortLabel: 'S2',
-    description: 'Overflow',
+    description: 'Node 2 (947e7)',
+    databaseUrl: 'https://ipl-auction-2-947e7-default-rtdb.asia-southeast1.firebasedatabase.app',
+    projectId: 'ipl-auction-2-947e7',
   },
   {
-    id: LOCAL_SERVER,
-    label: 'Offline / Hotspot',
-    shortLabel: 'Local',
-    description: 'Hotspot / LAN',
+    id: SERVER_3,
+    label: 'Server 3',
+    shortLabel: 'S3',
+    description: 'Node 3',
+    databaseUrl: 'https://ipl-auction-3-default-rtdb.asia-southeast1.firebasedatabase.app',
+    projectId: 'ipl-auction-3',
+  },
+  {
+    id: SERVER_4,
+    label: 'Server 4',
+    shortLabel: 'S4',
+    description: 'Node 4 (Paypact)',
+    databaseUrl: 'https://paypact-b5b52-default-rtdb.asia-southeast1.firebasedatabase.app',
+    projectId: 'paypact-b5b52',
   },
 ]);
 
 const SERVER_IDS = new Set(AUCTION_SERVERS.map((server) => server.id));
+const LEGACY_SERVER_MAP = {
+  primary: SERVER_1,
+  secondary: SERVER_2,
+};
 const PREFERRED_SERVER_KEY = 'ipl-auction:preferred-server';
 
-/** True when the value is one of the known server ids. */
+/** True when the value is one of the known server ids or legacy aliases. */
 export function isValidServer(value) {
-  return typeof value === 'string' && SERVER_IDS.has(value);
+  return typeof value === 'string' && (SERVER_IDS.has(value) || Boolean(LEGACY_SERVER_MAP[value]));
 }
 
 /**
@@ -46,7 +68,10 @@ export function isValidServer(value) {
  * Pass `null` as the fallback when the caller needs to detect an invalid value.
  */
 export function normalizeServer(value, fallback = DEFAULT_AUCTION_SERVER) {
-  if (isValidServer(value)) return value;
+  if (typeof value === 'string') {
+    if (SERVER_IDS.has(value)) return value;
+    if (LEGACY_SERVER_MAP[value]) return LEGACY_SERVER_MAP[value];
+  }
   return fallback;
 }
 
@@ -61,24 +86,25 @@ export function getServerMeta(value) {
 /**
  * Read the server from a Supabase auction row.
  *
- * `settings.server` is the deployable fallback used until the optional
- * top-level `server` column is added. Existing rows have neither and therefore
- * correctly default to Server 1.
+ * In existing deployments prior to 4-server clustering, `primary` was assigned
+ * to paypact-b5b52 (Server 4) and `secondary` was assigned to ipl-auction-3
+ * (Server 3). We resolve these legacy tags directly to their physical servers
+ * to preserve all existing rooms without requiring data migration.
  */
 export function getAuctionServer(record) {
   if (!record) return DEFAULT_AUCTION_SERVER;
-  // settings.server is written by every code path, including before the
-  // optional top-level column exists. Prefer it so a migration whose default
-  // backfills `server = 'primary'` cannot silently move existing Server 2 rooms.
-  if (isValidServer(record.settings?.server)) return record.settings.server;
-  return normalizeServer(record.server);
+  const raw = record.settings?.server || record.server;
+  if (raw === 'primary') return SERVER_4;
+  if (raw === 'secondary') return SERVER_3;
+  if (isValidServer(raw)) return normalizeServer(raw);
+  return DEFAULT_AUCTION_SERVER;
 }
 
 /** Read the server hint from a query string. Invalid/missing hints return null. */
 export function getServerFromSearch(search = '') {
   try {
     const value = new URLSearchParams(search).get('server');
-    return isValidServer(value) ? value : null;
+    return isValidServer(value) ? normalizeServer(value) : null;
   } catch {
     return null;
   }
