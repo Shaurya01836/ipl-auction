@@ -27,6 +27,7 @@ import { formatCrores, toFiniteNumber } from '../lib/auctionDisplay';
 import TextChat from '../components/TextChat';
 import Footer from '../components/Footer';
 import PageLoader from '../components/PageLoader';
+import PageBackground from '../components/PageBackground';
 import useRoomServer from '../hooks/useRoomServer';
 import { withServerParam } from '../lib/auctionServers';
 import useDocumentTitle from '../hooks/useDocumentTitle';
@@ -293,15 +294,11 @@ const Lobby = () => {
   // ─── Unauthenticated State: Show Login Gateway ───
   if (banError) {
     return (
-      <div className="relative min-h-screen bg-[#050505] flex items-center justify-center p-6 font-primary text-white overflow-x-hidden">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-orange-800/20 md:bg-orange-700/20 blur-[120px] rounded-full" />
-          <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-blue-600/10 blur-[120px] rounded-full" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://res.cloudinary.com/drl6ky9as/image/upload/v1792012081/texture_os1ukf.jpg')] opacity-[0.25]" />
-        </div>
+      <div className="relative min-h-screen bg-transparent flex items-center justify-center p-6 font-primary text-white overflow-x-hidden">
+        <PageBackground />
         <motion.div
           {...enterProps({ opacity: 0, scale: 0.9 })}
-          className="max-w-md w-full bg-white/5 border border-white/10 p-12 rounded-[3.5rem] text-center relative z-10 overflow-hidden"
+          className="max-w-md w-full bg-[#0c0d10] border border-white/10 border-t-white/20 p-12 rounded-[3.5rem] text-center relative z-10 overflow-hidden"
         >
           <div className="absolute top-0 right-0 p-8 w-32 h-32 bg-red-500/10 rounded-full -mr-16 -mt-16 blur-3xl" />
           <div className="absolute bottom-0 left-0 p-8 w-32 h-32 bg-red-500/10 rounded-full -ml-16 -mb-16 blur-3xl" />
@@ -335,18 +332,14 @@ const Lobby = () => {
 
   if (!user) {
     return (
-      <div className="relative min-h-screen bg-[#050505] flex flex-col items-center justify-center py-12 px-4 font-sans text-white overflow-x-hidden">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-orange-800/20 md:bg-orange-700/20 blur-[120px] rounded-full" />
-          <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-blue-600/10 blur-[120px] rounded-full" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://res.cloudinary.com/drl6ky9as/image/upload/v1792012081/texture_os1ukf.jpg')] opacity-[0.25]" />
-        </div>
+      <div className="relative min-h-screen bg-transparent flex flex-col items-center justify-center py-12 px-4 font-sans text-white overflow-x-hidden">
+        <PageBackground />
 
         <motion.div
           {...enterProps({ opacity: 0, y: 20 })}
-          className="relative z-10 w-full md:w-xl max-md bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-3 shadow-2xl"
+          className="relative z-10 w-full md:w-xl max-md bg-white/[0.015] border border-white/10 border-t-white/20 rounded-[2.5rem] p-3 shadow-2xl"
         >
-          <div className="bg-[#0c0c0c] rounded-[2.2rem] p-8 border border-white/5 flex flex-col items-center text-center">
+          <div className="bg-[#0c0d10] rounded-[2.2rem] p-8 border border-white/10 flex flex-col items-center text-center">
 
             <h2 className="text-2xl font-black tracking-tighter uppercase mb-2">Joining Arena</h2>
             <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.3em] mb-8">Room ID: <span className="text-orange-500">{id}</span></p>
@@ -373,7 +366,7 @@ const Lobby = () => {
 
                 <div className="relative py-2 flex items-center justify-center">
                   <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5" /></div>
-                  <span className="relative bg-[#0c0c0c] px-4 text-[9px] font-black text-gray-700 uppercase tracking-widest italic">Or enter as temporary guest</span>
+                  <span className="relative bg-[#0c0d10] px-4 text-[9px] font-black text-gray-700 uppercase tracking-widest italic">Or enter as temporary guest</span>
                 </div>
 
                 <button
@@ -432,15 +425,11 @@ const Lobby = () => {
 
   if (!currentAuction) {
     return (
-      <div className="relative min-h-screen bg-[#050505] flex items-center justify-center p-6 text-white font-sans overflow-x-hidden">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-orange-800/20 md:bg-orange-700/20 blur-[120px] rounded-full" />
-          <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-blue-600/10 blur-[120px] rounded-full" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://res.cloudinary.com/drl6ky9as/image/upload/v1792012081/texture_os1ukf.jpg')] opacity-[0.25]" />
-        </div>
+      <div className="relative min-h-screen bg-transparent flex items-center justify-center p-6 text-white font-sans overflow-x-hidden">
+        <PageBackground />
         <motion.div
           {...enterProps({ opacity: 0, scale: 0.9 })}
-          className="max-w-md w-full bg-white/[0.03] border border-white/10 p-8 rounded-[2.5rem] text-center relative z-10 shadow-2xl overflow-hidden"
+          className="max-w-md w-full bg-[#0c0d10] border border-white/10 border-t-white/20 p-8 rounded-[2.5rem] text-center relative z-10 shadow-2xl overflow-hidden"
         >
           <div className="absolute top-0 right-0 p-8 w-32 h-32 bg-orange-500/10 rounded-full -mr-16 -mt-16 blur-3xl" />
           <div className="w-20 h-20 bg-orange-500/10 border border-orange-500/20 rounded-3xl flex items-center justify-center mx-auto mb-6 text-orange-500 shadow-2xl">
@@ -464,12 +453,8 @@ const Lobby = () => {
   if (!spectateMode && (!isJoined || !currentUserPlayer?.team)) {
     // ═══ TEAM SELECTION OVERLAY ═══
     return (
-      <div className="relative min-h-screen bg-[#050505] flex flex-col items-center py-12 px-4 font-sans text-white overflow-x-hidden">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-orange-800/20 md:bg-orange-700/20 blur-[120px] rounded-full" />
-          <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-blue-600/10 blur-[120px] rounded-full" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://res.cloudinary.com/drl6ky9as/image/upload/v1792012081/texture_os1ukf.jpg')] opacity-[0.25]" />
-        </div>
+      <div className="relative min-h-screen bg-transparent flex flex-col items-center py-12 px-4 font-sans text-white overflow-x-hidden">
+        <PageBackground />
 
         <motion.div
           {...enterProps({ opacity: 0, y: 20 })}
@@ -526,7 +511,7 @@ const Lobby = () => {
 
   // ─── Authenticated State ───
   return (
-    <div className="relative min-h-screen bg-[#050505] flex flex-col items-center pt-8 px-4 font-sans text-white overflow-x-hidden">
+    <div className="relative min-h-screen bg-transparent flex flex-col items-center pt-8 px-4 font-sans text-white overflow-x-hidden">
 
       {actionError && (
         <div
@@ -537,12 +522,7 @@ const Lobby = () => {
         </div>
       )}
 
-      {/* Premium Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-orange-800/20 md:bg-orange-700/20 blur-[120px] rounded-full" />
-        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://res.cloudinary.com/drl6ky9as/image/upload/v1792012081/texture_os1ukf.jpg')] opacity-[0.25]" />
-      </div>
+      <PageBackground />
 
       {/* Top Navigation */}
       <div className="w-full max-w-6xl flex flex-nowrap items-center justify-between gap-1.5 sm:gap-2 md:gap-4 mb-6 md:mb-10 z-20 px-2 sm:px-4 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -596,19 +576,12 @@ const Lobby = () => {
 
       <motion.div
         {...enterProps({ opacity: 0, y: 30 }, { transition: { delay: 0.1 } })}
-        className="w-full max-w-6xl bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-3 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10 relative mt-2"
+        className="w-full max-w-6xl bg-white/[0.015] border border-white/10 border-t-white/20 rounded-[2.5rem] p-3 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10 relative mt-2"
       >
-        {/* Subtle Glow behind panel */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#ff5500]/[0.02] via-[#ff5500]/[0.01] to-transparent rounded-[2.5rem] blur-xl pointer-events-none -z-10" />
-        <div className="absolute -inset-2 bg-gradient-to-r from-[#ff5500]/5 to-[#0088ff]/2 rounded-[2.5rem] blur-3xl opacity-40 pointer-events-none -z-10" />
-
-        <div className="bg-[#0c0c0c] rounded-[2.2rem] border border-white/5 grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch divide-y lg:divide-y-0 lg:divide-x divide-white/5 overflow-hidden">
+        <div className="bg-[#0c0d10] rounded-[2.2rem] border border-white/10 grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch divide-y lg:divide-y-0 lg:divide-x divide-white/10 overflow-hidden">
 
           {/* Left Column: Management Hub */}
           <div className="lg:col-span-5 w-full flex flex-col p-6 md:p-8 relative gap-6">
-            {/* Background glow blob */}
-            <div className="absolute -top-12 -right-12 w-24 h-24 bg-white/5 blur-[40px] rounded-full pointer-events-none" />
-
             {/* Auction Rules Section */}
             <div>
               <div className="flex items-center gap-2 mb-4">
@@ -755,7 +728,7 @@ const Lobby = () => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex-1 py-3 flex flex-col items-center justify-center gap-1.5 transition-all rounded-xl cursor-pointer ${activeTab === tab.id
-                    ? 'bg-white/5 text-[#ff5500] border border-white/10 shadow-inner'
+                    ? 'bg-slate-500/15 text-slate-100 border border-slate-400/30 shadow-inner'
                     : 'text-gray-500 hover:text-gray-300 hover:bg-white/[0.01]'
                     }`}
                 >
@@ -878,11 +851,8 @@ const Lobby = () => {
             <motion.div
               {...enterProps({ opacity: 0, scale: 0.95, y: 20 }, { transition: { type: 'spring', damping: 25, stiffness: 300 } })}
               {...exitProps({ opacity: 0, scale: 0.95, y: 20 })}
-              className="relative w-full max-w-lg max-h-[85vh] sm:max-h-[90vh] bg-[#0c0c0c] border border-white/10 rounded-3xl sm:rounded-[2.5rem] p-5 sm:p-6 md:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.8)] z-10 flex flex-col my-auto overflow-hidden"
+              className="relative w-full max-w-lg max-h-[85vh] sm:max-h-[90vh] bg-[#0c0d10] border border-white/10 border-t-white/20 rounded-3xl sm:rounded-[2.5rem] p-5 sm:p-6 md:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.8)] z-10 flex flex-col my-auto overflow-hidden"
             >
-              {/* Background Glows */}
-              <div className="absolute -top-20 -right-20 w-40 h-40 sm:w-56 sm:h-56 bg-[#ff5500]/20 rounded-full blur-[60px] sm:blur-[80px] pointer-events-none" />
-              <div className="absolute -bottom-20 -left-20 w-40 h-40 sm:w-56 sm:h-56 bg-blue-500/10 rounded-full blur-[60px] sm:blur-[80px] pointer-events-none" />
 
               {/* Close Button */}
               <button

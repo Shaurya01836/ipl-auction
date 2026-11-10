@@ -1,42 +1,8 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { isUserAdmin } from '../lib/adminAuth';
+import Footer20 from './watermelon-ui/footer-20';
 
 const Footer = () => {
-  const currentYear = new Date().getFullYear();
-  const { user } = useAuth();
-  const isAdmin = isUserAdmin(user, import.meta.env.VITE_ADMIN_EMAIL);
-
-  return (
-    <footer className="mt-16 sm:mt-32 w-full mx-auto border-t border-white/10 z-10 relative flex flex-col font-mono">
-      <div className="w-full flex flex-col lg:flex-row text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-gray-400">
-        <div className="flex-1 px-4 sm:px-6 py-6 lg:py-4 flex items-center justify-center lg:justify-start border-b lg:border-b-0 border-white/10 text-center lg:text-left leading-relaxed">
-          <span>© {currentYear} CRICK AUCTION. ALL RIGHTS RESERVED. CONCEPT CRAFTED BY <a href="https://ershaurya.dev" target="_blank" rel="noopener noreferrer" className="ml-1 hover:text-white transition-colors underline underline-offset-2">SHAURYA UPADHYAY</a></span>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:flex lg:flex-row lg:flex-nowrap border-l-0 lg:border-l border-white/10 justify-center w-full lg:w-auto">
-          <Link to="/about" className="px-2 sm:px-5 py-4 hover:text-white hover:bg-white/5 transition-colors border-b lg:border-b-0 border-r border-white/10 flex items-center justify-center whitespace-nowrap">
-            About Us
-          </Link>
-          <Link to="/guide" className="px-2 sm:px-5 py-4 hover:text-white hover:bg-white/5 transition-colors border-b lg:border-b-0 border-r border-white/10 flex items-center justify-center whitespace-nowrap">
-            Game Guide
-          </Link>
-          <Link to="/privacy" className="px-2 sm:px-5 py-4 hover:text-white hover:bg-white/5 transition-colors border-b lg:border-b-0 border-r border-white/10 flex items-center justify-center whitespace-nowrap">
-            Privacy Policy
-          </Link>
-          <Link to="/terms" className={`px-2 sm:px-5 py-4 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center whitespace-nowrap border-white/10 ${isAdmin ? 'border-r' : ''}`}>
-            Terms & Conditions
-          </Link>
-          {isAdmin && (
-            <Link to="/admin" className="px-2 sm:px-6 py-4 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center whitespace-nowrap border-white/10">
-              Admin Dashboard
-            </Link>
-          )}
-        </div>
-      </div>
-    </footer>
-  );
+  return <Footer20 />;
 };
 
 export default Footer;

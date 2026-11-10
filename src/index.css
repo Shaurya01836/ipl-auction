@@ -1,11 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
+:root {
+  --bg-gradient-top: #0a0b0e;
+  --bg-gradient-bottom: #060607;
+  --bg-charcoal-vignette: rgba(0, 0, 0, 0.55);
+}
+
 @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system;
   --color-ipl-blue: #0b0e1e;
   --color-ipl-gold: #d4af37;
   --color-ipl-dark: #0b0e1e;
+  --color-page-bg-top: var(--bg-gradient-top, #12141a);
+  --color-page-bg-bottom: var(--bg-gradient-bottom, #0c0e13);
 }
 
 /* Desktop compact mode: the 125% browser-zoom view (roughly 1200px CSS wide)
@@ -32,9 +40,7 @@ body {
   color: white;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
-  /* Prevent horizontal bounce and enable smooth scrolling */
-  overscroll-behavior-y: none;
+  overflow-x: clip;
   min-height: 100vh;
   min-height: 100dvh;
 }

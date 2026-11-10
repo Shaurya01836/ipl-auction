@@ -48,7 +48,7 @@ const BuyMeACoffee = () => {
       <button
         id="support-fab-button"
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-[90] flex items-center gap-2 bg-[#0a0a0a]/80 hover:bg-[#ff5500]/10 text-white px-3.5 py-2 rounded-full border border-white/10 hover:border-[#ff5500]/30 backdrop-blur-xl shadow-2xl transition-all duration-300 group cursor-pointer"
+        className="fixed bottom-6 right-6 z-[90] flex items-center gap-2 bg-[#0a0a0a]/80 hover:bg-white/10 text-white px-3.5 py-2 rounded-full border border-white/10 hover:border-white/25 backdrop-blur-xl shadow-2xl transition-all duration-300 group cursor-pointer"
       >
         <Coffee className="w-3.5 h-3.5 " />
         <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/70 group-hover:text-white transition-colors duration-300">

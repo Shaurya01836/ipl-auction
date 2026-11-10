@@ -40,12 +40,14 @@ import {
   RefreshCw,
   Clock,
 } from "lucide-react";
-import GithubStarButton from "../components/GithubStarButton";
+import Navbar from "../components/Navbar";
 import BuyMeACoffee from "../components/BuyMeACoffee";
 import ConfirmDialog from "../components/ConfirmDialog";
 import AuctionActivityFeed from "../components/AuctionActivityFeed";
 import Footer from "../components/Footer";
 import ServerSwitcher from "../components/ServerSwitcher";
+import PageBackground from "../components/PageBackground";
+import PanelSurface from "../components/PanelSurface";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import {
   computeTeamSpent,
@@ -60,6 +62,7 @@ const LandingPage = () => {
     "IPL Auction Simulator & Game | Live IPL Mega Auction 2026",
     "Play the ultimate multiplayer IPL Auction Simulator online. Host live IPL Mega Auctions with friends, manage purse budgets, bid on top T20 players, and build championship squads!",
   );
+
   const [selectedTeam, setSelectedTeam] = useState("MI");
   const [activeTab, setActiveTab] = useState("new");
   const [auctionType, setAuctionType] = useState("mega"); 
@@ -521,35 +524,32 @@ const LandingPage = () => {
   // ─── Not Signed In: Show Google / Guest Login ───
   if (!user) {
     return (
-      <main className="relative min-h-screen bg-[#050505] flex flex-col items-center justify-start pt-6 sm:pt-8 px-4 font-sans text-white overflow-x-hidden">
-        <GithubStarButton />
-        <BuyMeACoffee />
+      <div className="relative min-h-screen bg-transparent flex flex-col font-sans text-white overflow-x-clip">
+        <PageBackground />
 
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-orange-800/20  md:bg-orange-700/20 blur-[120px] rounded-full" />
-            <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://res.cloudinary.com/drl6ky9as/image/upload/v1792012081/texture_os1ukf.jpg')] opacity-[0.25]" />
-          </div>
+        <Navbar />
+        <main className="relative w-full flex-1 flex flex-col items-center justify-start pt-16 sm:pt-20 px-3 sm:px-4 z-10 pb-20 sm:pb-32">
+          <BuyMeACoffee />
 
-        <div className="text-center mb-4 z-10 relative max-w-3xl px-4 mt-4 sm:mt-6">
+        <div className="text-center mb-3 sm:mb-4 z-10 relative max-w-2xl px-2 sm:px-4 mt-1 sm:mt-2">
           <h1 className="sr-only">
             IPL Auction Simulator & Game - Live IPL Mega Auction 2026
           </h1>
-          <div className="text-2xl sm:text-4xl md:text-5xl lg:text-[64px] font-pixel leading-none text-balance bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">
+          <div className="text-[clamp(1.25rem,2.8vw,2.35rem)] font-pixel leading-none text-balance bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">
             CREATE YOUR
           </div>
-          <div className="text-4xl sm:text-6xl md:text-7xl lg:text-[88px] font-pixel text-[#ff5500] leading-none uppercase text-balance mt-1 drop-shadow-[0_4px_12px_rgba(255,85,0,0.2)]">
+          <div className="text-[clamp(2.1rem,5.6vw,3.85rem)] font-pixel text-[#ff5500] leading-none uppercase text-balance mt-0.5 sm:mt-1 drop-shadow-[0_4px_12px_rgba(255,85,0,0.2)]">
             AUCTION ROOM
           </div>
 
-          <p className="text-[13px] sm:text-sm text-gray-400 font-medium max-w-xl mx-auto mt-3.5 leading-relaxed px-1">
+          <p className="text-xs sm:text-[13px] text-gray-400 font-pixel max-w-lg mx-auto mt-2 leading-relaxed px-1">
             The ultimate multiplayer IPL auction simulator and game. Host live
             IPL mega auctions with friends in real-time, choose your favorite
             franchise, bid strategically, and build a championship T20 squad.
           </p>
 
           {/* Three-step visual story */}
-          <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1.5 sm:gap-x-6 mt-5 px-2 text-[9px] sm:text-[10px] font-black tracking-wider sm:tracking-widest text-gray-400 uppercase select-none">
+          <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 sm:gap-x-5 mt-2.5 sm:mt-3 px-2 text-[8.5px] sm:text-[9.5px] font-black tracking-wider sm:tracking-widest text-gray-400 uppercase select-none">
             <span className="hover:text-orange-500/80 transition-colors">
               ① Create Room
             </span>
@@ -564,14 +564,8 @@ const LandingPage = () => {
           </div>
         </div>
 
-        {/* Subtle gradient line / Faded Divider */}
-        <div className="w-full max-w-4xl h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-4 mt-8 z-10 relative" />
-
-        <div className="w-full max-w-6xl bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-3 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10 relative mt-2">
-          {/* Subtle Orange Glow behind panel */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#ff5500]/[0.02] via-[#ff5500]/[0.01] to-transparent rounded-[2.5rem] blur-xl pointer-events-none -z-10" />
-          <div className="absolute -inset-2 bg-gradient-to-r from-[#ff5500]/5 to-[#0088ff]/2 rounded-[2.5rem] blur-3xl opacity-40 pointer-events-none -z-10" />
-          <div className="bg-[#0c0c0c] rounded-[2.2rem] border border-white/5 grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch divide-y lg:divide-y-0 lg:divide-x divide-white/5 overflow-hidden">
+        <PanelSurface className="mt-2 sm:mt-3">
+          <div className="bg-[#0c0d10] rounded-[2.2rem] border border-white/10 grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch divide-y lg:divide-y-0 lg:divide-x divide-white/10 overflow-hidden">
             {/* Left Side: Live Activity Feed */}
             <div className="lg:col-span-7 w-full flex flex-col p-6 md:p-8 relative">
               <AuctionActivityFeed activeCount={publicRooms.length} />
@@ -615,7 +609,7 @@ const LandingPage = () => {
                     <div className="absolute inset-0 flex items-center">
                       <div className="w-full border-t border-white/5" />
                     </div>
-                    <span className="relative bg-[#0c0c0c] px-4 text-[9px] font-black text-gray-400 uppercase tracking-widest italic">
+                    <span className="relative bg-[#0c0d10] px-4 text-[9px] font-black text-gray-400 uppercase tracking-widest italic">
                       Wait, I'm a guest
                     </span>
                   </div>
@@ -679,46 +673,43 @@ const LandingPage = () => {
               )}
             </div>
           </div>
-        </div>
+        </PanelSurface>
 
         <Footer />
       </main>
-    );
-  }
+    </div>
+  );
+}
 
   // ─── Signed In: Show Create / Join / History ───
   return (
-    <div className="relative min-h-screen bg-[#050505] flex flex-col font-sans text-white overflow-x-hidden">
-      <main className="relative flex-1 flex flex-col items-center justify-start pt-6 sm:pt-8 px-4">
-        <GithubStarButton />
+    <div className="relative min-h-screen bg-transparent flex flex-col font-sans text-white overflow-x-clip">
+      <PageBackground />
+
+      <Navbar />
+      <main className="relative w-full flex-1 flex flex-col items-center justify-start pt-16 sm:pt-20 px-3 sm:px-4 z-10 pb-20 sm:pb-32">
         <BuyMeACoffee />
 
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-orange-800/20  md:bg-orange-700/20 blur-[120px] rounded-full" />
-          <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://res.cloudinary.com/drl6ky9as/image/upload/v1792012081/texture_os1ukf.jpg')] opacity-[0.25]" />
-        </div>
-
       {/* Hero */}
-      <div className="text-center mb-4 z-10 relative max-w-3xl px-4 mt-4 sm:mt-6">
+      <div className="text-center mb-3 sm:mb-4 z-10 relative max-w-2xl px-2 sm:px-4 mt-1 sm:mt-2">
         <h1 className="sr-only">
           IPL Auction Simulator & Game - Live IPL Mega Auction 2026
         </h1>
-        <div className="text-2xl sm:text-4xl md:text-5xl lg:text-[64px] font-pixel leading-none text-balance bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">
+        <div className="text-[clamp(1.25rem,2.8vw,2.35rem)] font-pixel leading-none text-balance bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">
           CREATE YOUR
         </div>
-        <div className="text-4xl sm:text-6xl md:text-7xl lg:text-[88px] font-pixel text-[#ff5500] leading-none uppercase text-balance mt-1 drop-shadow-[0_4px_12px_rgba(255,85,0,0.2)]">
+        <div className="text-[clamp(2.1rem,5.6vw,3.85rem)] font-pixel text-[#ff5500] leading-none uppercase text-balance mt-0.5 sm:mt-1 drop-shadow-[0_4px_12px_rgba(255,85,0,0.2)]">
           AUCTION ROOM
         </div>
 
-        <p className="text-[13px] sm:text-sm text-gray-400 font-pixel max-w-xl mx-auto mt-3.5 leading-relaxed px-1">
+        <p className="text-xs sm:text-[13px] text-gray-400 font-pixel max-w-lg mx-auto mt-2 leading-relaxed px-1">
           The ultimate multiplayer IPL auction simulator and game. Host live IPL
           mega auctions with friends in real-time, choose your favorite
           franchise, bid strategically, and build a championship T20 squad.
         </p>
 
         {/* Three-step visual story */}
-        <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1.5 sm:gap-x-6 mt-5 px-2 text-[9px] sm:text-[10px] font-black tracking-wider sm:tracking-widest text-gray-400 uppercase select-none">
+        <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 sm:gap-x-5 mt-2.5 sm:mt-3 px-2 text-[8.5px] sm:text-[9.5px] font-black tracking-wider sm:tracking-widest text-gray-400 uppercase select-none">
           <span className="hover:text-orange-500/80 transition-colors">
             ① Create Room
           </span>
@@ -733,14 +724,8 @@ const LandingPage = () => {
         </div>
       </div>
 
-      {/* Subtle gradient line / Faded Divider */}
-      <div className="w-full max-w-4xl h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-4 mt-8 z-10 relative" />
-
-      <div className="w-full max-w-6xl bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-3 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10 relative mt-2">
-        {/* Subtle Orange Glow behind panel */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#ff5500]/[0.02] via-[#ff5500]/[0.01] to-transparent rounded-[2.5rem] blur-xl pointer-events-none -z-10" />
-        <div className="absolute -inset-2 bg-gradient-to-r from-[#ff5500]/5 to-[#0088ff]/2 rounded-[2.5rem] blur-3xl opacity-40 pointer-events-none -z-10" />
-        <div className="bg-[#0c0c0c] rounded-[2.2rem] border border-white/5 grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch divide-y lg:divide-y-0 lg:divide-x divide-white/5 overflow-hidden">
+      <PanelSurface className="mt-2 sm:mt-3">
+        <div className="bg-[#0c0d10] rounded-[2.2rem] border border-white/10 grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch divide-y lg:divide-y-0 lg:divide-x divide-white/10 overflow-hidden">
           {/* Left Side: Live signings */}
           <div className="lg:col-span-5 w-full flex flex-col p-6 md:p-8 relative">
             <AuctionActivityFeed activeCount={serverRoomCount} />
@@ -775,7 +760,7 @@ const LandingPage = () => {
                   onClick={() => setActiveTab("new")}
                   className={`pb-3 px-4 sm:pb-3.5 sm:px-6 font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition-all duration-200 border-b-2 relative ${
                     activeTab === "new"
-                      ? "border-[#ff5500] text-[#ff5500]"
+                      ? "border-slate-400/70 text-slate-100"
                       : "border-transparent text-gray-400 hover:text-gray-300"
                   }`}
                 >
@@ -786,13 +771,13 @@ const LandingPage = () => {
                   onClick={() => setActiveTab("join")}
                   className={`pb-3 px-4 sm:pb-3.5 sm:px-6 font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition-all duration-200 border-b-2 relative flex items-center gap-1.5 ${
                     activeTab === "join"
-                      ? "border-[#ff5500] text-[#ff5500]"
+                      ? "border-slate-400/70 text-slate-100"
                       : "border-transparent text-gray-400 hover:text-gray-300"
                   }`}
                 >
                   <span>Join</span>
                   {serverRoomCount > 0 && (
-                    <span className="bg-[#ff5500]/20 text-[#ff5500] text-[9px] px-1.5 py-0.2 rounded-full font-extrabold ml-0.5">
+                    <span className="bg-slate-500/20 text-slate-200 text-[9px] px-1.5 py-0.2 rounded-full font-extrabold ml-0.5">
                       {serverRoomCount}
                     </span>
                   )}
@@ -802,7 +787,7 @@ const LandingPage = () => {
                   onClick={() => setActiveTab("history")}
                   className={`pb-3 px-4 sm:pb-3.5 sm:px-6 font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition-all duration-200 border-b-2 relative ${
                     activeTab === "history"
-                      ? "border-[#ff5500] text-[#ff5500]"
+                      ? "border-slate-400/70 text-slate-100"
                       : "border-transparent text-gray-400 hover:text-gray-300"
                   }`}
                 >
@@ -1135,7 +1120,7 @@ const LandingPage = () => {
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-white/5" />
                   </div>
-                  <span className="relative bg-[#0c0c0c] px-3 sm:px-4 text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <span className="relative bg-[#0c0d10] px-3 sm:px-4 text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
                     Or join a public lobby
                   </span>
                 </div>
@@ -1152,14 +1137,15 @@ const LandingPage = () => {
                       />
                       <button
                         onClick={fetchPublicLobbies}
-                        className="flex items-center justify-center gap-1.5 bg-orange-500/20 hover:bg-orange-500 text-orange-500 hover:text-white border border-orange-500/30 hover:border-orange-500 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-[9px] sm:text-xs font-bold uppercase tracking-wider transition-all active:scale-95 shrink-0"
+                        disabled={lobbiesLoading}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-gray-300 hover:text-white hover:bg-white/10 transition-all disabled:opacity-40 cursor-pointer shrink-0"
                         title="Refresh Lobbies"
                       >
                         <RefreshCw
-                          size={14}
+                          size={10}
                           className={lobbiesLoading ? "animate-spin" : ""}
                         />
-                        <span className="hidden sm:inline">Refresh</span>
+                        Refresh
                       </button>
                     </div>
 
@@ -1214,15 +1200,14 @@ const LandingPage = () => {
                           className="p-2 sm:p-3 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 hover:border-white/10 rounded-xl transition-all duration-200 flex flex-row items-center justify-between gap-2 sm:gap-3 group"
                         >
                           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                            <div className="px-1.5 sm:px-2.5 py-1 sm:py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-400 font-mono font-black text-[9px] sm:text-xs tracking-wider shrink-0">
-                              {room.roomId}
-                            </div>
-
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-1.5">
                                 <h2 className="text-[10px] sm:text-xs font-bold text-white tracking-tight truncate max-w-[96px] xs:max-w-[160px] sm:max-w-none">
-                                  {room.hostName}'s Room
+                                  {room.hostName}'s Room -
                                 </h2>
+                                <span className="text-white font-mono font-bold text-[9px] sm:text-xs tracking-wider shrink-0">
+                                  {room.roomId}
+                                </span>
                               </div>
 
                               <div className="flex items-center gap-1 sm:gap-1.5 text-[8px] sm:text-[10px] text-gray-400 font-medium mt-0.5 truncate">
@@ -1298,17 +1283,6 @@ const LandingPage = () => {
                 </div>
                 {historyData.length > 0 && (
                   <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                    <button
-                      type="button"
-                      onClick={() => setHistoryFilter("all")}
-                      className={`px-2 py-1 rounded-md text-[8px] sm:text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
-                        historyFilter === "all"
-                          ? "bg-blue-600 text-white shadow-sm"
-                          : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
-                      }`}
-                    >
-                      All ({historyData.length})
-                    </button>
                     {availableServers.map((serverKey) => {
                       const count = historyData.filter((s) => normalizeServer(s.server) === serverKey).length;
                       if (count === 0) return null;
@@ -1316,7 +1290,7 @@ const LandingPage = () => {
                         <button
                           key={serverKey}
                           type="button"
-                          onClick={() => setHistoryFilter(serverKey)}
+                          onClick={() => setHistoryFilter(historyFilter === serverKey ? "all" : serverKey)}
                           className={`px-2 py-1 rounded-md text-[8px] sm:text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
                             historyFilter === serverKey
                               ? "bg-blue-600 text-white shadow-sm"
@@ -1709,7 +1683,7 @@ const LandingPage = () => {
             )}
           </div>
         </div>
-      </div>
+      </PanelSurface>
 
       <ConfirmDialog
         isOpen={!!sessionToDelete}

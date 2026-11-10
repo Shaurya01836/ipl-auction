@@ -25,7 +25,7 @@ export default function ServerSwitcher({ servers, value, onChange, className = '
             title={server.description}
             className={`flex items-center justify-center rounded-md px-1.5 lg:px-2.5 py-2 lg:py-1 text-[8.5px] lg:text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap text-center ${
               active
-                ? 'bg-[#ff5500]/15 text-[#ff5500] border border-[#ff5500]/25 shadow-sm'
+                ? 'bg-slate-500/20 text-slate-100 border border-slate-400/30 shadow-sm'
                 : 'border border-transparent text-gray-400 hover:text-gray-200 hover:bg-white/[0.02]'
             }`}
           >

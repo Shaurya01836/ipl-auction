@@ -13,6 +13,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import Footer from '../components/Footer';
+import PageBackground from '../components/PageBackground';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const AboutUs = () => {
@@ -74,9 +75,10 @@ const AboutUs = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0E0F10] text-[#E5E5E5] font-sans selection:bg-white/20 selection:text-white flex flex-col">
+    <div className="relative min-h-screen bg-transparent text-[#E5E5E5] font-sans selection:bg-white/20 selection:text-white flex flex-col">
+      <PageBackground showArt={false} />
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-[#0E0F10]/90 backdrop-blur-md border-b border-white/10 px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-black/70 backdrop-blur-md border-b border-white/10 px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs font-medium tracking-wide">
           <Link to="/" className="text-gray-400 hover:text-white transition-colors flex items-center gap-1.5">
             <Home size={14} />
@@ -97,7 +99,7 @@ const AboutUs = () => {
           </Link>
           <Link
             to="/"
-            className="text-xs font-semibold px-3 py-1.5 rounded-md bg-[#ff5500] hover:bg-[#ff6a1a] text-white transition-colors flex items-center gap-1.5"
+            className="text-xs font-semibold px-3 py-1.5 rounded-md bg-slate-500/25 hover:bg-slate-500/35 border border-slate-400/30 text-white transition-colors flex items-center gap-1.5"
           >
             <span>Play Now</span>
             <ArrowRight size={12} />
@@ -105,7 +107,7 @@ const AboutUs = () => {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex flex-col lg:flex-row gap-8 lg:gap-24 items-start w-full flex-1">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex flex-col lg:flex-row gap-8 lg:gap-24 items-start w-full flex-1">
         {/* Left TOC */}
         <aside className="hidden lg:block w-64 shrink-0 sticky top-28">
           <h3 className="text-white font-semibold text-sm mb-4">On this page</h3>
@@ -116,7 +118,7 @@ const AboutUs = () => {
                 onClick={() => scrollTo(s.id)}
                 className={`text-sm text-left pl-4 -ml-[1px] border-l ${
                   activeSection === s.id
-                    ? 'border-[#ff5500] text-white'
+                    ? 'border-slate-400/70 text-white'
                     : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-white/30'
                 } transition-colors`}
               >
@@ -129,7 +131,7 @@ const AboutUs = () => {
         {/* Main Content */}
         <main className="flex-1 max-w-3xl w-full pb-20">
           <div className="mb-8 sm:mb-12 border-b border-white/10 pb-6 sm:pb-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#ff5500]/10 border border-[#ff5500]/30 text-[#ff5500] text-xs font-semibold uppercase tracking-wider mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/15 text-slate-300 text-xs font-semibold uppercase tracking-wider mb-3">
               <Award size={13} />
               <span>Platform Overview & Engineering</span>
             </div>
@@ -150,7 +152,7 @@ const AboutUs = () => {
                   key={s.id}
                   onClick={() => scrollTo(s.id)}
                   className={`text-sm text-left pl-3 -ml-[1px] border-l ${
-                    activeSection === s.id ? 'border-[#ff5500] text-white' : 'border-transparent text-gray-400'
+                    activeSection === s.id ? 'border-slate-400/70 text-white' : 'border-transparent text-gray-400'
                   } transition-colors`}
                 >
                   {s.label}
@@ -187,7 +189,7 @@ const AboutUs = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="border border-white/10 rounded-md p-5 bg-white/[0.01]">
-                  <div className="w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/20 text-[#ff5500] flex items-center justify-center mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/10 text-slate-300 flex items-center justify-center mb-3">
                     <Brain size={16} />
                   </div>
                   <h3 className="text-sm font-semibold text-white mb-1.5">Autonomous AI Valuation</h3>
@@ -267,7 +269,7 @@ const AboutUs = () => {
 
               <div className="border border-white/10 rounded-md p-5 sm:p-6 bg-white/[0.01] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                 <div>
-                  <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#ff5500] uppercase tracking-wider mb-2">
+                  <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-slate-300 uppercase tracking-wider mb-2">
                     <Code2 size={14} />
                     <span>Lead Architect & Maintainer</span>
                   </div>
@@ -293,7 +295,7 @@ const AboutUs = () => {
                     href="https://github.com/shaurya-upadhyay/ipl-auction"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-3.5 py-2 rounded-md bg-[#ff5500] hover:bg-[#ff6a1a] text-xs font-semibold text-white transition-all flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(255,85,0,0.25)]"
+                    className="px-3.5 py-2 rounded-md bg-slate-500/25 hover:bg-slate-500/35 border border-slate-400/30 text-xs font-semibold text-white transition-all flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(0,0,0,0.35)]"
                   >
                     <span>GitHub</span>
                     <ExternalLink size={12} />

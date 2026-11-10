@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 import { auth } from '../lib/firebase';
 import {
@@ -9,9 +9,6 @@ import {
   signInAnonymously,
   updateProfile
 } from 'firebase/auth';
-import { motion, AnimatePresence } from 'framer-motion';
-
-import PageLoader from '../components/PageLoader';
 
 const AuthContext = createContext({
   user: null,
@@ -33,42 +30,16 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const hasSeen = sessionStorage.getItem('ipl_has_seen_loader');
-      if (hasSeen) return false;
-    }
-    return true;
-  });
-
-  const markLoaderSeen = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('ipl_has_seen_loader', 'true');
-    }
-    setLoading(false);
-  }, []);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      const isLandingPage = typeof window !== 'undefined' && window.location.pathname === '/';
-      if (!isLandingPage) {
-        setTimeout(markLoaderSeen, 1500);
-      }
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+      setLoading(false);
     });
 
     return unsubscribe;
-  }, [markLoaderSeen]);
-
-  // Listen to manual skip/continue event from PageLoader
-  useEffect(() => {
-    const handleSkip = () => {
-      markLoaderSeen();
-    };
-    document.addEventListener('skipIntro', handleSkip);
-    return () => document.removeEventListener('skipIntro', handleSkip);
-  }, [markLoaderSeen]);
-
+  }, []);
 
   const loginWithGoogle = async () => {
     const result = await signInWithPopup(auth, googleProvider);
@@ -94,28 +65,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      <AnimatePresence mode="wait">
-        {loading ? (
-          <motion.div
-            key="loader"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeIn" }}
-            className="fixed inset-0 z-[9999]"
-          >
-            <PageLoader />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="content"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-          >
-            {children}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {children}
     </AuthContext.Provider>
   );
 };

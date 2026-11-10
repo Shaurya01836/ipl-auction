@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Home, ChevronRight } from 'lucide-react';
 import Footer from '../components/Footer';
+import PageBackground from '../components/PageBackground';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const TermsConditions = () => {
@@ -67,9 +68,10 @@ const TermsConditions = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0E0F10] text-[#E5E5E5] font-sans selection:bg-white/20 selection:text-white flex flex-col">
+    <div className="relative min-h-screen bg-transparent text-[#E5E5E5] font-sans selection:bg-white/20 selection:text-white flex flex-col">
+      <PageBackground showArt={false} />
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-[#0E0F10]/90 backdrop-blur-md border-b border-white/10 px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-black/70 backdrop-blur-md border-b border-white/10 px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs font-medium tracking-wide">
           <Link to="/" className="text-gray-400 hover:text-white transition-colors flex items-center gap-1.5">
             <Home size={14} />
@@ -82,7 +84,7 @@ const TermsConditions = () => {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex flex-col lg:flex-row gap-8 lg:gap-24 items-start w-full flex-1">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex flex-col lg:flex-row gap-8 lg:gap-24 items-start w-full flex-1">
         {/* Left TOC - sticky on desktop, hidden on mobile */}
         <aside className="hidden lg:block w-64 shrink-0 sticky top-28">
           <h3 className="text-white font-semibold text-sm mb-4">On this page</h3>
@@ -91,7 +93,7 @@ const TermsConditions = () => {
               <button
                 key={s.id}
                 onClick={() => scrollTo(s.id)}
-                className={`text-sm text-left pl-4 -ml-[1px] border-l ${activeSection === s.id ? 'border-[#ff5500] text-white' : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-white/30'} transition-colors`}
+                className={`text-sm text-left pl-4 -ml-[1px] border-l ${activeSection === s.id ? 'border-slate-400/70 text-white' : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-white/30'} transition-colors`}
               >
                 {s.label}
               </button>
@@ -108,7 +110,7 @@ const TermsConditions = () => {
                 <button
                   key={s.id}
                   onClick={() => scrollTo(s.id)}
-                  className={`text-sm text-left pl-3 -ml-[1px] border-l ${activeSection === s.id ? 'border-[#ff5500] text-white' : 'border-transparent text-gray-400'} transition-colors`}
+                  className={`text-sm text-left pl-3 -ml-[1px] border-l ${activeSection === s.id ? 'border-slate-400/70 text-white' : 'border-transparent text-gray-400'} transition-colors`}
                 >
                   {s.label}
                 </button>
