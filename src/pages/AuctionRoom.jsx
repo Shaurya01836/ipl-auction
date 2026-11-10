@@ -75,7 +75,7 @@ const AuctionRoom = () => {
    const [activeOverlayTab, setActiveOverlayTab] = useState('upcoming');
    const [searchQuery] = useState('');
    const [selectedTeamId, setSelectedTeamId] = useState(null);
-   const [mobileTab, setMobileTab] = useState('arena'); // arena, squad, activity
+   const [mobileTab, setMobileTab] = useState('arena'); // arena, squad, activity, chat
    const [showSettings, setShowSettings] = useState(false);
    const [showParticipantsOverlay, setShowParticipantsOverlay] = useState(false);
    const [showEndConfirm, setShowEndConfirm] = useState(false);
@@ -1180,10 +1180,6 @@ const AuctionRoom = () => {
                <div className="min-h-12 border-b border-white/5 bg-white/[0.01] flex items-center px-2.5 sm:px-6 md:px-8 w-full shrink-0 py-2 md:py-0 overflow-x-auto no-scrollbar">
                   <div className="w-full max-w-4xl mx-auto flex items-center justify-between gap-1.5 sm:gap-3 md:gap-4 min-w-0">
                      <div className="flex items-center gap-1.5 sm:gap-3 md:gap-4 min-w-0 flex-1">
-                        <div className="px-2 sm:px-2.5 py-0.5 bg-yellow-500/10 border border-yellow-500/20 rounded-full shrink-0 flex items-center">
-                           <span className="text-[7.5px] sm:text-[9px] compact:text-[8px] font-extrabold text-yellow-400/90 uppercase tracking-widest whitespace-nowrap">{currentPlayer?.set}</span>
-                        </div>
-                        <div className="w-px h-3.5 sm:h-4 bg-white/10 shrink-0" />
                         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                            <span className="text-[7.5px] sm:text-[9px] compact:text-[8px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Base:</span>
                            <span className="text-[11px] sm:text-sm md:text-base compact:text-sm font-black text-white whitespace-nowrap">{currentPlayer?.basePrice == null ? '—' : `₹${formatCrores(currentPlayer.basePrice)} Cr`}</span>
@@ -1193,9 +1189,7 @@ const AuctionRoom = () => {
                         <div className="w-px h-3.5 sm:h-4 bg-white/10 shrink-0" />
                         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                            <span className="text-[7.5px] sm:text-[9px] compact:text-[8px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Bidder:</span>
-                           <div className="bg-green-500/20 border border-green-500/30 px-1.5 sm:px-2 py-0.5 rounded-md max-w-[85px] xs:max-w-[120px] sm:max-w-[180px] truncate">
-                              <span className="text-[7.5px] sm:text-[9px] compact:text-[8px] font-black text-green-400 uppercase tracking-wider truncate block">{displayAuctionState?.highBidderName}</span>
-                           </div>
+                           <span className="text-[10px] sm:text-[11px] font-black text-white uppercase tracking-wider truncate">{displayAuctionState?.highBidderName}</span>
                         </div>
                      </div>
                   </div>
@@ -1304,10 +1298,10 @@ const AuctionRoom = () => {
                               <div className="bg-gradient-to-b from-[#161616] to-[#0f0f0f] border border-white/[0.08] rounded-[2rem] overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.6)] relative min-h-[400px] lg:min-h-0">
                                  {isTimerPaused && (
                                     <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-30 flex flex-col items-center justify-center gap-2 pointer-events-none rounded-[2rem]">
-                                       <div className="bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 px-6 py-2.5 rounded-full font-black text-sm sm:text-base tracking-widest uppercase flex items-center gap-2 shadow-2xl">
-                                          <Pause size={18} className="animate-pulse" /> AUCTION PAUSED
+                                       <div className="bg-slate-900/90 border border-slate-600/60 text-white px-6 py-2.5 rounded-full font-black text-xs sm:text-sm tracking-widest uppercase flex items-center gap-2 shadow-2xl shadow-black/80">
+                                          <Pause size={17} className="text-slate-300" /> AUCTION PAUSED
                                        </div>
-                                       <p className="text-gray-400 text-xs font-semibold">Waiting for Admin to resume...</p>
+                                       <p className="text-slate-400 text-xs font-medium">Waiting for Admin to resume...</p>
                                     </div>
                                  )}
                                  <div className="p-4 sm:p-6 lg:p-5 xl:p-10 flex flex-col lg:flex-row items-center gap-4 sm:gap-6 lg:gap-5 xl:gap-10">
@@ -1447,11 +1441,14 @@ const AuctionRoom = () => {
                </main>
             </div>
 
-            <aside className={`${mobileTab === 'activity' ? 'flex' : 'hidden'} md:flex w-full md:w-64 lg:w-72 xl:w-96 bg-black/40 border-l border-white/5 flex-col h-full md:max-h-[calc(100dvh-3.5rem)] compact:max-h-[calc(100dvh-3rem)]`}>
+            <aside className={`${(mobileTab === 'activity' || mobileTab === 'chat') ? 'flex' : 'hidden'} md:flex w-full md:w-64 lg:w-72 xl:w-96 bg-black/40 border-l border-white/5 flex-col h-full md:max-h-[calc(100dvh-3.5rem)] compact:max-h-[calc(100dvh-3rem)]`}>
                {/* Premium Tabs Header */}
                <div className="h-14 compact:h-12 bg-white/[0.01] border-b border-white/5 flex items-center shrink-0 w-full">
                   <button
-                     onClick={() => setSidebarTab('activity')}
+                     onClick={() => {
+                        setSidebarTab('activity');
+                        setMobileTab('activity');
+                     }}
                      className={`h-full flex-1 flex items-center justify-center gap-2 transition-all cursor-pointer ${sidebarTab === 'activity'
                         ? 'bg-white/[0.04] text-white border-b-2 border-white/60 font-black'
                         : 'text-gray-500 hover:text-gray-400 hover:bg-white/[0.01] border-b-2 border-transparent font-bold'
@@ -1461,7 +1458,10 @@ const AuctionRoom = () => {
                      <span className="text-[10px] compact:text-[9px] uppercase tracking-widest">Live Activity</span>
                   </button>
                   <button
-                     onClick={() => setSidebarTab('chat')}
+                     onClick={() => {
+                        setSidebarTab('chat');
+                        setMobileTab('chat');
+                     }}
                      className={`h-full flex-1 flex items-center justify-center gap-2 transition-all cursor-pointer ${sidebarTab === 'chat'
                         ? 'bg-white/[0.04] text-white border-b-2 border-white/60 font-black'
                         : 'text-gray-500 hover:text-gray-400 hover:bg-white/[0.01] border-b-2 border-transparent font-bold'
@@ -1587,27 +1587,33 @@ const AuctionRoom = () => {
          </div>
 
          <div className="w-full shrink-0 bg-black/95 backdrop-blur-2xl border-t border-white/10 flex md:hidden z-50 pb-[max(0.75rem,env(safe-area-inset-bottom))] relative">
-            <div className="flex w-full h-14 items-center justify-around px-4">
-               <button onClick={() => setMobileTab('squad')} className={`flex flex-col items-center justify-center w-16 gap-0.5 transition-all duration-300 ${mobileTab === 'squad' ? 'text-blue-500 translate-y-0' : 'text-gray-500 hover:text-gray-400 translate-y-0.5'}`}>
-                  <div className={`p-1 rounded-lg transition-colors duration-300 ${mobileTab === 'squad' ? 'bg-blue-500/10' : 'bg-transparent'}`}>
+            <div className="flex w-full h-14 items-center justify-around px-2 sm:px-4">
+               <button onClick={() => setMobileTab('squad')} className={`flex flex-col items-center justify-center w-14 sm:w-16 gap-0.5 transition-all duration-300 ${mobileTab === 'squad' ? 'text-white translate-y-0' : 'text-gray-500 hover:text-gray-400 translate-y-0.5'}`}>
+                  <div className={`p-1 rounded-lg transition-colors duration-300 ${mobileTab === 'squad' ? 'bg-white/10 text-white' : 'bg-transparent text-gray-400'}`}>
                      <Users size={16} strokeWidth={mobileTab === 'squad' ? 2.5 : 2} />
                   </div>
-                  <span className={`text-[7px] font-black uppercase tracking-widest ${mobileTab === 'squad' ? 'opacity-100' : 'opacity-70'}`}>Squads</span>
+                  <span className={`text-[7px] font-black uppercase tracking-widest ${mobileTab === 'squad' ? 'text-slate-200 opacity-100' : 'text-gray-500 opacity-70'}`}>Squads</span>
                </button>
 
-               <button onClick={() => setMobileTab('arena')} className="flex flex-col items-center justify-center w-20 relative -mt-3 group z-10 transition-transform active:scale-95">
-                  <div className={`p-2.5 rounded-xl transition-all duration-500 border relative overflow-hidden ${mobileTab === 'arena' ? 'bg-yellow-500 text-black border-yellow-400 shadow-[0_6px_15px_rgba(234,179,8,0.4)] scale-105' : 'bg-[#151515] border-white/10 text-gray-400 shadow-lg'}`}>
-                     {mobileTab === 'arena' && <div className="absolute inset-0 bg-white/20 blur-md pointer-events-none" />}
-                     <Gavel size={18} strokeWidth={2.5} className="relative z-10" />
+               <button onClick={() => setMobileTab('arena')} className={`flex flex-col items-center justify-center w-14 sm:w-16 gap-0.5 transition-all duration-300 ${mobileTab === 'arena' ? 'text-white translate-y-0' : 'text-gray-500 hover:text-gray-400 translate-y-0.5'}`}>
+                  <div className={`p-1 rounded-lg transition-colors duration-300 ${mobileTab === 'arena' ? 'bg-white/10 text-white' : 'bg-transparent text-gray-400'}`}>
+                     <Gavel size={16} strokeWidth={mobileTab === 'arena' ? 2.5 : 2} />
                   </div>
-                  <span className={`text-[8px] font-black uppercase tracking-[0.2em] transition-all mt-1 ${mobileTab === 'arena' ? 'text-yellow-500' : 'text-gray-500'}`}>Arena</span>
+                  <span className={`text-[7px] font-black uppercase tracking-widest ${mobileTab === 'arena' ? 'text-slate-200 opacity-100' : 'text-gray-500 opacity-70'}`}>Arena</span>
                </button>
 
-               <button onClick={() => setMobileTab('activity')} className={`flex flex-col items-center justify-center w-16 gap-0.5 transition-all duration-300 ${mobileTab === 'activity' ? 'text-green-500 translate-y-0' : 'text-gray-500 hover:text-gray-400 translate-y-0.5'}`}>
-                  <div className={`p-1 rounded-lg transition-colors duration-300 ${mobileTab === 'activity' ? 'bg-green-500/10' : 'bg-transparent'}`}>
+               <button onClick={() => { setMobileTab('activity'); setSidebarTab('activity'); }} className={`flex flex-col items-center justify-center w-14 sm:w-16 gap-0.5 transition-all duration-300 ${mobileTab === 'activity' ? 'text-white translate-y-0' : 'text-gray-500 hover:text-gray-400 translate-y-0.5'}`}>
+                  <div className={`p-1 rounded-lg transition-colors duration-300 ${mobileTab === 'activity' ? 'bg-white/10 text-white' : 'bg-transparent text-gray-400'}`}>
                      <History size={16} strokeWidth={mobileTab === 'activity' ? 2.5 : 2} />
                   </div>
-                  <span className={`text-[7px] font-black uppercase tracking-widest ${mobileTab === 'activity' ? 'opacity-100' : 'opacity-70'}`}>Logs</span>
+                  <span className={`text-[7px] font-black uppercase tracking-widest ${mobileTab === 'activity' ? 'text-slate-200 opacity-100' : 'text-gray-500 opacity-70'}`}>Logs</span>
+               </button>
+
+               <button onClick={() => { setMobileTab('chat'); setSidebarTab('chat'); }} className={`flex flex-col items-center justify-center w-14 sm:w-16 gap-0.5 transition-all duration-300 ${mobileTab === 'chat' ? 'text-white translate-y-0' : 'text-gray-500 hover:text-gray-400 translate-y-0.5'}`}>
+                  <div className={`p-1 rounded-lg transition-colors duration-300 ${mobileTab === 'chat' ? 'bg-white/10 text-white' : 'bg-transparent text-gray-400'}`}>
+                     <MessageSquare size={16} strokeWidth={mobileTab === 'chat' ? 2.5 : 2} />
+                  </div>
+                  <span className={`text-[7px] font-black uppercase tracking-widest ${mobileTab === 'chat' ? 'text-slate-200 opacity-100' : 'text-gray-500 opacity-70'}`}>Chat</span>
                </button>
             </div>
          </div>
@@ -1743,15 +1749,15 @@ const AuctionRoom = () => {
                   <div className="space-y-4 max-h-[75vh] overflow-y-auto pr-1 custom-scrollbar">
                      {/* Host Settings Section */}
                      {isAdmin && (
-                        <div className="bg-gradient-to-b from-blue-500/5 to-transparent border border-blue-500/20 p-4 rounded-2xl relative overflow-hidden">
+                        <div className="bg-gradient-to-b from-slate-500/10 to-transparent border border-slate-500/20 p-4 rounded-2xl relative overflow-hidden">
                            <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-1.5">
-                                 <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest">Bid Timer (Host)</span>
+                                 <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Bid Timer (Host)</span>
                               </div>
-                              <span className="text-xs font-black text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">{newTimerValue} Seconds</span>
+                              <span className="text-xs font-black text-slate-300 bg-slate-500/15 px-2 py-0.5 rounded-full border border-slate-500/30">{newTimerValue} Seconds</span>
                            </div>
-                           <input type="range" min="5" max="60" value={newTimerValue} onChange={(e) => setNewTimerValue(parseInt(e.target.value))} className="w-full accent-blue-500 bg-white/10 h-1.5 rounded-lg cursor-pointer" />
-                           <button onClick={async () => { await updateRoomSettings(id, { ...currentAuction.settings, bidTimer: newTimerValue }); }} className="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all mt-3 shadow-lg shadow-blue-500/20 active:scale-95 cursor-pointer">
+                           <input type="range" min="5" max="60" value={newTimerValue} onChange={(e) => setNewTimerValue(parseInt(e.target.value))} className="w-full accent-slate-400 bg-white/10 h-1.5 rounded-lg cursor-pointer" />
+                           <button onClick={async () => { await updateRoomSettings(id, { ...currentAuction.settings, bidTimer: newTimerValue }); }} className="w-full bg-slate-700 hover:bg-slate-600 text-slate-100 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all mt-3 border border-slate-600/50 shadow-lg shadow-black/30 active:scale-95 cursor-pointer">
                               Apply Timer Settings
                            </button>
                         </div>
@@ -1762,7 +1768,7 @@ const AuctionRoom = () => {
                         <div className="flex items-center justify-between pb-3 border-b border-white/5">
                            <div className="flex items-center gap-2">
 
-                              <span className="text-[10px] font-black text-yellow-400 uppercase tracking-wider">Voice Auctioneer</span>
+                              <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">Voice Auctioneer</span>
                            </div>
 
                            {/* Toggle Switch */}
@@ -1776,7 +1782,7 @@ const AuctionRoom = () => {
                                     speak("Voice Auctioneer enabled.");
                                  }
                               }}
-                              className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-300 cursor-pointer ${isTtsEnabled ? 'bg-yellow-500' : 'bg-white/10'}`}
+                              className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-300 cursor-pointer ${isTtsEnabled ? 'bg-slate-300' : 'bg-white/10'}`}
                            >
                               <motion.div
                                  layout
@@ -1790,18 +1796,18 @@ const AuctionRoom = () => {
                         <div className={isTtsEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}>
                            <div className="flex justify-between items-center mb-1.5">
                               <label className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Speaking Speed</label>
-                              <span className="text-[10px] font-black text-yellow-400">{ttsSpeed.toFixed(2)}x</span>
+                              <span className="text-[10px] font-black text-slate-300">{ttsSpeed.toFixed(2)}x</span>
                            </div>
-                           <input type="range" min="0.70" max="1.80" step="0.05" value={ttsSpeed} onChange={(e) => setTtsSpeed(parseFloat(e.target.value))} className="w-full accent-yellow-500 bg-white/10 h-1.5 rounded-lg cursor-pointer" />
+                           <input type="range" min="0.70" max="1.80" step="0.05" value={ttsSpeed} onChange={(e) => setTtsSpeed(parseFloat(e.target.value))} className="w-full accent-slate-400 bg-white/10 h-1.5 rounded-lg cursor-pointer" />
                         </div>
 
                         {/* Pitch Slider */}
                         <div className={isTtsEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}>
                            <div className="flex justify-between items-center mb-1.5">
                               <label className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Voice Pitch</label>
-                              <span className="text-[10px] font-black text-yellow-400">{ttsPitch.toFixed(2)}</span>
+                              <span className="text-[10px] font-black text-slate-300">{ttsPitch.toFixed(2)}</span>
                            </div>
-                           <input type="range" min="0.60" max="1.40" step="0.05" value={ttsPitch} onChange={(e) => setTtsPitch(parseFloat(e.target.value))} className="w-full accent-yellow-500 bg-white/10 h-1.5 rounded-lg cursor-pointer" />
+                           <input type="range" min="0.60" max="1.40" step="0.05" value={ttsPitch} onChange={(e) => setTtsPitch(parseFloat(e.target.value))} className="w-full accent-slate-400 bg-white/10 h-1.5 rounded-lg cursor-pointer" />
                         </div>
 
                         {/* Voice Selector */}
@@ -1826,7 +1832,7 @@ const AuctionRoom = () => {
                                        }
                                     }, 100);
                                  }}
-                                 className="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-[10px] text-gray-200 font-bold focus:outline-none focus:border-yellow-500/50 transition-colors cursor-pointer"
+                                 className="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-[10px] text-gray-200 font-bold focus:outline-none focus:border-slate-400/50 transition-colors cursor-pointer"
                               >
                                  {availableVoices.map(v => (
                                     <option key={v.name} value={v.name} className="bg-[#0c0d12] text-white">

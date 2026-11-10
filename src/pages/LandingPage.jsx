@@ -535,30 +535,31 @@ const LandingPage = () => {
           <h1 className="sr-only">
             IPL Auction Simulator & Game - Live IPL Mega Auction 2026
           </h1>
-          <div className="text-[clamp(1.25rem,2.8vw,2.35rem)] font-pixel leading-none text-balance bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">
+
+          <div className="text-[clamp(1.25rem,2.8vw,2.35rem)] font-pixel leading-none text-balance bg-clip-text text-transparent bg-gradient-to-b from-white via-white/90 to-white/60">
             CREATE YOUR
           </div>
-          <div className="text-[clamp(2.1rem,5.6vw,3.85rem)] font-pixel text-[#ff5500] leading-none uppercase text-balance mt-0.5 sm:mt-1 drop-shadow-[0_4px_12px_rgba(255,85,0,0.2)]">
+          <div className="text-[clamp(2.1rem,5.6vw,3.85rem)] font-pixel text-[#ff5500] leading-none uppercase text-balance mt-0.5 sm:mt-1 drop-shadow-[0_2px_10px_rgba(255,85,0,0.15)]">
             AUCTION ROOM
           </div>
 
-          <p className="text-xs sm:text-[13px] text-gray-400 font-pixel max-w-lg mx-auto mt-2 leading-relaxed px-1">
+          <p className="text-xs sm:text-[13px] text-slate-400 font-pixel max-w-lg mx-auto mt-2 leading-relaxed px-1">
             The ultimate multiplayer IPL auction simulator and game. Host live
             IPL mega auctions with friends in real-time, choose your favorite
             franchise, bid strategically, and build a championship T20 squad.
           </p>
 
-          {/* Three-step visual story */}
-          <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 sm:gap-x-5 mt-2.5 sm:mt-3 px-2 text-[8.5px] sm:text-[9.5px] font-black tracking-wider sm:tracking-widest text-gray-400 uppercase select-none">
-            <span className="hover:text-orange-500/80 transition-colors">
+          {/* Watermelon-style Micro Step Indicators */}
+          <div className="inline-flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5 mt-2.5 sm:mt-3 px-3 py-1.5 rounded-xl bg-white/[0.02] border border-dashed border-white/10 text-[8.5px] sm:text-[9.5px] font-black tracking-wider sm:tracking-widest text-slate-400 uppercase select-none">
+            <span className="hover:text-slate-200 transition-colors">
               ① Create Room
             </span>
-            <span className="text-gray-800">➔</span>
-            <span className="hover:text-orange-500/80 transition-colors">
+            <span className="text-white/20">➔</span>
+            <span className="hover:text-slate-200 transition-colors">
               ② Invite Friends
             </span>
-            <span className="text-gray-800">➔</span>
-            <span className="hover:text-orange-500/80 transition-colors">
+            <span className="text-white/20">➔</span>
+            <span className="hover:text-slate-200 transition-colors">
               ③ Start Bidding
             </span>
           </div>
@@ -695,30 +696,31 @@ const LandingPage = () => {
         <h1 className="sr-only">
           IPL Auction Simulator & Game - Live IPL Mega Auction 2026
         </h1>
-        <div className="text-[clamp(1.25rem,2.8vw,2.35rem)] font-pixel leading-none text-balance bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">
+
+        <div className="text-[clamp(1.25rem,2.8vw,2.35rem)] font-pixel leading-none text-balance bg-clip-text text-transparent bg-gradient-to-b from-white via-white/90 to-white/60">
           CREATE YOUR
         </div>
-        <div className="text-[clamp(2.1rem,5.6vw,3.85rem)] font-pixel text-[#ff5500] leading-none uppercase text-balance mt-0.5 sm:mt-1 drop-shadow-[0_4px_12px_rgba(255,85,0,0.2)]">
+        <div className="text-[clamp(2.1rem,5.6vw,3.85rem)] font-pixel text-[#ff5500] leading-none uppercase text-balance mt-0.5 sm:mt-1 drop-shadow-[0_2px_10px_rgba(255,85,0,0.15)]">
           AUCTION ROOM
         </div>
 
-        <p className="text-xs sm:text-[13px] text-gray-400 font-pixel max-w-lg mx-auto mt-2 leading-relaxed px-1">
+        <p className="text-xs sm:text-[13px] text-slate-400 font-pixel max-w-lg mx-auto mt-2 leading-relaxed px-1">
           The ultimate multiplayer IPL auction simulator and game. Host live IPL
           mega auctions with friends in real-time, choose your favorite
           franchise, bid strategically, and build a championship T20 squad.
         </p>
 
-        {/* Three-step visual story */}
-        <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 sm:gap-x-5 mt-2.5 sm:mt-3 px-2 text-[8.5px] sm:text-[9.5px] font-black tracking-wider sm:tracking-widest text-gray-400 uppercase select-none">
-          <span className="hover:text-orange-500/80 transition-colors">
+        {/* Watermelon-style Micro Step Indicators */}
+        <div className="inline-flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5 mt-2.5 sm:mt-3 px-3 py-1.5 rounded-xl bg-white/[0.02] border border-dashed border-white/10 text-[8.5px] sm:text-[9.5px] font-black tracking-wider sm:tracking-widest text-slate-400 uppercase select-none">
+          <span className="hover:text-slate-200 transition-colors">
             ① Create Room
           </span>
-          <span className="text-gray-800">➔</span>
-          <span className="hover:text-orange-500/80 transition-colors">
+          <span className="text-white/20">➔</span>
+          <span className="hover:text-slate-200 transition-colors">
             ② Invite Friends
           </span>
-          <span className="text-gray-800">➔</span>
-          <span className="hover:text-orange-500/80 transition-colors">
+          <span className="text-white/20">➔</span>
+          <span className="hover:text-slate-200 transition-colors">
             ③ Start Bidding
           </span>
         </div>
