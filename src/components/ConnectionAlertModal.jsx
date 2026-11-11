@@ -1,41 +1,43 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Home, RefreshCw } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { Home } from 'lucide-react';
 import { useConnectionAlert } from '../contexts/ConnectionAlertContext';
 
 /**
- * Shown when the app cannot reach the Realtime Database: either the project has
- * hit its simultaneous-connection ceiling, or the connection could not be
- * established at all.
+ * Connection Alert Modal designed in strict adherence to THEME.md guidelines:
+ * - High-contrast dark glassmorphism with #0c0c0c solid modal core
+ * - Double-layered glass frame (rounded-[1.75rem] mobile, rounded-[2.5rem] desktop)
+ * - Atmospheric neutral glow (w-96 blur-[120px])
+ * - Pixel typography for titles, micro-badges, and step tags
+ * - Monochrome solid Primary CTA (bg-white text-black) for "Go to Home"
+ * - Minimum 44px thumb-friendly touch target with active:scale-[0.98]
  */
-
-const AUTO_RETRY_SECONDS = 30;
 
 const COPY = {
   capacity: {
     badge: 'Cloud Capacity Reached',
     title: 'Cloud Server Full',
-    body: 'Firebase’s free plan (100 simultaneous managers) is currently full. Your internet is fine!',
-    hint: 'Seats free up as managers leave. You can wait for auto-reconnect or retry now.',
+    body: 'This server has hit its free-tier limit of 100 simultaneous managers. Your internet connection is working properly!',
+    switchTip: 'You don’t have to wait: switch to Server 2, 3, or 4 from the Home page or Lobby to play immediately.',
+    hint: 'Seats free up as managers leave, or you can switch to another server on the Home page.',
   },
   unreachable: {
     badge: 'Server Unreachable',
-    title: 'Can’t Reach Cloud',
-    body: 'We couldn’t reach the cloud auction server right now. Check your internet connection or try again.',
-    hint: 'You can wait for auto-reconnect or retry now.',
+    title: 'Can’t Reach Cloud Server',
+    body: 'We couldn’t connect to this auction server right now. The server might be temporarily busy or restarting.',
+    switchTip: 'You can switch to another server (Server 2, 3, or 4) to start or join a game without delay.',
+    hint: 'Check your internet connection, or try switching to another server on the Home page.',
   },
   offline: {
     badge: 'No Internet Connection',
     title: 'Internet Disconnected',
     body: 'You appear to be offline. Cross-device multiplayer requires an active internet connection to synchronize bids.',
+    switchTip: null,
     hint: 'Please check your Wi-Fi or mobile data connection to resume.',
   },
 };
 
 function AlertDialog({ problem }) {
-  const { retry } = useConnectionAlert();
-  const retryButtonRef = useRef(null);
-  const retriedRef = useRef(false);
-  const [secondsLeft, setSecondsLeft] = useState(AUTO_RETRY_SECONDS);
+  const homeButtonRef = useRef(null);
 
   const goHome = () => {
     window.location.href = '/';
@@ -44,25 +46,11 @@ function AlertDialog({ problem }) {
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    retryButtonRef.current?.focus({ preventScroll: true });
+    homeButtonRef.current?.focus({ preventScroll: true });
     return () => {
       document.body.style.overflow = previousOverflow;
     };
   }, []);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      if (document.visibilityState === 'hidden') return;
-      setSecondsLeft((value) => (value > 0 ? value - 1 : 0));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    if (secondsLeft > 0 || retriedRef.current) return;
-    retriedRef.current = true;
-    retry();
-  }, [secondsLeft, retry]);
 
   const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
   const activeReason = isOffline ? 'offline' : problem;
@@ -70,12 +58,12 @@ function AlertDialog({ problem }) {
 
   return (
     <div
-      className="fixed inset-0 z-[99999] flex items-end justify-center bg-black/90 font-sans backdrop-blur-2xl sm:items-center sm:p-4"
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-3.5 sm:p-6 bg-black/90 font-sans backdrop-blur-2xl animate-fade-in"
     >
-      {/* Ambient glow per THEME.md */}
+      {/* Background Ambient Glow matching THEME.md Section 3 */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-        <div className="absolute bottom-0 left-1/2 h-[320px] w-[320px] -translate-x-1/2 translate-y-1/3 rounded-full bg-white/[0.02] blur-[120px] sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2" />
-        <div className="absolute right-0 top-0 h-[200px] w-[200px] rounded-full bg-slate-500/[0.02] blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/[0.02] blur-[120px] rounded-full" />
+        <div className="absolute bottom-10 right-10 w-96 h-96 bg-slate-500/[0.02] blur-[120px] rounded-full" />
       </div>
 
       <div
@@ -83,69 +71,66 @@ function AlertDialog({ problem }) {
         aria-modal="true"
         aria-labelledby="connection-alert-title"
         aria-describedby="connection-alert-body"
-        className="relative flex max-h-[100dvh] w-full flex-col sm:max-h-[calc(100dvh_-_2rem)] sm:max-w-md"
+        className="relative z-10 flex w-full max-w-md flex-col max-h-[92dvh]"
       >
-        {/* Glass frame */}
-        <div className="relative flex min-h-0 flex-col rounded-t-[2rem] border border-white/10 bg-white/[0.03] p-2.5 shadow-[0_-20px_60px_rgba(0,0,0,0.85)] backdrop-blur-3xl sm:rounded-[2.5rem] sm:p-3">
-          {/* Solid card */}
-          <div className="relative flex min-h-0 flex-col overflow-hidden rounded-t-[1.7rem] border border-white/5 bg-[#0c0c0c] sm:rounded-[2.2rem]">
-            <div className="absolute left-1/2 top-0 h-px w-2/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        {/* Outer Card Glass Frame (THEME.md Section 2 / Quota Modal pattern) */}
+        <div className="relative flex flex-col min-h-0 bg-white/[0.02] border border-white/10 rounded-[1.75rem] sm:rounded-[2.5rem] p-2.5 sm:p-3 backdrop-blur-3xl shadow-[0_25px_60px_rgba(0,0,0,0.85)]">
+          {/* Inner Dark Container */}
+          <div className="relative flex flex-col min-h-0 overflow-hidden rounded-[1.4rem] sm:rounded-[2rem] border border-white/5 bg-[#0c0c0c] p-5 sm:p-7 text-left">
+            {/* Top Divider Accent */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-3 pt-5 text-left sm:px-7 sm:pt-6">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-0.5 custom-scrollbar">
+              {/* Status Badge per THEME.md Section 4 */}
+              <div className="inline-flex items-center gap-1.5 border border-white/10 bg-white/5 text-slate-300 px-3 py-1 rounded-full font-pixel text-[8px] sm:text-[9px] uppercase tracking-wider backdrop-blur-md mb-3.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-pulse" />
+                {copy.badge}
+              </div>
 
+              {/* Main Heading matching THEME.md Section 4 */}
               <h2
                 id="connection-alert-title"
-                className="mb-2 break-words text-[1.25rem] font-pixel uppercase tracking-tight text-white drop-shadow-[0_2px_12px_rgba(255,255,255,0.08)] sm:text-[1.45rem]"
+                className="mb-2.5 break-words text-lg sm:text-2xl font-pixel uppercase tracking-tight text-white drop-shadow-[0_2px_12px_rgba(255,255,255,0.08)]"
               >
                 {copy.title}
               </h2>
 
+              {/* Description Body */}
               <p
                 id="connection-alert-body"
-                className="text-[12.5px] font-medium leading-relaxed text-slate-300 sm:text-[13px]"
+                className="text-xs sm:text-[13px] font-medium leading-relaxed text-slate-300"
               >
                 {copy.body}
               </p>
 
-              <p className="mt-3.5 border-t border-white/10 pt-3.5 text-[11px] leading-relaxed text-slate-500">{copy.hint}</p>
-            </div>
+              {/* Switch Server Info Well matching THEME.md Section 1 */}
+              {copy.switchTip && (
+                <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.02] p-3.5 space-y-1">
+                  <div className="font-pixel text-[8px] sm:text-[9px] font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>IMMEDIATE PLAY</span>
+                  </div>
+                  <p className="text-xs sm:text-[12.5px] text-slate-400 font-medium leading-relaxed">
+                    {copy.switchTip}
+                  </p>
+                </div>
+              )}
 
-            {/* Pinned actions */}
-            <div className="shrink-0 border-t border-white/5 px-5 pb-[calc(1.1rem_+_env(safe-area-inset-bottom))] pt-3 sm:px-7 sm:pb-6 sm:pt-3.5 space-y-2">
-              <div className="flex gap-2">
-                <button
-                  ref={retryButtonRef}
-                  type="button"
-                  onClick={retry}
-                  className="flex h-12 flex-1 touch-manipulation items-center justify-center gap-1.5 rounded-xl bg-white hover:bg-slate-200 text-[10px] font-black uppercase tracking-[0.14em] text-black transition-all active:scale-[0.98] cursor-pointer shadow-[0_10px_30px_rgba(255,255,255,0.08)]"
-                >
-                  <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>Reconnect Cloud</span>
-                </button>
+              {/* Muted Metadata / Hint */}
+              <p className="mt-4 border-t border-white/10 pt-3.5 text-[11px] leading-relaxed text-slate-500">
+                {copy.hint}
+              </p>
 
+              {/* Action Button: Single Solid Primary CTA matching THEME.md */}
+              <div className="mt-6">
                 <button
+                  ref={homeButtonRef}
                   type="button"
                   onClick={goHome}
-                  aria-label="Go to home page"
-                  title="Home"
-                  className="flex h-12 w-12 shrink-0 touch-manipulation items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition-all active:scale-[0.98] cursor-pointer"
+                  className="w-full h-11 sm:h-12 rounded-xl bg-white hover:bg-slate-200 text-black font-black uppercase tracking-[0.14em] text-[10px] sm:text-xs transition-all active:scale-[0.98] cursor-pointer shadow-[0_10px_30px_rgba(255,255,255,0.08)] flex items-center justify-center gap-2"
                 >
-                  <Home className="h-3.5 w-3.5" aria-hidden="true" />
+                  <Home className="h-4 w-4" aria-hidden="true" />
+                  <span>Go to Home</span>
                 </button>
-              </div>
-
-              <div className="pt-1">
-                <p className="text-center text-[10px] font-medium text-slate-400 mb-1">
-                  Cloud auto-retry in {secondsLeft}s
-                </p>
-                <div className="h-0.5 w-full overflow-hidden rounded-full bg-white/10" aria-hidden="true">
-                  <div
-                    className="h-full rounded-full bg-white/40 transition-[width] duration-1000 ease-linear"
-                    style={{
-                      width: `${Math.max(0, secondsLeft / AUTO_RETRY_SECONDS) * 100}%`,
-                    }}
-                  />
-                </div>
               </div>
             </div>
           </div>

@@ -677,32 +677,33 @@ const AuctionRoom = () => {
             };
             const colors = teamId && colorMap[teamId] ? colorMap[teamId] : ['#FFD700', '#FFA500', '#FF4500'];
 
-            const end = Date.now() + 3 * 1000;
-            const frame = () => {
+            // High-performance smooth confetti bursts (avoids frame drops on mobile/laptop)
+            confetti({
+               particleCount: 50,
+               spread: 70,
+               origin: { y: 0.6 },
+               colors: colors,
+               scalar: 1.1,
+               disableForReducedMotion: true
+            });
+            const t1 = setTimeout(() => {
                confetti({
-                  particleCount: 2,
+                  particleCount: 35,
                   angle: 60,
-                  spread: 55,
-                  origin: { x: 0, y: 0.6 },
+                  spread: 50,
+                  origin: { x: 0.05, y: 0.65 },
                   colors: colors,
-                  scalar: 1.2,
-                  ticks: 200
+                  disableForReducedMotion: true
                });
                confetti({
-                  particleCount: 2,
+                  particleCount: 35,
                   angle: 120,
-                  spread: 55,
-                  origin: { x: 1, y: 0.6 },
+                  spread: 50,
+                  origin: { x: 0.95, y: 0.65 },
                   colors: colors,
-                  scalar: 1.2,
-                  ticks: 200
+                  disableForReducedMotion: true
                });
-
-               if (Date.now() < end) {
-                  rafId = requestAnimationFrame(frame);
-               }
-            };
-            frame();
+            }, 200);
 
             if (teamId && TEAM_SONGS[teamId.toLowerCase()]) {
                if (!celebrationAudioRef.current) celebrationAudioRef.current = new Audio();
@@ -1248,10 +1249,11 @@ const AuctionRoom = () => {
                             return (
                                <motion.div
                                   key="celebration"
-                                  initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                                  initial={{ opacity: 0, scale: 0.94, y: 12 }}
                                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                                  exit={{ opacity: 0, scale: 1.05 }}
-                                  className="w-full max-w-sm sm:max-w-md mx-auto"
+                                  exit={{ opacity: 0, scale: 0.97, y: -8 }}
+                                  transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                                  className="w-full max-w-sm sm:max-w-md mx-auto will-change-transform"
                                >
                                   <div className="relative w-full rounded-[2rem] overflow-hidden bg-[#0c0d10] border border-white/10 shadow-[0_24px_70px_rgba(0,0,0,0.8)]">
                                      {/* Franchise Ambient Glow Background */}
@@ -1288,7 +1290,10 @@ const AuctionRoom = () => {
                                         <div className="flex flex-col justify-center items-center py-1 sm:py-2">
                                            <div className="relative w-32 h-32 sm:w-40 sm:h-40 compact:w-32 compact:h-32 group">
                                               <div className={`absolute inset-0 rounded-full blur-3xl opacity-40 ${isSold && buyerTeam ? buyerTeam.color : 'bg-red-500'}`} />
-                                              <img
+                                              <motion.img
+                                                 initial={{ scale: 0.88, opacity: 0 }}
+                                                 animate={{ scale: 1, opacity: 1 }}
+                                                 transition={{ duration: 0.35, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
                                                  src={currentPlayer?.image}
                                                  className="relative w-full h-full object-contain z-10 drop-shadow-[0_10px_30px_rgba(0,0,0,0.7)]"
                                                  alt={currentPlayer?.name || 'Player'}
@@ -1318,7 +1323,12 @@ const AuctionRoom = () => {
                                               </div>
                                            )}
 
-                                           <div className={`backdrop-blur-md border p-3 rounded-2xl text-center ${isSold ? 'bg-white/5 border-white/10' : 'bg-red-500/10 border-red-500/20'}`}>
+                                           <motion.div
+                                              initial={{ scale: 0.92, opacity: 0, y: 6 }}
+                                              animate={{ scale: 1, opacity: 1, y: 0 }}
+                                              transition={{ duration: 0.3, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+                                              className={`backdrop-blur-md border p-3 rounded-2xl text-center ${isSold ? 'bg-white/5 border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.4)]' : 'bg-red-500/10 border-red-500/20'}`}
+                                           >
                                               {isSold ? (
                                                  <p className="text-xl sm:text-2xl compact:text-xl font-black text-white">
                                                     {displayAuctionState?.currentBid == null ? '—' : `₹${formatCrores(displayAuctionState.currentBid)} Cr`}
@@ -1328,14 +1338,21 @@ const AuctionRoom = () => {
                                                     UNSOLD
                                                  </p>
                                               )}
-                                           </div>
+                                           </motion.div>
                                         </div>
                                      </div>
                                   </div>
                                </motion.div>
                             );
                          })() : (
-                           <motion.div key="player-card" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full flex-col gap-4 md:gap-6 flex">
+                           <motion.div
+                              key="player-card"
+                              initial={{ opacity: 0, scale: 0.98 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.98 }}
+                              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                              className="w-full flex-col gap-4 md:gap-6 flex will-change-transform"
+                           >
                               <div className="bg-[#0c0d10] border border-white/10 rounded-[2rem] overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.6)] relative min-h-[400px] lg:min-h-0">
             {/* Top-of-card progress bar across the flat top edge */}
             <AuctionCountdown
@@ -1879,7 +1896,26 @@ const AuctionRoom = () => {
 
          <AnimatePresence>
             {showSettings && (
-               <motion.div initial={{ opacity: 0, scale: 0.95, y: -10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: -10 }} className="fixed top-16 right-3 sm:right-6 z-[100] bg-[#0c0c0c] border border-white/10 p-5 sm:p-6 rounded-2xl shadow-2xl w-80 sm:w-96 backdrop-blur-2xl">
+               <>
+                  {/* Backdrop scrim to close on tap/click outside and dim background */}
+                  <motion.div
+                     initial={{ opacity: 0 }}
+                     animate={{ opacity: 1 }}
+                     exit={{ opacity: 0 }}
+                     transition={{ duration: 0.2 }}
+                     onClick={() => setShowSettings(false)}
+                     className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[95]"
+                  />
+
+                  {/* Settings Modal Container: centered on mobile, right-aligned on tablet/laptop */}
+                  <div className="fixed inset-0 z-[100] flex items-start justify-center sm:justify-end p-3 sm:p-6 sm:pt-16 pointer-events-none">
+                     <motion.div
+                        initial={{ opacity: 0, scale: 0.94, y: -12 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.96, y: -8 }}
+                        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                        className="pointer-events-auto relative w-full max-w-[calc(100vw-1.5rem)] sm:w-96 bg-[#0c0d10] border border-white/10 p-5 sm:p-6 rounded-2xl shadow-[0_24px_70px_rgba(0,0,0,0.85)] backdrop-blur-2xl will-change-transform"
+                     >
                   <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
                      <div className="flex items-center gap-2.5">
 
@@ -1990,8 +2026,10 @@ const AuctionRoom = () => {
                      </div>
                   </div>
                </motion.div>
-            )}
-         </AnimatePresence>
+            </div>
+         </>
+      )}
+   </AnimatePresence>
 
          <AnimatePresence>
             {showParticipantsOverlay && (
