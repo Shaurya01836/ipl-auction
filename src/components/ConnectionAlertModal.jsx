@@ -72,10 +72,10 @@ function AlertDialog({ problem }) {
     <div
       className="fixed inset-0 z-[99999] flex items-end justify-center bg-black/90 font-sans backdrop-blur-2xl sm:items-center sm:p-4"
     >
-      {/* Ambient glow */}
+      {/* Ambient glow per THEME.md */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-        <div className="absolute bottom-0 left-1/2 h-[320px] w-[320px] -translate-x-1/2 translate-y-1/3 rounded-full bg-[#ff5500]/25 blur-[110px] sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2" />
-        <div className="absolute right-0 top-0 h-[200px] w-[200px] rounded-full bg-blue-600/10 blur-[100px]" />
+        <div className="absolute bottom-0 left-1/2 h-[320px] w-[320px] -translate-x-1/2 translate-y-1/3 rounded-full bg-white/[0.02] blur-[120px] sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2" />
+        <div className="absolute right-0 top-0 h-[200px] w-[200px] rounded-full bg-slate-500/[0.02] blur-[120px]" />
       </div>
 
       <div
@@ -86,28 +86,28 @@ function AlertDialog({ problem }) {
         className="relative flex max-h-[100dvh] w-full flex-col sm:max-h-[calc(100dvh_-_2rem)] sm:max-w-md"
       >
         {/* Glass frame */}
-        <div className="relative flex min-h-0 flex-col rounded-t-[2rem] border border-white/10 bg-white/[0.04] p-2.5 shadow-[0_-20px_60px_rgba(0,0,0,0.85)] backdrop-blur-3xl sm:rounded-[2.5rem] sm:p-3">
+        <div className="relative flex min-h-0 flex-col rounded-t-[2rem] border border-white/10 bg-white/[0.03] p-2.5 shadow-[0_-20px_60px_rgba(0,0,0,0.85)] backdrop-blur-3xl sm:rounded-[2.5rem] sm:p-3">
           {/* Solid card */}
           <div className="relative flex min-h-0 flex-col overflow-hidden rounded-t-[1.7rem] border border-white/5 bg-[#0c0c0c] sm:rounded-[2.2rem]">
-            <div className="absolute left-1/2 top-0 h-px w-2/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-[#ff5500]/50 to-transparent" />
+            <div className="absolute left-1/2 top-0 h-px w-2/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-3 pt-5 text-left sm:px-7 sm:pt-6">
 
               <h2
                 id="connection-alert-title"
-                className="mb-2 break-words text-[1.3rem] font-black uppercase italic leading-[1.05] tracking-tight text-[#ff5500] drop-shadow-[0_4px_12px_rgba(255,85,0,0.25)] sm:text-[1.55rem] sm:tracking-tighter"
+                className="mb-2 break-words text-[1.25rem] font-pixel uppercase tracking-tight text-white drop-shadow-[0_2px_12px_rgba(255,255,255,0.08)] sm:text-[1.45rem]"
               >
                 {copy.title}
               </h2>
 
               <p
                 id="connection-alert-body"
-                className="text-[12.5px] font-medium leading-relaxed text-gray-300 sm:text-[13px]"
+                className="text-[12.5px] font-medium leading-relaxed text-slate-300 sm:text-[13px]"
               >
                 {copy.body}
               </p>
 
-              <p className="mt-3.5 border-t border-white/10 pt-4 text-[11px] leading-relaxed text-gray-500">{copy.hint}</p>
+              <p className="mt-3.5 border-t border-white/10 pt-3.5 text-[11px] leading-relaxed text-slate-500">{copy.hint}</p>
             </div>
 
             {/* Pinned actions */}
@@ -117,7 +117,7 @@ function AlertDialog({ problem }) {
                   ref={retryButtonRef}
                   type="button"
                   onClick={retry}
-                  className="flex h-12 flex-1 touch-manipulation items-center justify-center gap-1.5 rounded-xl border border-orange-500/40 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] text-[10px] font-black uppercase tracking-[0.12em] text-white transition-all active:scale-[0.98] cursor-pointer"
+                  className="flex h-12 flex-1 touch-manipulation items-center justify-center gap-1.5 rounded-xl bg-white hover:bg-slate-200 text-[10px] font-black uppercase tracking-[0.14em] text-black transition-all active:scale-[0.98] cursor-pointer shadow-[0_10px_30px_rgba(255,255,255,0.08)]"
                 >
                   <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
                   <span>Reconnect Cloud</span>
@@ -128,19 +128,19 @@ function AlertDialog({ problem }) {
                   onClick={goHome}
                   aria-label="Go to home page"
                   title="Home"
-                  className="flex h-12 w-12 shrink-0 touch-manipulation items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 transition-all active:scale-[0.98] cursor-pointer"
+                  className="flex h-12 w-12 shrink-0 touch-manipulation items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition-all active:scale-[0.98] cursor-pointer"
                 >
                   <Home className="h-3.5 w-3.5" aria-hidden="true" />
                 </button>
               </div>
 
               <div className="pt-1">
-                <p className="text-center text-[10px] font-medium text-gray-500 mb-1">
+                <p className="text-center text-[10px] font-medium text-slate-400 mb-1">
                   Cloud auto-retry in {secondsLeft}s
                 </p>
-                <div className="h-0.5 w-full overflow-hidden rounded-full bg-white/5" aria-hidden="true">
+                <div className="h-0.5 w-full overflow-hidden rounded-full bg-white/10" aria-hidden="true">
                   <div
-                    className="h-full rounded-full bg-orange-500/60 transition-[width] duration-1000 ease-linear"
+                    className="h-full rounded-full bg-white/40 transition-[width] duration-1000 ease-linear"
                     style={{
                       width: `${Math.max(0, secondsLeft / AUTO_RETRY_SECONDS) * 100}%`,
                     }}

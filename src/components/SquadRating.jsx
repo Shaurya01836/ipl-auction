@@ -73,12 +73,12 @@ const SquadRating = ({ roomTeams = [], currentAuction }) => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
-            className={`w-full flex flex-row items-center justify-between p-3 sm:p-6 rounded-2xl sm:rounded-[2.5rem] bg-[#0c0c0c] border transition-all duration-300 relative overflow-hidden group gap-2 sm:gap-4 ${
+            className={`w-full flex flex-row items-center justify-between p-3.5 sm:p-5 rounded-2xl sm:rounded-[2rem] bg-[#0c0d10] border transition-all duration-300 relative overflow-hidden group gap-2 sm:gap-4 ${
               team.isDisqualified 
                 ? 'border-red-900/30 opacity-70 grayscale-[0.5]' 
                 : idx === 0 
-                  ? 'border-orange-500/50 shadow-2xl' 
-                  : 'border-white/5 hover:border-white/10'
+                  ? 'border-white/20 bg-white/[0.04] shadow-2xl' 
+                  : 'border-white/5 hover:border-white/15 hover:bg-white/[0.02]'
             }`}
           >
             {/* Massive Background Logo */}
@@ -86,9 +86,9 @@ const SquadRating = ({ roomTeams = [], currentAuction }) => {
               {team.teamLogo && <img src={team.teamLogo} alt={`${team.teamName} Watermark Logo`} className="w-full h-full object-contain" />}
             </div>
             
-            <div className="flex items-center gap-2.5 sm:gap-6 relative z-10 min-w-0">
-              <div className={`w-10 h-10 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 p-1.5 sm:p-2 flex items-center justify-center shadow-2xl shrink-0 relative ${team.isDisqualified ? 'bg-red-950/20 border-red-900/30' : ''}`}>
-                {!team.isDisqualified && idx === 0 && <Star className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 w-4 h-4 sm:w-6 sm:h-6 text-yellow-400 fill-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]" />}
+            <div className="flex items-center gap-2.5 sm:gap-5 relative z-10 min-w-0">
+              <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 p-1.5 sm:p-2 flex items-center justify-center shadow-xl shrink-0 relative ${team.isDisqualified ? 'bg-red-950/20 border-red-900/30' : ''}`}>
+                {!team.isDisqualified && idx === 0 && <Star className="absolute -top-2 -right-2 sm:-top-2.5 sm:-right-2.5 w-4 h-4 sm:w-5 sm:h-5 text-amber-300 fill-amber-300 drop-shadow-[0_0_8px_rgba(252,211,77,0.4)]" />}
                 {team.teamLogo ? (
                   <img src={team.teamLogo} alt={team.teamName} className={`w-full h-full object-contain ${team.isDisqualified ? 'opacity-50' : ''}`} />
                 ) : (
@@ -98,11 +98,11 @@ const SquadRating = ({ roomTeams = [], currentAuction }) => {
               
               <div className="text-left min-w-0">
                 <div className="flex items-center gap-1.5 sm:gap-2">
-                  <span className="text-gray-400 font-bold text-xs sm:text-base shrink-0">#{idx + 1}</span>
-                  <h3 className={`text-sm sm:text-2xl font-black uppercase tracking-tight sm:tracking-tighter transition-colors truncate ${team.isDisqualified ? 'text-gray-500' : 'text-white group-hover:text-orange-500'}`}>{team.teamName}</h3>
+                  <span className="text-slate-400 font-bold text-xs sm:text-sm shrink-0">#{idx + 1}</span>
+                  <h3 className={`text-sm sm:text-xl font-black uppercase tracking-tight transition-colors truncate ${team.isDisqualified ? 'text-gray-500' : 'text-white group-hover:text-slate-200'}`}>{team.teamName}</h3>
                 </div>
-                <div className="flex items-center gap-2 mt-1 sm:mt-1.5">
-                  <p className={`text-[7px] sm:text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.4em] leading-none truncate ${team.isDisqualified ? 'text-red-500' : 'text-gray-500'}`}>{team.playerCount} / {minPlayers} Players</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className={`text-[7px] sm:text-[9px] font-black uppercase tracking-[0.1em] sm:tracking-[0.3em] leading-none truncate ${team.isDisqualified ? 'text-red-500' : 'text-slate-400'}`}>{team.playerCount} / {minPlayers} Players</p>
                   {team.isDisqualified && (
                     <span className="bg-red-500/20 text-red-500 border border-red-500/30 px-1.5 py-0.5 rounded text-[6px] sm:text-[8px] font-black uppercase tracking-widest shrink-0">Disqualified</span>
                   )}
@@ -111,8 +111,8 @@ const SquadRating = ({ roomTeams = [], currentAuction }) => {
             </div>
 
             <div className="flex flex-col items-end justify-center relative z-10 shrink-0 pl-2 sm:pl-4">
-              <span className={`block text-[7px] sm:text-[8px] font-black uppercase tracking-widest mb-0.5 sm:mb-1 ${team.isDisqualified ? 'text-red-500' : 'text-orange-500'}`}>Avg Rating</span>
-              <span className={`text-lg sm:text-3xl font-black leading-none ${team.isDisqualified ? 'text-red-600/50' : 'text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-[#ff5500]'}`}>
+              <span className={`block text-[7px] sm:text-[8px] font-black uppercase tracking-widest mb-0.5 ${team.isDisqualified ? 'text-red-500' : 'text-slate-400'}`}>Avg Rating</span>
+              <span className={`text-lg sm:text-2xl font-black leading-none ${team.isDisqualified ? 'text-red-600/50' : 'text-white'}`}>
                 {team.avgRating}
               </span>
             </div>

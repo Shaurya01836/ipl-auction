@@ -4,29 +4,29 @@ import { isUserAdmin } from '../src/lib/adminAuth.js';
 import { isQuotaError } from '../src/lib/quota.js';
 
 test('admin authorization: legitimate admin access is granted with case and whitespace tolerance', () => {
-  const configuredAdmin = 'shaurya01836@gmail.com';
+  const configuredAdmin = 'admin@example.com';
 
   assert.equal(
-    isUserAdmin({ email: 'shaurya01836@gmail.com' }, configuredAdmin),
+    isUserAdmin({ email: 'admin@example.com' }, configuredAdmin),
     true,
     'Exact match must be granted admin access',
   );
 
   assert.equal(
-    isUserAdmin({ email: 'SHAURYA01836@GMAIL.COM' }, configuredAdmin),
+    isUserAdmin({ email: 'ADMIN@EXAMPLE.COM' }, configuredAdmin),
     true,
     'Case-insensitive match must be granted admin access',
   );
 
   assert.equal(
-    isUserAdmin({ email: '  shaurya01836@gmail.com  ' }, configuredAdmin),
+    isUserAdmin({ email: '  admin@example.com  ' }, configuredAdmin),
     true,
     'Trimmed whitespace match must be granted admin access',
   );
 });
 
 test('admin authorization: unauthorized users are strictly denied without leaking admin email', () => {
-  const configuredAdmin = 'shaurya01836@gmail.com';
+  const configuredAdmin = 'admin@example.com';
 
   assert.equal(
     isUserAdmin({ email: 'attacker@example.com' }, configuredAdmin),
@@ -53,13 +53,13 @@ test('admin authorization: unauthorized users are strictly denied without leakin
   );
 
   assert.equal(
-    isUserAdmin({ email: 'shaurya01836@gmail.com' }, ''),
+    isUserAdmin({ email: 'admin@example.com' }, ''),
     false,
     'Unconfigured admin email must deny all access',
   );
 
   assert.equal(
-    isUserAdmin({ email: 'shaurya01836@gmail.com' }, null),
+    isUserAdmin({ email: 'admin@example.com' }, null),
     false,
     'Null admin email must deny all access',
   );

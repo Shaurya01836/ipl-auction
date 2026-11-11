@@ -14,6 +14,7 @@ import {
 import { supabase } from '../lib/supabase';
 import { IPL_PLAYERS } from '../data/players';
 import { evaluateBotBid } from '../lib/botEngine';
+import { isSoloBotRoom, simulateBotLot, simulateRemainingAuction } from '../lib/botSimulation';
 import { 
   ref, 
   set, 
@@ -497,6 +498,12 @@ export const AuctionProvider = ({ children }) => {
         await updateRtdb(rtdbRoomRef, { playerOrder });
       }
 
+      // Check if room is 1 human vs AI bots
+      const isSolo = isSoloBotRoom(roomData?.players || []);
+      if (isSolo) {
+        await updateRtdb(rtdbRoomRef, { isSoloBotRoom: true });
+      }
+
       const firstPlayer = IPL_PLAYERS[playerOrder[0]];
       if (!firstPlayer) throw new Error('No players available for this auction.');
 
@@ -716,12 +723,209 @@ export const AuctionProvider = ({ children }) => {
 
       setTimeout(advanceToNextPlayer, waitTime);
     } catch (err) {
-      // Release the lock on any outer error so future players can be ended
       console.error('[auction] endPlayerAuction failed', err);
       handleFirebaseError(err);
       endingPlayerRef.current = false;
     }
   }, [getSyncedTime, flushAuctionToFirestore]);
+
+  // Ref guards against duplicate fast-forward / pass actions
+  const isSimulatingRef = React.useRef(false);
+
+  /**
+   * Fast-pass the current lot in solo-bot mode:
+   * Cancels pending timer, immediately resolves the lot among bots, advances without human delay.
+   */
+  const skipCurrentPlayerSolo = useCallback(async (roomId) => {
+    if (isSimulatingRef.current || endingPlayerRef.current) return;
+    isSimulatingRef.current = true;
+    endingPlayerRef.current = true;
+
+    try {
+      const liveRef = ref(rtdb, `auctions/${roomId}/live`);
+      const roomRef = ref(rtdb, `auctions/${roomId}/room`);
+      const [liveSnap, roomSnap] = await Promise.all([get(liveRef), get(roomRef)]);
+      if (!liveSnap.exists() || !roomSnap.exists()) return;
+
+      const live = liveSnap.val();
+      const room = roomSnap.val();
+      if (live.status !== 'bidding') return;
+
+      const player = IPL_PLAYERS.find((p) => p.id === live.playerId);
+      if (!player) return;
+
+      const initialBudget = toFiniteNumber(room.settings?.budget, 120.0);
+      const squadLimit = toFiniteNumber(room.squadLimit, 25);
+      const overseasLimit = toFiniteNumber(room.overseasLimit, 8);
+
+      // Fetch fresh teams
+      const teamsSnap = await get(ref(rtdb, `auctions/${roomId}/teams`));
+      const teamsVal = teamsSnap.exists() ? teamsSnap.val() : {};
+      const allTeams = Object.values(teamsVal);
+      const botTeams = allTeams.filter((t) => t.userId && (t.userId.startsWith('bot_') || t.userId !== user?.uid));
+
+      // Simulate lot strictly among bots
+      const lotRes = simulateBotLot({
+        player,
+        botTeams,
+        currentBid: live.currentBid || 0,
+        highBidderId: live.highBidderId || '',
+        highBidderName: live.highBidderName || '',
+        highBidderTeamId: live.highBidderTeamId || '',
+        squadLimit,
+        overseasLimit,
+        initialBudget,
+      });
+
+      const now = getSyncedTime();
+      if (lotRes.isSold) {
+        // Atomic update of winning bot team
+        const winnerDocKey = `${roomId}_${lotRes.winnerId}`;
+        const winningTeam = allTeams.find((t) => t.userId === lotRes.winnerId);
+        const existingSquad = winningTeam?.squad || [];
+        const updatedSquad = [
+          ...existingSquad,
+          {
+            id: player.id,
+            name: player.name,
+            role: player.role,
+            bid: lotRes.finalBid,
+            team: lotRes.winnerTeamId,
+          },
+        ];
+        const newSpent = toFiniteNumber(winningTeam?.spent, 0) + lotRes.finalBid;
+        const newBudgetRemaining = Math.max(0, toFiniteNumber(winningTeam?.budgetRemaining, initialBudget) - lotRes.finalBid);
+
+        await updateRtdb(ref(rtdb, `auctions/${roomId}/teams/${winnerDocKey}`), {
+          squad: updatedSquad,
+          spent: newSpent,
+          budgetRemaining: newBudgetRemaining,
+        });
+
+        // Set lot sold
+        await set(liveRef, {
+          ...live,
+          status: 'sold',
+          currentBid: lotRes.finalBid,
+          highBidderId: lotRes.winnerId,
+          highBidderName: lotRes.winnerName,
+          highBidderTeamId: lotRes.winnerTeamId,
+          timerEndsAt: now,
+        });
+      } else {
+        // Set lot unsold
+        await set(liveRef, {
+          ...live,
+          status: 'unsold',
+          currentBid: 0,
+          highBidderId: '',
+          highBidderName: 'No Bids',
+          highBidderTeamId: '',
+          timerEndsAt: now,
+        });
+      }
+
+      // Quick advance without waiting 5 seconds
+      const order = room.playerOrder || Array.from({ length: IPL_PLAYERS.length }, (_, i) => i);
+      const curIdx = order.findIndex((idx) => IPL_PLAYERS[idx] && IPL_PLAYERS[idx].id === player.id);
+      const nextIdx = curIdx !== -1 ? order[curIdx + 1] : order[0];
+
+      if (nextIdx !== undefined && IPL_PLAYERS[nextIdx]) {
+        const nextPlayer = IPL_PLAYERS[nextIdx];
+        await set(liveRef, {
+          playerId: nextPlayer.id,
+          currentBid: 0,
+          highBidderId: '',
+          highBidderName: 'No Bids',
+          timerEndsAt: now + (room.settings?.bidTimer || 10) * 1000,
+          status: 'bidding',
+        });
+      } else {
+        // Last player: complete room
+        const server = normalizeServer(currentAuction?.server || getActiveServer());
+        const rtdbInstance = getRtdb(server);
+        await updateRtdb(ref(rtdbInstance, `auctions/${roomId}/room`), { status: 'completed' });
+        await updateRtdb(ref(rtdbInstance, `auctions/${roomId}/live`), { status: 'completed' });
+        await flushAuctionToFirestore(roomId, server);
+      }
+    } catch (err) {
+      console.error('[auction] skipCurrentPlayerSolo error', err);
+    } finally {
+      isSimulatingRef.current = false;
+      endingPlayerRef.current = false;
+    }
+  }, [user?.uid, getSyncedTime, currentAuction?.server, flushAuctionToFirestore]);
+
+  /**
+   * Fast-forward entire remaining auction:
+   * Simulates all remaining lots for bots in memory, commits teams, and finishes auction.
+   */
+  const fastForwardAuctionSolo = useCallback(async (roomId) => {
+    if (isSimulatingRef.current || endingPlayerRef.current) return;
+    isSimulatingRef.current = true;
+    endingPlayerRef.current = true;
+
+    try {
+      const liveRef = ref(rtdb, `auctions/${roomId}/live`);
+      const roomRef = ref(rtdb, `auctions/${roomId}/room`);
+      const teamsRef = ref(rtdb, `auctions/${roomId}/teams`);
+
+      const [liveSnap, roomSnap, teamsSnap] = await Promise.all([
+        get(liveRef),
+        get(roomRef),
+        get(teamsRef),
+      ]);
+
+      if (!roomSnap.exists()) return;
+      const room = roomSnap.val();
+      const live = liveSnap.exists() ? liveSnap.val() : null;
+      const teamsVal = teamsSnap.exists() ? teamsSnap.val() : {};
+      const allTeams = Object.values(teamsVal);
+
+      const order = room.playerOrder || Array.from({ length: IPL_PLAYERS.length }, (_, i) => i);
+      const currentPlayerId = live?.playerId;
+      const currentIdx = order.findIndex((idx) => IPL_PLAYERS[idx] && IPL_PLAYERS[idx].id === currentPlayerId);
+
+      const { simulatedTeams } = simulateRemainingAuction({
+        playerOrder: order,
+        currentPlayerIndex: currentIdx !== -1 ? currentIdx : 0,
+        currentLive: live,
+        humanUserId: user?.uid,
+        humanTeamId: team?.teamId,
+        teams: allTeams,
+        settings: room.settings || {},
+        squadLimit: toFiniteNumber(room.squadLimit, 25),
+        overseasLimit: toFiniteNumber(room.overseasLimit, 8),
+      });
+
+      // Commit simulated teams to RTDB
+      const teamUpdates = {};
+      simulatedTeams.forEach((t) => {
+        teamUpdates[`auctions/${roomId}/teams/${roomId}_${t.userId}`] = t;
+      });
+      await updateRtdb(ref(rtdb), teamUpdates);
+
+      // Mark room and live status completed with fastForwarded tag
+      const server = normalizeServer(currentAuction?.server || getActiveServer());
+      const rtdbInstance = getRtdb(server);
+      await onDisconnect(ref(rtdbInstance, `auctions/${roomId}/live`)).cancel().catch(() => {});
+      await updateRtdb(ref(rtdbInstance, `auctions/${roomId}/room`), {
+        status: 'completed',
+        fastForwarded: true,
+      });
+      await updateRtdb(ref(rtdbInstance, `auctions/${roomId}/live`), {
+        status: 'completed',
+      });
+
+      // Flush final state to Supabase / Firestore
+      await flushAuctionToFirestore(roomId, server);
+    } catch (err) {
+      console.error('[auction] fastForwardAuctionSolo error', err);
+    } finally {
+      isSimulatingRef.current = false;
+      endingPlayerRef.current = false;
+    }
+  }, [user?.uid, team?.teamId, currentAuction?.server, flushAuctionToFirestore]);
 
   // A finished lot is normally advanced by the client that finalized it. If
   // that client drops before its timer fires, any other client finishes the
@@ -911,6 +1115,11 @@ export const AuctionProvider = ({ children }) => {
 
     const existingPlayers = mapRoomPlayers(data.players, (p) => p);
     const playerExists = existingPlayers.find(p => p.id === userId);
+
+    // Solo Bot Room Lock: if the room was started as a solo-vs-bots game, deny new human managers
+    if (data.isSoloBotRoom && !playerExists) {
+      throw new Error("This is a single-player bot auction and cannot be joined.");
+    }
     
     // Preserve stats and bot flags from an existing entry; a re-join (e.g. a
     // refresh during an active auction) must not erase spent/squadCount.
@@ -2073,6 +2282,8 @@ export const AuctionProvider = ({ children }) => {
     addBotTeam,
     removeBotTeam,
     fillEmptyTeamsWithBots,
+    skipCurrentPlayerSolo,
+    fastForwardAuctionSolo,
     getSyncedTime
   };
 

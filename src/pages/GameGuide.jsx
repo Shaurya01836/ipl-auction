@@ -210,6 +210,10 @@ const GameGuide = () => {
       title: 'Overseas & Category Quota Compliance',
       desc: 'AI managers monitor strict 8-overseas maximum ceilings and prioritize balanced playing XI combinations (top-order, spin spine, pace battery, and wicketkeeper-batter).',
     },
+    {
+      title: 'Solo Fast-Forward & Pass Controls',
+      desc: 'When playing solo against 9 AI bots, Pass and Finish Auction controls are unlocked. Pass allows bots to battle for an unwanted player instantly without waiting out the countdown, while Finish Auction simulates remaining rounds in memory and takes you directly to final squad results (these controls are strictly disabled in multiplayer rooms with real friends).',
+    },
   ];
 
   // Schema.org FAQPage structured data for Google Search rich snippets

@@ -45,6 +45,8 @@ import BuyMeACoffee from "../components/BuyMeACoffee";
 import ConfirmDialog from "../components/ConfirmDialog";
 import AuctionActivityFeed from "../components/AuctionActivityFeed";
 import Footer from "../components/Footer";
+import CommunitySection from "../components/community/CommunitySection";
+import CommunityBanner from "../components/community/CommunityBanner";
 import ServerSwitcher from "../components/ServerSwitcher";
 import PageBackground from "../components/PageBackground";
 import PanelSurface from "../components/PanelSurface";
@@ -527,8 +529,11 @@ const LandingPage = () => {
       <div className="relative min-h-screen bg-transparent flex flex-col font-sans text-white overflow-x-clip">
         <PageBackground />
 
-        <Navbar />
-        <main className="relative w-full flex-1 flex flex-col items-center justify-start pt-16 sm:pt-20 px-3 sm:px-4 z-10 pb-20 sm:pb-32">
+        <div className="relative z-50 w-full">
+          <CommunityBanner />
+          <Navbar />
+        </div>
+        <main className="relative w-full flex-1 flex flex-col items-center justify-start pt-6 sm:pt-8 px-3 sm:px-4 z-10 pb-20 sm:pb-32">
           <BuyMeACoffee />
 
         <div className="text-center mb-3 sm:mb-4 z-10 relative max-w-2xl px-2 sm:px-4 mt-1 sm:mt-2">
@@ -539,7 +544,7 @@ const LandingPage = () => {
           <div className="text-[clamp(1.25rem,2.8vw,2.35rem)] font-pixel leading-none text-balance bg-clip-text text-transparent bg-gradient-to-b from-white via-white/90 to-white/60">
             CREATE YOUR
           </div>
-          <div className="text-[clamp(2.1rem,5.6vw,3.85rem)] font-pixel text-[#ff5500] leading-none uppercase text-balance mt-0.5 sm:mt-1 drop-shadow-[0_2px_10px_rgba(255,85,0,0.15)]">
+          <div className="text-[clamp(2.1rem,5.6vw,3.85rem)] font-pixel leading-none uppercase text-balance mt-0.5 sm:mt-1 drop-shadow-[0_2px_12px_rgba(255,255,255,0.08)]">
             AUCTION ROOM
           </div>
 
@@ -587,15 +592,14 @@ const LandingPage = () => {
                 <div className="w-full space-y-4">
                   <button
                     onClick={handleGoogleSignIn}
-                    className="w-full h-12 sm:h-14 relative overflow-hidden group/submit rounded-xl shadow-[0_10px_30px_rgba(255,85,0,0.2)] cursor-pointer transition-all active:scale-[0.98]"
+                    className="w-full h-12 sm:h-14 relative overflow-hidden group/submit rounded-xl bg-white hover:bg-slate-200 text-black shadow-[0_10px_30px_rgba(255,255,255,0.08)] cursor-pointer transition-all active:scale-[0.98]"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] transition-transform duration-500 group-hover/submit:scale-105" />
-                    <div className="relative flex items-center justify-center gap-2.5 sm:gap-3 text-white font-black uppercase tracking-[0.12em] sm:tracking-[0.2em] text-xs sm:text-sm">
+                    <div className="relative flex items-center justify-center gap-2.5 sm:gap-3 font-black uppercase tracking-[0.12em] sm:tracking-[0.2em] text-xs sm:text-sm">
                       <svg
                         viewBox="0 0 24 24"
                         width="16"
                         height="16"
-                        className="fill-white sm:w-[18px] sm:h-[18px]"
+                        className="fill-current sm:w-[18px] sm:h-[18px]"
                       >
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
                         <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -633,7 +637,7 @@ const LandingPage = () => {
                       value={guestName}
                       onChange={(e) => setGuestName(e.target.value)}
                       placeholder="e.g. MS Dhoni"
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white font-black uppercase text-sm tracking-widest placeholder:text-gray-800 focus:outline-none focus:border-orange-500/50 transition-all"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white font-black uppercase text-sm tracking-widest placeholder:text-gray-800 focus:outline-none focus:border-white/30 transition-all"
                       autoFocus
                     />
                   </div>
@@ -641,10 +645,9 @@ const LandingPage = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full h-14 relative overflow-hidden group/submit rounded-xl shadow-[0_10px_30px_rgba(255,85,0,0.2)] cursor-pointer transition-all active:scale-[0.98]"
+                    className="w-full h-14 relative overflow-hidden group/submit rounded-xl bg-white hover:bg-slate-200 text-black shadow-[0_10px_30px_rgba(255,255,255,0.08)] cursor-pointer transition-all active:scale-[0.98]"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] transition-transform duration-500 group-hover/submit:scale-105" />
-                    <div className="relative flex items-center justify-center gap-3 text-white font-black uppercase tracking-[0.2em] text-sm">
+                    <div className="relative flex items-center justify-center gap-3 font-black uppercase tracking-[0.2em] text-sm">
                       {isSubmitting ? (
                         <Loader2 size={18} className="animate-spin" />
                       ) : (
@@ -676,6 +679,8 @@ const LandingPage = () => {
           </div>
         </PanelSurface>
 
+        <CommunitySection />
+
         <Footer />
       </main>
     </div>
@@ -687,8 +692,11 @@ const LandingPage = () => {
     <div className="relative min-h-screen bg-transparent flex flex-col font-sans text-white overflow-x-clip">
       <PageBackground />
 
-      <Navbar />
-      <main className="relative w-full flex-1 flex flex-col items-center justify-start pt-16 sm:pt-20 px-3 sm:px-4 z-10 pb-20 sm:pb-32">
+      <div className="relative z-50 w-full">
+        <CommunityBanner />
+        <Navbar />
+      </div>
+      <main className="relative w-full flex-1 flex flex-col items-center justify-start pt-6 sm:pt-8 px-3 sm:px-4 z-10 pb-20 sm:pb-32">
         <BuyMeACoffee />
 
       {/* Hero */}
@@ -700,7 +708,7 @@ const LandingPage = () => {
         <div className="text-[clamp(1.25rem,2.8vw,2.35rem)] font-pixel leading-none text-balance bg-clip-text text-transparent bg-gradient-to-b from-white via-white/90 to-white/60">
           CREATE YOUR
         </div>
-        <div className="text-[clamp(2.1rem,5.6vw,3.85rem)] font-pixel text-[#ff5500] leading-none uppercase text-balance mt-0.5 sm:mt-1 drop-shadow-[0_2px_10px_rgba(255,85,0,0.15)]">
+        <div className="text-[clamp(2.1rem,5.6vw,3.85rem)] font-pixel leading-none uppercase text-balance mt-0.5 sm:mt-1 drop-shadow-[0_2px_12px_rgba(255,255,255,0.08)]">
           AUCTION ROOM
         </div>
 
@@ -730,7 +738,7 @@ const LandingPage = () => {
         <div className="bg-[#0c0d10] rounded-[2.2rem] border border-white/10 grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch divide-y lg:divide-y-0 lg:divide-x divide-white/10 overflow-hidden">
           {/* Left Side: Live signings */}
           <div className="lg:col-span-5 w-full flex flex-col p-6 md:p-8 relative">
-            <AuctionActivityFeed activeCount={serverRoomCount} />
+            <AuctionActivityFeed activeCount={publicRooms.length} />
           </div>
 
           {/* Right Side: Create/Join/History form */}
@@ -842,10 +850,10 @@ const LandingPage = () => {
                         type="button"
                         onClick={() => setSelectedTeam(t.id)}
                         aria-label={`Select ${t.name}`}
-                        className={`relative group/team flex flex-col items-center justify-center p-1.5 sm:p-3 rounded-xl sm:rounded-2xl transition-all duration-200 ${
+                        className={`relative group/team flex flex-col items-center justify-center p-1.5 sm:p-3 rounded-xl sm:rounded-2xl transition-all duration-200 cursor-pointer ${
                           selectedTeam === t.id
-                            ? "bg-[#1b1b1b] border border-white/[0.12] scale-[1.02] shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
-                            : "bg-[#151515] border border-transparent hover:bg-white/[0.04]"
+                            ? "bg-white/[0.08] border border-white/20 scale-[1.02] shadow-[0_4px_24px_rgba(0,0,0,0.5)]"
+                            : "bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-white/10"
                         }`}
                       >
                         {selectedTeam === t.id && (
@@ -887,10 +895,10 @@ const LandingPage = () => {
                     <button
                       type="button"
                       onClick={() => setAuctionType("mega")}
-                      className={`flex-1 p-2 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-200 text-left relative overflow-hidden group/mode ${
+                      className={`flex-1 p-2 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-200 text-left relative overflow-hidden group/mode cursor-pointer ${
                         auctionType === "mega"
-                          ? "bg-[#1b1b1b] border border-white/[0.12] scale-[1.02] shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
-                          : "bg-[#151515] border border-transparent hover:bg-white/[0.04]"
+                          ? "bg-white/[0.08] border border-white/20 scale-[1.02] shadow-[0_4px_24px_rgba(0,0,0,0.5)]"
+                          : "bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-white/10"
                       }`}
                     >
                       {auctionType === "mega" && (
@@ -926,10 +934,10 @@ const LandingPage = () => {
                     <button
                       type="button"
                       onClick={() => setAuctionType("sprint11")}
-                      className={`flex-1 p-2 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-200 text-left relative overflow-hidden group/mode ${
+                      className={`flex-1 p-2 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-200 text-left relative overflow-hidden group/mode cursor-pointer ${
                         auctionType === "sprint11"
-                          ? "bg-[#1b1b1b] border border-white/[0.12] scale-[1.02] shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
-                          : "bg-[#151515] border border-transparent hover:bg-white/[0.04]"
+                          ? "bg-white/[0.08] border border-white/20 scale-[1.02] shadow-[0_4px_24px_rgba(0,0,0,0.5)]"
+                          : "bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-white/10"
                       }`}
                     >
                       {auctionType === "sprint11" && (
@@ -965,10 +973,10 @@ const LandingPage = () => {
                     <button
                       type="button"
                       onClick={() => setAuctionType("sprint5")}
-                      className={`flex-1 p-2 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-200 text-left relative overflow-hidden group/mode ${
+                      className={`flex-1 p-2 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-200 text-left relative overflow-hidden group/mode cursor-pointer ${
                         auctionType === "sprint5"
-                          ? "bg-[#1b1b1b] border border-white/[0.12] scale-[1.02] shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
-                          : "bg-[#151515] border border-transparent hover:bg-white/[0.04]"
+                          ? "bg-white/[0.08] border border-white/20 scale-[1.02] shadow-[0_4px_24px_rgba(0,0,0,0.5)]"
+                          : "bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-white/10"
                       }`}
                     >
                       {auctionType === "sprint5" && (
@@ -1024,11 +1032,11 @@ const LandingPage = () => {
                     aria-label="Toggle public room visibility"
                     className={`w-10 h-5 sm:w-12 sm:h-6 rounded-full transition-colors p-1 flex items-center cursor-pointer shrink-0 ${
                       isPublicRoom
-                        ? "bg-orange-600 justify-end"
+                        ? "bg-slate-400 justify-end"
                         : "bg-white/10 justify-start"
                     }`}
                   >
-                    <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-white shadow-md" />
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-slate-900 shadow-md" />
                   </button>
                 </div>
 
@@ -1036,10 +1044,9 @@ const LandingPage = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full h-10 sm:h-12 relative overflow-hidden group/submit rounded-xl shadow-[0_10px_30px_rgba(255,85,0,0.2)] disabled:opacity-50 cursor-pointer transition-all active:scale-[0.98]"
+                    className="w-full h-10 sm:h-12 relative overflow-hidden group/submit rounded-xl bg-white hover:bg-slate-200 text-black shadow-[0_10px_30px_rgba(255,255,255,0.08)] disabled:opacity-50 cursor-pointer transition-all active:scale-[0.98]"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] transition-transform duration-500 group-hover/submit:scale-105" />
-                    <div className="relative flex items-center justify-center gap-2 text-white font-black uppercase tracking-[0.16em] sm:tracking-[0.2em] text-[10px] sm:text-xs">
+                    <div className="relative flex items-center justify-center gap-2 font-black uppercase tracking-[0.16em] sm:tracking-[0.2em] text-[10px] sm:text-xs">
                       {isSubmitting ? (
                         <Loader2 size={18} className="animate-spin" />
                       ) : (
@@ -1078,7 +1085,7 @@ const LandingPage = () => {
                       type="text"
                       value={roomCode}
                       onChange={(e) => setRoomCode(e.target.value)}
-                      className="w-full bg-[#111] border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3.5 focus:outline-none focus:border-orange-500/50 transition-all text-white font-black uppercase tracking-[0.25em] sm:tracking-[0.4em] text-center text-sm sm:text-base placeholder:tracking-normal placeholder:text-[10px] sm:placeholder:text-xs placeholder:text-gray-500"
+                      className="w-full bg-[#111] border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3.5 focus:outline-none focus:border-white/30 transition-all text-white font-black uppercase tracking-[0.25em] sm:tracking-[0.4em] text-center text-sm sm:text-base placeholder:tracking-normal placeholder:text-[10px] sm:placeholder:text-xs placeholder:text-gray-500"
                       placeholder="e.g. AB12CD"
                     />
                   </div>
@@ -1098,10 +1105,9 @@ const LandingPage = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting || !roomCode.trim()}
-                    className="w-full h-10 sm:h-12 relative overflow-hidden group/submit rounded-xl shadow-[0_10px_30px_rgba(255,85,0,0.2)] disabled:opacity-50 cursor-pointer"
+                    className="w-full h-10 sm:h-12 relative overflow-hidden group/submit rounded-xl bg-white hover:bg-slate-200 text-black shadow-[0_10px_30px_rgba(255,255,255,0.08)] disabled:opacity-50 cursor-pointer"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] transition-transform duration-500 group-hover/submit:scale-105" />
-                    <div className="relative flex items-center justify-center gap-2 sm:gap-3 text-white font-black uppercase tracking-[0.16em] sm:tracking-[0.2em] text-[10px] sm:text-xs">
+                    <div className="relative flex items-center justify-center gap-2 sm:gap-3 font-black uppercase tracking-[0.16em] sm:tracking-[0.2em] text-[10px] sm:text-xs">
                       {isSubmitting ? (
                         <Loader2 size={18} className="animate-spin" />
                       ) : (
@@ -1135,7 +1141,7 @@ const LandingPage = () => {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search room code or manager..."
-                        className="w-full bg-white/[0.03] border border-white/10 focus:border-orange-500/50 rounded-xl px-3 sm:px-3.5 py-1.5 sm:py-2 text-[10px] sm:text-xs text-white placeholder:text-gray-400 focus:outline-none transition-all font-medium"
+                        className="w-full bg-white/[0.03] border border-white/10 focus:border-white/30 rounded-xl px-3 sm:px-3.5 py-1.5 sm:py-2 text-[10px] sm:text-xs text-white placeholder:text-gray-400 focus:outline-none transition-all font-medium"
                       />
                       <button
                         onClick={fetchPublicLobbies}
@@ -1178,7 +1184,7 @@ const LandingPage = () => {
                     <div className="flex flex-col items-center justify-center py-6 sm:py-8 text-gray-400">
                       <Loader2
                         size={18}
-                        className="animate-spin mb-2 text-orange-500"
+                        className="animate-spin mb-2 text-slate-400"
                       />
                       <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-400">
                         Scanning active rooms...
@@ -1247,7 +1253,7 @@ const LandingPage = () => {
                                 ),
                               );
                             }}
-                            className="px-2.5 sm:px-4 py-1.5 sm:py-2 bg-orange-500 hover:bg-orange-600 text-white font-black text-[8px] sm:text-[10px] uppercase tracking-wider rounded-lg transition-all active:scale-95 flex items-center gap-1 shrink-0 cursor-pointer shadow-md"
+                            className="px-2.5 sm:px-4 py-1.5 sm:py-2 bg-white/10 hover:bg-white/20 border border-white/10 text-white font-black text-[8px] sm:text-[10px] uppercase tracking-wider rounded-lg transition-all active:scale-95 flex items-center gap-1 shrink-0 cursor-pointer shadow-md"
                           >
                             <span>Join</span>
                             <ChevronRight
@@ -1622,7 +1628,7 @@ const LandingPage = () => {
                                             ),
                                           )
                                         }
-                                        className="w-full mt-1.5 sm:mt-2 py-2 sm:py-3 bg-orange-500/10 border border-orange-500/20 rounded-xl text-orange-500 text-[8px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-orange-500/20 transition-all cursor-pointer flex items-center justify-center gap-2"
+                                        className="w-full mt-1.5 sm:mt-2 py-2 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-slate-200 text-[8px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center justify-center gap-2"
                                       >
                                         <Zap size={12} /> Resume Auction
                                       </button>
@@ -1654,7 +1660,7 @@ const LandingPage = () => {
                                             ),
                                           )
                                         }
-                                        className="w-full mt-1.5 sm:mt-2 py-2 sm:py-3 bg-orange-500/10 border border-orange-500/20 rounded-xl text-orange-500 text-[8px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-orange-500/20 transition-all cursor-pointer flex items-center justify-center gap-2"
+                                        className="w-full mt-1.5 sm:mt-2 py-2 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-slate-200 text-[8px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center justify-center gap-2"
                                       >
                                         <Zap size={12} /> Resume / Join Auction
                                       </button>
@@ -1697,6 +1703,8 @@ const LandingPage = () => {
         onConfirm={handleDeleteHistory}
         onCancel={() => setSessionToDelete(null)}
       />
+
+      <CommunitySection />
 
       <Footer />
       </main>

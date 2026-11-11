@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SquadRating from '../components/SquadRating';
+import PageLoader from '../components/PageLoader';
 import useRoomServer from '../hooks/useRoomServer';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import {
@@ -318,22 +319,17 @@ const AuctionSummary = () => {
   }
 
   if (!serverReady || (!activeAuction && summaryLoading)) {
-    return (
-      <div className="h-screen-safe bg-[#050505] text-white flex flex-col items-center justify-center p-8 text-center">
-        <div className="w-20 h-20 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin mb-8" />
-        <h2 className="text-2xl font-black italic tracking-widest uppercase animate-pulse text-gray-400">Loading Summary...</h2>
-      </div>
-    );
+    return <PageLoader text="Loading Summary..." />;
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white font-sans overflow-x-hidden selection:bg-orange-500 selection:text-black">
+    <div className="min-h-screen bg-[#050505] text-white font-sans overflow-x-hidden selection:bg-white selection:text-black">
       
       {/* Premium Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-orange-600/20 blur-[150px] rounded-full" />
-        <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-blue-600/10 blur-[150px] rounded-full" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(rgba(255,255,255,0.12)_1px,transparent_1px)] [background-size:12px_12px] opacity-20" />
+        <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-white/[0.02] blur-[140px] rounded-full" />
+        <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-slate-500/[0.02] blur-[140px] rounded-full" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:16px_16px] opacity-25" />
       </div>
 
       <div className="relative z-10 w-full max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 md:py-12">
@@ -348,15 +344,15 @@ const AuctionSummary = () => {
           <div className="flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
             <div className="flex items-center gap-2 flex-wrap">
               
-              <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-2.5 py-1 rounded-full shrink-0">
-                <span className="text-gray-500 text-[9px] font-black uppercase tracking-widest leading-none">ID:</span>
-                <span className="text-orange-500 font-extrabold tracking-widest text-xs">{id}</span>
+              <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1 rounded-full shrink-0">
+                <span className="text-gray-400 text-[9px] font-black uppercase tracking-widest leading-none">ID:</span>
+                <span className="text-white font-mono font-bold tracking-wider text-xs">{id}</span>
               </div>
             </div>
 
             <button 
               onClick={() => navigate('/')}
-              className="px-4 sm:px-7 py-2 sm:py-3 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl hover:bg-white text-gray-300 hover:text-black font-black uppercase text-[10px] sm:text-xs tracking-wider transition-all flex items-center gap-1.5 sm:gap-2.5 active:scale-95 touch-manipulation shrink-0 ml-auto"
+              className="px-4 sm:px-6 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-xl hover:bg-white hover:text-black text-slate-300 font-black uppercase text-[10px] sm:text-xs tracking-wider transition-all flex items-center gap-1.5 sm:gap-2 active:scale-95 touch-manipulation shrink-0 ml-auto"
             >
               <Home size={14} className="sm:w-4 sm:h-4" /> Menu
             </button>
@@ -364,15 +360,15 @@ const AuctionSummary = () => {
 
           {/* Title */}
           <div className="text-center md:text-left pt-1">
-            <h1 className="text-3xl sm:text-5xl lg:text-7xl font-black tracking-tighter uppercase leading-none drop-shadow-2xl">
-              Auction <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff5500] to-[#ff8c00]">Complete</span>
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-pixel uppercase tracking-tight leading-none text-white drop-shadow-[0_2px_12px_rgba(255,255,255,0.08)]">
+              Auction Complete
             </h1>
           </div>
         </motion.header>
 
         {/* Tab Navigation */}
         <div className="mb-6 sm:mb-12">
-          <div className="bg-white/5 backdrop-blur-3xl p-1 sm:p-1.5 rounded-2xl sm:rounded-[2rem] border border-white/10 grid grid-cols-3 sm:flex sm:justify-center gap-1 sm:gap-2 max-w-full sm:max-w-max mx-auto">
+          <div className="bg-[#0c0d10] backdrop-blur-3xl p-1 sm:p-1.5 rounded-2xl border border-white/10 grid grid-cols-3 sm:flex sm:justify-center gap-1 sm:gap-2 max-w-full sm:max-w-max mx-auto shadow-2xl">
             {[
               { id: 'squads', label: 'Squads', fullLabel: 'Team Squads', icon: Users },
               { id: 'leaderboard', label: 'Top 5', fullLabel: 'Top Expensive', icon: Trophy },
@@ -381,10 +377,10 @@ const AuctionSummary = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-2 sm:px-6 md:px-10 py-2.5 sm:py-3.5 md:py-4 rounded-xl sm:rounded-[1.5rem] font-black uppercase text-[9px] sm:text-[10px] tracking-tight sm:tracking-[0.2em] transition-all flex items-center justify-center gap-1.5 sm:gap-3 touch-manipulation w-full sm:w-auto ${
+                className={`px-2 sm:px-6 md:px-8 py-2.5 sm:py-3 rounded-xl font-black uppercase text-[9px] sm:text-[10px] tracking-tight sm:tracking-[0.16em] transition-all flex items-center justify-center gap-1.5 sm:gap-2.5 touch-manipulation w-full sm:w-auto ${
                   activeTab === tab.id 
-                    ? 'bg-[#ff5500] text-white shadow-2xl' 
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    ? 'bg-white text-black shadow-lg shadow-white/10' 
+                    : 'text-slate-400 hover:text-white hover:bg-white/5'
                 }`}
               >
                 <tab.icon size={14} className="shrink-0 sm:w-4 sm:h-4" />
@@ -406,10 +402,9 @@ const AuctionSummary = () => {
               className="max-w-4xl mx-auto space-y-4 sm:space-y-6"
             >
               <div className="flex items-center gap-4 sm:gap-6 mb-6 sm:mb-10">
-               
                 <div>
-                  <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tighter">Leaderboard</h2>
-                  <p className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] sm:tracking-[0.3em]">The Most Expensive Signings</p>
+                  <h2 className="text-2xl sm:text-3xl font-pixel uppercase tracking-tight text-white">Leaderboard</h2>
+                  <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] sm:tracking-[0.3em] mt-1">The Most Expensive Signings</p>
                 </div>
               </div>
 
@@ -420,11 +415,11 @@ const AuctionSummary = () => {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.08 }}
                     key={player.id}
-                    className="group relative bg-white/[0.03] border border-white/5 p-3.5 sm:p-6 rounded-2xl sm:rounded-[2rem] transition-all hover:bg-white/5 hover:border-orange-500/30 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 sm:gap-6"
+                    className="group relative bg-[#0e1015]/95 border border-white/5 p-3.5 sm:p-5 rounded-2xl sm:rounded-[1.75rem] transition-all hover:bg-white/[0.04] hover:border-white/15 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 sm:gap-6"
                   >
-                    <div className="flex items-center gap-3 sm:gap-8">
-                      <span className="text-2xl sm:text-5xl font-black text-white/10 group-hover:text-orange-500/20 transition-colors shrink-0">#{idx + 1}</span>
-                      <div className="w-12 h-12 sm:w-20 sm:h-20 bg-black/40 border border-white/10 rounded-xl sm:rounded-2xl overflow-hidden group-hover:scale-105 transition-transform duration-500 p-1 sm:p-2 shrink-0">
+                    <div className="flex items-center gap-3 sm:gap-6">
+                      <span className="text-2xl sm:text-4xl font-black text-white/10 group-hover:text-white/30 transition-colors shrink-0">#{idx + 1}</span>
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-black/40 border border-white/10 rounded-xl sm:rounded-2xl overflow-hidden group-hover:scale-105 transition-transform duration-300 p-1 shrink-0">
                         <img 
                           src={player.image} 
                           alt={player.name}
@@ -434,31 +429,31 @@ const AuctionSummary = () => {
                             e.target.onerror = null;
                             e.target.src = 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(player.name || 'Player');
                           }}
-                          className="w-full h-full object-cover filter drop-shadow-2xl" 
+                          className="w-full h-full object-cover filter drop-shadow-md" 
                         />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
-                          <h3 className="text-base sm:text-2xl font-black uppercase tracking-tight italic leading-none truncate">{player.name}</h3>
+                          <h3 className="text-base sm:text-xl font-black uppercase tracking-tight italic leading-none truncate text-white">{player.name}</h3>
                           {isOverseasPlayer(player) && <Wifi size={12} className="text-purple-400 rotate-90 shrink-0" />}
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
                           <div className={`px-1.5 py-0.5 rounded text-[7px] sm:text-[8px] font-black uppercase shrink-0 ${player.teamColor} ${player.teamTextColor}`}>
                             {player.teamId}
                           </div>
-                          <p className="text-[8px] sm:text-[10px] font-black text-gray-500 uppercase tracking-widest truncate">
+                          <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
                             {player.role} • {player.teamName}
                           </p>
                         </div>
                       </div>
                     </div>
                     <div className="text-left sm:text-right border-t sm:border-t-0 pt-2 sm:pt-0 border-white/5 flex sm:block items-center justify-between">
-                      <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest sm:hidden">Winning Bid</p>
-                      <div className="text-2xl sm:text-4xl font-black text-[#ff5500] tracking-tighter">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest sm:hidden">Winning Bid</p>
+                      <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
                         {player.bidVal == null ? (
                           <span>—</span>
                         ) : (
-                          <>₹{formatCrores(player.bidVal)}<span className="text-xs ml-1 font-bold not-italic text-gray-500">Cr</span></>
+                          <>₹{formatCrores(player.bidVal)}<span className="text-xs ml-1 font-bold not-italic text-slate-400">Cr</span></>
                         )}
                       </div>
                     </div>
@@ -516,8 +511,8 @@ const AuctionSummary = () => {
                     {/* Team Accordion Toggle */}
                     <button
                       onClick={() => setExpandedTeam(isExpanded ? null : t.id)}
-                      className={`w-full flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-4 sm:p-6 rounded-2xl sm:rounded-[2.5rem] bg-[#0c0c0c] border transition-all duration-300 relative overflow-hidden group active:scale-[0.99] touch-manipulation gap-4 ${
-                        isExpanded ? 'border-orange-500/50 bg-white/5 shadow-2xl' : 'border-white/5 hover:border-white/10'
+                      className={`w-full flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-4 sm:p-5 rounded-2xl sm:rounded-[2rem] bg-[#0c0d10] border transition-all duration-300 relative overflow-hidden group active:scale-[0.99] touch-manipulation gap-4 ${
+                        isExpanded ? 'border-white/20 bg-white/[0.04] shadow-2xl' : 'border-white/5 hover:border-white/15 hover:bg-white/[0.02]'
                       }`}
                     >
                       {/* Massive Background Logo */}
@@ -525,35 +520,35 @@ const AuctionSummary = () => {
                          <img src={t.logo} alt={`${t.name} Watermark Logo`} decoding="async" loading="lazy" className="w-full h-full object-contain" />
                       </div>
 
-                      <div className="flex items-center gap-3 sm:gap-6 relative z-10">
-                        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 p-1.5 sm:p-2 flex items-center justify-center shadow-2xl shrink-0">
+                      <div className="flex items-center gap-3 sm:gap-5 relative z-10">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 p-1.5 sm:p-2 flex items-center justify-center shadow-xl shrink-0">
                            <img src={t.logo} alt={`${t.name} Logo`} decoding="async" loading="lazy" className="w-full h-full object-contain" />
                         </div>
                         <div className="text-left min-w-0">
-                          <h3 className="text-lg sm:text-2xl font-black uppercase tracking-tighter group-hover:text-orange-500 transition-colors truncate">{t.name}</h3>
-                          <p className="text-[9px] sm:text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] sm:tracking-[0.4em] leading-none mt-1 truncate">Managed by {manager?.name || 'N/A'}</p>
+                          <h3 className="text-lg sm:text-xl font-black uppercase tracking-tight group-hover:text-slate-200 transition-colors truncate text-white">{t.name}</h3>
+                          <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] sm:tracking-[0.3em] leading-none mt-1 truncate">Managed by {manager?.name || 'N/A'}</p>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-8 relative z-10 border-t sm:border-t-0 pt-3 sm:pt-0 border-white/5">
+                      <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-6 relative z-10 border-t sm:border-t-0 pt-3 sm:pt-0 border-white/5">
                         {/* Summary Stats */}
-                        <div className="flex items-center gap-4 sm:gap-6 md:gap-12 text-left sm:text-right sm:border-r border-white/5 sm:pr-6 md:pr-12">
+                        <div className="flex items-center gap-4 sm:gap-6 md:gap-10 text-left sm:text-right sm:border-r border-white/10 sm:pr-6 md:pr-10">
                           <div className="shrink-0">
-                            <span className="block text-[7px] sm:text-[8px] font-black text-blue-500 uppercase tracking-widest mb-0.5">Players</span>
-                            <span className="text-xs sm:text-lg font-black">{squad.length}</span>
+                            <span className="block text-[7px] sm:text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Players</span>
+                            <span className="text-xs sm:text-base font-black text-white">{squad.length}</span>
                           </div>
                           <div className="shrink-0">
-                            <span className="block text-[7px] sm:text-[8px] font-black text-purple-500 uppercase tracking-widest mb-0.5">Overseas</span>
-                            <span className="text-xs sm:text-lg font-black">{osCount}</span>
+                            <span className="block text-[7px] sm:text-[8px] font-black text-purple-400 uppercase tracking-widest mb-0.5">Overseas</span>
+                            <span className="text-xs sm:text-base font-black text-white">{osCount}</span>
                           </div>
                           <div className="shrink-0">
-                            <span className="block text-[7px] sm:text-[8px] font-black text-orange-500 uppercase tracking-widest mb-0.5">Spent</span>
-                            <span className="text-xs sm:text-lg font-black">{totalSpent === null ? '—' : `₹${formatCrores(totalSpent, 1)}Cr`}</span>
+                            <span className="block text-[7px] sm:text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Spent</span>
+                            <span className="text-xs sm:text-base font-black text-white">{totalSpent === null ? '—' : `₹${formatCrores(totalSpent, 1)}Cr`}</span>
                           </div>
                         </div>
 
-                        <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/5 flex items-center justify-center transition-transform duration-300 shrink-0 ${isExpanded ? 'rotate-180 bg-orange-600 text-white' : 'text-gray-500'}`}>
-                          <ChevronDown size={20} />
+                        <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/5 flex items-center justify-center transition-transform duration-300 shrink-0 ${isExpanded ? 'rotate-180 bg-white text-black' : 'text-slate-400'}`}>
+                          <ChevronDown size={18} />
                         </div>
                       </div>
                     </button>
@@ -565,11 +560,11 @@ const AuctionSummary = () => {
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: 'auto', opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
-                          className="overflow-hidden px-2 sm:px-4 md:px-8 mb-4"
+                          className="overflow-hidden px-1 sm:px-3 md:px-6 mb-4"
                         >
                           <div 
                              ref={el => teamCardRefs.current[t.id] = el}
-                             className="bg-[#0b0c10] border-x border-b border-white/10 rounded-b-2xl sm:rounded-b-[3rem] p-4 sm:p-8 space-y-6 sm:space-y-12 relative overflow-hidden"
+                             className="bg-[#0c0d10] border-x border-b border-white/10 rounded-b-2xl sm:rounded-b-[2rem] p-4 sm:p-6 space-y-6 sm:space-y-8 relative overflow-hidden"
                           >
                              {/* Watermark Logo for Exported Image */}
                              <div className="absolute right-4 top-4 w-32 h-32 opacity-5 pointer-events-none grayscale">
@@ -577,17 +572,17 @@ const AuctionSummary = () => {
                              </div>
 
                              {/* View Mode Toggle */}
-                             <div className="flex justify-end relative z-10 mb-4 sm:mb-8">
+                             <div className="flex justify-end relative z-10 mb-2 sm:mb-4">
                                <div className="bg-white/5 border border-white/10 p-1 rounded-xl flex items-center gap-1">
                                  <button 
                                    onClick={() => setSquadViewMode('grid')} 
-                                   className={`px-3 sm:px-4 py-1.5 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] transition-all ${squadViewMode === 'grid' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'text-gray-400 hover:text-white'}`}
+                                   className={`px-3 sm:px-4 py-1.5 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-[0.16em] transition-all ${squadViewMode === 'grid' ? 'bg-white text-black font-black shadow-md' : 'text-slate-400 hover:text-white'}`}
                                  >
                                    List
                                  </button>
                                  <button 
                                    onClick={() => setSquadViewMode('card')} 
-                                   className={`px-3 sm:px-4 py-1.5 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] transition-all ${squadViewMode === 'card' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'text-gray-400 hover:text-white'}`}
+                                   className={`px-3 sm:px-4 py-1.5 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-[0.16em] transition-all ${squadViewMode === 'card' ? 'bg-white text-black font-black shadow-md' : 'text-slate-400 hover:text-white'}`}
                                  >
                                    Cards
                                  </button>
@@ -599,14 +594,14 @@ const AuctionSummary = () => {
                               if (rolePlayers.length === 0) return null;
 
                               return (
-                                <div key={role} className="space-y-3 sm:space-y-6 relative z-10">
+                                <div key={role} className="space-y-3 sm:space-y-4 relative z-10">
                                   <div className="flex items-center gap-3 sm:gap-4">
-                                    <h4 className="text-[9px] sm:text-[10px] font-black text-orange-500 uppercase tracking-[0.2em] sm:tracking-[0.4em]">{role}s</h4>
-                                    <div className="flex-1 h-px bg-orange-500/20" />
-                                    <span className="text-[9px] sm:text-[10px] font-black text-gray-600">{rolePlayers.length} Members</span>
+                                    <h4 className="text-[9px] sm:text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] sm:tracking-[0.3em]">{role}s</h4>
+                                    <div className="flex-1 h-px bg-white/10" />
+                                    <span className="text-[9px] sm:text-[10px] font-black text-slate-400">{rolePlayers.length} Members</span>
                                   </div>
                                   
-                                  <div className={`grid ${squadViewMode === 'card' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4'}`}>
+                                  <div className={`grid ${squadViewMode === 'card' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3.5 sm:gap-5' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3.5'}`}>
                                     {rolePlayers.map((p, pidx) => (
                                       <motion.div 
                                         initial={{ opacity: 0, y: 10 }}
@@ -614,16 +609,16 @@ const AuctionSummary = () => {
                                         transition={{ delay: pidx * 0.04 }}
                                         key={p.id} 
                                         className={squadViewMode === 'card' 
-                                          ? "bg-gradient-to-br from-[#1a1b26] to-[#0c0c0c] border border-white/10 p-4 sm:p-6 rounded-[2rem] flex flex-col justify-between group/p relative overflow-hidden transition-all hover:border-orange-500/30 hover:shadow-2xl hover:shadow-orange-500/10"
-                                          : "bg-white/5 border border-white/10 p-2.5 sm:p-4 rounded-2xl sm:rounded-3xl flex items-center justify-between group/p hover:bg-white/10 transition-all"
+                                          ? "bg-[#0e1015]/95 border border-white/10 p-4 sm:p-5 rounded-2xl flex flex-col justify-between group/p relative overflow-hidden transition-all hover:border-white/20 hover:bg-white/[0.04]"
+                                          : "bg-white/[0.03] border border-white/5 p-2.5 sm:p-3.5 rounded-xl flex items-center justify-between group/p hover:bg-white/[0.06] hover:border-white/10 transition-all"
                                         }
                                       >
                                         {squadViewMode === 'card' ? (
                                            <>
-                                             <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 blur-3xl rounded-full pointer-events-none opacity-0 group-hover/p:opacity-100 transition-opacity" />
+                                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/[0.03] blur-2xl rounded-full pointer-events-none opacity-0 group-hover/p:opacity-100 transition-opacity" />
                                              <div className="flex items-start justify-between relative z-10 mb-4">
-                                                <div className="flex items-center gap-4 min-w-0">
-                                                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-black/40 border border-white/10 rounded-2xl p-1 shrink-0 overflow-hidden">
+                                                <div className="flex items-center gap-3.5 min-w-0">
+                                                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-black/40 border border-white/10 rounded-xl p-1 shrink-0 overflow-hidden">
                                                     <img 
                                                       src={p.image} 
                                                       alt={p.name}
@@ -637,27 +632,27 @@ const AuctionSummary = () => {
                                                     />
                                                   </div>
                                                   <div className="min-w-0">
-                                                    <h5 className="text-sm sm:text-lg font-black uppercase tracking-tight truncate">{p.name}</h5>
+                                                    <h5 className="text-sm sm:text-base font-black uppercase tracking-tight truncate text-white">{p.name}</h5>
                                                     <div className="flex items-center gap-2 mt-1">
-                                                      <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">{p.type}</span>
+                                                      <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">{p.type}</span>
                                                       {isOverseasPlayer(p) && <Wifi size={12} className="text-purple-400 rotate-90 shrink-0" />}
                                                     </div>
                                                   </div>
                                                 </div>
                                                 <div className="text-right shrink-0">
-                                                  <span className="block text-[8px] sm:text-[10px] font-black text-orange-500 uppercase tracking-widest mb-1">Rating</span>
-                                                  <span className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-[#ff5500]">{p.rating || 15}</span>
+                                                  <span className="block text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Rating</span>
+                                                  <span className="text-lg sm:text-xl font-black text-white">{p.rating || 15}</span>
                                                 </div>
                                              </div>
-                                             <div className="relative z-10 pt-4 border-t border-white/5 flex items-center justify-between">
-                                                <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Acquired For</div>
-                                                <div className="text-base sm:text-lg font-black text-green-500">{p.bid == null ? '—' : `₹${formatCrores(p.bid)}Cr`}</div>
+                                             <div className="relative z-10 pt-3 border-t border-white/5 flex items-center justify-between">
+                                                <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Acquired For</div>
+                                                <div className="text-sm sm:text-base font-black text-emerald-400">{p.bid == null ? '—' : `₹${formatCrores(p.bid)}Cr`}</div>
                                              </div>
                                            </>
                                         ) : (
                                            <>
                                              <div className="flex items-center gap-3 min-w-0">
-                                               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-black/40 border border-white/10 rounded-xl p-1 shrink-0 overflow-hidden">
+                                               <div className="w-9 h-9 sm:w-11 sm:h-11 bg-black/40 border border-white/10 rounded-lg p-1 shrink-0 overflow-hidden">
                                                  <img 
                                                    src={p.image} 
                                                    alt={p.name}
@@ -671,15 +666,15 @@ const AuctionSummary = () => {
                                                  />
                                                </div>
                                                <div className="overflow-hidden min-w-0">
-                                                 <h5 className="text-[11px] sm:text-[12px] font-black uppercase tracking-tight truncate">{p.name}</h5>
+                                                 <h5 className="text-[11px] sm:text-[12px] font-black uppercase tracking-tight truncate text-white">{p.name}</h5>
                                                  <div className="flex items-center gap-1.5">
-                                                   <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">{p.type}</span>
+                                                   <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{p.type}</span>
                                                    {isOverseasPlayer(p) && <Wifi size={10} className="text-purple-400 rotate-90 shrink-0" />}
                                                  </div>
                                                </div>
                                              </div>
                                              <div className="text-right shrink-0">
-                                               <div className="text-[13px] sm:text-[14px] font-black text-green-500">{p.bid == null ? '—' : `₹${formatCrores(p.bid)}Cr`}</div>
+                                               <div className="text-[12px] sm:text-[13px] font-black text-emerald-400">{p.bid == null ? '—' : `₹${formatCrores(p.bid)}Cr`}</div>
                                              </div>
                                            </>
                                         )}
@@ -691,21 +686,21 @@ const AuctionSummary = () => {
                             })}
 
                             {/* Summary Footer for Team */}
-                            <div className="pt-4 sm:pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 opacity-70 hover:opacity-100 transition-opacity relative z-10">
+                            <div className="pt-4 sm:pt-6 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 opacity-70 hover:opacity-100 transition-opacity relative z-10">
                                <div className="flex items-center gap-3">
-                                  <LayoutGrid size={14} className="text-gray-600" />
-                                  <p className="text-[8px] sm:text-[9px] font-black text-gray-600 uppercase tracking-[0.3em] sm:tracking-[0.5em]">Composition Verified by Arena Engine</p>
+                                  <LayoutGrid size={14} className="text-slate-400" />
+                                  <p className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] sm:tracking-[0.4em]">Composition Verified by Arena Engine</p>
                                </div>
                                <div className="flex gap-4">
                                   <button 
                                      onClick={() => handleShareSquadImage(t, squad, manager)}
                                      disabled={sharingTeamId === t.id}
-                                     className="flex items-center gap-2 text-[9px] font-black uppercase text-gray-400 hover:text-orange-500 transition-colors touch-manipulation cursor-pointer active:scale-95 disabled:opacity-50"
+                                     className="flex items-center gap-2 text-[9px] font-black uppercase text-slate-300 hover:text-white transition-colors touch-manipulation cursor-pointer active:scale-95 disabled:opacity-50"
                                   >
                                      {sharingTeamId === t.id ? (
-                                       <span className="text-orange-400 flex items-center gap-1.5"><Loader2 size={12} className="animate-spin" /> Generating Poster...</span>
+                                       <span className="text-slate-300 flex items-center gap-1.5"><Loader2 size={12} className="animate-spin" /> Generating Poster...</span>
                                      ) : copiedTeamId === t.id ? (
-                                       <span className="text-green-500 flex items-center gap-1.5"><CheckCircle2 size={12} /> Image Downloaded!</span>
+                                       <span className="text-emerald-400 flex items-center gap-1.5"><CheckCircle2 size={12} /> Image Downloaded!</span>
                                      ) : (
                                        <><Share2 size={12} /> Share Squad Image</>
                                      )}

@@ -325,9 +325,7 @@ const Lobby = () => {
   }
 
   if (authLoading) {
-    return (
-      <PageLoader />
-    );
+    return <PageLoader text="Authenticating..." />;
   }
 
   if (!user) {
@@ -337,19 +335,19 @@ const Lobby = () => {
 
         <motion.div
           {...enterProps({ opacity: 0, y: 20 })}
-          className="relative z-10 w-full md:w-xl max-md bg-white/[0.015] border border-white/10 border-t-white/20 rounded-[2.5rem] p-3 shadow-2xl"
+          className="relative z-10 w-full md:w-xl max-md bg-white/[0.015] border border-white/10 rounded-[2rem] p-2.5 sm:p-3 shadow-2xl"
         >
-          <div className="bg-[#0c0d10] rounded-[2.2rem] p-8 border border-white/10 flex flex-col items-center text-center">
+          <div className="bg-[#0c0d10] rounded-[1.75rem] p-6 sm:p-8 border border-white/10 flex flex-col items-center text-center">
 
-            <h2 className="text-2xl font-black tracking-tighter uppercase mb-2">Joining Arena</h2>
-            <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.3em] mb-8">Room ID: <span className="text-orange-500">{id}</span></p>
+            <h2 className="text-2xl sm:text-3xl font-pixel uppercase tracking-tight text-white mb-2 drop-shadow-[0_2px_12px_rgba(255,255,255,0.08)]">Joining Arena</h2>
+            <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.25em] mb-6 sm:mb-8">Room ID: <span className="text-white font-mono font-bold">{id}</span></p>
 
             {!isGuestMode ? (
-              <div className="w-full space-y-4">
+              <div className="w-full space-y-3.5">
                 <button
                   onClick={handleGoogleSignIn}
                   disabled={isUpdatingSettings}
-                  className="w-full h-14 bg-white text-black rounded-xl flex items-center justify-center gap-3 hover:bg-gray-100 transition-all font-black uppercase tracking-widest text-xs cursor-pointer active:scale-95 disabled:opacity-50"
+                  className="w-full h-12 sm:h-14 bg-white text-black hover:bg-slate-200 rounded-xl flex items-center justify-center gap-3 transition-all font-black uppercase tracking-widest text-xs cursor-pointer active:scale-95 disabled:opacity-50 shadow-[0_10px_30px_rgba(255,255,255,0.08)]"
                 >
                   {isUpdatingSettings ? <Loader2 size={18} className="animate-spin text-black" /> : (
                     <>
@@ -366,26 +364,26 @@ const Lobby = () => {
 
                 <div className="relative py-2 flex items-center justify-center">
                   <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5" /></div>
-                  <span className="relative bg-[#0c0d10] px-4 text-[9px] font-black text-gray-700 uppercase tracking-widest italic">Or enter as temporary guest</span>
+                  <span className="relative bg-[#0c0d10] px-4 text-[9px] font-black text-slate-500 uppercase tracking-widest">Or enter as temporary guest</span>
                 </div>
 
                 <button
                   onClick={() => setIsGuestMode(true)}
-                  className="w-full h-14 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center gap-3 text-gray-400 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all font-black uppercase tracking-widest text-xs cursor-pointer active:scale-95"
+                  className="w-full h-12 sm:h-14 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center gap-3 text-slate-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all font-black uppercase tracking-widest text-xs cursor-pointer active:scale-95"
                 >
                   <Users size={18} /> Join as Guest
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleGuestSignIn} className="w-full space-y-5">
+              <form onSubmit={handleGuestSignIn} className="w-full space-y-4">
                 <div className="space-y-2 text-left">
-                  <label className="block text-[10px] font-black text-gray-600 uppercase tracking-widest ml-1">Manager Identity</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Manager Identity</label>
                   <input
                     type="text"
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
                     placeholder="e.g. THALA"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white font-black uppercase text-sm tracking-[0.2em] placeholder:text-gray-800 focus:outline-none focus:border-orange-500/50 transition-all"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white font-black uppercase text-sm tracking-[0.2em] placeholder:text-gray-700 focus:outline-none focus:border-white/30 transition-all"
                     autoFocus
                   />
                 </div>
@@ -393,15 +391,15 @@ const Lobby = () => {
                 <button
                   type="submit"
                   disabled={isUpdatingSettings || !guestName.trim()}
-                  className="w-full h-14 bg-gradient-to-r from-orange-600 to-orange-500 rounded-xl flex items-center justify-center gap-3 text-white font-black uppercase tracking-widest text-xs shadow-[0_10px_30px_rgba(255,85,0,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100"
+                  className="w-full h-12 sm:h-14 bg-white hover:bg-slate-200 text-black rounded-xl flex items-center justify-center gap-3 font-black uppercase tracking-widest text-xs shadow-[0_10px_30px_rgba(255,255,255,0.08)] transition-all cursor-pointer active:scale-[0.98] disabled:opacity-50"
                 >
-                  {isUpdatingSettings ? <Loader2 size={18} className="animate-spin" /> : <span>Step into Hub</span>}
+                  {isUpdatingSettings ? <Loader2 size={18} className="animate-spin text-black" /> : <span>Step into Hub</span>}
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setIsGuestMode(false)}
-                  className="w-full text-[9px] font-black text-gray-600 hover:text-white uppercase tracking-[0.4em] transition-colors"
+                  className="w-full text-[9px] font-black text-slate-500 hover:text-white uppercase tracking-[0.3em] transition-colors pt-1 cursor-pointer"
                 >
                   ← Use Google Account
                 </button>
@@ -410,7 +408,7 @@ const Lobby = () => {
           </div>
         </motion.div>
 
-        <button onClick={() => navigate('/')} className="mt-8 text-[10px] font-black text-gray-600 hover:text-white uppercase tracking-[0.4em] transition-all flex items-center gap-2">
+        <button onClick={() => navigate('/')} className="mt-8 text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-[0.3em] transition-all flex items-center gap-2 cursor-pointer">
           <Home size={14} /> Back to Base
         </button>
       </div>
@@ -418,9 +416,7 @@ const Lobby = () => {
   }
 
   if (!serverReady || auctionLoading) {
-    return (
-      <PageLoader />
-    );
+    return <PageLoader text="Connecting to Lobby..." />;
   }
 
   if (!currentAuction) {
@@ -429,19 +425,18 @@ const Lobby = () => {
         <PageBackground />
         <motion.div
           {...enterProps({ opacity: 0, scale: 0.9 })}
-          className="max-w-md w-full bg-[#0c0d10] border border-white/10 border-t-white/20 p-8 rounded-[2.5rem] text-center relative z-10 shadow-2xl overflow-hidden"
+          className="max-w-md w-full bg-[#0c0d10] border border-white/10 p-8 rounded-[2rem] text-center relative z-10 shadow-2xl overflow-hidden"
         >
-          <div className="absolute top-0 right-0 p-8 w-32 h-32 bg-orange-500/10 rounded-full -mr-16 -mt-16 blur-3xl" />
-          <div className="w-20 h-20 bg-orange-500/10 border border-orange-500/20 rounded-3xl flex items-center justify-center mx-auto mb-6 text-orange-500 shadow-2xl">
-            <ShieldAlert size={40} />
+          <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-5 text-slate-300 shadow-xl">
+            <ShieldAlert size={32} />
           </div>
-          <h2 className="text-2xl font-black uppercase tracking-tighter mb-2">Room Not Found</h2>
-          <p className="text-gray-400 text-xs font-medium mb-8 leading-relaxed">
-            This auction room code (<span className="text-orange-500 font-mono font-bold">{id}</span>) does not exist, has expired, or was closed by the host.
+          <h2 className="text-2xl font-pixel uppercase tracking-tight text-white mb-2">Room Not Found</h2>
+          <p className="text-slate-400 text-xs font-medium mb-6 leading-relaxed">
+            This auction room code (<span className="text-white font-mono font-bold">{id}</span>) does not exist, has expired, or was closed by the host.
           </p>
           <button
             onClick={() => navigate('/')}
-            className="w-full py-4 bg-orange-600 hover:bg-orange-500 text-white font-black uppercase tracking-widest text-xs rounded-xl transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer shadow-[0_10px_30px_rgba(255,85,0,0.3)]"
+            className="w-full py-3.5 bg-white hover:bg-slate-200 text-black font-black uppercase tracking-widest text-xs rounded-xl transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer shadow-[0_10px_30px_rgba(255,255,255,0.08)]"
           >
             <Home size={16} /> Back to Base
           </button>
@@ -460,12 +455,12 @@ const Lobby = () => {
           {...enterProps({ opacity: 0, y: 20 })}
           className="w-full max-w-4xl z-10"
         >
-          <div className="text-center mb-16">
-            <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-4">Select Your Squad</h1>
-            <p className="text-gray-500 font-bold text-xs uppercase tracking-[0.3em]">Choose a vacant franchise to enter the auction hub</p>
+          <div className="text-center mb-12 sm:mb-16">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-pixel uppercase tracking-tight text-white mb-3 drop-shadow-[0_2px_12px_rgba(255,255,255,0.08)]">Select Your Squad</h1>
+            <p className="text-slate-400 font-bold text-xs uppercase tracking-[0.25em]">Choose a vacant franchise to enter the auction hub</p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5 sm:gap-4">
             {TEAMS.map((team) => {
               const isTaken = teamAssignments[team.id];
               return (
@@ -473,33 +468,33 @@ const Lobby = () => {
                   key={team.id}
                   onClick={() => !isTaken && handleTeamSelect(team.id)}
                   disabled={!!isTaken}
-                  className={`relative group/sel p-6 rounded-[2rem] border transition-all duration-500 flex flex-col items-center gap-4 ${isTaken
+                  className={`relative group/sel p-5 sm:p-6 rounded-2xl sm:rounded-[1.75rem] border transition-all duration-300 flex flex-col items-center gap-3.5 sm:gap-4 ${isTaken
                     ? 'bg-white/[0.01] border-white/5 opacity-20 grayscale cursor-not-allowed'
-                    : 'bg-white/[0.03] border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-105 active:scale-95 shadow-2xl'
+                    : 'bg-[#0e1015]/90 border-white/5 hover:bg-white/[0.04] hover:border-white/15 hover:scale-[1.03] active:scale-95 shadow-xl cursor-pointer'
                     }`}
                 >
-                  <div className="w-20 h-20 bg-white/5 border border-white/5 rounded-2xl p-2 flex items-center justify-center">
-                    {isSelectingTeam === team.id ? <Loader2 className="animate-spin text-orange-500" /> : <img src={team.logo} alt={`${team.name || team.id} Logo`} className="w-full h-full object-contain" />}
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/5 border border-white/5 rounded-2xl p-2 flex items-center justify-center">
+                    {isSelectingTeam === team.id ? <Loader2 className="animate-spin text-slate-200" /> : <img src={team.logo} alt={`${team.name || team.id} Logo`} className="w-full h-full object-contain" />}
                   </div>
                   <div className="text-center">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-white">{team.id}</p>
-                    <p className="text-[8px] font-bold uppercase tracking-widest text-gray-500 mt-1">{isTaken ? (isTaken.split(' ')[0]) : 'Available'}</p>
+                    <p className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-white">{team.id}</p>
+                    <p className="text-[8px] font-bold uppercase tracking-widest text-slate-400 mt-0.5">{isTaken ? (isTaken.split(' ')[0]) : 'Available'}</p>
                   </div>
                 </button>
               );
             })}
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-12">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mt-10 sm:mt-12">
             <button
               onClick={() => setSpectateMode(true)}
-              className="px-6 py-3 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 font-black text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center gap-2"
+              className="px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center gap-2 active:scale-95"
             >
-              <Eye size={16} /> Spectate Room Only
+              <Eye size={15} /> Spectate Room Only
             </button>
             <button
               onClick={() => navigate('/')}
-              className="px-6 py-3 text-[10px] font-black text-gray-600 hover:text-white uppercase tracking-[0.4em] transition-all cursor-pointer"
+              className="px-5 py-2.5 text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-[0.3em] transition-all cursor-pointer"
             >
               ← Cancel & Exit
             </button>
@@ -529,7 +524,7 @@ const Lobby = () => {
         <div className="flex items-center gap-1.5 sm:gap-3 md:gap-4 min-w-0">
           <button
             onClick={() => navigate('/')}
-            className="shrink-0 p-2 sm:p-2.5 md:p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl sm:rounded-2xl transition-all group flex items-center gap-1.5 sm:gap-2"
+            className="shrink-0 p-2 sm:p-2.5 md:p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl sm:rounded-2xl transition-all group flex items-center gap-1.5 sm:gap-2 cursor-pointer active:scale-95"
             title="Exit Hub"
           >
             <Home size={16} className="group-hover:scale-110 transition-transform shrink-0" />
@@ -537,12 +532,12 @@ const Lobby = () => {
           </button>
           <div className="h-6 sm:h-8 md:h-10 w-px bg-white/10 shrink-0" />
           <div className="flex flex-col min-w-0">
-            <span className="text-[7px] sm:text-[9px] font-black text-gray-500 uppercase tracking-widest leading-none mb-0.5 sm:mb-1 whitespace-nowrap">Room ID</span>
-            <span className="text-sm sm:text-base md:text-xl font-black text-white tracking-tight leading-none truncate">{id}</span>
+            <span className="text-[7px] sm:text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none mb-0.5 sm:mb-1 whitespace-nowrap">Room ID</span>
+            <span className="text-sm sm:text-base md:text-lg font-mono font-bold text-white tracking-tight leading-none truncate">{id}</span>
           </div>
           {spectateMode && (
-            <div className="flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 font-black text-[8px] sm:text-[9px] uppercase tracking-widest whitespace-nowrap shrink-0">
-              <Eye size={10} className="sm:w-3 sm:h-3" />
+            <div className="flex items-center gap-1 px-2.5 py-1 bg-white/5 border border-white/10 rounded-full text-slate-300 font-black text-[8px] sm:text-[9px] uppercase tracking-widest whitespace-nowrap shrink-0">
+              <Eye size={11} className="sm:w-3 sm:h-3" />
               <span>SPECTATING</span>
             </div>
           )}
@@ -552,21 +547,20 @@ const Lobby = () => {
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
               onClick={() => fillEmptyTeamsWithBots(id)}
-              className="shrink-0 px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl sm:rounded-2xl font-black text-[9px] sm:text-[10px] md:text-xs uppercase tracking-wider text-orange-400 hover:text-orange-300 transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer active:scale-95 whitespace-nowrap"
+              className="shrink-0 px-2.5 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl sm:rounded-2xl font-black text-[9px] sm:text-[10px] md:text-xs uppercase tracking-wider text-slate-300 hover:text-white transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer active:scale-95 whitespace-nowrap"
               title="Add AI Bots to unassigned franchises"
             >
-              <Zap size={12} className="text-orange-400 shrink-0 sm:w-[14px] sm:h-[14px]" />
+              <Zap size={12} className="text-slate-400 shrink-0 sm:w-[14px] sm:h-[14px]" />
               <span>Fill Bots</span>
             </button>
             <button
               onClick={handleStartAuction}
               disabled={isStarting || !canStartAuction}
               title={!canStartAuction ? `Add at least ${MIN_TEAMS_TO_START} teams to start` : undefined}
-              className="relative overflow-hidden group shrink-0 px-3 sm:px-4 md:px-8 py-2 sm:py-2.5 md:py-3 bg-gradient-to-r from-[#ff5500] to-[#ff8c00] rounded-xl sm:rounded-2xl font-black text-[9px] sm:text-[10px] md:text-xs uppercase tracking-wider md:tracking-widest shadow-[0_10px_30px_rgba(255,85,0,0.3)] disabled:opacity-50 transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+              className="shrink-0 px-3.5 sm:px-5 md:px-8 py-2 sm:py-2.5 md:py-3 bg-white hover:bg-slate-200 text-black rounded-xl sm:rounded-2xl font-black text-[9px] sm:text-[10px] md:text-xs uppercase tracking-wider md:tracking-widest shadow-[0_10px_30px_rgba(255,255,255,0.08)] disabled:opacity-50 transition-all active:scale-95 cursor-pointer whitespace-nowrap"
             >
-              <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-              <div className="relative flex items-center gap-1 sm:gap-1.5 md:gap-2">
-                {isStarting && <Loader2 size={14} className="animate-spin shrink-0 md:w-4 md:h-4" />}
+              <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2">
+                {isStarting && <Loader2 size={14} className="animate-spin text-black shrink-0 md:w-4 md:h-4" />}
                 <span>{isStarting ? 'Igniting...' : 'Start Auction'}</span>
               </div>
             </button>
@@ -576,41 +570,41 @@ const Lobby = () => {
 
       <motion.div
         {...enterProps({ opacity: 0, y: 30 }, { transition: { delay: 0.1 } })}
-        className="w-full max-w-6xl bg-white/[0.015] border border-white/10 border-t-white/20 rounded-[2.5rem] p-3 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10 relative mt-2"
+        className="w-full max-w-6xl bg-white/[0.015] border border-white/10 rounded-[2rem] p-2 sm:p-3 shadow-2xl z-10 relative mt-2"
       >
-        <div className="bg-[#0c0d10] rounded-[2.2rem] border border-white/10 grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch divide-y lg:divide-y-0 lg:divide-x divide-white/10 overflow-hidden">
+        <div className="bg-[#0c0d10] rounded-[1.75rem] border border-white/10 grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch divide-y lg:divide-y-0 lg:divide-x divide-white/10 overflow-hidden">
 
           {/* Left Column: Management Hub */}
-          <div className="lg:col-span-5 w-full flex flex-col p-6 md:p-8 relative gap-6">
+          <div className="lg:col-span-5 w-full flex flex-col p-5 sm:p-6 md:p-8 relative gap-5 sm:gap-6">
             {/* Auction Rules Section */}
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Auction Rules</h3>
+              <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Auction Rules</h3>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
-                  <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-1">Auction Mode</span>
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                <div className="p-3 bg-white/[0.02] rounded-xl border border-white/5">
+                  <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">Auction Mode</span>
                   <span className="text-[11px] font-black text-white uppercase tracking-tight">
                     {currentAuction?.auctionType === 'sprint5' ? '5-Player Sprint' :
                       currentAuction?.auctionType === 'sprint11' ? '11-Player Classic' :
                         'Mega Auction'}
                   </span>
                 </div>
-                <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
-                  <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-1">Initial Budget</span>
-                  <span className="text-[11px] font-black text-yellow-500 uppercase tracking-tight">
+                <div className="p-3 bg-white/[0.02] rounded-xl border border-white/5">
+                  <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">Initial Budget</span>
+                  <span className="text-[11px] font-black text-slate-100 uppercase tracking-tight">
                     ₹{formatCrores(toFiniteNumber(currentAuction?.settings?.budget, 120), 1)} Cr
                   </span>
                 </div>
-                <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
-                  <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-1">Squad Capacity</span>
-                  <span className="text-[11px] font-black text-blue-400 uppercase tracking-tight">
+                <div className="p-3 bg-white/[0.02] rounded-xl border border-white/5">
+                  <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">Squad Capacity</span>
+                  <span className="text-[11px] font-black text-slate-100 uppercase tracking-tight">
                     {toFiniteNumber(currentAuction?.squadLimit, 25)} Players
                   </span>
                 </div>
-                <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
-                  <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-1">Overseas Quota</span>
+                <div className="p-3 bg-white/[0.02] rounded-xl border border-white/5">
+                  <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">Overseas Quota</span>
                   <span className="text-[11px] font-black text-purple-400 uppercase tracking-tight">
                     Max {toFiniteNumber(currentAuction?.overseasLimit, 8)}
                   </span>
@@ -623,16 +617,16 @@ const Lobby = () => {
 
             {/* Franchise Selector */}
             <div>
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Claim Franchise</h3>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Claim Franchise</h3>
                 </div>
                 {currentUserPlayer?.team && (
-                  <div className="text-[9px] font-black text-green-500 bg-green-500/10 px-2 py-0.5 rounded uppercase tracking-wider">Locked In</div>
+                  <div className="text-[9px] font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded uppercase tracking-wider">Locked In</div>
                 )}
               </div>
 
-              <div className="grid grid-cols-5 gap-2.5">
+              <div className="grid grid-cols-5 gap-2 sm:gap-2.5">
                 {TEAMS.map((team) => {
                   const isTaken = teamAssignments[team.id];
                   const isMine = currentUserPlayer?.team === team.id;
@@ -642,24 +636,24 @@ const Lobby = () => {
                       key={team.id}
                       onClick={() => handleTeamSelect(team.id)}
                       disabled={!!isTaken && !isMine}
-                      className={`relative group/team flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-200 border ${isMine
-                        ? 'bg-[#1b1b1b] border-white/[0.12] scale-[1.02] shadow-[0_4px_20px_rgba(0,0,0,0.4)]'
+                      className={`relative group/team flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-200 border cursor-pointer ${isMine
+                        ? 'bg-white/10 border-white/25 scale-[1.02] shadow-lg'
                         : isTaken
                           ? 'border-transparent opacity-20 grayscale cursor-not-allowed'
                           : 'border-transparent hover:bg-white/[0.04]'
                         }`}
                     >
                       {isMine && (
-                        <div className="absolute top-2 right-2 text-white z-20">
+                        <div className="absolute top-1.5 right-1.5 text-white z-20">
                           <Check size={10} strokeWidth={3} />
                         </div>
                       )}
 
-                      <div className={`w-9 h-9 rounded-xl bg-white/5 border border-white/5 p-1.5 flex items-center justify-center mb-2 transition-all duration-300 ${isMine ? 'scale-105 border-white/[0.12] shadow-lg' : 'group-hover/team:scale-105'}`}>
+                      <div className={`w-9 h-9 rounded-xl bg-white/5 border border-white/5 p-1.5 flex items-center justify-center mb-1.5 transition-all duration-300 ${isMine ? 'scale-105 border-white/20 shadow-md' : 'group-hover/team:scale-105'}`}>
                         {isSelectingTeam === team.id ? <Loader2 size={14} className="animate-spin text-white" /> : <img src={team.logo} alt={`${team.name || team.id} Logo`} className="w-full h-full object-contain" />}
                       </div>
 
-                      <span className={`text-[8px] font-black uppercase text-center tracking-tighter truncate w-full ${isMine ? 'text-white' : 'text-gray-500'}`}>
+                      <span className={`text-[8px] font-black uppercase text-center tracking-tighter truncate w-full ${isMine ? 'text-white' : 'text-slate-500'}`}>
                         {isTaken ? isTaken.split(' ')[0] : team.id}
                       </span>
                     </button>
@@ -673,22 +667,23 @@ const Lobby = () => {
 
             {/* Share Section */}
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Invite Players</h3>
+              <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Invite Players</h3>
               </div>
 
-              <div className="flex gap-3">
-                <div className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-gray-500 font-medium truncate flex items-center">
+              <div className="flex gap-2 sm:gap-3">
+                <div className="flex-1 bg-black/40 border border-white/10 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-[11px] sm:text-xs text-slate-400 font-mono font-medium truncate flex items-center">
                   {window.location.href}
                 </div>
-                <button onClick={copyLink} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all border border-white/5 relative group/copy cursor-pointer">
-                  {copied ? <CheckCircle2 size={18} className="text-green-500" /> : <Copy size={18} className="group-hover/copy:scale-110 transition-transform" />}
+                <button onClick={copyLink} className="p-2.5 sm:p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all border border-white/5 relative group/copy cursor-pointer text-slate-300 hover:text-white" title="Copy Link">
+                  {copied ? <CheckCircle2 size={16} className="text-emerald-400 sm:w-[18px] sm:h-[18px]" /> : <Copy size={16} className="group-hover/copy:scale-110 transition-transform sm:w-[18px] sm:h-[18px]" />}
                 </button>
                 <button
                   onClick={shareWhatsApp}
-                  className="p-3 bg-[#25D366]/5 hover:bg-[#25D366]/10 rounded-xl transition-all border border-[#25D366]/10 text-[#25D366] group/wa cursor-pointer"
+                  className="p-2.5 sm:p-3 bg-[#25D366]/5 hover:bg-[#25D366]/10 rounded-xl transition-all border border-[#25D366]/10 text-[#25D366] group/wa cursor-pointer"
+                  title="Share to WhatsApp"
                 >
-                  <MessageSquare size={18} className="group-hover/wa:scale-110 transition-transform" />
+                  <MessageSquare size={16} className="group-hover/wa:scale-110 transition-transform sm:w-[18px] sm:h-[18px]" />
                 </button>
               </div>
             </div>
@@ -700,26 +695,26 @@ const Lobby = () => {
             <div>
               <button
                 onClick={() => setShowBotInfo(true)}
-                className="w-full flex items-center justify-between p-3.5 bg-gradient-to-r from-white/[0.03] to-transparent hover:from-[#ff5500]/10 hover:to-transparent border border-white/5 hover:border-[#ff5500]/30 rounded-2xl transition-all duration-300 group cursor-pointer text-left"
+                className="w-full flex items-center justify-between p-3 sm:p-3.5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 hover:border-white/15 rounded-xl sm:rounded-2xl transition-all duration-300 group cursor-pointer text-left"
               >
                 <div className="flex items-center gap-2.5">
                   <div>
                     <h3 className="text-[11px] font-black uppercase tracking-[0.15em] text-white flex items-center gap-1.5">
                       About AI Bots
                     </h3>
-                    <p className="text-[9px] text-gray-500 font-medium">How automated bidders work</p>
+                    <p className="text-[9px] text-slate-400 font-medium mt-0.5">How automated franchise managers work</p>
                   </div>
                 </div>
-                <Info size={16} className="text-gray-500 group-hover:text-[#ff5500] transition-colors" />
+                <Info size={16} className="text-slate-400 group-hover:text-white transition-colors" />
               </button>
             </div>
 
           </div>
 
           {/* Right Column: Engagement Hub */}
-          <div className="lg:col-span-7 w-full p-6 md:p-8 flex flex-col justify-start">
+          <div className="lg:col-span-7 w-full p-5 sm:p-6 md:p-8 flex flex-col justify-start">
             {/* Tabs Header */}
-            <div className="flex bg-white/[0.02] p-1.5 gap-1.5 rounded-2xl mb-6 border border-white/5">
+            <div className="flex bg-white/[0.02] p-1 gap-1 rounded-xl mb-5 sm:mb-6 border border-white/5">
               {[
                 { id: 'players', icon: Users, label: `Players` },
                 { id: 'chat', icon: MessageSquare, label: 'Chat' }
@@ -727,23 +722,23 @@ const Lobby = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 py-3 flex flex-col items-center justify-center gap-1.5 transition-all rounded-xl cursor-pointer ${activeTab === tab.id
-                    ? 'bg-slate-500/15 text-slate-100 border border-slate-400/30 shadow-inner'
-                    : 'text-gray-500 hover:text-gray-300 hover:bg-white/[0.01]'
+                  className={`flex-1 py-2.5 sm:py-3 flex flex-col items-center justify-center gap-1 sm:gap-1.5 transition-all rounded-lg cursor-pointer ${activeTab === tab.id
+                    ? 'bg-white text-black shadow-md'
+                    : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
                     }`}
                 >
                   <span className="relative">
                     <tab.icon size={16} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
                     {tab.id === 'chat' && unreadChat > 0 && (
                       <span className="absolute -top-1.5 -right-2.5 flex items-center justify-center">
-                        <span className="absolute inline-flex h-4 w-4 rounded-full bg-red-500 opacity-75 animate-ping" />
-                        <span className="relative flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[8px] font-black text-white shadow-[0_0_10px_rgba(239,68,68,0.8)]">
+                        <span className="absolute inline-flex h-3.5 w-3.5 rounded-full bg-red-500 opacity-75 animate-ping" />
+                        <span className="relative flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-red-500 px-1 text-[7px] font-black text-white shadow-md">
                           {unreadChat > 9 ? '9+' : unreadChat}
                         </span>
                       </span>
                     )}
                   </span>
-                  <span className={`text-[9px] font-black uppercase tracking-widest ${tab.id === 'chat' && unreadChat > 0 ? 'text-red-400' : ''}`}>{tab.id === 'players' ? `${tab.label} (${players.length})` : tab.label}</span>
+                  <span className="text-[9px] font-black uppercase tracking-widest">{tab.id === 'players' ? `${tab.label} (${players.length})` : tab.label}</span>
                 </button>
               ))}
             </div>
@@ -755,7 +750,7 @@ const Lobby = () => {
                     key="p-list"
                     {...enterProps({ opacity: 0, y: 10 })}
                     {...exitProps({ opacity: 0, y: -10 })}
-                    className="space-y-4"
+                    className="space-y-3 sm:space-y-3.5"
                   >
                     {players.map((player, idx) => {
                       const playerTeam = TEAMS.find(t => t.id === player.team);
@@ -763,25 +758,25 @@ const Lobby = () => {
                         <motion.div
                           key={`${player.id}-${idx}`}
                           {...enterProps({ opacity: 0, x: -10 }, { transition: { delay: idx * 0.05 } })}
-                          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-3 bg-white/[0.01] border border-white/5 p-3 sm:p-4 rounded-2xl group transition-all hover:bg-white/[0.03] hover:border-white/10"
+                          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-3 bg-white/[0.015] border border-white/5 p-3 sm:p-3.5 rounded-xl group transition-all hover:bg-white/[0.04] hover:border-white/10"
                         >
                           <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto">
-                            <div className="w-11 h-11 sm:w-12 sm:h-12 shrink-0 rounded-2xl border border-white/10 flex items-center justify-center shadow-2xl relative overflow-hidden bg-white/5 p-1.5">
+                            <div className="w-10 h-10 sm:w-11 sm:h-11 shrink-0 rounded-xl border border-white/10 flex items-center justify-center shadow-lg relative overflow-hidden bg-white/5 p-1.5">
                               <div className="absolute inset-x-0 bottom-0 top-1/2 bg-black/5 pointer-events-none" />
                               {playerTeam ? (
                                 <img src={playerTeam.logo} alt={`${playerTeam.name || playerTeam.id} Logo`} className="w-full h-full object-contain relative z-10" />
                               ) : (
-                                <span className="text-gray-500 relative z-10 text-xs">?</span>
+                                <span className="text-slate-500 relative z-10 text-xs">?</span>
                               )}
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="flex flex-wrap items-center gap-1.5">
                                 <p className="font-black text-xs sm:text-sm text-white uppercase tracking-tight truncate max-w-[160px] sm:max-w-none">{player.name}</p>
-                                {player.isHost && <Crown size={14} className="text-yellow-500 fill-yellow-500 shrink-0" />}
-                                {(player.isBot || player.id.startsWith('bot_')) && <span className="text-[8px] font-black bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded border border-orange-500/30 flex items-center gap-1 shrink-0"><Zap size={8} /> AI BOT</span>}
-                                {player.id === user?.uid && <span className="text-[8px] font-black bg-white/10 px-1.5 py-0.5 rounded text-gray-400 shrink-0">YOU</span>}
+                                {player.isHost && <Crown size={13} className="text-amber-300 fill-amber-300 shrink-0" />}
+                                {(player.isBot || player.id.startsWith('bot_')) && <span className="text-[8px] font-black bg-white/10 text-slate-300 px-1.5 py-0.5 rounded border border-white/15 flex items-center gap-1 shrink-0"><Zap size={8} /> AI BOT</span>}
+                                {player.id === user?.uid && <span className="text-[8px] font-black bg-white/10 px-1.5 py-0.5 rounded text-slate-400 shrink-0">YOU</span>}
                               </div>
-                              <p className="text-[9px] text-gray-500 font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] mt-0.5 truncate">
+                              <p className="text-[9px] text-slate-500 font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] mt-0.5 truncate">
                                 {playerTeam?.name || (player.team === '' ? 'CALIBRATING...' : player.team)}
                               </p>
                             </div>
@@ -789,8 +784,8 @@ const Lobby = () => {
 
                           <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto pt-2 sm:pt-0 border-t border-white/5 sm:border-0 gap-3">
                             <div className="flex items-center gap-1.5 sm:flex-col sm:items-end">
-                              <div className={`w-1.5 h-1.5 rounded-full shadow-lg ${player.isBot || player.isOnline ? 'bg-green-500 shadow-green-500/50' : 'bg-gray-700'}`} />
-                              <span className={`text-[8px] font-black uppercase tracking-tighter ${player.isBot || player.isOnline ? 'text-green-500' : 'text-gray-700'}`}>
+                              <div className={`w-1.5 h-1.5 rounded-full ${player.isBot || player.isOnline ? 'bg-emerald-400' : 'bg-gray-700'}`} />
+                              <span className={`text-[8px] font-black uppercase tracking-wider ${player.isBot || player.isOnline ? 'text-emerald-400' : 'text-gray-600'}`}>
                                 {player.isBot ? 'ACTIVE BOT' : player.isOnline ? 'ONLINE' : 'OFFLINE'}
                               </span>
                             </div>
@@ -798,18 +793,19 @@ const Lobby = () => {
                             {isAdmin && (player.isBot || player.id.startsWith('bot_')) && (
                               <button
                                 onClick={() => removeBotTeam(id, player.id)}
-                                className="p-1.5 sm:p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all border border-transparent hover:border-red-500/20 cursor-pointer"
+                                className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all border border-transparent hover:border-red-500/20 cursor-pointer"
                                 title="Remove AI Bot"
                               >
-                                <UserMinus size={15} />
+                                <UserMinus size={14} />
                               </button>
                             )}
                             {isAdmin && !player.isHost && !(player.isBot || player.id.startsWith('bot_')) && (
                               <button
                                 onClick={() => handleKickPlayer(player)}
-                                className="sm:opacity-0 group-hover:opacity-100 p-1.5 sm:p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all cursor-pointer"
+                                className="sm:opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer"
+                                title="Remove Player"
                               >
-                                <UserMinus size={16} />
+                                <UserMinus size={15} />
                               </button>
                             )}
                           </div>
@@ -851,60 +847,60 @@ const Lobby = () => {
             <motion.div
               {...enterProps({ opacity: 0, scale: 0.95, y: 20 }, { transition: { type: 'spring', damping: 25, stiffness: 300 } })}
               {...exitProps({ opacity: 0, scale: 0.95, y: 20 })}
-              className="relative w-full max-w-lg max-h-[85vh] sm:max-h-[90vh] bg-[#0c0d10] border border-white/10 border-t-white/20 rounded-3xl sm:rounded-[2.5rem] p-5 sm:p-6 md:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.8)] z-10 flex flex-col my-auto overflow-hidden"
+              className="relative w-full max-w-lg max-h-[85vh] sm:max-h-[90vh] bg-[#0c0d10] border border-white/10 rounded-3xl sm:rounded-[2rem] p-5 sm:p-6 md:p-7 shadow-[0_25px_60px_rgba(0,0,0,0.85)] z-10 flex flex-col my-auto overflow-hidden"
             >
 
               {/* Close Button */}
               <button
                 onClick={() => setShowBotInfo(false)}
-                className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer z-20"
+                className="absolute top-4 right-4 sm:top-5 sm:right-5 p-2 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer z-20"
               >
                 <X size={16} className="sm:w-[18px] sm:h-[18px]" />
               </button>
 
               {/* Modal Header */}
-              <div className="flex items-center gap-3 sm:gap-3.5 mb-4 sm:mb-6 pr-10 shrink-0">
+              <div className="flex items-center gap-3 sm:gap-3.5 mb-4 sm:mb-5 pr-10 shrink-0">
                 <div>
                   <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                    <h2 className="text-base sm:text-xl font-black uppercase tracking-wider text-white">AI Bidding Bots</h2>
+                    <h2 className="text-base sm:text-xl font-pixel uppercase tracking-tight text-white">AI Bidding Bots</h2>
                   </div>
-                  <p className="text-[10px] sm:text-xs text-gray-400 font-medium mt-0.5">Automated franchise strategies & behavior</p>
+                  <p className="text-[10px] sm:text-xs text-slate-400 font-medium mt-0.5">Automated franchise strategies & behavior</p>
                 </div>
               </div>
 
               {/* Modal Body (Scrollable for smaller screens) */}
-              <div className="space-y-3 sm:space-y-4 overflow-y-auto pr-1 custom-scrollbar flex-1">
-                <p className="text-[11px] sm:text-xs text-gray-300 font-medium leading-relaxed bg-white/[0.02] border border-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-3.5">
+              <div className="space-y-3 sm:space-y-3.5 overflow-y-auto pr-1 custom-scrollbar flex-1">
+                <p className="text-[11px] sm:text-xs text-slate-300 font-medium leading-relaxed bg-white/[0.02] border border-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-3.5">
                   AI Bots act as autonomous franchise managers during the auction. They analyze player stats, manage purse budget, build balanced squads, and execute team-specific buying strategies.
                 </p>
 
                 {/* Feature Cards Grid */}
                 <div className="grid grid-cols-1 gap-2.5 sm:gap-3">
                   {/* Tile 1 */}
-                  <div className="flex items-start gap-2.5 sm:gap-3.5 p-3 sm:p-3.5 bg-white/[0.03] border border-white/5 rounded-xl sm:rounded-2xl hover:border-white/10 transition-colors">
+                  <div className="flex items-start gap-2.5 sm:gap-3.5 p-3 sm:p-3.5 bg-white/[0.02] border border-white/5 rounded-xl hover:border-white/10 transition-colors">
                     <div>
                       <h4 className="text-[11px] sm:text-xs font-black uppercase tracking-widest text-white mb-0.5">Smart Bidding Engine</h4>
-                      <p className="text-[10px] sm:text-[11px] text-gray-400 leading-relaxed">
-                        Bots evaluate players using base price, star tier, role demand, and team bias - e.g., <span className="text-orange-400 font-semibold">MI</span> chases pace bowlers, <span className="text-yellow-400 font-semibold">CSK</span> prioritizes all-rounders, and <span className="text-red-400 font-semibold">RCB</span> bids aggressively on marquee batsmen.
+                      <p className="text-[10px] sm:text-[11px] text-slate-400 leading-relaxed">
+                        Bots evaluate players using base price, star tier, role demand, and team bias — e.g., <span className="text-slate-200 font-bold">MI</span> chases pace bowlers, <span className="text-slate-200 font-bold">CSK</span> prioritizes all-rounders, and <span className="text-slate-200 font-bold">RCB</span> bids aggressively on marquee batsmen.
                       </p>
                     </div>
                   </div>
 
                   {/* Tile 2 */}
-                  <div className="flex items-start gap-2.5 sm:gap-3.5 p-3 sm:p-3.5 bg-white/[0.03] border border-white/5 rounded-2xl hover:border-white/10 transition-colors">
+                  <div className="flex items-start gap-2.5 sm:gap-3.5 p-3 sm:p-3.5 bg-white/[0.02] border border-white/5 rounded-xl hover:border-white/10 transition-colors">
                     <div>
                       <h4 className="text-[11px] sm:text-xs font-black uppercase tracking-widest text-white mb-0.5">Purse & Slot Protection</h4>
-                      <p className="text-[10px] sm:text-[11px] text-gray-400 leading-relaxed">
+                      <p className="text-[10px] sm:text-[11px] text-slate-400 leading-relaxed">
                         Bots calculate remaining budget dynamically, reserving <span className="text-white font-semibold">₹0.40 Cr</span> per required squad slot so they never get priced out prematurely.
                       </p>
                     </div>
                   </div>
 
                   {/* Tile 3 */}
-                  <div className="flex items-start gap-2.5 sm:gap-3.5 p-3 sm:p-3.5 bg-white/[0.03] border border-white/5 rounded-2xl hover:border-white/10 transition-colors">
+                  <div className="flex items-start gap-2.5 sm:gap-3.5 p-3 sm:p-3.5 bg-white/[0.02] border border-white/5 rounded-xl hover:border-white/10 transition-colors">
                     <div>
                       <h4 className="text-[11px] sm:text-xs font-black uppercase tracking-widest text-white mb-0.5">Roster Balance Controls</h4>
-                      <p className="text-[10px] sm:text-[11px] text-gray-400 leading-relaxed">
+                      <p className="text-[10px] sm:text-[11px] text-slate-400 leading-relaxed">
                         Bots strictly enforce overseas limit (max 8 per squad) and role caps to maintain authentic, realistic IPL team compositions.
                       </p>
                     </div>
@@ -912,18 +908,18 @@ const Lobby = () => {
                 </div>
 
                 {/* How to add box */}
-                <div className="p-3 sm:p-4 bg-gradient-to-r from-[#ff5500]/10 to-transparent border border-[#ff5500]/30 rounded-xl sm:rounded-2xl">
+                <div className="p-3.5 sm:p-4 bg-white/[0.02] border border-white/10 rounded-xl sm:rounded-2xl">
                   <div className="flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-1.5">
-                    <Zap size={13} className="text-[#ff5500] sm:w-[14px] sm:h-[14px]" />
-                    <h5 className="text-[11px] sm:text-xs font-black uppercase tracking-widest text-[#ff5500]">How to Add Bots</h5>
+                    <Zap size={13} className="text-slate-300 sm:w-[14px] sm:h-[14px]" />
+                    <h5 className="text-[11px] sm:text-xs font-black uppercase tracking-widest text-white">How to Add Bots</h5>
                   </div>
                   {isAdmin ? (
-                    <p className="text-[10px] sm:text-xs text-gray-300 font-medium leading-relaxed">
-                      As host, click <span className="text-white font-bold bg-orange-500/20 px-1.5 py-0.5 rounded border border-orange-500/30">Fill Bots</span> in the top header. This fills all unassigned franchise teams with AI managers so your auction runs at full capacity!
+                    <p className="text-[10px] sm:text-xs text-slate-300 font-medium leading-relaxed">
+                      As host, click <span className="text-white font-bold bg-white/10 px-1.5 py-0.5 rounded border border-white/15">Fill Bots</span> in the top header. This fills all unassigned franchise teams with AI managers so your auction runs at full capacity!
                     </p>
                   ) : (
-                    <p className="text-[10px] sm:text-xs text-gray-300 font-medium leading-relaxed">
-                      The room host can click <span className="text-white font-bold bg-orange-500/20 px-1.5 py-0.5 rounded border border-orange-500/30">Fill Bots</span> to assign AI managers to empty teams, allowing the auction to run smoothly even without 10 human players.
+                    <p className="text-[10px] sm:text-xs text-slate-300 font-medium leading-relaxed">
+                      The room host can click <span className="text-white font-bold bg-white/10 px-1.5 py-0.5 rounded border border-white/15">Fill Bots</span> to assign AI managers to empty teams, allowing the auction to run smoothly even without 10 human players.
                     </p>
                   )}
                 </div>

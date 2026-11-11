@@ -5,6 +5,7 @@ import { AuctionProvider } from './contexts/AuctionContext'
 import { QuotaProvider } from './contexts/QuotaContext'
 import { ConnectionAlertProvider } from './contexts/ConnectionAlertContext'
 import ScrollToTop from './components/ScrollToTop'
+import PageLoader from './components/PageLoader'
 import LandingPage from './pages/LandingPage'
 import './index.css'
 
@@ -25,12 +26,8 @@ const ConnectionAlertModal = lazy(() => import('./components/ConnectionAlertModa
 const FeedbackModal        = lazy(() => import('./components/FeedbackModal'))
 const CookieConsent        = lazy(() => import('./components/CookieConsent'))
 
-// ── Minimal inline fallback — no extra bundle cost ───────────────────────────
-const PageFallback = () => (
-  <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-    <div className="w-8 h-8 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
-  </div>
-)
+// ── Minimal fallback — uniform with PageLoader ────────────────────────────────
+const PageFallback = () => <PageLoader />
 
 function App() {
   return (
