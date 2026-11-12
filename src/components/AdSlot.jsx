@@ -1,8 +1,13 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
-const AdSlot = ({ slot, className = '', label = 'Advertisement' }) => {
+const AdSlot = ({
+  slot = import.meta.env.VITE_ADSENSE_LANDING_FOOTER_SLOT,
+  className = '',
+  label = 'Advertisement'
+}) => {
+  const adRef = useRef(null);
   const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID;
-  const canRenderAd = clientId && slot;
+  const canRenderAd = Boolean(clientId && slot);
 
   useEffect(() => {
     if (!canRenderAd) return;
@@ -17,6 +22,10 @@ const AdSlot = ({ slot, className = '', label = 'Advertisement' }) => {
       script.crossOrigin = 'anonymous';
       script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${clientId}`;
       document.head.appendChild(script);
+    }
+
+    if (adRef.current && adRef.current.getAttribute('data-adsbygoogle-status')) {
+      return;
     }
 
     try {
@@ -38,6 +47,7 @@ const AdSlot = ({ slot, className = '', label = 'Advertisement' }) => {
         <div className="h-px w-10 bg-white/10" />
       </div>
       <ins
+        ref={adRef}
         className="adsbygoogle block min-h-[90px] rounded-2xl border border-white/10 bg-white/[0.02]"
         style={{ display: 'block' }}
         data-ad-client={clientId}
