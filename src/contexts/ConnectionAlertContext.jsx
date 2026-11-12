@@ -5,13 +5,13 @@ import React, {
   useEffect,
   useRef,
   useState,
-} from 'react';
+} from "react";
 import {
   CAPACITY,
   describeConsoleArgs,
   isCapacityWarning,
   resolveProblemReason,
-} from '../lib/connectionAlerts';
+} from "../lib/connectionAlerts";
 
 const ConnectionAlertContext = createContext(null);
 
@@ -43,10 +43,12 @@ export const ConnectionAlertProvider = ({ children }) => {
   const [problem, setProblem] = useState(null);
   const dismissedAtRef = useRef(0);
   const sawCapacityRef = useRef(false);
+  const originalWarnRef = useRef(console.warn);
 
   // A dismissal silences both detectors briefly, never permanently: if the
   // problem is still there it can re-surface instead of hiding forever.
-  const isMuted = () => Date.now() - dismissedAtRef.current < DISMISS_COOLDOWN_MS;
+  const isMuted = () =>
+    Date.now() - dismissedAtRef.current < DISMISS_COOLDOWN_MS;
 
   const dismiss = useCallback(() => {
     dismissedAtRef.current = Date.now();
@@ -82,8 +84,7 @@ export const ConnectionAlertProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    const originalWarn = console.warn;
-
+    const originalWarn = originalWarnRef.current;
     const guardedWarn = (...args) => {
       originalWarn.apply(console, args);
       try {
@@ -94,10 +95,11 @@ export const ConnectionAlertProvider = ({ children }) => {
       }
     };
 
-    console.warn = guardedWarn;
+    if (console.warn !== guardedWarn) {
+      console.warn = guardedWarn;
+    }
 
     return () => {
-      // Only restore if nothing else wrapped console.warn after us.
       if (console.warn === guardedWarn) {
         console.warn = originalWarn;
       }
@@ -123,7 +125,9 @@ export const ConnectionAlertProvider = ({ children }) => {
 export const useConnectionAlert = () => {
   const context = useContext(ConnectionAlertContext);
   if (!context) {
-    throw new Error('useConnectionAlert must be used within a ConnectionAlertProvider');
+    throw new Error(
+      "useConnectionAlert must be used within a ConnectionAlertProvider",
+    );
   }
   return context;
 };

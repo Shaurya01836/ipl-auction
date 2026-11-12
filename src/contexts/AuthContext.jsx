@@ -1,21 +1,32 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 
-import { auth } from '../lib/firebase';
+import { auth } from "../lib/firebase";
 import {
   onAuthStateChanged,
   signInWithPopup,
   GoogleAuthProvider,
   signOut,
   signInAnonymously,
-  updateProfile
-} from 'firebase/auth';
+  updateProfile,
+} from "firebase/auth";
+import {
+  ref,
+  push,
+  serverTimestamp as serverTimestampRtdb,
+} from "firebase/database";
 
 const AuthContext = createContext({
   user: null,
   loading: true,
-  loginWithGoogle: async () => { },
-  loginAsGuest: async () => { },
-  logout: async () => { }
+  loginWithGoogle: async () => {},
+  loginAsGuest: async () => {},
+  logout: async () => {},
 });
 
 const googleProvider = new GoogleAuthProvider();
@@ -23,9 +34,9 @@ const googleProvider = new GoogleAuthProvider();
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    // AuthProvider check failed
+    throw new Error("useAuth must be used within an AuthProvider");
   }
-  return context || {};
+  return context;
 };
 
 export const AuthProvider = ({ children }) => {
@@ -55,17 +66,36 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => signOut(auth);
 
+  const sendMessage = useCallback(
+    async (roomId, text, type = "text") => {
+      const cleanText = typeof text === "string" ? text.trim() : "";
+
+      if (!user) {
+        throw new Error("Please log in to send a message.");
+      }
+
+      if (!roomId || !cleanText) return;
+
+      const msgRef = ref(rtdb, `auctions/${roomId}/messages`);
+      await push(msgRef, {
+        userId: user.uid,
+        userName: user.displayName || "Manager",
+        text: cleanText,
+        type,
+        timestamp: serverTimestampRtdb(),
+      });
+    },
+    [user],
+  );
+
   const value = {
     user,
     loading,
     loginWithGoogle,
     loginAsGuest,
-    logout
+    logout,
+    sendMessage,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

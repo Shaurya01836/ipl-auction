@@ -1,11 +1,19 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate, Link, useParams } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { useQuota } from '../contexts/QuotaContext';
-import { isUserAdmin } from '../lib/adminAuth';
-import { db } from '../lib/firebase';
-import { supabase } from '../lib/supabase';
-import { collection, getDocs, deleteDoc, updateDoc, doc, query, orderBy } from 'firebase/firestore';
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useNavigate, Link, useParams } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { useQuota } from "../contexts/QuotaContext";
+import { isUserAdmin } from "../lib/adminAuth";
+import { db } from "../lib/firebase";
+import { supabase } from "../lib/supabase";
+import {
+  collection,
+  getDocs,
+  deleteDoc,
+  updateDoc,
+  doc,
+  query,
+  orderBy,
+} from "firebase/firestore";
 import {
   Home,
   ShieldAlert,
@@ -25,34 +33,34 @@ import {
   Flame,
   Lock,
   LogIn,
-} from 'lucide-react';
-import { motion } from 'framer-motion';
-import Footer from '../components/Footer';
-import useDocumentTitle from '../hooks/useDocumentTitle';
-import { IPL_PLAYERS } from '../data/players';
+} from "lucide-react";
+import { motion } from "framer-motion";
+import Footer from "../components/Footer";
+import useDocumentTitle from "../hooks/useDocumentTitle";
+import { IPL_PLAYERS } from "../data/players";
 
 // Admin Components
-import OverviewTab from '../components/admin/OverviewTab';
-import FeedbacksTab from '../components/admin/FeedbacksTab';
-import AuctionsTab from '../components/admin/AuctionsTab';
-import PlayersTab from '../components/admin/PlayersTab';
-import DeleteConfirmModal from '../components/admin/DeleteConfirmModal';
-import PlayerDetailModal from '../components/admin/PlayerDetailModal';
+import OverviewTab from "../components/admin/OverviewTab";
+import FeedbacksTab from "../components/admin/FeedbacksTab";
+import AuctionsTab from "../components/admin/AuctionsTab";
+import PlayersTab from "../components/admin/PlayersTab";
+import DeleteConfirmModal from "../components/admin/DeleteConfirmModal";
+import PlayerDetailModal from "../components/admin/PlayerDetailModal";
 
 const CATEGORIES = [
-  { id: 'all', label: 'All Categories' },
-  { id: 'general', label: 'General' },
-  { id: 'bug', label: 'Bug Report' },
-  { id: 'feature', label: 'Feature' },
-  { id: 'ui', label: 'UI / UX' },
+  { id: "all", label: "All Categories" },
+  { id: "general", label: "General" },
+  { id: "bug", label: "Bug Report" },
+  { id: "feature", label: "Feature" },
+  { id: "ui", label: "UI / UX" },
 ];
 
 const WORKFLOW_STATUSES = [
-  { id: 'all', label: 'All Statuses' },
-  { id: 'new', label: 'New' },
-  { id: 'in_progress', label: 'In Progress' },
-  { id: 'resolved', label: 'Resolved' },
-  { id: 'starred', label: 'Starred ★' },
+  { id: "all", label: "All Statuses" },
+  { id: "new", label: "New" },
+  { id: "in_progress", label: "In Progress" },
+  { id: "resolved", label: "Resolved" },
+  { id: "starred", label: "Starred ★" },
 ];
 
 const FEEDBACKS_PER_PAGE = 8;
@@ -60,64 +68,64 @@ const AUCTIONS_PER_PAGE = 8;
 
 const getRatingBadgeStyle = (rating = 0) => {
   if (rating >= 75) {
-    return 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.12)]';
+    return "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.12)]";
   }
-  return 'bg-slate-500/10 border-slate-500/20 text-slate-400';
+  return "bg-slate-500/10 border-slate-500/20 text-slate-400";
 };
 
 const getRoleBadgeStyle = (role) => {
   switch (role) {
-    case 'Batter':
-    case 'Batsman':
-      return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-    case 'Bowler':
-      return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
-    case 'All-Rounder':
-      return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
-    case 'Wicket-Keeper':
-      return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+    case "Batter":
+    case "Batsman":
+      return "bg-blue-500/10 text-blue-400 border-blue-500/20";
+    case "Bowler":
+      return "bg-rose-500/10 text-rose-400 border-rose-500/20";
+    case "All-Rounder":
+      return "bg-purple-500/10 text-purple-400 border-purple-500/20";
+    case "Wicket-Keeper":
+      return "bg-amber-500/10 text-amber-400 border-amber-500/20";
     default:
-      return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+      return "bg-gray-500/10 text-gray-400 border-gray-500/20";
   }
 };
 
-const getFeedbackCategoryStyle = (category = 'general') => {
+const getFeedbackCategoryStyle = (category = "general") => {
   switch (category?.toLowerCase()) {
-    case 'bug':
+    case "bug":
       return {
-        badge: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-        dot: 'bg-rose-400',
-        label: 'Bug Report'
+        badge: "bg-rose-500/10 text-rose-400 border-rose-500/20",
+        dot: "bg-rose-400",
+        label: "Bug Report",
       };
-    case 'feature':
+    case "feature":
       return {
-        badge: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
-        dot: 'bg-sky-400',
-        label: 'Feature'
+        badge: "bg-sky-500/10 text-sky-400 border-sky-500/20",
+        dot: "bg-sky-400",
+        label: "Feature",
       };
-    case 'ui':
+    case "ui":
       return {
-        badge: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-        dot: 'bg-purple-400',
-        label: 'UI / UX'
+        badge: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+        dot: "bg-purple-400",
+        label: "UI / UX",
       };
     default:
       return {
-        badge: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-        dot: 'bg-amber-400',
-        label: 'General'
+        badge: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+        dot: "bg-amber-400",
+        label: "General",
       };
   }
 };
 
-const getFeedbackStatusStyle = (status = 'new') => {
+const getFeedbackStatusStyle = (status = "new") => {
   switch (status?.toLowerCase()) {
-    case 'resolved':
-      return 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400';
-    case 'in_progress':
-      return 'bg-amber-500/10 border-amber-500/25 text-amber-400';
+    case "resolved":
+      return "bg-emerald-500/10 border-emerald-500/25 text-emerald-400";
+    case "in_progress":
+      return "bg-amber-500/10 border-amber-500/25 text-amber-400";
     default:
-      return 'bg-blue-500/10 border-blue-500/25 text-blue-400';
+      return "bg-blue-500/10 border-blue-500/25 text-blue-400";
   }
 };
 
@@ -125,40 +133,47 @@ const getPlayerKeyStats = (player) => {
   const s = player.stats || {};
   const role = player.role;
 
-  if (role === 'Bowler') {
+  if (role === "Bowler") {
     return [
-      { label: 'Wkts', value: s.wickets ?? '—', accent: 'text-rose-400' },
-      { label: 'Econ', value: s.econ ?? '—', accent: 'text-white' },
-      { label: 'Avg', value: s.avg ?? '—', accent: 'text-white' },
-      { label: 'BBI', value: s.bb ?? '—', accent: 'text-white' },
+      { label: "Wkts", value: s.wickets ?? "—", accent: "text-rose-400" },
+      { label: "Econ", value: s.econ ?? "—", accent: "text-white" },
+      { label: "Avg", value: s.avg ?? "—", accent: "text-white" },
+      { label: "BBI", value: s.bb ?? "—", accent: "text-white" },
     ];
   }
 
-  if (role === 'All-Rounder') {
+  if (role === "All-Rounder") {
     return [
-      { label: 'Runs', value: s.runs ?? '—', accent: 'text-blue-400' },
-      { label: 'SR', value: s.sr ?? '—', accent: 'text-white' },
-      { label: 'Wkts', value: s.wickets ?? '—', accent: 'text-rose-400' },
-      { label: 'Econ', value: s.econ ?? '—', accent: 'text-white' },
+      { label: "Runs", value: s.runs ?? "—", accent: "text-blue-400" },
+      { label: "SR", value: s.sr ?? "—", accent: "text-white" },
+      { label: "Wkts", value: s.wickets ?? "—", accent: "text-rose-400" },
+      { label: "Econ", value: s.econ ?? "—", accent: "text-white" },
     ];
   }
 
   return [
-    { label: 'Runs', value: s.runs ?? '—', accent: 'text-blue-400' },
-    { label: 'Avg', value: s.avg ?? '—', accent: 'text-white' },
-    { label: 'SR', value: s.sr ?? '—', accent: 'text-amber-300' },
-    { label: 'HS', value: s.hs ?? '—', accent: 'text-white' },
+    { label: "Runs", value: s.runs ?? "—", accent: "text-blue-400" },
+    { label: "Avg", value: s.avg ?? "—", accent: "text-white" },
+    { label: "SR", value: s.sr ?? "—", accent: "text-amber-300" },
+    { label: "HS", value: s.hs ?? "—", accent: "text-white" },
   ];
 };
 
 const AdminPanel = () => {
-  useDocumentTitle('Admin Control Hub | CrickAuction', 'Administrative management panel.', true);
+  useDocumentTitle(
+    "Admin Control Hub | CrickAuction",
+    "Administrative management panel.",
+    true,
+  );
   const navigate = useNavigate();
   const { user, loginWithGoogle, logout } = useAuth();
   const { handleFirebaseError } = useQuota();
 
-  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
-  const isAdmin = useMemo(() => isUserAdmin(user, adminEmail), [user, adminEmail]);
+  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || "";
+  const isAdmin = useMemo(
+    () => isUserAdmin(user, adminEmail),
+    [user, adminEmail],
+  );
 
   // Data states
   const [loading, setLoading] = useState(true);
@@ -172,35 +187,36 @@ const AdminPanel = () => {
 
   // Supabase Data
   const [supabaseAuctions, setSupabaseAuctions] = useState([]);
-  const [supabaseTotalAuctionsCount, setSupabaseTotalAuctionsCount] = useState(0);
+  const [supabaseTotalAuctionsCount, setSupabaseTotalAuctionsCount] =
+    useState(0);
   const [supabaseActiveCount, setSupabaseActiveCount] = useState(0);
   const [supabaseCompletedCount, setSupabaseCompletedCount] = useState(0);
 
   // Filters & Tabs
   const { tab } = useParams();
   const activeTab = useMemo(() => {
-    const validTabs = ['overview', 'feedbacks', 'auctions', 'players'];
+    const validTabs = ["overview", "feedbacks", "auctions", "players"];
     if (tab && validTabs.includes(tab.toLowerCase())) {
       return tab.toLowerCase();
     }
-    return 'overview';
+    return "overview";
   }, [tab]);
 
-  const [feedbackSearch, setFeedbackSearch] = useState('');
-  const [feedbackCategory, setFeedbackCategory] = useState('all');
+  const [feedbackSearch, setFeedbackSearch] = useState("");
+  const [feedbackCategory, setFeedbackCategory] = useState("all");
   const [feedbackStarFilter, setFeedbackStarFilter] = useState(0);
-  const [feedbackStatusFilter, setFeedbackStatusFilter] = useState('all');
+  const [feedbackStatusFilter, setFeedbackStatusFilter] = useState("all");
   const [feedbackPage, setFeedbackPage] = useState(1);
   const [savingNoteId, setSavingNoteId] = useState(null);
   const [expandedFeedbackIds, setExpandedFeedbackIds] = useState(new Set());
 
-  const [auctionSearch, setAuctionSearch] = useState('');
-  const [auctionStatusFilter, setAuctionStatusFilter] = useState('all');
+  const [auctionSearch, setAuctionSearch] = useState("");
+  const [auctionStatusFilter, setAuctionStatusFilter] = useState("all");
   const [auctionPage, setAuctionPage] = useState(1);
 
-  const [playerSearch, setPlayerSearch] = useState('');
-  const [playerRoleFilter, setPlayerRoleFilter] = useState('all');
-  const [playerSortBy, setPlayerSortBy] = useState('default');
+  const [playerSearch, setPlayerSearch] = useState("");
+  const [playerRoleFilter, setPlayerRoleFilter] = useState("all");
+  const [playerSortBy, setPlayerSortBy] = useState("default");
   const [playerPage, setPlayerPage] = useState(1);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
 
@@ -212,7 +228,12 @@ const AdminPanel = () => {
   // Reset pagination on filter changes
   useEffect(() => {
     setFeedbackPage(1);
-  }, [feedbackSearch, feedbackCategory, feedbackStarFilter, feedbackStatusFilter]);
+  }, [
+    feedbackSearch,
+    feedbackCategory,
+    feedbackStarFilter,
+    feedbackStatusFilter,
+  ]);
 
   useEffect(() => {
     setAuctionPage(1);
@@ -233,30 +254,38 @@ const AdminPanel = () => {
       const firestorePromises = (async () => {
         let fbList = [];
         try {
-          const fbQuery = query(collection(db, 'feedbacks'), orderBy('createdAt', 'desc'));
+          const fbQuery = query(
+            collection(db, "feedbacks"),
+            orderBy("createdAt", "desc"),
+          );
           const fbSnap = await getDocs(fbQuery);
           fbList = fbSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
         } catch {
           // orderBy may fail when the index is missing; fall back to an
           // unordered read so feedback still loads.
-          const fbSnap = await getDocs(collection(db, 'feedbacks'));
+          const fbSnap = await getDocs(collection(db, "feedbacks"));
           fbList = fbSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
         }
 
         // Migrate any 0 or unrated feedbacks to 1 star in Firestore
         const zeroRatingItems = fbList.filter(
-          (f) => f.rating === 0 || f.rating === '0' || Number(f.rating) < 1 || f.rating === undefined || f.rating === null
+          (f) =>
+            f.rating === 0 ||
+            f.rating === "0" ||
+            Number(f.rating) < 1 ||
+            f.rating === undefined ||
+            f.rating === null,
         );
 
         if (zeroRatingItems.length > 0) {
           try {
             await Promise.all(
               zeroRatingItems.map((item) =>
-                updateDoc(doc(db, 'feedbacks', item.id), {
+                updateDoc(doc(db, "feedbacks", item.id), {
                   rating: 1,
                   updatedAt: new Date(),
-                })
-              )
+                }),
+              ),
             );
             // Reflect in local state
             fbList = fbList.map((f) => {
@@ -267,7 +296,10 @@ const AdminPanel = () => {
               return f;
             });
           } catch (migrateErr) {
-            console.warn('Could not auto-migrate 0-rating feedbacks in Firestore:', migrateErr);
+            console.warn(
+              "Could not auto-migrate 0-rating feedbacks in Firestore:",
+              migrateErr,
+            );
             // Ensure local state at least displays as 1
             fbList = fbList.map((f) => {
               const r = Number(f.rating);
@@ -281,10 +313,10 @@ const AdminPanel = () => {
 
         let fsCount = 0;
         try {
-          const fsAuctionsSnap = await getDocs(collection(db, 'auctions'));
+          const fsAuctionsSnap = await getDocs(collection(db, "auctions"));
           fsCount = fsAuctionsSnap.size;
         } catch (e) {
-          console.warn('Could not count firestore auctions:', e);
+          console.warn("Could not count firestore auctions:", e);
         }
 
         return { fbList, fsCount };
@@ -293,22 +325,46 @@ const AdminPanel = () => {
       // 2. Fetch Supabase Auctions with Exact Counts (no 1k ceiling)
       const supabasePromises = (async () => {
         try {
-          const [totalRes, activeRes, completedRes, listRes] = await Promise.all([
-            supabase.from('auctions').select('*', { count: 'exact', head: true }),
-            supabase.from('auctions').select('*', { count: 'exact', head: true }).neq('status', 'completed'),
-            supabase.from('auctions').select('*', { count: 'exact', head: true }).eq('status', 'completed'),
-            supabase
-              .from('auctions')
-              .select('id, host_name, status, auction_type, settings, created_at')
-              .order('created_at', { ascending: false })
-              .limit(100)
-          ]);
+          const [totalRes, activeRes, completedRes, listRes] =
+            await Promise.all([
+              supabase
+                .from("auctions")
+                .select("*", { count: "exact", head: true }),
+              supabase
+                .from("auctions")
+                .select("*", { count: "exact", head: true })
+                .neq("status", "completed"),
+              supabase
+                .from("auctions")
+                .select("*", { count: "exact", head: true })
+                .eq("status", "completed"),
+              supabase
+                .from("auctions")
+                .select(
+                  "id, host_name, status, auction_type, settings, created_at",
+                )
+                .order("created_at", { ascending: false })
+                .limit(100),
+            ]);
 
           if (listRes.error) throw listRes.error;
 
-          const exactTotal = typeof totalRes.count === 'number' ? totalRes.count : (listRes.data?.length || 0);
-          const exactActive = typeof activeRes.count === 'number' ? activeRes.count : (listRes.data?.filter((a) => (a.status || '').toLowerCase() !== 'completed').length || 0);
-          const exactCompleted = typeof completedRes.count === 'number' ? completedRes.count : (listRes.data?.filter((a) => (a.status || '').toLowerCase() === 'completed').length || 0);
+          const exactTotal =
+            typeof totalRes.count === "number"
+              ? totalRes.count
+              : listRes.data?.length || 0;
+          const exactActive =
+            typeof activeRes.count === "number"
+              ? activeRes.count
+              : listRes.data?.filter(
+                  (a) => (a.status || "").toLowerCase() !== "completed",
+                ).length || 0;
+          const exactCompleted =
+            typeof completedRes.count === "number"
+              ? completedRes.count
+              : listRes.data?.filter(
+                  (a) => (a.status || "").toLowerCase() === "completed",
+                ).length || 0;
 
           return {
             auctions: listRes.data || [],
@@ -317,7 +373,7 @@ const AdminPanel = () => {
             completedCount: exactCompleted,
           };
         } catch (sbErr) {
-          console.warn('Supabase fetch error:', sbErr);
+          console.warn("Supabase fetch error:", sbErr);
           return {
             auctions: [],
             totalCount: 0,
@@ -327,7 +383,10 @@ const AdminPanel = () => {
         }
       })();
 
-      const [fsRes, sbRes] = await Promise.all([firestorePromises, supabasePromises]);
+      const [fsRes, sbRes] = await Promise.all([
+        firestorePromises,
+        supabasePromises,
+      ]);
 
       setFeedbacks(fsRes.fbList);
       setFirestoreAuctionsCount(fsRes.fsCount);
@@ -339,9 +398,11 @@ const AdminPanel = () => {
 
       setLastUpdated(new Date());
     } catch (err) {
-      console.error('Error fetching admin data:', err);
+      console.error("Error fetching admin data:", err);
       handleFirebaseError(err);
-      setError('Failed to load dashboard data. Please check connection and permissions.');
+      setError(
+        "Failed to load dashboard data. Please check connection and permissions.",
+      );
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -361,7 +422,8 @@ const AdminPanel = () => {
     // Accurately parse ratings (handling numbers, numeric strings, and alternatives like stars)
     const validRatings = feedbacks
       .map((f) => {
-        const val = f.rating !== undefined && f.rating !== null ? f.rating : f.stars;
+        const val =
+          f.rating !== undefined && f.rating !== null ? f.rating : f.stars;
         const num = Number(val);
         return !isNaN(num) && num > 0 ? num : null;
       })
@@ -371,11 +433,12 @@ const AdminPanel = () => {
     const avgRating =
       ratedCount > 0
         ? (validRatings.reduce((sum, r) => sum + r, 0) / ratedCount).toFixed(1)
-        : '0.0';
+        : "0.0";
 
     const starCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
     feedbacks.forEach((f) => {
-      const val = f.rating !== undefined && f.rating !== null ? f.rating : f.stars;
+      const val =
+        f.rating !== undefined && f.rating !== null ? f.rating : f.stars;
       const num = Number(val);
       if (!isNaN(num) && num > 0) {
         const rounded = Math.min(5, Math.max(1, Math.round(num)));
@@ -387,7 +450,7 @@ const AdminPanel = () => {
 
     const categoryCounts = { general: 0, bug: 0, feature: 0, ui: 0 };
     feedbacks.forEach((f) => {
-      const c = (f.category || 'general').toLowerCase();
+      const c = (f.category || "general").toLowerCase();
       if (categoryCounts[c] !== undefined) categoryCounts[c]++;
       else categoryCounts.general++;
     });
@@ -399,39 +462,63 @@ const AdminPanel = () => {
       starCounts,
       categoryCounts,
       totalFirestoreAuctions: firestoreAuctionsCount,
-      totalSupabaseAuctions: supabaseTotalAuctionsCount || supabaseAuctions.length,
+      totalSupabaseAuctions:
+        supabaseTotalAuctionsCount || supabaseAuctions.length,
       activeSbAuctions: supabaseActiveCount,
       completedSbAuctions: supabaseCompletedCount,
     };
-  }, [feedbacks, firestoreAuctionsCount, supabaseAuctions.length, supabaseTotalAuctionsCount, supabaseActiveCount, supabaseCompletedCount]);
+  }, [
+    feedbacks,
+    firestoreAuctionsCount,
+    supabaseAuctions.length,
+    supabaseTotalAuctionsCount,
+    supabaseActiveCount,
+    supabaseCompletedCount,
+  ]);
 
   // Filtered Feedbacks
   const filteredFeedbacks = useMemo(() => {
     return feedbacks.filter((f) => {
       const matchesSearch =
         !feedbackSearch.trim() ||
-        (f.email && f.email.toLowerCase().includes(feedbackSearch.toLowerCase())) ||
-        (f.feedback && f.feedback.toLowerCase().includes(feedbackSearch.toLowerCase())) ||
-        (f.adminNote && f.adminNote.toLowerCase().includes(feedbackSearch.toLowerCase()));
+        (f.email &&
+          f.email.toLowerCase().includes(feedbackSearch.toLowerCase())) ||
+        (f.feedback &&
+          f.feedback.toLowerCase().includes(feedbackSearch.toLowerCase())) ||
+        (f.adminNote &&
+          f.adminNote.toLowerCase().includes(feedbackSearch.toLowerCase()));
 
-      const matchesCategory = feedbackCategory === 'all' || f.category === feedbackCategory;
+      const matchesCategory =
+        feedbackCategory === "all" || f.category === feedbackCategory;
 
       const matchesStar =
-        feedbackStarFilter === 0 || Math.round(Number(f.rating) || 0) === feedbackStarFilter;
+        feedbackStarFilter === 0 ||
+        Math.round(Number(f.rating) || 0) === feedbackStarFilter;
 
       const matchesWorkflowStatus =
-        feedbackStatusFilter === 'all'
+        feedbackStatusFilter === "all"
           ? true
-          : feedbackStatusFilter === 'starred'
+          : feedbackStatusFilter === "starred"
             ? Boolean(f.isStarred)
-            : (f.status || 'new') === feedbackStatusFilter;
+            : (f.status || "new") === feedbackStatusFilter;
 
-      return matchesSearch && matchesCategory && matchesStar && matchesWorkflowStatus;
+      return (
+        matchesSearch && matchesCategory && matchesStar && matchesWorkflowStatus
+      );
     });
-  }, [feedbacks, feedbackSearch, feedbackCategory, feedbackStarFilter, feedbackStatusFilter]);
+  }, [
+    feedbacks,
+    feedbackSearch,
+    feedbackCategory,
+    feedbackStarFilter,
+    feedbackStatusFilter,
+  ]);
 
   // Paginated Feedbacks
-  const totalFeedbackPages = Math.max(1, Math.ceil(filteredFeedbacks.length / FEEDBACKS_PER_PAGE));
+  const totalFeedbackPages = Math.max(
+    1,
+    Math.ceil(filteredFeedbacks.length / FEEDBACKS_PER_PAGE),
+  );
   const paginatedFeedbacks = useMemo(() => {
     const start = (feedbackPage - 1) * FEEDBACKS_PER_PAGE;
     return filteredFeedbacks.slice(start, start + FEEDBACKS_PER_PAGE);
@@ -448,19 +535,25 @@ const AdminPanel = () => {
     return supabaseAuctions.filter((a) => {
       const matchesSearch =
         !auctionSearch.trim() ||
-        (a.title && a.title.toLowerCase().includes(auctionSearch.toLowerCase())) ||
-        (a.room_code && a.room_code.toLowerCase().includes(auctionSearch.toLowerCase())) ||
+        (a.title &&
+          a.title.toLowerCase().includes(auctionSearch.toLowerCase())) ||
+        (a.room_code &&
+          a.room_code.toLowerCase().includes(auctionSearch.toLowerCase())) ||
         (a.id && a.id.toLowerCase().includes(auctionSearch.toLowerCase()));
 
       const matchesStatus =
-        auctionStatusFilter === 'all' || (a.status || 'active') === auctionStatusFilter;
+        auctionStatusFilter === "all" ||
+        (a.status || "active") === auctionStatusFilter;
 
       return matchesSearch && matchesStatus;
     });
   }, [supabaseAuctions, auctionSearch, auctionStatusFilter]);
 
   // Paginated Auctions
-  const totalAuctionPages = Math.max(1, Math.ceil(filteredAuctions.length / AUCTIONS_PER_PAGE));
+  const totalAuctionPages = Math.max(
+    1,
+    Math.ceil(filteredAuctions.length / AUCTIONS_PER_PAGE),
+  );
   const paginatedAuctions = useMemo(() => {
     const start = (auctionPage - 1) * AUCTIONS_PER_PAGE;
     return filteredAuctions.slice(start, start + AUCTIONS_PER_PAGE);
@@ -476,21 +569,28 @@ const AdminPanel = () => {
   const handleUpdateFeedback = async (id, updateFields) => {
     setSavingNoteId(id);
     try {
-      await updateDoc(doc(db, 'feedbacks', id), {
+      await updateDoc(doc(db, "feedbacks", id), {
         ...updateFields,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       });
       setFeedbacks((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, ...updateFields } : item))
+        prev.map((item) =>
+          item.id === id ? { ...item, ...updateFields } : item,
+        ),
       );
-      setActionSuccess('Feedback updated successfully.');
+      setActionSuccess("Feedback updated successfully.");
       setTimeout(() => setActionSuccess(null), 2000);
     } catch (err) {
-      console.warn('Error updating feedback:', err);
-      if (err?.code === 'permission-denied' || String(err).includes('permission')) {
-        setError('Firestore permission denied: Please deploy updated firestore.rules to Firebase Console.');
+      console.warn("Error updating feedback:", err);
+      if (
+        err?.code === "permission-denied" ||
+        String(err).includes("permission")
+      ) {
+        setError(
+          "Firestore permission denied: Please deploy updated firestore.rules to Firebase Console.",
+        );
       } else {
-        setError('Failed to update feedback entry.');
+        setError("Failed to update feedback entry.");
       }
     } finally {
       setSavingNoteId(null);
@@ -501,13 +601,13 @@ const AdminPanel = () => {
   const handleDeleteFeedback = async (id) => {
     setIsDeleting(true);
     try {
-      await deleteDoc(doc(db, 'feedbacks', id));
+      await deleteDoc(doc(db, "feedbacks", id));
       setFeedbacks((prev) => prev.filter((item) => item.id !== id));
-      setActionSuccess('Feedback entry deleted successfully.');
+      setActionSuccess("Feedback entry deleted successfully.");
       setTimeout(() => setActionSuccess(null), 3000);
     } catch (err) {
-      console.error('[admin] Failed to delete feedback entry', err);
-      setError('Failed to delete feedback entry.');
+      console.error("[admin] Failed to delete feedback entry", err);
+      setError("Failed to delete feedback entry.");
     } finally {
       setIsDeleting(false);
       setDeleteTarget(null);
@@ -517,23 +617,26 @@ const AdminPanel = () => {
   const handleDeleteAuction = async (id) => {
     setIsDeleting(true);
     try {
-      const { error: sbErr } = await supabase.from('auctions').delete().eq('id', id);
+      const { error: sbErr } = await supabase
+        .from("auctions")
+        .delete()
+        .eq("id", id);
       if (sbErr) throw sbErr;
 
       try {
-        await deleteDoc(doc(db, 'auctions', id));
+        await deleteDoc(doc(db, "auctions", id));
       } catch (e) {
         // The Supabase row is already deleted; the Firestore mirror is
         // best-effort cleanup, so log without failing the whole action.
-        console.warn('[admin] Failed to delete Firestore auction mirror', e);
+        console.warn("[admin] Failed to delete Firestore auction mirror", e);
       }
 
       setSupabaseAuctions((prev) => prev.filter((item) => item.id !== id));
-      setActionSuccess('Auction room deleted from database.');
+      setActionSuccess("Auction room deleted from database.");
       setTimeout(() => setActionSuccess(null), 3000);
     } catch (err) {
-      console.error('[admin] Failed to delete auction room', err);
-      setError('Failed to delete auction room.');
+      console.error("[admin] Failed to delete auction room", err);
+      setError("Failed to delete auction room.");
     } finally {
       setIsDeleting(false);
       setDeleteTarget(null);
@@ -542,12 +645,13 @@ const AdminPanel = () => {
 
   const executeDelete = () => {
     if (!deleteTarget) return;
-    if (deleteTarget.type === 'feedback') handleDeleteFeedback(deleteTarget.id);
-    else if (deleteTarget.type === 'auction') handleDeleteAuction(deleteTarget.id);
+    if (deleteTarget.type === "feedback") handleDeleteFeedback(deleteTarget.id);
+    else if (deleteTarget.type === "auction")
+      handleDeleteAuction(deleteTarget.id);
   };
 
   const formatDate = (ts) => {
-    if (!ts) return 'N/A';
+    if (!ts) return "N/A";
     try {
       if (ts.toDate) return ts.toDate().toLocaleString();
       if (ts.seconds) return new Date(ts.seconds * 1000).toLocaleString();
@@ -578,12 +682,13 @@ const AdminPanel = () => {
             Admin Portal Access
           </h2>
           <p className="text-xs text-gray-400 font-medium leading-relaxed mb-6 sm:mb-8">
-            Authentication required to access the IPL Auction Hub system management dashboard.
+            Authentication required to access the IPL Auction Hub system
+            management dashboard.
           </p>
 
           <button
             onClick={loginWithGoogle}
-            className="w-full py-3.5 px-5 sm:px-6 rounded-2xl bg-gradient-to-r from-[#ff5500] to-[#ff8c00] text-white font-black uppercase tracking-[0.15em] text-xs hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_10px_30px_rgba(255,85,0,0.3)] flex items-center justify-center gap-3 cursor-pointer"
+            className="w-full py-3.5 px-5 sm:px-6 rounded-2xl bg-linear-to-r from-[#ff5500] to-[#ff8c00] text-white font-black uppercase tracking-[0.15em] text-xs hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_10px_30px_rgba(255,85,0,0.3)] flex items-center justify-center gap-3 cursor-pointer"
           >
             <LogIn className="w-4 h-4" />
             <span>Sign In with Google</span>
@@ -620,7 +725,9 @@ const AdminPanel = () => {
             403 — Access Denied
           </h2>
           <p className="text-xs text-gray-400 font-medium leading-relaxed mb-6">
-            Logged in as <span className="text-white font-bold">{user.email}</span>. You do not have permission to view or manage the administrator control hub.
+            Logged in as{" "}
+            <span className="text-white font-bold">{user.email}</span>. You do
+            not have permission to view or manage the administrator control hub.
           </p>
 
           <div className="space-y-3">
@@ -654,11 +761,16 @@ const AdminPanel = () => {
         <div className="max-w-7xl mx-auto flex flex-row items-center justify-between gap-2 sm:gap-4">
           <div className="flex items-center gap-2 sm:gap-4">
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate("/")}
               className="p-2 sm:px-4 sm:py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl sm:rounded-2xl transition-all group flex items-center gap-2 cursor-pointer"
             >
-              <Home size={14} className="text-gray-400 group-hover:text-white transition-colors sm:w-[16px] sm:h-[16px]" />
-              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">Home</span>
+              <Home
+                size={14}
+                className="text-gray-400 group-hover:text-white transition-colors sm:w-[16px] sm:h-[16px]"
+              />
+              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">
+                Home
+              </span>
             </button>
 
             <div className="h-6 w-px bg-white/10 hidden md:block" />
@@ -677,7 +789,9 @@ const AdminPanel = () => {
               className="p-2 sm:px-3.5 sm:py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold uppercase tracking-wider text-gray-300 hover:text-white transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2"
               title="Refresh Data"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-[#ff5500]' : ''}`} />
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${refreshing ? "animate-spin text-[#ff5500]" : ""}`}
+              />
               <span className="hidden sm:inline">Refresh</span>
             </button>
 
@@ -704,7 +818,12 @@ const AdminPanel = () => {
               <AlertCircle className="w-4 sm:w-5 h-4 sm:h-5 flex-shrink-0" />
               <span>{error}</span>
             </div>
-            <button onClick={() => setError(null)} className="hover:text-white p-1">✕</button>
+            <button
+              onClick={() => setError(null)}
+              className="hover:text-white p-1"
+            >
+              ✕
+            </button>
           </motion.div>
         )}
 
@@ -738,7 +857,11 @@ const AdminPanel = () => {
               </div>
             </div>
             <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-              {loading ? <span className="animate-pulse text-gray-600">---</span> : stats.totalFirestoreAuctions}
+              {loading ? (
+                <span className="animate-pulse text-gray-600">---</span>
+              ) : (
+                stats.totalFirestoreAuctions
+              )}
             </div>
             <p className="text-[8px] sm:text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-2 flex items-center gap-1.5">
               <Database className="w-3 h-3 text-[#ff5500]" /> Legacy Room Docs
@@ -759,10 +882,15 @@ const AdminPanel = () => {
               </div>
             </div>
             <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-              {loading ? <span className="animate-pulse text-gray-600">---</span> : stats.totalSupabaseAuctions}
+              {loading ? (
+                <span className="animate-pulse text-gray-600">---</span>
+              ) : (
+                stats.totalSupabaseAuctions
+              )}
             </div>
             <p className="text-[8px] sm:text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-2 flex items-center gap-1.5">
-              <Activity className="w-3 h-3 text-blue-400" /> {stats.activeSbAuctions} Active · {stats.completedSbAuctions} Done
+              <Activity className="w-3 h-3 text-blue-400" />{" "}
+              {stats.activeSbAuctions} Active · {stats.completedSbAuctions} Done
             </p>
           </motion.div>
 
@@ -780,10 +908,15 @@ const AdminPanel = () => {
               </div>
             </div>
             <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-              {loading ? <span className="animate-pulse text-gray-600">---</span> : stats.totalFeedbacks}
+              {loading ? (
+                <span className="animate-pulse text-gray-600">---</span>
+              ) : (
+                stats.totalFeedbacks
+              )}
             </div>
             <p className="text-[8px] sm:text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-2 flex items-center gap-1.5">
-              <CheckCircle2 className="w-3 h-3 text-amber-400" /> Firestore Collection Records
+              <CheckCircle2 className="w-3 h-3 text-amber-400" /> Firestore
+              Collection Records
             </p>
           </motion.div>
 
@@ -801,11 +934,16 @@ const AdminPanel = () => {
               </div>
             </div>
             <div className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-baseline gap-2">
-              {loading ? <span className="animate-pulse text-gray-600">---</span> : stats.avgRating}
+              {loading ? (
+                <span className="animate-pulse text-gray-600">---</span>
+              ) : (
+                stats.avgRating
+              )}
               <span className="text-xs font-bold text-gray-500">/ 5.0</span>
             </div>
             <p className="text-[8px] sm:text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-2 flex items-center gap-1.5">
-              <Sparkles className="w-3 h-3 text-emerald-400" /> Satisfaction Score
+              <Sparkles className="w-3 h-3 text-emerald-400" /> Satisfaction
+              Score
             </p>
           </motion.div>
         </div>
@@ -814,21 +952,36 @@ const AdminPanel = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
           <div className="flex items-center gap-2 overflow-x-auto custom-scrollbar no-scrollbar py-1 w-full sm:w-auto">
             {[
-              { id: 'overview', label: 'Overview', icon: Activity },
-              { id: 'feedbacks', label: `Feedbacks (${feedbacks.length})`, icon: MessageSquare },
-              { id: 'auctions', label: `Supabase Auctions`, icon: Gavel },
-              { id: 'players', label: `Players (${IPL_PLAYERS.length})`, icon: Users },
+              { id: "overview", label: "Overview", icon: Activity },
+              {
+                id: "feedbacks",
+                label: `Feedbacks (${feedbacks.length})`,
+                icon: MessageSquare,
+              },
+              { id: "auctions", label: `Supabase Auctions`, icon: Gavel },
+              {
+                id: "players",
+                label: `Players (${IPL_PLAYERS.length})`,
+                icon: Users,
+              },
             ].map((tabItem) => {
               const Icon = tabItem.icon;
               const isActive = activeTab === tabItem.id;
               return (
                 <button
                   key={tabItem.id}
-                  onClick={() => navigate(tabItem.id === 'overview' ? '/admin' : `/admin/${tabItem.id}`)}
-                  className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-wider transition-all duration-200 shrink-0 cursor-pointer ${isActive
-                    ? 'bg-[#ff5500] text-white shadow-[0_4px_20px_rgba(255,85,0,0.3)]'
-                    : 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/5'
-                    }`}
+                  onClick={() =>
+                    navigate(
+                      tabItem.id === "overview"
+                        ? "/admin"
+                        : `/admin/${tabItem.id}`,
+                    )
+                  }
+                  className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-wider transition-all duration-200 shrink-0 cursor-pointer ${
+                    isActive
+                      ? "bg-[#ff5500] text-white shadow-[0_4px_20px_rgba(255,85,0,0.3)]"
+                      : "bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/5"
+                  }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
                   <span>{tabItem.label}</span>
@@ -846,17 +999,17 @@ const AdminPanel = () => {
         </div>
 
         {/* Tab 1: Overview Tab */}
-        {activeTab === 'overview' && (
+        {activeTab === "overview" && (
           <OverviewTab
             stats={stats}
             feedbacks={feedbacks}
             formatDate={formatDate}
-            onViewAllFeedbacks={() => navigate('/admin/feedbacks')}
+            onViewAllFeedbacks={() => navigate("/admin/feedbacks")}
           />
         )}
 
         {/* Tab 2: Feedbacks Management Tab */}
-        {activeTab === 'feedbacks' && (
+        {activeTab === "feedbacks" && (
           <FeedbacksTab
             feedbacks={feedbacks}
             filteredFeedbacks={filteredFeedbacks}
@@ -887,7 +1040,7 @@ const AdminPanel = () => {
         )}
 
         {/* Tab 3: Supabase Auctions Directory */}
-        {activeTab === 'auctions' && (
+        {activeTab === "auctions" && (
           <AuctionsTab
             filteredAuctions={filteredAuctions}
             paginatedAuctions={paginatedAuctions}
@@ -904,7 +1057,7 @@ const AdminPanel = () => {
         )}
 
         {/* Tab 4: Players Tab */}
-        {activeTab === 'players' && (
+        {activeTab === "players" && (
           <PlayersTab
             allPlayers={IPL_PLAYERS}
             playerSearch={playerSearch}

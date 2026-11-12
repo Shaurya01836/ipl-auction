@@ -1,303 +1,371 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useAuction } from '../contexts/AuctionContext';
-import { useAuth } from '../contexts/AuthContext';
-import { Send, MessageSquare, ChevronUp, ChevronDown, Image as ImageIcon } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { shouldStickToBottom } from '../lib/auctionDisplay';
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useAuction } from "../contexts/AuctionContext";
+import { useAuth } from "../contexts/AuthContext";
+import {
+  Send,
+  MessageSquare,
+  ChevronUp,
+  ChevronDown,
+  Image as ImageIcon,
+} from "lucide-react";
+import { motion } from "framer-motion";
+import { shouldStickToBottom } from "../lib/auctionDisplay";
 
-
-const GIPHY_API_KEY = import.meta.env.VITE_GIPHY_API_KEY;
+const GIPHY_API_KEY = import.meta.env.VITE_GIPHY_API_KEY || "";
 
 const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
-   const { messages, sendMessage } = useAuction();
-   const { user } = useAuth();
-   const [text, setText] = useState('');
-   const [chatError, setChatError] = useState('');
-   const [gifError, setGifError] = useState('');
-   const scrollContainerRef = useRef(null);
-   const stickToBottomRef = useRef(true);
-   const lastScrollTopRef = useRef(0);
+  const { messages, sendMessage } = useAuction();
+  const { user } = useAuth();
+  const [text, setText] = useState("");
+  const [chatError, setChatError] = useState("");
+  const [gifError, setGifError] = useState("");
+  const scrollContainerRef = useRef(null);
+  const stickToBottomRef = useRef(true);
+  const lastScrollTopRef = useRef(0);
 
-   // Filter only text and gif chat messages
-   const chatMessages = messages.filter(m => m.type === 'text' || m.type === 'gif' || !m.type);
-   const lastMessageId = chatMessages[chatMessages.length - 1]?.id;
+  // Filter only text and gif chat messages
+  const chatMessages = messages.filter(
+    (m) => m.type === "text" || m.type === "gif" || !m.type,
+  );
+  const lastMessageId = chatMessages[chatMessages.length - 1]?.id;
 
-   const scrollToBottom = useCallback(() => {
-      if (scrollContainerRef.current) {
-         scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+  const scrollToBottom = useCallback(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop =
+        scrollContainerRef.current.scrollHeight;
+    }
+  }, []);
+
+  // Follow the latest message by identity, not only by length: the RTDB
+  // subscription keeps a fixed-size window, so replacement messages do not
+  // change the length. Only follow when the user is already near the bottom.
+  // When collapsed, remember the reading position so expanding does not jump.
+  useEffect(() => {
+    if (isCollapsed) return undefined;
+    const el = scrollContainerRef.current;
+    if (!el) return undefined;
+
+    const raf = requestAnimationFrame(() => {
+      if (stickToBottomRef.current) {
+        scrollToBottom();
+      } else {
+        el.scrollTop = lastScrollTopRef.current;
       }
-   }, []);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [lastMessageId, isCollapsed, scrollToBottom]);
 
-   // Follow the latest message by identity, not only by length: the RTDB
-   // subscription keeps a fixed-size window, so replacement messages do not
-   // change the length. Only follow when the user is already near the bottom.
-   // When collapsed, remember the reading position so expanding does not jump.
-   useEffect(() => {
-      if (isCollapsed) return undefined;
-      const el = scrollContainerRef.current;
-      if (!el) return undefined;
+  const handleScroll = () => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    lastScrollTopRef.current = el.scrollTop;
+    stickToBottomRef.current = shouldStickToBottom(
+      el.scrollHeight,
+      el.scrollTop,
+      el.clientHeight,
+    );
+  };
 
-      const raf = requestAnimationFrame(() => {
-         if (stickToBottomRef.current) {
-            scrollToBottom();
-         } else {
-            el.scrollTop = lastScrollTopRef.current;
-         }
-      });
-      return () => cancelAnimationFrame(raf);
-   }, [lastMessageId, isCollapsed, scrollToBottom]);
+  const handleSend = async (e) => {
+    e.preventDefault();
+    if (!text.trim() || !roomId) return;
 
-   const handleScroll = () => {
-      const el = scrollContainerRef.current;
-      if (!el) return;
-      lastScrollTopRef.current = el.scrollTop;
-      stickToBottomRef.current = shouldStickToBottom(
-         el.scrollHeight,
-         el.scrollTop,
-         el.clientHeight,
+    try {
+      await sendMessage(roomId, text.trim(), "text");
+      setText("");
+      setChatError("");
+      stickToBottomRef.current = true;
+    } catch (err) {
+      console.error("[chat] Failed to send message", err);
+      setChatError(
+        err?.message || "Message could not be sent. Please try again.",
       );
-   };
+    }
+  };
 
-   const handleSend = async (e) => {
-      e.preventDefault();
-      if (!text.trim() || !roomId) return;
+  const [showGifPicker, setShowGifPicker] = useState(false);
+  const [gifSearchQuery, setGifSearchQuery] = useState("");
+  const [searchedGifs, setSearchedGifs] = useState([]);
+  const [isSearchingGifs, setIsSearchingGifs] = useState(false);
 
-      try {
-         await sendMessage(roomId, text.trim(), 'text');
-         setText('');
-         setChatError('');
-         stickToBottomRef.current = true;
-      } catch (err) {
-         console.error('[chat] Failed to send message', err);
-         setChatError('Message could not be sent. Please try again.');
+  const fetchGifs = useCallback(
+    async (query = "") => {
+      if (!GIPHY_API_KEY) {
+        setSearchedGifs([]);
+        setGifError("GIF search is not configured.");
+        setIsSearchingGifs(false);
+        return;
       }
-   };
 
-   const [showGifPicker, setShowGifPicker] = useState(false);
-   const [gifSearchQuery, setGifSearchQuery] = useState('');
-   const [searchedGifs, setSearchedGifs] = useState([]);
-   const [isSearchingGifs, setIsSearchingGifs] = useState(false);
-
-   const fetchGifs = useCallback(async (query = '') => {
       setIsSearchingGifs(true);
-      setGifError('');
+      setGifError("");
       try {
-         const url = query.trim()
-            ? `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query.trim())}&limit=16&rating=g`
-            : `https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_API_KEY}&limit=16&rating=g`;
+        const url = query.trim()
+          ? `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query.trim())}&limit=16&rating=g`
+          : `https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_API_KEY}&limit=16&rating=g`;
 
-         const res = await fetch(url);
-         if (!res.ok) {
-            throw new Error(`Giphy request failed with status ${res.status}`);
-         }
-         const json = await res.json();
-         if (json && json.data) {
-            const list = json.data.map(item => ({
-               id: item.id,
-               name: item.title || 'GIF',
-               url: item.images?.fixed_height?.url || item.images?.original?.url
-            }));
-            setSearchedGifs(list);
-         } else {
-            setSearchedGifs([]);
-         }
+        const res = await fetch(url);
+        if (!res.ok) {
+          throw new Error(`Giphy request failed with status ${res.status}`);
+        }
+        const json = await res.json();
+        if (json && json.data) {
+          const list = json.data.map((item) => ({
+            id: item.id,
+            name: item.title || "GIF",
+            url: item.images?.fixed_height?.url || item.images?.original?.url,
+          }));
+          setSearchedGifs(list);
+        } else {
+          setSearchedGifs([]);
+        }
       } catch (err) {
-         console.error('[chat] Failed to load GIFs', err);
-         setSearchedGifs([]);
-         setGifError('Could not load GIFs. Please try again.');
+        console.error("[chat] Failed to load GIFs", err);
+        setSearchedGifs([]);
+        setGifError("Could not load GIFs. Please try again.");
       } finally {
-         setIsSearchingGifs(false);
+        setIsSearchingGifs(false);
       }
-   }, []);
+    },
+    [GIPHY_API_KEY],
+  );
 
-   const handleSearchGifs = async (e) => {
-      if (e) e.preventDefault();
-      await fetchGifs(gifSearchQuery);
-   };
+  const handleSearchGifs = async (e) => {
+    if (e) e.preventDefault();
+    await fetchGifs(gifSearchQuery);
+  };
 
-   useEffect(() => {
-      if (showGifPicker) {
-         fetchGifs('');
-      }
-   }, [showGifPicker, fetchGifs]);
+  useEffect(() => {
+    if (showGifPicker) {
+      fetchGifs("");
+    }
+  }, [showGifPicker, fetchGifs]);
 
-   return (
-      <div className="relative flex flex-col h-full bg-transparent w-full">
-         {onToggleCollapse && (
-            <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
-               <button
-                  type="button"
-                  onClick={onToggleCollapse}
-                  className="p-1 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition-colors cursor-pointer"
-                  title={isCollapsed ? "Expand Chat" : "Collapse Chat"}
-               >
-                  {isCollapsed ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-               </button>
-            </div>
-         )}
+  return (
+    <div className="relative flex flex-col h-full bg-transparent w-full">
+      {onToggleCollapse && (
+        <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/1">
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            className="p-1 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition-colors cursor-pointer"
+            title={isCollapsed ? "Expand Chat" : "Collapse Chat"}
+          >
+            {isCollapsed ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+        </div>
+      )}
 
-         {!isCollapsed && (
-            <>
-               {/* Messages Scroll Area */}
-               <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-4 compact:p-3 space-y-3 custom-scrollbar flex flex-col min-h-0">
-                  {chatMessages.length === 0 ? (
-                     <div className="flex-1 flex flex-col items-center justify-center opacity-30 p-8 text-center my-auto">
-                        <MessageSquare size={24} className="text-gray-500 mb-2 animate-pulse" />
-                        <p className="text-[9px] compact:text-[8px] font-black text-white/50 uppercase tracking-widest">No banter yet</p>
-                        <p className="text-[8px] compact:text-[7px] text-gray-600 font-bold uppercase tracking-widest mt-1">Start the conversation</p>
-                     </div>
-                  ) : (
-                     chatMessages.map((msg, index) => {
-                        const isMe = msg.userId === user?.uid;
+      {!isCollapsed && (
+        <>
+          {/* Messages Scroll Area */}
+          <div
+            ref={scrollContainerRef}
+            onScroll={handleScroll}
+            className="flex-1 overflow-y-auto p-4 compact:p-3 space-y-3 custom-scrollbar flex flex-col min-h-0"
+          >
+            {chatMessages.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center opacity-30 p-8 text-center my-auto">
+                <MessageSquare
+                  size={24}
+                  className="text-gray-500 mb-2 animate-pulse"
+                />
+                <p className="text-[9px] compact:text-[8px] font-black text-white/50 uppercase tracking-widest">
+                  No banter yet
+                </p>
+                <p className="text-[8px] compact:text-[7px] text-gray-600 font-bold uppercase tracking-widest mt-1">
+                  Start the conversation
+                </p>
+              </div>
+            ) : (
+              chatMessages.map((msg, index) => {
+                const isMe = msg.userId === user?.uid;
 
-                        return (
-                           <motion.div
-                              key={msg.id || index}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[85%] ${isMe ? 'ml-auto' : 'mr-auto'}`}
-                           >
-                              {/* Name and Team Header (only for other users) */}
-                              {!isMe && (
-                                 <div className="flex items-center gap-1.5 mb-1 px-1">
-                                    <span className="text-[9px] compact:text-[8px] font-bold text-gray-400 uppercase tracking-tight">
-                                       {msg.userName}
-                                    </span>
-                                    {msg.teamId && (
-                                       <span className="bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-[7px] compact:text-[6px] font-black text-gray-400 uppercase tracking-widest">
-                                          {msg.teamId}
-                                       </span>
-                                    )}
-                                 </div>
-                              )}
-
-                              {/* Speech Bubble */}
-                              <div
-                                 className={`rounded-2xl text-[11px] compact:text-[10px] leading-relaxed break-words shadow-lg overflow-hidden ${
-                                    msg.type === 'gif' || (msg.text?.startsWith('http') && msg.text?.includes('.gif'))
-                                       ? 'border border-white/10 max-w-[200px]'
-                                       : isMe
-                                          ? 'px-4 py-3 bg-white/10 border border-white/10 text-white rounded-tr-none'
-                                          : 'px-4 py-3 bg-white/5 border border-white/10 text-gray-300 rounded-tl-none'
-                                 }`}
-                              >
-                                 {msg.type === 'gif' || (msg.text?.startsWith('http') && msg.text?.includes('.gif')) ? (
-                                    <img src={msg.text} alt="gif" className="w-full h-auto object-cover block" />
-                                 ) : (
-                                    msg.text
-                                 )}
-                              </div>
-                           </motion.div>
-                        );
-                     })
-                  )}
-               </div>
-
-               {/* Message Input Box */}
-               {chatError && (
-                  <p role="alert" className="px-3 pt-2 text-[9px] compact:text-[8px] font-bold text-red-400">{chatError}</p>
-               )}
-               <form onSubmit={handleSend} className="p-3 border-t border-white/5 bg-white/[0.01] flex gap-2 relative">
-                  <button
-                     type="button"
-                     onClick={() => setShowGifPicker(!showGifPicker)}
-                     className={`w-10 h-10 border rounded-xl flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0 ${showGifPicker ? 'bg-white/10 border-white/20 text-white shadow-inner' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'}`}
-                     title="Send a GIF"
+                return (
+                  <motion.div
+                    key={msg.id || index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`flex flex-col ${isMe ? "items-end" : "items-start"} max-w-[85%] ${isMe ? "ml-auto" : "mr-auto"}`}
                   >
-                     <ImageIcon size={14} />
-                  </button>
-                  <input
-                     type="text"
-                     value={text}
-                     onChange={(e) => setText(e.target.value)}
-                     placeholder="Type a message..."
-                     className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 compact:px-3 compact:py-2 text-[11px] compact:text-[10px] text-white focus:outline-none focus:border-white/30 transition-colors placeholder:text-gray-700"
-                     maxLength={150}
-                  />
-                  <button
-                     type="submit"
-                     disabled={!text.trim()}
-                     className="w-10 h-10 bg-white disabled:opacity-40 hover:bg-white/90 text-black rounded-xl flex items-center justify-center transition-all active:scale-95 disabled:scale-100 cursor-pointer shrink-0"
-                  >
-                     <Send size={14} fill="currentColor" />
-                  </button>
-               </form>
-
-               {showGifPicker && (
-                  <div className="absolute bottom-16 right-3 left-3 bg-[#0d0d0e]/98 border border-white/10 rounded-2xl p-4 shadow-2xl backdrop-blur-xl z-[60] flex flex-col gap-3">
-                     <div className="flex justify-between items-center px-1">
-                        <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Global GIF Search</span>
-                        <button
-                           type="button"
-                           onClick={() => {
-                              setShowGifPicker(false);
-                              setGifSearchQuery('');
-                           }}
-                           className="text-[8px] font-black text-gray-500 hover:text-white uppercase tracking-widest transition-colors cursor-pointer"
-                        >
-                           Close
-                        </button>
-                     </div>
-
-                     {/* Search input field */}
-                     <form onSubmit={handleSearchGifs} className="flex gap-2">
-                        <input
-                           type="text"
-                           value={gifSearchQuery}
-                           onChange={(e) => setGifSearchQuery(e.target.value)}
-                           placeholder="Search any GIF (e.g. Dhoni, Kohli...)"
-                           className="flex-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-[10px] text-white focus:outline-none focus:border-white/30 transition-colors placeholder:text-gray-700"
-                        />
-                        <button
-                           type="submit"
-                           className="px-3 bg-white hover:bg-white/90 text-black font-black text-[9px] uppercase tracking-widest rounded-xl transition-all active:scale-95 cursor-pointer shrink-0"
-                        >
-                           Search
-                        </button>
-                     </form>
-
-                     <div className="grid grid-cols-4 gap-2 overflow-y-auto max-h-[160px] custom-scrollbar min-h-[80px]">
-                        {isSearchingGifs ? (
-                           <div className="col-span-4 flex items-center justify-center py-8 opacity-50">
-                              <span className="text-[9px] font-black text-white uppercase tracking-widest animate-pulse">Searching Giphy...</span>
-                           </div>
-                        ) : searchedGifs.length === 0 ? (
-                           <div className="col-span-4 flex items-center justify-center py-8 opacity-50">
-                              <span className="text-[9px] font-black text-white uppercase tracking-widest">{gifError || 'No GIFs Found'}</span>
-                           </div>
-                        ) : (
-                           searchedGifs.map((gif) => (
-                              <button
-                                 key={gif.id}
-                                 type="button"
-                                 onClick={async () => {
-                                    try {
-                                       await sendMessage(roomId, gif.url, 'gif');
-                                        setChatError('');
-                                        stickToBottomRef.current = true;
-                                       setShowGifPicker(false);
-                                       setGifSearchQuery('');
-                                    } catch (err) {
-                                        console.error('[chat] Failed to send GIF', err);
-                                        setChatError('GIF could not be sent. Please try again.');
-                                     }
-                                 }}
-                                 className="relative rounded-lg overflow-hidden border border-white/5 hover:border-white/30 aspect-video group cursor-pointer transition-all active:scale-95 bg-white/5"
-                              >
-                                 <img src={gif.url} alt={gif.name} className="w-full h-full object-cover animate-pulse" />
-                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                    <span className="text-[7px] font-black text-white uppercase tracking-tight truncate max-w-[90%] px-1">{gif.name}</span>
-                                 </div>
-                              </button>
-                           ))
+                    {/* Name and Team Header (only for other users) */}
+                    {!isMe && (
+                      <div className="flex items-center gap-1.5 mb-1 px-1">
+                        <span className="text-[9px] compact:text-[8px] font-bold text-gray-400 uppercase tracking-tight">
+                          {msg.userName}
+                        </span>
+                        {msg.teamId && (
+                          <span className="bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-[7px] compact:text-[6px] font-black text-gray-400 uppercase tracking-widest">
+                            {msg.teamId}
+                          </span>
                         )}
-                     </div>
+                      </div>
+                    )}
+
+                    {/* Speech Bubble */}
+                    <div
+                      className={`rounded-2xl text-[11px] compact:text-[10px] leading-relaxed wrap-break-word shadow-lg overflow-hidden ${
+                        msg.type === "gif" ||
+                        (msg.text?.startsWith("http") &&
+                          msg.text?.includes(".gif"))
+                          ? "border border-white/10 max-w-50"
+                          : isMe
+                            ? "px-4 py-3 bg-white/10 border border-white/10 text-white rounded-tr-none"
+                            : "px-4 py-3 bg-white/5 border border-white/10 text-gray-300 rounded-tl-none"
+                      }`}
+                    >
+                      {msg.type === "gif" ||
+                      (msg.text?.startsWith("http") &&
+                        msg.text?.includes(".gif")) ? (
+                        <img
+                          src={msg.text}
+                          alt="gif"
+                          className="w-full h-auto object-cover block"
+                        />
+                      ) : (
+                        msg.text
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Message Input Box */}
+          {chatError && (
+            <p
+              role="alert"
+              className="px-3 pt-2 text-[9px] compact:text-[8px] font-bold text-red-400"
+            >
+              {chatError}
+            </p>
+          )}
+          <form
+            onSubmit={handleSend}
+            className="p-3 border-t border-white/5 bg-white/1 flex gap-2 relative"
+          >
+            <input
+              type="text"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Type a message..."
+              className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 compact:px-3 compact:py-2 text-[11px] compact:text-[10px] text-white focus:outline-none focus:border-white/30 transition-colors placeholder:text-gray-700"
+              maxLength={150}
+            />
+            <button
+              type="submit"
+              disabled={!text.trim()}
+              className="w-10 h-10 bg-white disabled:opacity-40 hover:bg-white/90 text-black rounded-xl flex items-center justify-center transition-all active:scale-95 disabled:scale-100 cursor-pointer shrink-0"
+            >
+              <Send size={14} fill="currentColor" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowGifPicker(!showGifPicker)}
+              disabled={!GIPHY_API_KEY}
+              title={
+                GIPHY_API_KEY ? "Send a GIF" : "GIF search is not configured"
+              }
+              className={`w-10 h-10 border rounded-xl flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0 ${
+                showGifPicker
+                  ? "bg-white/10 border-white/20 text-white shadow-inner"
+                  : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white"
+              } ${!GIPHY_API_KEY ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              <ImageIcon size={14} />
+            </button>
+          </form>
+
+          {showGifPicker && (
+            <div className="absolute bottom-16 right-3 left-3 bg-[#0d0d0e]/98 border border-white/10 rounded-2xl p-4 shadow-2xl backdrop-blur-xl z-60 flex flex-col gap-3">
+              <div className="flex justify-between items-center px-1">
+                <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">
+                  Global GIF Search
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowGifPicker(false);
+                    setGifSearchQuery("");
+                  }}
+                  className="text-[8px] font-black text-gray-500 hover:text-white uppercase tracking-widest transition-colors cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+
+              {/* Search input field */}
+              <form onSubmit={handleSearchGifs} className="flex gap-2">
+                <input
+                  type="text"
+                  value={gifSearchQuery}
+                  onChange={(e) => setGifSearchQuery(e.target.value)}
+                  placeholder="Search any GIF (e.g. Dhoni, Kohli...)"
+                  className="flex-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-[10px] text-white focus:outline-none focus:border-white/30 transition-colors placeholder:text-gray-700"
+                />
+                <button
+                  type="submit"
+                  className="px-3 bg-white hover:bg-white/90 text-black font-black text-[9px] uppercase tracking-widest rounded-xl transition-all active:scale-95 cursor-pointer shrink-0"
+                >
+                  Search
+                </button>
+              </form>
+
+              <div className="grid grid-cols-4 gap-2 overflow-y-auto max-h-40 custom-scrollbar min-h-20">
+                {isSearchingGifs ? (
+                  <div className="col-span-4 flex items-center justify-center py-8 opacity-50">
+                    <span className="text-[9px] font-black text-white uppercase tracking-widest animate-pulse">
+                      Searching Giphy...
+                    </span>
                   </div>
-               )}
-            </>
-         )}
-      </div>
-   );
+                ) : searchedGifs.length === 0 ? (
+                  <div className="col-span-4 flex items-center justify-center py-8 opacity-50">
+                    <span className="text-[9px] font-black text-white uppercase tracking-widest">
+                      {gifError || "No GIFs Found"}
+                    </span>
+                  </div>
+                ) : (
+                  searchedGifs.map((gif) => (
+                    <button
+                      key={gif.id}
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await sendMessage(roomId, gif.url, "gif");
+                          setChatError("");
+                          stickToBottomRef.current = true;
+                          setShowGifPicker(false);
+                          setGifSearchQuery("");
+                        } catch (err) {
+                          console.error("[chat] Failed to send GIF", err);
+                          setChatError(
+                            "GIF could not be sent. Please try again.",
+                          );
+                        }
+                      }}
+                      className="relative rounded-lg overflow-hidden border border-white/5 hover:border-white/30 aspect-video group cursor-pointer transition-all active:scale-95 bg-white/5"
+                    >
+                      <img
+                        src={gif.url}
+                        alt={gif.name}
+                        className="w-full h-full object-cover animate-pulse"
+                      />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <span className="text-[7px] font-black text-white uppercase tracking-tight truncate max-w-[90%] px-1">
+                          {gif.name}
+                        </span>
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
 };
 
 export default TextChat;
