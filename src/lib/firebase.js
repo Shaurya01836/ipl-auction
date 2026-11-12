@@ -1,7 +1,17 @@
 import { getApps, initializeApp } from "firebase/app";
 import { getAuth, signInAnonymously } from "firebase/auth";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
-import { getDatabase, ref, onValue, goOffline, goOnline } from "firebase/database";
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+} from "firebase/firestore";
+import {
+  getDatabase,
+  ref,
+  onValue,
+  goOffline,
+  goOnline,
+} from "firebase/database";
 import {
   AUCTION_SERVERS,
   DEFAULT_AUCTION_SERVER,
@@ -13,39 +23,59 @@ import {
   SERVER_4,
 } from "./auctionServers";
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  // Primary project: Auth, Firestore and the first Realtime Database.
-  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+const readViteEnv = (key, fallback = "") => {
+  if (typeof import.meta !== "undefined" && import.meta.env) {
+    return import.meta.env[key] ?? fallback;
+  }
+  return fallback;
 };
+
+const firebaseConfig = {
+  apiKey: readViteEnv("VITE_FIREBASE_API_KEY"),
+  authDomain: readViteEnv("VITE_FIREBASE_AUTH_DOMAIN"),
+  databaseURL: readViteEnv("VITE_FIREBASE_DATABASE_URL"),
+  projectId: readViteEnv("VITE_FIREBASE_PROJECT_ID"),
+  storageBucket: readViteEnv("VITE_FIREBASE_STORAGE_BUCKET"),
+  messagingSenderId: readViteEnv("VITE_FIREBASE_MESSAGING_SENDER_ID"),
+  appId: readViteEnv("VITE_FIREBASE_APP_ID"),
+  measurementId: readViteEnv("VITE_FIREBASE_MEASUREMENT_ID"),
+};
+
+if (
+  !firebaseConfig.apiKey ||
+  !firebaseConfig.authDomain ||
+  !firebaseConfig.projectId
+) {
+  console.warn(
+    "[firebase] Firebase web config is incomplete. Add the VITE_FIREBASE_* values to your .env file.",
+  );
+}
 
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const db = initializeFirestore(app, {
   localCache: persistentLocalCache({
-    tabManager: persistentMultipleTabManager()
-  })
+    tabManager: persistentMultipleTabManager(),
+  }),
 });
 // Defer Analytics until after first paint — removes it from the critical path
 let analytics = null;
-if (typeof window !== 'undefined') {
-  window.addEventListener('load', () => {
-    import('firebase/analytics').then(({ getAnalytics }) => {
-      analytics = getAnalytics(app);
-    });
-  }, { once: true });
+if (typeof window !== "undefined") {
+  window.addEventListener(
+    "load",
+    () => {
+      import("firebase/analytics").then(({ getAnalytics }) => {
+        analytics = getAnalytics(app);
+      });
+    },
+    { once: true },
+  );
 }
 export { analytics };
 
 // ─── Four RTDB backends ───
-// Server 1 (Main): ipl-auction-1cdbc (Auth, Firestore, and primary RTDB with security rules)
+// Server 1 (Main): ipl-auction-1cdbc (Auth, Firestore, and the first Realtime Database.
 // Server 2: ipl-auction-2-947e7
 // Server 3: ipl-auction-3
 // Server 4: paypact-b5b52
@@ -55,24 +85,24 @@ export { analytics };
 const server2DatabaseURL = (
   import.meta.env.VITE_RTDB_2_URL ||
   import.meta.env.VITE_RTDB_FIREBASE_DATABASE_URL ||
-  'https://ipl-auction-2-947e7-default-rtdb.asia-southeast1.firebasedatabase.app'
+  "https://ipl-auction-2-947e7-default-rtdb.asia-southeast1.firebasedatabase.app"
 ).trim();
 
 const server3DatabaseURL = (
   import.meta.env.VITE_RTDB_3_URL ||
   import.meta.env.VITE_RTDB_B_URL ||
-  'https://ipl-auction-3-default-rtdb.asia-southeast1.firebasedatabase.app'
+  "https://ipl-auction-3-default-rtdb.asia-southeast1.firebasedatabase.app"
 ).trim();
 
 const server4DatabaseURL = (
   import.meta.env.VITE_RTDB_4_URL ||
   import.meta.env.VITE_RTDB_A_URL ||
-  'https://paypact-b5b52-default-rtdb.asia-southeast1.firebasedatabase.app'
+  "https://paypact-b5b52-default-rtdb.asia-southeast1.firebasedatabase.app"
 ).trim();
 
-const SERVER_2_APP_NAME = 'ipl-auction-rtdb-2';
-const SERVER_3_APP_NAME = 'ipl-auction-rtdb-3';
-const SERVER_4_APP_NAME = 'ipl-auction-rtdb-4';
+const SERVER_2_APP_NAME = "ipl-auction-rtdb-2";
+const SERVER_3_APP_NAME = "ipl-auction-rtdb-3";
+const SERVER_4_APP_NAME = "ipl-auction-rtdb-4";
 
 function deriveProjectId(databaseURL) {
   try {
@@ -87,41 +117,66 @@ function createOverrideDatabase(databaseURL, appName, envPrefix) {
   if (!databaseURL) return null;
   try {
     const existing = getApps().find((candidate) => candidate.name === appName);
-    const overrideApp = existing || initializeApp(
-      Object.fromEntries(
-        Object.entries({
-          apiKey:            import.meta.env[`${envPrefix}_API_KEY`],
-          authDomain:        import.meta.env[`${envPrefix}_AUTH_DOMAIN`],
-          databaseURL,
-          projectId:
-            import.meta.env[`${envPrefix}_PROJECT_ID`] ||
-            deriveProjectId(databaseURL),
-          storageBucket:     import.meta.env[`${envPrefix}_STORAGE_BUCKET`],
-          messagingSenderId: import.meta.env[`${envPrefix}_MESSAGING_SENDER_ID`],
-          appId:             import.meta.env[`${envPrefix}_APP_ID`],
-        }).filter(([, value]) => Boolean(value)),
-      ),
-      appName,
-    );
+    const overrideApp =
+      existing ||
+      initializeApp(
+        Object.fromEntries(
+          Object.entries({
+            apiKey: import.meta.env[`${envPrefix}_API_KEY`],
+            authDomain: import.meta.env[`${envPrefix}_AUTH_DOMAIN`],
+            databaseURL,
+            projectId:
+              import.meta.env[`${envPrefix}_PROJECT_ID`] ||
+              deriveProjectId(databaseURL),
+            storageBucket: import.meta.env[`${envPrefix}_STORAGE_BUCKET`],
+            messagingSenderId: import.meta.env[
+              `${envPrefix}_MESSAGING_SENDER_ID`
+            ],
+            appId: import.meta.env[`${envPrefix}_APP_ID`],
+          }).filter(([, value]) => Boolean(value)),
+        ),
+        appName,
+      );
     return getDatabase(overrideApp, databaseURL);
   } catch (error) {
-    console.error(`[firebase] Could not initialise override RTDB app "${appName}"`, error);
+    console.error(
+      `[firebase] Could not initialise override RTDB app "${appName}"`,
+      error,
+    );
     return null;
   }
 }
 
 const server1Rtdb = getDatabase(app);
 const server2Rtdb =
-  createOverrideDatabase(server2DatabaseURL, SERVER_2_APP_NAME, 'VITE_RTDB_2') ||
-  createOverrideDatabase(server2DatabaseURL, SERVER_2_APP_NAME, 'VITE_RTDB_FIREBASE');
+  createOverrideDatabase(
+    server2DatabaseURL,
+    SERVER_2_APP_NAME,
+    "VITE_RTDB_2",
+  ) ||
+  createOverrideDatabase(
+    server2DatabaseURL,
+    SERVER_2_APP_NAME,
+    "VITE_RTDB_FIREBASE",
+  );
 const server3Rtdb =
-  createOverrideDatabase(server3DatabaseURL, SERVER_3_APP_NAME, 'VITE_RTDB_3') ||
-  createOverrideDatabase(server3DatabaseURL, SERVER_3_APP_NAME, 'VITE_RTDB_B');
+  createOverrideDatabase(
+    server3DatabaseURL,
+    SERVER_3_APP_NAME,
+    "VITE_RTDB_3",
+  ) ||
+  createOverrideDatabase(server3DatabaseURL, SERVER_3_APP_NAME, "VITE_RTDB_B");
 const server4Rtdb =
-  createOverrideDatabase(server4DatabaseURL, SERVER_4_APP_NAME, 'VITE_RTDB_4') ||
-  createOverrideDatabase(server4DatabaseURL, SERVER_4_APP_NAME, 'VITE_RTDB_A');
+  createOverrideDatabase(
+    server4DatabaseURL,
+    SERVER_4_APP_NAME,
+    "VITE_RTDB_4",
+  ) ||
+  createOverrideDatabase(server4DatabaseURL, SERVER_4_APP_NAME, "VITE_RTDB_A");
 
-export const SECONDARY_SERVER_ENABLED = Boolean(server2Rtdb || server3Rtdb || server4Rtdb);
+export const SECONDARY_SERVER_ENABLED = Boolean(
+  server2Rtdb || server3Rtdb || server4Rtdb,
+);
 
 const SERVER_DATABASES = {
   [SERVER_1]: server1Rtdb,
@@ -179,7 +234,7 @@ const serverTimeUnsubscribers = new Map();
 function startServerTimeSync(server) {
   if (!isServerAvailable(server) || serverTimeUnsubscribers.has(server)) return;
   try {
-    const offsetRef = ref(getRtdb(server), '.info/serverTimeOffset');
+    const offsetRef = ref(getRtdb(server), ".info/serverTimeOffset");
     const unsubscribe = onValue(
       offsetRef,
       (snap) => {
@@ -235,7 +290,11 @@ export function goOnlineServer(server = activeServer) {
   setActiveServer(next);
   const target = rtdb;
   try {
-    if (target.app && target.app.name !== '[DEFAULT]' && target.app.options?.apiKey) {
+    if (
+      target.app &&
+      target.app.name !== "[DEFAULT]" &&
+      target.app.options?.apiKey
+    ) {
       const targetAuth = getAuth(target.app);
       if (!targetAuth.currentUser) {
         signInAnonymously(targetAuth).catch(() => {});
@@ -267,7 +326,7 @@ export function goOfflineServer(server = activeServer) {
  */
 export function waitForServerConnection(dbOrServer, timeoutMs = 6000) {
   const database =
-    typeof dbOrServer === 'string' ? getRtdb(dbOrServer) : dbOrServer;
+    typeof dbOrServer === "string" ? getRtdb(dbOrServer) : dbOrServer;
 
   return new Promise((resolve) => {
     let settled = false;
@@ -292,7 +351,7 @@ export function waitForServerConnection(dbOrServer, timeoutMs = 6000) {
 
     try {
       const stop = onValue(
-        ref(database, '.info/connected'),
+        ref(database, ".info/connected"),
         (snap) => {
           if (snap.val() === true) finish(true);
         },
@@ -316,7 +375,8 @@ export function waitForServerConnection(dbOrServer, timeoutMs = 6000) {
 /** Wait briefly for the active server's first clock-offset snapshot. */
 export function waitForServerTime(server = activeServer, timeoutMs = 1500) {
   const id = normalizeServer(server);
-  if (serverTimeOffsets.has(id)) return Promise.resolve(serverTimeOffsets.get(id));
+  if (serverTimeOffsets.has(id))
+    return Promise.resolve(serverTimeOffsets.get(id));
   startServerTimeSync(id);
 
   return new Promise((resolve) => {
