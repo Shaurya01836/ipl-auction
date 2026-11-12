@@ -7,13 +7,15 @@ import {
   getRtdb,
   getAvailableServers,
   goOfflineServer,
+  goOfflineAllServers,
   isServerAvailable,
 } from "../lib/firebase";
 import { supabase } from "../lib/supabase";
-import { generateRoomCode, normalizeRoomCode } from "../lib/roomCodes";
+import { generateRoomCode, normalizeRoomCode, generateSoloRoomCode } from "../lib/roomCodes";
 import { ref, remove } from "firebase/database";
 import {
   DEFAULT_AUCTION_SERVER,
+  SERVER_LOCAL,
   getAuctionServer,
   getPreferredServer,
   getServerFromSearch,
@@ -22,6 +24,7 @@ import {
   setPreferredServer,
   withServerParam,
 } from "../lib/auctionServers";
+import { localAuctionReducer, saveLocalSoloRoom, listLocalSoloRooms, deleteLocalSoloRoom } from "../lib/localAuctionEngine";
 import { IPL_PLAYERS } from "../data/players";
 import { TEAMS } from "../data/teams";
 import {
@@ -33,6 +36,8 @@ import {
   ChevronDown,
   Check,
   Star,
+  Bot,
+  Sparkles,
   Wifi,
   Globe,
   History,
@@ -59,6 +64,77 @@ import {
   toFiniteNumber,
 } from "../lib/auctionDisplay";
 
+/** Device-local solo saves shaped like the cloud history rows. */
+const buildLocalHistorySessions = (userId) =>
+  listLocalSoloRooms()
+    .filter(({ state }) => {
+      if (!state || !state.id) return false;
+      if (!userId) return true;
+      return (
+        !state.hostId ||
+        state.hostId === userId ||
+        String(state.hostId).startsWith("guest_") ||
+        (state.players || []).some((p) => p?.id === userId)
+      );
+    })
+    .map(({ state, savedAt }) => {
+      const teams = state.roomTeams || state.teams || [];
+      const humanTeam =
+        teams.find((t) => t.userId === state.hostId) ||
+        teams.find((t) => !String(t.userId || "").startsWith("bot_")) ||
+        teams[0];
+      const totalBudget = toFiniteNumber(state.settings?.budget, 120);
+      const squad = (humanTeam?.squad || [])
+        .map((entry) => {
+          const pid = typeof entry === "string" ? entry : entry.id;
+          const info = IPL_PLAYERS.find((p) => p.id === pid);
+          return {
+            id: pid,
+            name: info?.name || pid,
+            role: info?.role || "Player",
+            image: info?.image || "",
+            country: info?.country,
+            type: info?.type,
+            bid: typeof entry === "string" ? null : (entry.bid ?? null),
+          };
+        })
+        .filter((p) => p.id);
+
+      return {
+        id: `local_${state.id}`,
+        roomId: state.id,
+        server: SERVER_LOCAL,
+        teamId: humanTeam?.teamId || "",
+        teamName: humanTeam?.teamName || "Manager",
+        mode: state.auctionType || "mega",
+        status: state.status || "active",
+        budgetRemaining: humanTeam?.budgetRemaining ?? null,
+        spent: computeTeamSpent({
+          budget: totalBudget,
+          budgetRemaining: humanTeam?.budgetRemaining,
+          spent: humanTeam?.spent,
+        }),
+        overseasLimit: toFiniteNumber(state.overseasLimit, 8),
+        squadLimit: toFiniteNumber(state.squadLimit, 25),
+        squad,
+        date: new Date(savedAt || Date.now()).toLocaleDateString("en-IN", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }),
+        isLocal: true,
+      };
+    });
+
+/** Local copy wins so an in-progress solo save stays resumable. */
+const mergeHistorySessions = (localSessions, remoteSessions) => {
+  const localRoomIds = new Set(localSessions.map((s) => s.roomId));
+  return [
+    ...localSessions,
+    ...(remoteSessions || []).filter((s) => !localRoomIds.has(s.roomId)),
+  ];
+};
+
 const LandingPage = () => {
   useDocumentTitle(
     "IPL Auction Simulator & Game | Live IPL Mega Auction 2026",
@@ -68,6 +144,7 @@ const LandingPage = () => {
   const [selectedTeam, setSelectedTeam] = useState("MI");
   const [activeTab, setActiveTab] = useState("new");
   const [auctionType, setAuctionType] = useState("mega"); 
+  const [playSolo, setPlaySolo] = useState(false);
   const [isPublicRoom, setIsPublicRoom] = useState(true);
   const [roomCode, setRoomCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -137,6 +214,7 @@ const LandingPage = () => {
 
   // Client-side cache for Public Lobbies to stop redundant Supabase egress on frequent renders
   const publicLobbiesCacheRef = useRef({ data: null, timestamp: 0 });
+  const abortControllerRef = useRef(null);
 
   // Fetch Public Lobbies directly from Supabase (optimized egress, minimal columns)
   const fetchPublicLobbies = async (force = false) => {
@@ -145,6 +223,11 @@ const LandingPage = () => {
       setPublicRooms(publicLobbiesCacheRef.current.data);
       return;
     }
+
+    if (!abortControllerRef.current) {
+      abortControllerRef.current = new AbortController();
+    }
+    const signal = abortControllerRef.current.signal;
 
     setLobbiesLoading(true);
     try {
@@ -162,7 +245,8 @@ const LandingPage = () => {
           .eq("is_public", true)
           .eq("host_online", true)
           .gte("created_at", threeHoursAgoISO)
-          .order("created_at", { ascending: false });
+          .order("created_at", { ascending: false })
+          .abortSignal(signal);
           
         if (!error && supabaseRooms && supabaseRooms.length > 0) {
           const list = supabaseRooms.map((r) => {
@@ -214,15 +298,23 @@ const LandingPage = () => {
 
   const fetchHistory = useCallback(async (force = false) => {
     const userId = user?.uid;
-    if (!userId || !supabase) {
-      setHistoryData([]);
+    const localSessions = buildLocalHistorySessions(userId);
+
+    if (!userId) {
+      setHistoryData(localSessions);
+      setHistoryError(null);
+      return;
+    }
+
+    if (!supabase) {
+      setHistoryData(localSessions);
       setHistoryError(null);
       return;
     }
 
     const cached = historyCacheRef.current.get(userId);
     if (!force && cached && Date.now() - cached.timestamp < 45000) {
-      setHistoryData(cached.data);
+      setHistoryData(mergeHistorySessions(localSessions, cached.data));
       return;
     }
 
@@ -233,18 +325,27 @@ const LandingPage = () => {
     setHistoryLoading(true);
     setHistoryError(null);
     try {
+      if (!abortControllerRef.current) {
+        abortControllerRef.current = new AbortController();
+      }
+      const signal = abortControllerRef.current.signal;
+
       // Optimized egress: Select only needed columns for history cards and limit to recent 20
-      const { data: supabaseTeams, error: teamsError } = await supabase
+      let teamsQuery = supabase
         .from("teams")
         .select("id, auction_id, user_id, team_id, team_name, budget_remaining, spent, squad, created_at")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(20);
+      if (signal && typeof teamsQuery.abortSignal === 'function') {
+        teamsQuery = teamsQuery.abortSignal(signal);
+      }
+      const { data: supabaseTeams, error: teamsError } = await teamsQuery;
 
       if (teamsError) throw teamsError;
 
       if (!supabaseTeams || supabaseTeams.length === 0) {
-        setHistoryData([]);
+        setHistoryData(localSessions);
         historyCacheRef.current.set(userId, { data: [], timestamp: Date.now() });
         return;
       }
@@ -254,10 +355,14 @@ const LandingPage = () => {
       ].filter(Boolean);
 
       // Optimized egress: Exclude player_order and massive player collections (server is in settings)
-      const { data: supabaseAuctions, error: auctionsError } = await supabase
+      let auctionsQuery = supabase
         .from("auctions")
         .select("id, settings, status, auction_type, overseas_limit, squad_limit, created_at")
         .in("id", auctionIds);
+      if (signal && typeof auctionsQuery.abortSignal === 'function') {
+        auctionsQuery = auctionsQuery.abortSignal(signal);
+      }
+      const { data: supabaseAuctions, error: auctionsError } = await auctionsQuery;
 
       if (auctionsError) throw auctionsError;
 
@@ -315,9 +420,10 @@ const LandingPage = () => {
         };
       });
 
-      setHistoryData(sessions);
+      setHistoryData(mergeHistorySessions(localSessions, sessions));
       historyCacheRef.current.set(userId, { data: sessions, timestamp: Date.now() });
     } catch (error) {
+      if (error?.name === 'AbortError' || error?.message?.includes('aborted')) return;
       // Keep any previously loaded data visible; surface the failure instead.
       console.error("[history] Failed to load auction history", error);
       setHistoryError("Could not load your auction history. Please try again.");
@@ -328,10 +434,7 @@ const LandingPage = () => {
   }, [user?.uid]);
 
   useEffect(() => {
-    // Load once when the signed-in user is available (entering the site or
-    // switching accounts). Opening the History tab reuses this data; only the
-    // explicit Refresh button triggers another request.
-    if (!user?.uid) return;
+    // Load once on mount or when user changes.
     fetchHistory();
   }, [user?.uid, fetchHistory]);
 
@@ -377,7 +480,23 @@ const LandingPage = () => {
     setSessionToDelete(null);
 
     try {
-      if (supabase) {
+      if (session.isLocal) {
+        // Solo save lives on this device; the Supabase copy (if synced) is
+        // keyed by room only, so clear every row for this auction.
+        deleteLocalSoloRoom(roomId);
+        if (supabase) {
+          const { error: teamsError } = await supabase
+            .from("teams")
+            .delete()
+            .eq("auction_id", roomId);
+          if (teamsError) throw teamsError;
+          const { error: roomError } = await supabase
+            .from("auctions")
+            .delete()
+            .eq("id", roomId);
+          if (roomError) throw roomError;
+        }
+      } else if (supabase) {
         // 1. Delete user's team row from Supabase
         const { error: teamError } = await supabase
           .from("teams")
@@ -443,6 +562,41 @@ const LandingPage = () => {
     } catch {
       setError("Guest login failed. Ensure Anonymous Auth is enabled.");
       setTimeout(() => setError(""), 3000);
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleStartSoloAuction = async (e) => {
+    e.preventDefault();
+    if (!user) return;
+
+    // Abort in-flight Supabase REST queries
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Disconnect all RTDB instances to guarantee zero open sockets
+      goOfflineAllServers();
+
+      const roomId = generateSoloRoomCode();
+      const displayName = user.displayName || "Manager";
+      const initialState = localAuctionReducer(null, {
+        type: "INIT_AUCTION",
+        roomId,
+        humanUser: { uid: user.uid, displayName, team: selectedTeam },
+        auctionType,
+        settings: { bidTimer: 10 },
+        bidTimer: 10,
+      });
+
+      saveLocalSoloRoom(initialState);
+      navigate(withServerParam(`/auction/${roomId}`, SERVER_LOCAL));
+    } catch (err) {
+      console.error("[solo] Failed to launch solo auction", err);
+      setError("Failed to start solo auction. Please try again.");
       setIsSubmitting(false);
     }
   };
@@ -743,7 +897,7 @@ const LandingPage = () => {
 
           {/* Right Side: Create/Join/History form */}
           <div className="lg:col-span-7 w-full p-4 sm:p-6 md:p-8 flex flex-col">
-            {availableServers.length > 1 && (
+            {availableServers.length > 1 && !(activeTab === "new" && playSolo) && (
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-4 mb-4 sm:mb-6">
                 <div className="min-w-0">
                   <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest block">
@@ -764,11 +918,11 @@ const LandingPage = () => {
             )}
             {/* Flat Tab Bar Navigation: Create / Join / History */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-white/5 mb-5 sm:mb-8 gap-3 sm:gap-4">
-              <div className="flex">
+              <div className="flex overflow-x-auto no-scrollbar">
                 <button
                   type="button"
                   onClick={() => setActiveTab("new")}
-                  className={`pb-3 px-4 sm:pb-3.5 sm:px-6 font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition-all duration-200 border-b-2 relative ${
+                  className={`pb-3 px-3 sm:pb-3.5 sm:px-5 font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all duration-200 border-b-2 relative shrink-0 ${
                     activeTab === "new"
                       ? "border-slate-400/70 text-slate-100"
                       : "border-transparent text-gray-400 hover:text-gray-300"
@@ -779,7 +933,7 @@ const LandingPage = () => {
                 <button
                   type="button"
                   onClick={() => setActiveTab("join")}
-                  className={`pb-3 px-4 sm:pb-3.5 sm:px-6 font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition-all duration-200 border-b-2 relative flex items-center gap-1.5 ${
+                  className={`pb-3 px-3 sm:pb-3.5 sm:px-5 font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all duration-200 border-b-2 relative flex items-center gap-1.5 shrink-0 ${
                     activeTab === "join"
                       ? "border-slate-400/70 text-slate-100"
                       : "border-transparent text-gray-400 hover:text-gray-300"
@@ -795,7 +949,7 @@ const LandingPage = () => {
                 <button
                   type="button"
                   onClick={() => setActiveTab("history")}
-                  className={`pb-3 px-4 sm:pb-3.5 sm:px-6 font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition-all duration-200 border-b-2 relative ${
+                  className={`pb-3 px-3 sm:pb-3.5 sm:px-5 font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all duration-200 border-b-2 relative shrink-0 ${
                     activeTab === "history"
                       ? "border-slate-400/70 text-slate-100"
                       : "border-transparent text-gray-400 hover:text-gray-300"
@@ -830,7 +984,7 @@ const LandingPage = () => {
             {activeTab === "new" && (
               <form
                 key="create-tab"
-                onSubmit={handleFormSubmit}
+                onSubmit={playSolo ? handleStartSoloAuction : handleFormSubmit}
                 className="space-y-4 sm:space-y-6"
               >
                 <div>
@@ -839,7 +993,9 @@ const LandingPage = () => {
                       Franchise
                     </h2>
                     <p className="text-[9px] sm:text-[11px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">
-                      Choose the team you'll manage.
+                      {playSolo
+                        ? "Choose the team you'll manage against 9 AI franchises."
+                        : "Choose the team you'll manage."}
                     </p>
                   </div>
 
@@ -1014,31 +1170,75 @@ const LandingPage = () => {
                   </div>
                 </div>
 
-                {/* Room Visibility Toggle */}
+                {/* Room Visibility Toggle — cloud rooms only */}
+                {!playSolo && (
+                  <div className="p-3 sm:p-4 bg-white/[0.02] border border-white/5 rounded-xl sm:rounded-2xl flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <h2 className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider flex items-center gap-1.5">
+                        Public Room Visibility
+                      </h2>
+                      <p className="text-[8px] sm:text-[9px] text-gray-400 font-medium">
+                        {isPublicRoom
+                          ? "Listed in the Public Rooms Directory for anyone to join"
+                          : "Private room — accessible only via Room Code link"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsPublicRoom(!isPublicRoom)}
+                      aria-label="Toggle public room visibility"
+                      className={`w-10 h-5 sm:w-12 sm:h-6 rounded-full transition-colors p-1 flex items-center cursor-pointer shrink-0 ${
+                        isPublicRoom
+                          ? "bg-slate-400 justify-end"
+                          : "bg-white/10 justify-start"
+                      }`}
+                    >
+                      <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-slate-900 shadow-md" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Solo vs AI bots Toggle */}
                 <div className="p-3 sm:p-4 bg-white/[0.02] border border-white/5 rounded-xl sm:rounded-2xl flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <h2 className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider flex items-center gap-1.5">
-                      Public Room Visibility
+                      Solo vs AI Bots
                     </h2>
                     <p className="text-[8px] sm:text-[9px] text-gray-400 font-medium">
-                      {isPublicRoom
-                        ? "Listed in the Public Rooms Directory for anyone to join"
-                        : "Private room — accessible only via Room Code link"}
+                      {playSolo
+                        ? "Runs 100% on your device - no server, no room code"
+                        : "Play instantly against 9 AI franchises, no server needed"}
                     </p>
                   </div>
                   <button
                     type="button"
-                    onClick={() => setIsPublicRoom(!isPublicRoom)}
-                    aria-label="Toggle public room visibility"
+                    onClick={() => setPlaySolo(!playSolo)}
+                    aria-label="Toggle solo vs AI bots"
                     className={`w-10 h-5 sm:w-12 sm:h-6 rounded-full transition-colors p-1 flex items-center cursor-pointer shrink-0 ${
-                      isPublicRoom
-                        ? "bg-slate-400 justify-end"
+                      playSolo
+                        ? "bg-emerald-400 justify-end"
                         : "bg-white/10 justify-start"
                     }`}
                   >
                     <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-slate-900 shadow-md" />
                   </button>
                 </div>
+
+                {playSolo && (
+                  <div className="p-3 sm:p-4 bg-emerald-500/[0.04] border border-emerald-500/20 rounded-xl sm:rounded-2xl flex items-start gap-3">
+                   
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-[10px] sm:text-[11px] font-black uppercase text-emerald-400 tracking-wider">
+                          Zero RTDB Load
+                        </h3>
+                      </div>
+                      <p className="text-[8px] sm:text-[9px] text-gray-400 font-medium mt-0.5 leading-relaxed">
+                        10s bidding timer with pause/resume and fast-forward. Runs 100% on your device and saves locally in browser storage.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="pt-1 sm:pt-2">
                   <button
@@ -1051,7 +1251,7 @@ const LandingPage = () => {
                         <Loader2 size={18} className="animate-spin" />
                       ) : (
                         <>
-                          <span>Start Auction</span>
+                          <span>{playSolo ? "Start Solo Auction" : "Start Auction"}</span>
                           <ChevronRight
                             size={16}
                             className="group-hover/submit:translate-x-1 transition-transform"
@@ -1291,7 +1491,7 @@ const LandingPage = () => {
                 </div>
                 {historyData.length > 0 && (
                   <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                    {availableServers.map((serverKey) => {
+                    {[...availableServers, SERVER_LOCAL].map((serverKey) => {
                       const count = historyData.filter((s) => normalizeServer(s.server) === serverKey).length;
                       if (count === 0) return null;
                       return (
@@ -1504,7 +1704,7 @@ const LandingPage = () => {
                                           <span className="text-green-400">
                                             {session.budgetRemaining == null
                                               ? "—"
-                                              : `₹${formatCrores(session.budgetRemaining, 1)} Cr`}
+                                              : `₹${formatCrores(session.budgetRemaining)} Cr`}
                                           </span>
                                         </span>
                                         <span className="text-gray-400">
@@ -1614,7 +1814,9 @@ const LandingPage = () => {
                                             Auction In Progress
                                           </p>
                                           <p className="text-[8px] sm:text-[9px] text-gray-500 font-medium mt-0.5">
-                                            Bidding is live right now — jump back in to keep building your squad.
+                                            {session.isLocal
+                                              ? "Saved on this device — resume right where you left off."
+                                              : "Bidding is live right now — jump back in to keep building your squad."}
                                           </p>
                                         </div>
                                       </div>
@@ -1623,7 +1825,9 @@ const LandingPage = () => {
                                         onClick={() =>
                                           navigate(
                                             withServerParam(
-                                              `/lobby/${session.roomId}`,
+                                              session.isLocal
+                                                ? `/auction/${session.roomId}`
+                                                : `/lobby/${session.roomId}`,
                                               session.server,
                                             ),
                                           )
@@ -1655,7 +1859,9 @@ const LandingPage = () => {
                                         onClick={() =>
                                           navigate(
                                             withServerParam(
-                                              `/lobby/${session.roomId}`,
+                                              session.isLocal
+                                                ? `/auction/${session.roomId}`
+                                                : `/lobby/${session.roomId}`,
                                               session.server,
                                             ),
                                           )

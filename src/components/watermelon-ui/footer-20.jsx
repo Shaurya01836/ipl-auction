@@ -58,7 +58,7 @@ export default function Footer20() {
       className="relative w-full bg-transparent text-gray-400 font-sans overflow-hidden flex flex-col justify-between border-t border-white/[0.06] mt-20 sm:mt-32 z-10"
     >
       {/* Main content wrapper with dashed borders */}
-      <div className="relative z-10 max-w-[1400px] w-full mx-auto px-6 md:px-12 lg:px-16 pt-16 md:pt-24 flex flex-col">
+      <div className="relative z-10 max-w-7xl w-full mx-auto px-6 md:px-12 lg:px-16 pt-16 md:pt-24 flex flex-col">
         {/* Top Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 mb-12 md:mb-16">
           {/* Left Column (Brand info) */}

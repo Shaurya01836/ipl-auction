@@ -22,3 +22,8 @@ export function generateRoomCode(length = 6, random = Math.random) {
 export function normalizeRoomCode(value) {
   return String(value || '').trim().toUpperCase();
 }
+
+/** Generate a device-local solo auction room code prefixed with SOLO- */
+export function generateSoloRoomCode(random = Math.random) {
+  return `SOLO-${generateRoomCode(6, random)}`;
+}

@@ -20,13 +20,15 @@ import {
   LayoutGrid,
   Zap,
   Download,
-  Loader2
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SquadRating from '../components/SquadRating';
 import PageLoader from '../components/PageLoader';
 import useRoomServer from '../hooks/useRoomServer';
 import useDocumentTitle from '../hooks/useDocumentTitle';
+import { isLocalRoom, loadLocalSoloRoom } from '../lib/localAuctionEngine';
 import {
   computeTeamSpent,
   countOverseas,
@@ -121,6 +123,30 @@ const AuctionSummary = () => {
       setSummaryLoading(true);
       setSummaryError(null);
       try {
+        const isLocal = isLocalRoom(id, server, true) || (typeof id === 'string' && id.startsWith('SOLO-')) || server === 'local';
+        if (isLocal) {
+          const localData = loadLocalSoloRoom(id);
+          if (localData && isMounted) {
+            setDbAuction({
+              id: localData.id,
+              hostId: localData.players?.[0]?.id || 'solo_host',
+              hostName: localData.players?.[0]?.name || 'Manager',
+              status: localData.status || 'completed',
+              auctionType: localData.auctionType || 'mega',
+              squadLimit: localData.squadLimit || 25,
+              overseasLimit: localData.overseasLimit || 8,
+              players: localData.players || [],
+              settings: localData.settings || {},
+              fastForwarded: Boolean(localData.fastForwarded),
+            });
+            setDbTeams(localData.roomTeams || localData.teams || []);
+            setSummaryLoading(false);
+            return;
+          }
+          // No local save (cleared browser / another device): the completed
+          // auction may still have been copied to Supabase, so fall through.
+        }
+
         // 1. Persistent Supabase store
         if (supabase) {
           // Optimized egress: Exclude heavy player_order column
@@ -173,39 +199,50 @@ const AuctionSummary = () => {
             }
 
             // Fallback to RTDB if Supabase flush hasn't arrived or squads are empty
-            try {
-              goOnlineServer(server);
-              const rtdbInstance = getRtdb(server);
-              const rtdbTeamsSnap = await get(ref(rtdbInstance, `auctions/${id}/teams`));
-              if (rtdbTeamsSnap.exists()) {
-                const teamsObj = rtdbTeamsSnap.val() || {};
-                const rtdbTeams = Object.entries(teamsObj).map(([docId, t]) => {
-                  const rawSquad = t.squad;
-                  return {
-                    id: docId,
-                    auctionId: id,
-                    userId: t.userId,
-                    teamId: t.teamId,
-                    teamName: t.teamName,
-                    budgetRemaining: t.budgetRemaining ?? null,
-                    spent: toFiniteNumber(t.spent, 0),
-                    squad: Array.isArray(rawSquad) ? rawSquad : (rawSquad ? Object.values(rawSquad) : [])
-                  };
-                });
-                if (rtdbTeams.length > 0) {
-                  setDbTeams(rtdbTeams);
-                  setSummaryLoading(false);
-                  return;
+            if (!isLocal) {
+              try {
+                goOnlineServer(server);
+                const rtdbInstance = getRtdb(server);
+                const rtdbTeamsSnap = await get(ref(rtdbInstance, `auctions/${id}/teams`));
+                if (rtdbTeamsSnap.exists()) {
+                  const teamsObj = rtdbTeamsSnap.val() || {};
+                  const rtdbTeams = Object.entries(teamsObj).map(([docId, t]) => {
+                    const rawSquad = t.squad;
+                    return {
+                      id: docId,
+                      auctionId: id,
+                      userId: t.userId,
+                      teamId: t.teamId,
+                      teamName: t.teamName,
+                      budgetRemaining: t.budgetRemaining ?? null,
+                      spent: toFiniteNumber(t.spent, 0),
+                      squad: Array.isArray(rawSquad) ? rawSquad : (rawSquad ? Object.values(rawSquad) : [])
+                    };
+                  });
+                  if (rtdbTeams.length > 0) {
+                    setDbTeams(rtdbTeams);
+                    setSummaryLoading(false);
+                    return;
+                  }
                 }
+              } catch (rtdbErr) {
+                console.warn('[summary] RTDB teams fallback error', rtdbErr);
               }
-            } catch (rtdbErr) {
-              console.warn('[summary] RTDB teams fallback error', rtdbErr);
             }
 
             setDbTeams(parsedTeams);
             setSummaryLoading(false);
             return;
           }
+        }
+
+        // A local solo auction has no RTDB/Firestore copy; stop here.
+        if (isLocal) {
+          if (isMounted) {
+            setSummaryError('device_not_found');
+            setSummaryLoading(false);
+          }
+          return;
         }
 
         // 2. Fallback to RTDB directly before Firestore
@@ -300,19 +337,26 @@ const AuctionSummary = () => {
   const topPlayers = allSoldPlayers.slice(0, 5);
 
   if (!activeAuction && summaryError) {
+    const isDeviceNotFound = summaryError === 'device_not_found' || (typeof id === 'string' && id.startsWith('SOLO-')) || server === 'local';
     return (
-      <div className="h-screen-safe bg-[#050505] text-white flex flex-col items-center justify-center p-8 text-center">
-        <h2 className="text-xl font-black italic tracking-widest uppercase text-red-400 mb-2">Summary Unavailable</h2>
-        <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-6">{summaryError}</p>
+      <div className="h-screen-safe bg-[#050505] text-white flex flex-col items-center justify-center p-8 text-center max-w-md mx-auto">
+        <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 text-gray-300">
+          <AlertCircle size={24} />
+        </div>
+        <h2 className="text-base font-black uppercase tracking-wider mb-2 text-white">
+          {isDeviceNotFound ? 'Local Solo Auction' : 'Summary Unavailable'}
+        </h2>
+        <p className="text-xs text-gray-400 font-medium leading-relaxed mb-6">
+          {isDeviceNotFound
+            ? 'This solo auction lives on the device where it started. No saved data was found in this browser for this room.'
+            : summaryError}
+        </p>
         <button
           type="button"
-          onClick={() => {
-            setSummaryError(null);
-            setSummaryReloadKey((key) => key + 1);
-          }}
-          className="px-5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-white hover:bg-white/10 transition-all cursor-pointer"
+          onClick={() => navigate('/')}
+          className="px-6 py-2.5 rounded-xl bg-white hover:bg-slate-200 text-black font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg"
         >
-          Retry
+          Back to Home
         </button>
       </div>
     );

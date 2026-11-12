@@ -139,7 +139,7 @@ const AuctionCountdown = ({
    const { secondsRemaining, timerPercent } = timeState;
 
    const renderProgressBar = () => (
-      <div className="absolute top-0 inset-x-0 h-1 bg-white/5 pointer-events-none">
+      <div className="absolute top-0 inset-x-0 h-0.5 sm:h-1 bg-white/5 pointer-events-none z-30">
          <motion.div
             initial={{ width: "100%" }}
             animate={{ width: `${timerPercent}%` }}
@@ -156,23 +156,23 @@ const AuctionCountdown = ({
 
    const renderBadge = () => (
       <div
-         className={`w-12 h-12 sm:w-14 sm:h-14 xl:w-16 xl:h-16 rounded-full flex flex-col items-center justify-center transition-all duration-300 border-2 backdrop-blur-md ${
+         className={`w-12 h-12 sm:w-14 sm:h-14 xl:w-16 xl:h-16 rounded-full flex flex-col items-center justify-center transition-all duration-300 border-2 ${
             isTimerPaused
-               ? 'border-slate-500/50 bg-[#0c0d10]/90 text-slate-300 shadow-[0_4px_20px_rgba(0,0,0,0.8)]'
+               ? 'border-slate-500/50 bg-[#0c0d10] text-slate-300'
                : secondsRemaining < 5
-                  ? 'border-red-500 bg-[#0c0d10]/90 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.35),0_4px_20px_rgba(0,0,0,0.8)]'
-                  : 'border-emerald-500/50 bg-[#0c0d10]/90 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.25),0_4px_20px_rgba(0,0,0,0.8)]'
+                  ? 'border-red-500 bg-[#0c0d10] text-red-500'
+                  : 'border-emerald-500/50 bg-[#0c0d10] text-emerald-400'
          }`}
       >
          {isTimerPaused ? (
             <>
-               <span className="text-base sm:text-lg xl:text-xl font-black leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">{secondsRemaining}</span>
-               <span className="text-[6px] md:text-[7px] font-bold tracking-widest uppercase mt-0.5 text-slate-400 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">PAUSED</span>
+               <span className="text-base sm:text-lg xl:text-xl font-black leading-none">{secondsRemaining}</span>
+               <span className="text-[6px] md:text-[7px] font-bold tracking-widest uppercase mt-0.5 text-slate-400">PAUSED</span>
             </>
          ) : (
             <>
-               <span className="text-base sm:text-lg xl:text-xl font-black leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">{secondsRemaining}</span>
-               <span className="text-[6px] md:text-[7px] font-bold tracking-widest uppercase mt-0.5 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">Sec</span>
+               <span className="text-base sm:text-lg xl:text-xl font-black leading-none">{secondsRemaining}</span>
+               <span className="text-[6px] md:text-[7px] font-bold tracking-widest uppercase mt-0.5">Sec</span>
             </>
          )}
       </div>

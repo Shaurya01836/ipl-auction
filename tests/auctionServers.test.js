@@ -9,6 +9,8 @@ import {
   SERVER_2,
   SERVER_3,
   SERVER_4,
+  SERVER_LOCAL,
+  isValidServer,
   getAuctionServer,
   getServerFromSearch,
   getServerMeta,
@@ -76,4 +78,17 @@ test('server metadata covers all 4 servers and always has a fallback', () => {
   assert.equal(getServerMeta('server-4').label, 'Server 4');
   assert.equal(getServerMeta('secondary').label, 'Server 2');
   assert.equal(getServerMeta('unknown').id, AUCTION_SERVERS[0].id);
+});
+
+test('SERVER_LOCAL is recognized, normalized, and flagged as isLocal', () => {
+  assert.equal(SERVER_LOCAL, 'local');
+  assert.equal(isValidServer('local'), true);
+  assert.equal(normalizeServer('local'), 'local');
+  assert.equal(getServerFromSearch('?server=local'), 'local');
+  assert.equal(withServerParam('/auction/SOLO-123456', 'local'), '/auction/SOLO-123456?server=local');
+  
+  const localMeta = getServerMeta('local');
+  assert.equal(localMeta.id, 'local');
+  assert.equal(localMeta.isLocal, true);
+  assert.match(localMeta.label, /Local/i);
 });

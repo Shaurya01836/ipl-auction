@@ -39,7 +39,8 @@ import PageBackground from '../components/PageBackground';
 import ConfirmDialog from '../components/ConfirmDialog';
 import AuctionCountdown from '../components/AuctionCountdown';
 import useRoomServer from '../hooks/useRoomServer';
-import { withServerParam } from '../lib/auctionServers';
+import { SERVER_LOCAL, withServerParam } from '../lib/auctionServers';
+import { isLocalRoom } from '../lib/localAuctionEngine';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import { getNextBidAmount } from '../lib/auctionRules';
 import {
@@ -57,7 +58,7 @@ const AuctionRoom = () => {
    const { server, ready: serverReady } = useRoomServer(id);
    const {
       currentAuction,
-      team,
+      team: contextTeam,
       roomTeams,
       loading,
       placeBid,
@@ -72,7 +73,9 @@ const AuctionRoom = () => {
       kickPlayer,
       skipCurrentPlayerSolo,
       fastForwardAuctionSolo,
-      getSyncedTime
+      getSyncedTime,
+      soloLockStatus,
+      takeOverSoloAuction
    } = useAuction();
    const { user } = useAuth();
    const [error, setError] = useState('');
@@ -124,16 +127,24 @@ const AuctionRoom = () => {
       user?.uid
    ]);
 
-   const displayAuctionState = optimisticState || currentAuction?.currentAuction;
+   const displayAuctionState = optimisticState || currentAuction?.currentAuction || currentAuction?.currentLot;
 
-   // Solo vs AI bots detection
+   // Solo vs AI bots detection: strictly device-local rooms
    const isSoloVsBots = useMemo(() => {
-      if (currentAuction?.isSoloBotRoom) return true;
-      const players = currentAuction?.players || [];
-      const humanCount = players.filter(p => !p.isBot && !String(p.id).startsWith('bot_')).length;
-      const botCount = players.filter(p => p.isBot || String(p.id).startsWith('bot_')).length;
-      return humanCount === 1 && botCount >= 1;
-   }, [currentAuction?.isSoloBotRoom, currentAuction?.players]);
+      return server === SERVER_LOCAL || isLocalRoom(id, server);
+   }, [server, id]);
+
+   // Effective team: use context team, or in solo rooms derive the human team from roomTeams/currentAuction
+   const team = useMemo(() => {
+      const t = contextTeam || (isSoloVsBots ? (roomTeams || []).find(doc => doc.userId === user?.uid || !String(doc.userId).startsWith('bot_')) : null);
+      if (!t) return null;
+      return {
+         ...t,
+         id: t.teamId || t.id,
+         teamId: t.teamId || t.id,
+         team: t.teamId || t.id,
+      };
+   }, [contextTeam, isSoloVsBots, roomTeams, user?.uid]);
 
    const [isSkippingLot, setIsSkippingLot] = useState(false);
    const [isFastForwarding, setIsFastForwarding] = useState(false);
@@ -486,7 +497,7 @@ const AuctionRoom = () => {
       };
    }, []);
 
-   const isAdmin = currentAuction?.hostId === user?.uid;
+   const isAdmin = isSoloVsBots || currentAuction?.hostId === user?.uid;
    const currentBid = displayAuctionState?.currentBid || 0;
    const nextBidAmount = getNextBidAmount(currentPlayer, currentBid);
    const playerCategories = useMemo(() => {
@@ -554,6 +565,7 @@ const AuctionRoom = () => {
       const unsub = joinAuction(id, user.uid, server);
 
       const autoJoin = async () => {
+         if (server === SERVER_LOCAL || isLocalRoom(id, server)) return;
          try {
             await joinRoomDb(id, user.uid, { name: user.displayName || 'Manager' }, server);
          } catch (e) {
@@ -882,6 +894,29 @@ const AuctionRoom = () => {
    }
 
    if (!serverReady || loading || !currentAuction || currentAuction.id !== id) {
+      const isLocalAuction = server === SERVER_LOCAL || isLocalRoom(id, server) || (typeof id === 'string' && id.startsWith('SOLO-'));
+      if (serverReady && !loading && isLocalAuction && (!currentAuction || currentAuction.id !== id)) {
+         return (
+            <div className="h-screen-safe bg-[#000000] text-white flex flex-col items-center justify-center p-4 sm:p-6 text-center relative overflow-hidden">
+               <PageBackground showArt={false} />
+               <div className="relative z-10 flex flex-col items-center w-full max-w-md bg-[#0c0d10] border border-white/10 rounded-[2rem] p-6 sm:p-8 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)]">
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 text-gray-300">
+                     <AlertCircle size={24} />
+                  </div>
+                  <h2 className="text-base font-black uppercase tracking-wider mb-2">Local Solo Auction</h2>
+                  <p className="text-xs text-gray-400 font-medium leading-relaxed mb-6">
+                     This solo auction lives on the device where it started. No saved data was found in this browser for room <span className="font-mono text-white font-bold">{id}</span>.
+                  </p>
+                  <button
+                     onClick={() => navigate('/')}
+                     className="px-6 py-2.5 rounded-xl bg-white hover:bg-slate-200 text-black font-black text-xs uppercase tracking-wider transition-all cursor-pointer"
+                  >
+                     Back to Home
+                  </button>
+               </div>
+            </div>
+         );
+      }
       return <PageLoader text="Entering Auction Room..." />;
    }
 
@@ -907,8 +942,8 @@ const AuctionRoom = () => {
       }
    };
 
-   // Team Selection Guard — show team picker or "room full" error (unless in Spectate Mode)
-   if (!spectateMode && !team && !loading && user) {
+   // Team Selection Guard — show team picker or "room full" error (unless in Spectate Mode or Local Solo Room)
+   if (!spectateMode && !team && !loading && user && !isSoloVsBots) {
       const takenTeamIds = new Set(roomTeams.map(t => t.teamId));
       (currentAuction?.players || []).forEach(p => { if (p.team) takenTeamIds.add(p.team); });
       const availableTeams = TEAMS.filter(t => !takenTeamIds.has(t.id));
@@ -1020,6 +1055,12 @@ const AuctionRoom = () => {
                      {currentAuction?.players?.filter(p => p.team).length || 0}/10
                   </span>
                </div>
+               {isSoloVsBots && (
+                  <div className="hidden xs:flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 font-extrabold text-[8px] sm:text-[9px] uppercase tracking-wider" title="Saved locally in browser storage">
+                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                     <span>Saved on this device</span>
+                  </div>
+               )}
                <div className="flex items-center border-l border-white/10 pl-1.5 sm:pl-3">
                   <button onClick={copyRoomId} className="p-1 sm:p-1.5 bg-white/5 text-slate-400 rounded-lg hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Copy Room ID">
                      {copied ? <CheckCircle2 size={13} className="text-emerald-400" /> : <Copy size={13} />}
@@ -1148,7 +1189,7 @@ const AuctionRoom = () => {
                               <div className="flex items-center gap-4">
                                  <div className="text-right">
                                     <span className="text-[10px] compact:text-[9px] font-bold block leading-none text-gray-200">
-                                       ₹{formatCrores(teamDoc?.budgetRemaining ?? toFiniteNumber(currentAuction?.settings?.budget, 120), 1)} Cr
+                                       ₹{formatCrores(teamDoc?.budgetRemaining ?? toFiniteNumber(currentAuction?.settings?.budget, 120))} Cr
                                     </span>
                                     <span className="text-[8px] compact:text-[7px] font-bold text-gray-500 uppercase tracking-widest mt-0.5 block">{teamDoc?.squad?.length || 0}/{toFiniteNumber(currentAuction?.squadLimit, 25)}</span>
                                  </div>
@@ -1507,8 +1548,8 @@ const AuctionRoom = () => {
                         </div>
                      </div>
 
-                     {/* Timer ring: positioned top-right of hero on mobile via absolute, static in bid row on desktop/tablet */}
-                     <div className="absolute top-3 right-3 sm:static z-20 shrink-0 rounded-full shadow-[0_8px_24px_rgba(0,0,0,0.85)] sm:shadow-none">
+                     {/* Timer ring: inline with the bid row on all sizes */}
+                     <div className="shrink-0">
                         <AuctionCountdown
                            variant="badge"
                            displayAuctionState={displayAuctionState}
@@ -1544,7 +1585,7 @@ const AuctionRoom = () => {
                                              <div className="w-px h-3 bg-white/10" />
                                              <div className="flex items-center gap-1" title="Purse Left out of Total Budget">
                                                 <span className="text-gray-500 uppercase font-black text-[8px] sm:text-[10px]">Purse:</span>
-                                                <span className="text-slate-200 font-extrabold">₹{formatCrores(team.budgetRemaining ?? totalBudget, 1)}/{formatCrores(totalBudget, 0)}Cr</span>
+                                                <span className="text-slate-200 font-extrabold">₹{formatCrores(team.budgetRemaining ?? totalBudget)}/{formatCrores(totalBudget, 0)}Cr</span>
                                              </div>
                                              <div className="w-px h-3 bg-white/10 hidden xs:block" />
                                              <div className="items-center gap-1 hidden xs:flex" title="Total Spent">
@@ -1619,25 +1660,27 @@ const AuctionRoom = () => {
                      <History size={14} />
                      <span className="text-[10px] compact:text-[9px] uppercase tracking-widest">Live Activity</span>
                   </button>
-                  <button
-                     onClick={() => {
-                        setSidebarTab('chat');
-                        setMobileTab('chat');
-                     }}
-                     className={`h-full flex-1 flex items-center justify-center gap-2 transition-all cursor-pointer ${sidebarTab === 'chat'
-                        ? 'bg-white/[0.08] text-white border-b-2 border-white font-black'
-                        : 'text-slate-400 hover:text-white hover:bg-white/[0.02] border-b-2 border-transparent font-bold'
-                        }`}
-                  >
-                     <MessageSquare size={14} />
-                     <span className="text-[10px] compact:text-[9px] uppercase tracking-widest">Chat</span>
-                  </button>
+                  {!isSoloVsBots && (
+                     <button
+                        onClick={() => {
+                           setSidebarTab('chat');
+                           setMobileTab('chat');
+                        }}
+                        className={`h-full flex-1 flex items-center justify-center gap-2 transition-all cursor-pointer ${sidebarTab === 'chat'
+                           ? 'bg-white/[0.08] text-white border-b-2 border-white font-black'
+                           : 'text-slate-400 hover:text-white hover:bg-white/[0.02] border-b-2 border-transparent font-bold'
+                           }`}
+                     >
+                        <MessageSquare size={14} />
+                        <span className="text-[10px] compact:text-[9px] uppercase tracking-widest">Chat</span>
+                     </button>
+                  )}
                </div>
 
                {/* Tab Panels */}
                <div className="flex-1 min-h-0 flex flex-col relative">
                   <AnimatePresence mode="wait">
-                     {sidebarTab === 'activity' ? (
+                     {sidebarTab === 'activity' || isSoloVsBots ? (
                         <motion.div
                            key="activity"
                            initial={{ opacity: 0, y: 10 }}
@@ -1650,14 +1693,14 @@ const AuctionRoom = () => {
                               <div className="absolute left-6 sm:left-10 top-6 bottom-6 w-[1px] bg-white/5 pointer-events-none" />
 
                               <div className="space-y-3 sm:space-y-4 relative">
-                                 {[...messages.filter(m => m.type === 'log' || m.type === 'sold_card').filter(m => !m.text.includes('New bid:'))]
+                                 {[...messages.filter(m => (m.type === 'log' || m.type === 'sold_card' || m.type === 'system' || m.type === 'sold' || m.type === 'unsold') && !(m.text || '').includes('New bid:'))]
                                     .sort((a, b) => {
                                        const ta = typeof a.timestamp === 'number' ? a.timestamp : (a.timestamp?.toDate ? a.timestamp.toDate().getTime() : 0);
                                        const tb = typeof b.timestamp === 'number' ? b.timestamp : (b.timestamp?.toDate ? b.timestamp.toDate().getTime() : 0);
                                        return tb - ta;
                                     })
                                     .map((msg, index) => {
-                                    const isSold = msg.type === 'sold_card';
+                                    const isSold = (msg.type === 'sold_card' || msg.type === 'sold') && msg.metadata?.playerId;
 
                                     // Relative timestamp
                                     let timeAgo = '';
@@ -1724,7 +1767,7 @@ const AuctionRoom = () => {
                                  })}
                               </div>
 
-                              {messages.filter(m => m.type === 'log' || m.type === 'sold_card').filter(m => !m.text.includes('New bid:')).length === 0 && (
+                              {messages.filter(m => (m.type === 'log' || m.type === 'sold_card' || m.type === 'system' || m.type === 'sold' || m.type === 'unsold') && !(m.text || '').includes('New bid:')).length === 0 && (
                                  <div className="h-full flex flex-col items-center justify-center py-10 opacity-30">
                                     <History size={24} className="text-gray-700 mb-2" />
                                     <p className="text-[10px] compact:text-[9px] font-black text-gray-600 uppercase tracking-widest">No activity yet</p>
@@ -1732,7 +1775,7 @@ const AuctionRoom = () => {
                               )}
                            </div>
                         </motion.div>
-                     ) : (
+                     ) : !isSoloVsBots ? (
                         <motion.div
                            key="chat"
                            initial={{ opacity: 0, y: 10 }}
@@ -1742,7 +1785,7 @@ const AuctionRoom = () => {
                         >
                            <TextChat roomId={id} />
                         </motion.div>
-                     )}
+                     ) : null}
                   </AnimatePresence>
                </div>
             </aside>
@@ -1771,12 +1814,14 @@ const AuctionRoom = () => {
                   <span className={`text-[7px] font-black uppercase tracking-widest ${mobileTab === 'activity' ? 'text-slate-200 opacity-100' : 'text-gray-500 opacity-70'}`}>Logs</span>
                </button>
 
-               <button onClick={() => { setMobileTab('chat'); setSidebarTab('chat'); }} className={`flex flex-col items-center justify-center w-14 sm:w-16 gap-0.5 transition-all duration-300 ${mobileTab === 'chat' ? 'text-white translate-y-0' : 'text-gray-500 hover:text-gray-400 translate-y-0.5'}`}>
-                  <div className={`p-1 rounded-lg transition-colors duration-300 ${mobileTab === 'chat' ? 'bg-white/10 text-white' : 'bg-transparent text-gray-400'}`}>
-                     <MessageSquare size={16} strokeWidth={mobileTab === 'chat' ? 2.5 : 2} />
-                  </div>
-                  <span className={`text-[7px] font-black uppercase tracking-widest ${mobileTab === 'chat' ? 'text-slate-200 opacity-100' : 'text-gray-500 opacity-70'}`}>Chat</span>
-               </button>
+               {!isSoloVsBots && (
+                  <button onClick={() => { setMobileTab('chat'); setSidebarTab('chat'); }} className={`flex flex-col items-center justify-center w-14 sm:w-16 gap-0.5 transition-all duration-300 ${mobileTab === 'chat' ? 'text-white translate-y-0' : 'text-gray-500 hover:text-gray-400 translate-y-0.5'}`}>
+                     <div className={`p-1 rounded-lg transition-colors duration-300 ${mobileTab === 'chat' ? 'bg-white/10 text-white' : 'bg-transparent text-gray-400'}`}>
+                        <MessageSquare size={16} strokeWidth={mobileTab === 'chat' ? 2.5 : 2} />
+                     </div>
+                     <span className={`text-[7px] font-black uppercase tracking-widest ${mobileTab === 'chat' ? 'text-slate-200 opacity-100' : 'text-gray-500 opacity-70'}`}>Chat</span>
+                  </button>
+               )}
             </div>
          </div>
 
@@ -1935,10 +1980,49 @@ const AuctionRoom = () => {
                               <div className="flex items-center gap-1.5">
                                  <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Bid Timer (Host)</span>
                               </div>
-                              <span className="text-xs font-black text-slate-300 bg-slate-500/15 px-2 py-0.5 rounded-full border border-slate-500/30">{newTimerValue} Seconds</span>
+                              <span className="text-xs font-black text-slate-300 bg-slate-500/15 px-2 py-0.5 rounded-full border border-slate-500/30">
+                                 {newTimerValue} Seconds
+                              </span>
                            </div>
-                           <input type="range" min="5" max="60" value={newTimerValue} onChange={(e) => setNewTimerValue(parseInt(e.target.value))} className="w-full accent-slate-400 bg-white/10 h-1.5 rounded-lg cursor-pointer" />
-                           <button onClick={async () => { await updateRoomSettings(id, { ...currentAuction.settings, bidTimer: newTimerValue }); }} className="w-full bg-white hover:bg-slate-200 text-black py-2 rounded-xl font-black text-[9px] uppercase tracking-wider transition-all mt-3 shadow-[0_10px_30px_rgba(255,255,255,0.08)] active:scale-95 cursor-pointer">
+
+                           {/* Timer Choice Blocks (5s, 10s, 15s, 20s) */}
+                           <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+                              {[
+                                 { value: 5, label: '5s', tag: 'Fast' },
+                                 { value: 10, label: '10s', tag: 'Standard' },
+                                 { value: 15, label: '15s', tag: 'Relaxed' },
+                                 { value: 20, label: '20s', tag: 'Chill' },
+                              ].map((opt) => {
+                                 const isSelected = newTimerValue === opt.value;
+                                 return (
+                                    <button
+                                       key={opt.value}
+                                       type="button"
+                                       onClick={() => setNewTimerValue(opt.value)}
+                                       className={`flex flex-col items-center justify-center py-2 sm:py-2.5 px-1 rounded-xl border transition-all cursor-pointer ${
+                                          isSelected
+                                             ? 'bg-white text-black border-white shadow-md shadow-white/10'
+                                             : 'bg-white/5 text-gray-300 border-white/10 hover:bg-white/10 hover:border-white/20'
+                                       }`}
+                                    >
+                                       <span className="text-xs sm:text-sm font-black leading-tight">{opt.label}</span>
+                                       <span className={`text-[7px] sm:text-[8px] font-bold uppercase tracking-wider mt-0.5 ${
+                                          isSelected ? 'text-black/70 font-black' : 'text-gray-500'
+                                       }`}>
+                                          {opt.tag}
+                                       </span>
+                                    </button>
+                                 );
+                              })}
+                           </div>
+
+                           <button
+                              type="button"
+                              onClick={async () => {
+                                 await updateRoomSettings(id, { ...(currentAuction?.settings || {}), bidTimer: newTimerValue });
+                              }}
+                              className="w-full bg-white hover:bg-slate-200 text-black py-2.5 rounded-xl font-black text-[9px] uppercase tracking-wider transition-all mt-3 shadow-[0_10px_30px_rgba(255,255,255,0.08)] active:scale-95 cursor-pointer"
+                           >
                               Apply Timer Settings
                            </button>
                         </div>
@@ -2060,6 +2144,56 @@ const AuctionRoom = () => {
                </motion.div>
             )}
          </AnimatePresence>
+
+         {/* Two-Tab Lock: Blocked by another active window */}
+         {isSoloVsBots && soloLockStatus === 'blocked' && (
+            <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-2xl p-4 sm:p-6 flex flex-col items-center justify-center text-center">
+               <div className="relative z-10 flex flex-col items-center w-full max-w-md bg-[#0c0d10] border border-white/10 rounded-[2rem] p-6 sm:p-8 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)]">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4 text-amber-400">
+                     <AlertCircle size={24} />
+                  </div>
+                  <h2 className="text-base font-black uppercase tracking-wider mb-2 text-white">Active in Another Window</h2>
+                  <p className="text-xs text-gray-400 font-medium leading-relaxed mb-6">
+                     This solo auction is currently running in another tab or window on this device. You can take over the session here.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2 w-full">
+                     <button
+                        onClick={takeOverSoloAuction}
+                        className="flex-1 py-2.5 px-4 rounded-xl bg-white hover:bg-slate-200 text-black font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg"
+                     >
+                        Take Over Here
+                     </button>
+                     <button
+                        onClick={() => navigate('/')}
+                        className="py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+                     >
+                        Back to Home
+                     </button>
+                  </div>
+               </div>
+            </div>
+         )}
+
+         {/* Two-Tab Lock: Taken over by another window */}
+         {isSoloVsBots && soloLockStatus === 'taken_over' && (
+            <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-2xl p-4 sm:p-6 flex flex-col items-center justify-center text-center">
+               <div className="relative z-10 flex flex-col items-center w-full max-w-md bg-[#0c0d10] border border-white/10 rounded-[2rem] p-6 sm:p-8 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)]">
+                  <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4 text-red-400">
+                     <AlertCircle size={24} />
+                  </div>
+                  <h2 className="text-base font-black uppercase tracking-wider mb-2 text-white">Session Taken Over</h2>
+                  <p className="text-xs text-gray-400 font-medium leading-relaxed mb-6">
+                     This solo auction was taken over by another window on this device. Bidding in this tab is paused.
+                  </p>
+                  <button
+                     onClick={() => navigate('/')}
+                     className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-slate-200 text-black font-black text-xs uppercase tracking-wider transition-all cursor-pointer"
+                  >
+                     Back to Home
+                  </button>
+               </div>
+            </div>
+         )}
 
          <ConfirmDialog
             isOpen={showFastForwardConfirm}

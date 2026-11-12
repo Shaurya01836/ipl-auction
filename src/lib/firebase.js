@@ -11,18 +11,20 @@ import {
   SERVER_2,
   SERVER_3,
   SERVER_4,
-} from "./auctionServers";
+} from "./auctionServers.js";
+
+const rawEnv = (typeof import.meta !== 'undefined' && import.meta.env) ? import.meta.env : (typeof process !== 'undefined' && process.env ? process.env : {});
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  apiKey: rawEnv.VITE_FIREBASE_API_KEY || 'AIzaSyDummyKeyForNodeTestEnvironment00',
+  authDomain: rawEnv.VITE_FIREBASE_AUTH_DOMAIN || 'ipl-auction.firebaseapp.com',
   // Primary project: Auth, Firestore and the first Realtime Database.
-  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  databaseURL: rawEnv.VITE_FIREBASE_DATABASE_URL || 'https://ipl-auction-default-rtdb.firebaseio.com',
+  projectId: rawEnv.VITE_FIREBASE_PROJECT_ID || 'ipl-auction-mock',
+  storageBucket: rawEnv.VITE_FIREBASE_STORAGE_BUCKET || 'ipl-auction.appspot.com',
+  messagingSenderId: rawEnv.VITE_FIREBASE_MESSAGING_SENDER_ID || '1234567890',
+  appId: rawEnv.VITE_FIREBASE_APP_ID || '1:1234567890:web:abcdef',
+  measurementId: rawEnv.VITE_FIREBASE_MEASUREMENT_ID || 'G-DUMMY'
 };
 
 const app = initializeApp(firebaseConfig);
@@ -53,20 +55,20 @@ export { analytics };
 // their respective project IDs.
 
 const server2DatabaseURL = (
-  import.meta.env.VITE_RTDB_2_URL ||
-  import.meta.env.VITE_RTDB_FIREBASE_DATABASE_URL ||
+  rawEnv.VITE_RTDB_2_URL ||
+  rawEnv.VITE_RTDB_FIREBASE_DATABASE_URL ||
   'https://ipl-auction-2-947e7-default-rtdb.asia-southeast1.firebasedatabase.app'
 ).trim();
 
 const server3DatabaseURL = (
-  import.meta.env.VITE_RTDB_3_URL ||
-  import.meta.env.VITE_RTDB_B_URL ||
+  rawEnv.VITE_RTDB_3_URL ||
+  rawEnv.VITE_RTDB_B_URL ||
   'https://ipl-auction-3-default-rtdb.asia-southeast1.firebasedatabase.app'
 ).trim();
 
 const server4DatabaseURL = (
-  import.meta.env.VITE_RTDB_4_URL ||
-  import.meta.env.VITE_RTDB_A_URL ||
+  rawEnv.VITE_RTDB_4_URL ||
+  rawEnv.VITE_RTDB_A_URL ||
   'https://paypact-b5b52-default-rtdb.asia-southeast1.firebasedatabase.app'
 ).trim();
 
@@ -90,15 +92,15 @@ function createOverrideDatabase(databaseURL, appName, envPrefix) {
     const overrideApp = existing || initializeApp(
       Object.fromEntries(
         Object.entries({
-          apiKey:            import.meta.env[`${envPrefix}_API_KEY`],
-          authDomain:        import.meta.env[`${envPrefix}_AUTH_DOMAIN`],
+          apiKey:            rawEnv[`${envPrefix}_API_KEY`],
+          authDomain:        rawEnv[`${envPrefix}_AUTH_DOMAIN`],
           databaseURL,
           projectId:
-            import.meta.env[`${envPrefix}_PROJECT_ID`] ||
+            rawEnv[`${envPrefix}_PROJECT_ID`] ||
             deriveProjectId(databaseURL),
-          storageBucket:     import.meta.env[`${envPrefix}_STORAGE_BUCKET`],
-          messagingSenderId: import.meta.env[`${envPrefix}_MESSAGING_SENDER_ID`],
-          appId:             import.meta.env[`${envPrefix}_APP_ID`],
+          storageBucket:     rawEnv[`${envPrefix}_STORAGE_BUCKET`],
+          messagingSenderId: rawEnv[`${envPrefix}_MESSAGING_SENDER_ID`],
+          appId:             rawEnv[`${envPrefix}_APP_ID`],
         }).filter(([, value]) => Boolean(value)),
       ),
       appName,
@@ -141,7 +143,28 @@ export function getAvailableServers() {
   return AUCTION_SERVERS.filter((server) => isServerAvailable(server.id));
 }
 
+let localModeActive = false;
+
+/** Enable strict device-local solo mode (disconnects sockets and throws on accidental RTDB access). */
+export function enterLocalMode() {
+  localModeActive = true;
+  goOfflineAllServers();
+}
+
+/** Exit local solo mode and re-allow cloud connections. */
+export function exitLocalMode() {
+  localModeActive = false;
+}
+
+/** Check if device-local solo mode is currently engaged. */
+export function isLocalMode() {
+  return localModeActive;
+}
+
 export function getRtdb(server = DEFAULT_AUCTION_SERVER) {
+  if (localModeActive || server === 'local') {
+    throw new Error('RTDB access is strictly prohibited in device-local solo mode.');
+  }
   const id = normalizeServer(server);
   return SERVER_DATABASES[id] || server1Rtdb;
 }
@@ -228,6 +251,9 @@ export function setActiveServer(server) {
 
 /** Switch to a server, connect, and start its time-offset listener. */
 export function goOnlineServer(server = activeServer) {
+  if (localModeActive) {
+    throw new Error('Cannot connect RTDB server while in local solo mode.');
+  }
   const next = normalizeServer(server);
   if (!isServerAvailable(next)) {
     throw new Error(`${next} auction server is not configured.`);
@@ -259,6 +285,30 @@ export function goOfflineServer(server = activeServer) {
     // Already offline.
   }
   stopServerTimeSync(id);
+}
+
+/**
+ * Shut down all configured RTDB sockets and cancel active time sync listeners.
+ * Used when entering device-local solo mode to guarantee zero open sockets.
+ */
+export function goOfflineAllServers() {
+  Object.values(SERVER_DATABASES).forEach((dbInstance) => {
+    if (dbInstance) {
+      try {
+        goOffline(dbInstance);
+      } catch {
+        // Already offline.
+      }
+    }
+  });
+  for (const serverId of Array.from(serverTimeUnsubscribers.keys())) {
+    stopServerTimeSync(serverId);
+  }
+}
+
+/** Reconnect all configured RTDB sockets (or active server). */
+export function goOnlineAllServers() {
+  return goOnlineServer(activeServer);
 }
 
 /**

@@ -34,6 +34,7 @@ export function simulateBotLot({
   squadLimit = 25,
   overseasLimit = 8,
   initialBudget = 120.0,
+  randomFn = Math.random,
 }) {
   if (!player || !Array.isArray(botTeams) || botTeams.length === 0) {
     return {
@@ -58,7 +59,7 @@ export function simulateBotLot({
     someoneBid = false;
 
     // Shuffle bots for fairness in tie-breaking
-    const shuffled = [...botTeams].sort(() => Math.random() - 0.5);
+    const shuffled = [...botTeams].sort(() => randomFn() - 0.5);
 
     for (const botTeam of shuffled) {
       if (botTeam.userId === leadingBidderId) continue;
@@ -71,6 +72,7 @@ export function simulateBotLot({
         squadLimit,
         overseasLimit,
         initialBudget,
+        randomFn,
       });
 
       if (decision && decision.shouldBid) {
@@ -112,6 +114,7 @@ export function simulateRemainingAuction({
   settings = {},
   squadLimit = 25,
   overseasLimit = 8,
+  randomFn = Math.random,
 }) {
   const initialBudget = toFiniteNumber(settings.budget, 120.0);
 
@@ -156,6 +159,7 @@ export function simulateRemainingAuction({
           squadLimit,
           overseasLimit,
           initialBudget,
+          randomFn,
         });
 
         if (lotRes.isSold) {
@@ -194,6 +198,7 @@ export function simulateRemainingAuction({
       squadLimit,
       overseasLimit,
       initialBudget,
+      randomFn,
     });
 
     if (lotRes.isSold) {

@@ -95,7 +95,7 @@ const TEAM_PREFERENCES = {
  * Computes a bot's max valuation for a player.
  * Returns a value in Cr that varies per team, per player, and per auction run.
  */
-function computeBotValuation({ player, botTeam, squadLimit, budgetRemaining, initialBudget }) {
+function computeBotValuation({ player, botTeam, squadLimit, budgetRemaining, initialBudget, randomFn = Math.random }) {
   const basePrice = toFiniteNumber(player.basePrice, 0.30);
   const set = player.set || 'Set 4';
   const teamId = botTeam.teamId;
@@ -115,7 +115,7 @@ function computeBotValuation({ player, botTeam, squadLimit, budgetRemaining, ini
 
   // 3. Per-bot random willingness (simulates scouting reports / mood)
   //    Each bot rolls a number per player that varies how keen they are this time
-  const willingnessFactor = tier.base + Math.random() * (tier.max - tier.base);
+  const willingnessFactor = tier.base + randomFn() * (tier.max - tier.base);
 
   // 4. Budget pressure factor — bots spend slightly more aggressively
   //    as the auction progresses (e.g., "must complete squad")
@@ -167,6 +167,7 @@ export function evaluateBotBid({
   squadLimit = 25,
   overseasLimit = 8,
   initialBudget = 120.0,
+  randomFn = Math.random,
 }) {
   if (!player || !botTeam) return null;
 
@@ -216,6 +217,7 @@ export function evaluateBotBid({
     squadLimit,
     budgetRemaining,
     initialBudget,
+    randomFn,
   });
 
   // 8. Bidding decision — only bid if next bid is within valuation
@@ -229,7 +231,7 @@ export function evaluateBotBid({
     : priceRatio < 0.85 ? 0.65                      // getting pricey → sometimes drop
     : 0.40;                                          // near ceiling → coin-flip drop-off
 
-  if (Math.random() > baseBidChance) return null;
+  if (randomFn() > baseBidChance) return null;
 
   return {
     shouldBid: true,

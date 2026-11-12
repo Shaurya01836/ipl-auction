@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   db,
+  enterLocalMode,
+  exitLocalMode,
   getActiveServer,
   getAvailableServers,
   getRtdb,
@@ -68,16 +71,31 @@ import {
   DEFAULT_AUCTION_SERVER,
   PRIMARY_SERVER,
   SECONDARY_SERVER,
+  SERVER_LOCAL,
   getAuctionServer,
   getServerMeta,
   normalizeServer,
   withServerParam,
 } from '../lib/auctionServers';
 import {
+  isLocalRoom,
+  loadLocalSoloRoom,
+  saveLocalSoloRoom,
+  localAuctionReducer,
+  acquireSoloRoomLock,
+  buildSoloPersistPayload,
+} from '../lib/localAuctionEngine';
+import {
   fetchAuctionRecord,
   insertAuctionWithServer,
   upsertAuctionWithServer,
 } from '../lib/auctionServerDirectory';
+import {
+  createSoloBotLoop,
+  createSoloStateManager,
+  handleSoloEndAuction,
+  handleSoloSendMessage,
+} from '../lib/soloAuctionSession';
 const TEAMS = [
   { id: 'MI', name: 'Mumbai Indians', color: 'bg-blue-600' },
   { id: 'CSK', name: 'Chennai Super Kings', color: 'bg-yellow-400 text-black' },
@@ -128,6 +146,7 @@ const AuctionContext = createContext();
 export const useAuction = () => useContext(AuctionContext);
 
 export const AuctionProvider = ({ children }) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { handleFirebaseError } = useQuota();
   const { reportConnectionTrouble, clearConnectionAlert } = useConnectionAlert();
@@ -136,16 +155,27 @@ export const AuctionProvider = ({ children }) => {
   const [roomTeams, setRoomTeams] = useState([]);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [soloLockStatus, setSoloLockStatus] = useState('active'); // 'active' | 'blocked' | 'taken_over'
+  const isSoloLockHeldRef = React.useRef(false);
+  const soloBotLoopRef = React.useRef(null);
+  const soloStateManagerRef = React.useRef(null);
   const endingPlayerRef = React.useRef(false);
   const serverSessionsRef = React.useRef(null);
   if (!serverSessionsRef.current) {
     serverSessionsRef.current = createServerSessionTracker();
   }
+  const localSoloStateRef = React.useRef(null);
+  const localSoloLockReleaseRef = React.useRef(null);
+  const localSoloStealFnRef = React.useRef(null);
+  const localSoloTimerIntervalRef = React.useRef(null);
 
-
-  // Server-authoritative time: getServerTime() returns Date.now() + serverOffset,
-  // synced across all clients.
-  const getSyncedTime = useCallback(() => getServerTime(), []);
+  // Server-authoritative time in cloud mode, Date.now() in device-local solo mode
+  const getSyncedTime = useCallback(() => {
+    if (isLocalRoom(currentAuction?.id, currentAuction?.server)) {
+      return Date.now();
+    }
+    return getServerTime();
+  }, [currentAuction?.id, currentAuction?.server]);
 
   // Create a new room in DB (RTDB + Supabase index, zero Firestore load)
   const createRoom = useCallback(async (
@@ -156,6 +186,9 @@ export const AuctionProvider = ({ children }) => {
     isPublic = true,
     server = DEFAULT_AUCTION_SERVER,
   ) => {
+    if (isLocalRoom(roomId, server)) {
+      return;
+    }
     const requestedServer = normalizeServer(server);
 
     // A full free-plan database never opens its socket. Probe the chosen server
@@ -421,7 +454,28 @@ export const AuctionProvider = ({ children }) => {
     }
   }, [currentAuction?.server]);
 
+  // Persist a finished device-local solo auction so its summary survives this
+  // browser. Runs only when the player explicitly ends the auction.
+  const persistSoloAuction = useCallback(async (state) => {
+    if (!supabase) return false;
+    const payload = buildSoloPersistPayload(state);
+    if (!payload) return false;
+    try {
+      const { error } = await upsertAuctionWithServer(payload.auction, SERVER_LOCAL);
+      if (error) throw error;
+      if (payload.teams.length > 0) {
+        const { error: teamsError } = await supabase.from('teams').upsert(payload.teams);
+        if (teamsError) throw teamsError;
+      }
+      return true;
+    } catch (err) {
+      console.warn('[solo] Failed to save completed auction to Supabase', err);
+      return false;
+    }
+  }, []);
+
   const startAuction = useCallback(async (roomId) => {
+    if (isLocalRoom(roomId, currentAuction?.server)) return;
     try {
       const rtdbRoomRef = ref(rtdb, `auctions/${roomId}/room`);
       const liveRef = ref(rtdb, `auctions/${roomId}/live`);
@@ -553,6 +607,16 @@ export const AuctionProvider = ({ children }) => {
   }, [getSyncedTime, handleFirebaseError]);
 
   const endPlayerAuction = useCallback(async (roomId) => {
+    if (isLocalRoom(roomId, currentAuction?.server)) {
+      const live = currentAuction?.currentAuction || currentAuction?.currentLot;
+      if (live && (live.status === 'sold' || live.status === 'unsold')) {
+        updateLocalSoloState({ type: 'ADVANCE_LOT', now: Date.now() });
+      } else {
+        updateLocalSoloState({ type: 'RESOLVE_LOT', now: Date.now(), celebrate: true });
+      }
+      return;
+    }
+
     // Prevent duplicate calls from the timer interval
     if (endingPlayerRef.current) return;
     endingPlayerRef.current = true;
@@ -732,11 +796,60 @@ export const AuctionProvider = ({ children }) => {
   // Ref guards against duplicate fast-forward / pass actions
   const isSimulatingRef = React.useRef(false);
 
+  const updateLocalSoloState = useCallback((action) => {
+    if (soloStateManagerRef.current) {
+      return soloStateManagerRef.current.updateState(action);
+    }
+    if (!isSoloLockHeldRef.current) {
+      console.warn('[solo] Refusing to update local solo state: lock is not held by this window.');
+      return null;
+    }
+    const prev = localSoloStateRef.current;
+    if (!prev) return null;
+    const next = localAuctionReducer(prev, action);
+    localSoloStateRef.current = next;
+    saveLocalSoloRoom(next);
+
+    const liveLot = next.currentAuction || next.currentLot;
+    setCurrentAuction({
+      ...next,
+      currentAuction: liveLot,
+      currentLot: liveLot,
+      isSoloBotRoom: true,
+      server: SERVER_LOCAL,
+    });
+    const teamsList = next.roomTeams || next.teams || [];
+    setRoomTeams(teamsList);
+    setMessages(next.messages || []);
+    const humanTeam = teamsList.find(
+      (t) => t.userId === user?.uid || !String(t.userId).startsWith('bot_'),
+    );
+    if (humanTeam) {
+      setTeam({
+        ...humanTeam,
+        id: humanTeam.teamId || humanTeam.id,
+        teamId: humanTeam.teamId || humanTeam.id,
+        team: humanTeam.teamId || humanTeam.id,
+      });
+    }
+    return next;
+  }, [user?.uid]);
+
   /**
    * Fast-pass the current lot in solo-bot mode:
    * Cancels pending timer, immediately resolves the lot among bots, advances without human delay.
    */
   const skipCurrentPlayerSolo = useCallback(async (roomId) => {
+    if (isLocalRoom(roomId, currentAuction?.server)) {
+      const live = currentAuction?.currentAuction || currentAuction?.currentLot;
+      if (live && (live.status === 'sold' || live.status === 'unsold')) {
+        updateLocalSoloState({ type: 'ADVANCE_LOT', now: Date.now() });
+      } else {
+        updateLocalSoloState({ type: 'SKIP_LOT', now: Date.now() });
+      }
+      return;
+    }
+
     if (isSimulatingRef.current || endingPlayerRef.current) return;
     isSimulatingRef.current = true;
     endingPlayerRef.current = true;
@@ -762,6 +875,13 @@ export const AuctionProvider = ({ children }) => {
       const teamsSnap = await get(ref(rtdb, `auctions/${roomId}/teams`));
       const teamsVal = teamsSnap.exists() ? teamsSnap.val() : {};
       const allTeams = Object.values(teamsVal);
+
+      // Explicitly reject if cloud room is not a solo bot room!
+      if (!isSoloBotRoom(room.players || allTeams)) {
+        console.warn('[auction] skipCurrentPlayerSolo rejected: not a solo bot room');
+        return;
+      }
+
       const botTeams = allTeams.filter((t) => t.userId && (t.userId.startsWith('bot_') || t.userId !== user?.uid));
 
       // Simulate lot strictly among bots
@@ -861,6 +981,11 @@ export const AuctionProvider = ({ children }) => {
    * Simulates all remaining lots for bots in memory, commits teams, and finishes auction.
    */
   const fastForwardAuctionSolo = useCallback(async (roomId) => {
+    if (isLocalRoom(roomId, currentAuction?.server)) {
+      updateLocalSoloState({ type: 'FAST_FORWARD', now: Date.now() });
+      return;
+    }
+
     if (isSimulatingRef.current || endingPlayerRef.current) return;
     isSimulatingRef.current = true;
     endingPlayerRef.current = true;
@@ -881,6 +1006,12 @@ export const AuctionProvider = ({ children }) => {
       const live = liveSnap.exists() ? liveSnap.val() : null;
       const teamsVal = teamsSnap.exists() ? teamsSnap.val() : {};
       const allTeams = Object.values(teamsVal);
+
+      // Explicitly reject if cloud room is not a solo bot room!
+      if (!isSoloBotRoom(room.players || allTeams)) {
+        console.warn('[auction] fastForwardAuctionSolo rejected: not a solo bot room');
+        return;
+      }
 
       const order = room.playerOrder || Array.from({ length: IPL_PLAYERS.length }, (_, i) => i);
       const currentPlayerId = live?.playerId;
@@ -958,6 +1089,9 @@ export const AuctionProvider = ({ children }) => {
   }, [currentAuction?.id, currentAuction?.server, liveLotStatus, endPlayerAuction]);
 
   const joinRoomDb = useCallback(async (roomId, userId, playerDetails, serverHint) => {
+    if (isLocalRoom(roomId, serverHint)) {
+      return SERVER_LOCAL;
+    }
     const teamDetails = TEAMS.find(t => t.id === playerDetails.team);
 
     let targetServer = normalizeServer(serverHint, null);
@@ -1180,6 +1314,7 @@ export const AuctionProvider = ({ children }) => {
 
   // Kick a player from the room
   const kickPlayer = useCallback(async (roomId, playerObj) => {
+    if (isLocalRoom(roomId, currentAuction?.server)) return;
     try {
       // 1+2. Remove the player and ban them in one transaction so a concurrent
       // join cannot resurrect the kicked manager's roster entry.
@@ -1228,9 +1363,161 @@ export const AuctionProvider = ({ children }) => {
     }
   }, []);
 
+  const takeOverSoloAuction = useCallback(async () => {
+    if (localSoloStealFnRef.current) {
+      try {
+        const stolen = await localSoloStealFnRef.current();
+        if (stolen?.acquired) {
+          isSoloLockHeldRef.current = true;
+          localSoloLockReleaseRef.current = stolen.release;
+          setSoloLockStatus('active');
+          soloBotLoopRef.current?.start();
+        }
+      } catch (err) {
+        console.error('[solo] Failed to take over session lock', err);
+      }
+    }
+  }, []);
+
+  const joinLocalSoloAuction = useCallback((auctionId, userId) => {
+    clearConnectionAlert();
+    setLoading(true);
+
+    const saved = loadLocalSoloRoom(auctionId);
+    if (!saved) {
+      setCurrentAuction(null);
+      setLoading(false);
+      return () => {};
+    }
+
+    enterLocalMode();
+    localSoloStateRef.current = saved;
+    const initialLot = saved.currentAuction || saved.currentLot;
+    setCurrentAuction({
+      ...saved,
+      currentAuction: initialLot,
+      currentLot: initialLot,
+      isSoloBotRoom: true,
+      server: SERVER_LOCAL,
+    });
+    const teamsList = saved.roomTeams || saved.teams || [];
+    setRoomTeams(teamsList);
+    setMessages(saved.messages || []);
+    const humanTeam = teamsList.find(
+      (t) => t.userId === userId || t.userId === user?.uid || !String(t.userId).startsWith('bot_'),
+    );
+    if (humanTeam) {
+      setTeam({
+        ...humanTeam,
+        id: humanTeam.teamId || humanTeam.id,
+        teamId: humanTeam.teamId || humanTeam.id,
+        team: humanTeam.teamId || humanTeam.id,
+      });
+    }
+    setLoading(false);
+
+    let lockActive = true;
+    isSoloLockHeldRef.current = false;
+
+    // Use createSoloStateManager to manage local solo room transitions & lease verification
+    const stateManager = createSoloStateManager({
+      initialState: saved,
+      isLockHeldRef: isSoloLockHeldRef,
+      onSave: saveLocalSoloRoom,
+      onStateChange: (next) => {
+        localSoloStateRef.current = next;
+        const activeLot = next.currentAuction || next.currentLot;
+        setCurrentAuction({
+          ...next,
+          currentAuction: activeLot,
+          currentLot: activeLot,
+          isSoloBotRoom: true,
+          server: SERVER_LOCAL,
+        });
+        const updatedTeamsList = next.roomTeams || next.teams || [];
+        setRoomTeams(updatedTeamsList);
+        setMessages(next.messages || []);
+        const nextHumanTeam = updatedTeamsList.find(
+          (t) => t.userId === userId || t.userId === user?.uid || !String(t.userId).startsWith('bot_'),
+        );
+        if (nextHumanTeam) {
+          setTeam({
+            ...nextHumanTeam,
+            id: nextHumanTeam.teamId || nextHumanTeam.id,
+            teamId: nextHumanTeam.teamId || nextHumanTeam.id,
+            team: nextHumanTeam.teamId || nextHumanTeam.id,
+          });
+        }
+        if (next.status === 'completed' && !next.synced) {
+          persistSoloAuction(next).then((saved) => {
+            if (saved) {
+              saveLocalSoloRoom(next, true);
+            }
+          }).catch((err) => {
+            console.warn('[solo] Auto-persist to Supabase failed', err);
+          });
+        }
+      },
+    });
+    soloStateManagerRef.current = stateManager;
+
+    // Use createSoloBotLoop for StrictMode safety and timestamp-driven bidding
+    const botLoop = createSoloBotLoop({
+      getState: () => soloStateManagerRef.current?.getState() || localSoloStateRef.current,
+      updateState: (action) => updateLocalSoloState(action),
+      intervalMs: 200,
+      celebrate: true,
+      pacing: true,
+    });
+    soloBotLoopRef.current = botLoop;
+
+    const onStealCallback = () => {
+      isSoloLockHeldRef.current = false;
+      setSoloLockStatus('taken_over');
+      soloBotLoopRef.current?.stop();
+    };
+
+    acquireSoloRoomLock(auctionId, undefined, onStealCallback).then((lockResult) => {
+      if (!lockActive) {
+        lockResult.release?.();
+        return;
+      }
+      if (!lockResult.acquired) {
+        isSoloLockHeldRef.current = false;
+        setSoloLockStatus('blocked');
+        localSoloStealFnRef.current = lockResult.steal;
+        soloBotLoopRef.current?.stop();
+        return;
+      }
+      isSoloLockHeldRef.current = true;
+      localSoloLockReleaseRef.current = lockResult.release;
+      setSoloLockStatus('active');
+      soloBotLoopRef.current?.start();
+    });
+
+    return () => {
+      lockActive = false;
+      isSoloLockHeldRef.current = false;
+      soloBotLoopRef.current?.stop();
+      soloBotLoopRef.current = null;
+      if (localSoloLockReleaseRef.current) {
+        localSoloLockReleaseRef.current();
+        localSoloLockReleaseRef.current = null;
+      }
+      localSoloStateRef.current = null;
+      soloStateManagerRef.current = null;
+      exitLocalMode();
+    };
+  }, [clearConnectionAlert, updateLocalSoloState]);
+
   // Listen to current auction state live
   const joinAuction = useCallback((auctionId, userId, serverHint) => {
     if (!userId) return () => {};
+
+    const localStoreExists = Boolean(loadLocalSoloRoom(auctionId));
+    if (isLocalRoom(auctionId, serverHint, localStoreExists)) {
+      return joinLocalSoloAuction(auctionId, userId);
+    }
 
     const preferredServer = normalizeServer(serverHint || getActiveServer());
     const roomServer = isServerAvailable(preferredServer)
@@ -1758,16 +2045,24 @@ export const AuctionProvider = ({ children }) => {
   }, [user]);
 
   const sendMessage = useCallback(async (roomId, text, type = 'text') => {
-    if (!user) return;
-    const msgRef = ref(rtdb, `auctions/${roomId}/messages`);
-    await push(msgRef, {
-      userId: user.uid,
-      userName: user.displayName || 'Manager',
+    return handleSoloSendMessage({
+      roomId,
+      server: currentAuction?.server,
+      user,
       text,
       type,
-      timestamp: serverTimestampRtdb()
+      onCloudSend: async () => {
+        const msgRef = ref(rtdb, `auctions/${roomId}/messages`);
+        await push(msgRef, {
+          userId: user.uid,
+          userName: user.displayName || 'Manager',
+          text,
+          type,
+          timestamp: serverTimestampRtdb()
+        });
+      },
     });
-  }, [user]);
+  }, [user, currentAuction?.server]);
 
   // The bid amount is recomputed from live room state; callers may pass a
   // hint, but it is intentionally ignored.
@@ -1787,13 +2082,21 @@ export const AuctionProvider = ({ children }) => {
 
     // Read the team fresh: the React `team` snapshot can be a render behind a
     // sale or another tab, which used to let a full squad/overseas team bid.
-    const teamDocId = `${currentAuction.id}_${user.uid}`;
+    const isLocal = isLocalRoom(currentAuction.id, currentAuction.server);
     let authoritativeTeam = team;
-    try {
-      const teamSnap = await get(ref(rtdb, `auctions/${currentAuction.id}/teams/${teamDocId}`));
-      if (teamSnap.exists()) authoritativeTeam = teamSnap.val();
-    } catch {
-      // Offline/read failure: the live transaction still enforces the purse.
+    if (isLocal) {
+      const found = (localSoloStateRef.current?.roomTeams || roomTeams || []).find(
+        (t) => t.userId === user.uid || !String(t.userId).startsWith('bot_')
+      );
+      if (found) authoritativeTeam = found;
+    } else {
+      const teamDocId = `${currentAuction.id}_${user.uid}`;
+      try {
+        const teamSnap = await get(ref(rtdb, `auctions/${currentAuction.id}/teams/${teamDocId}`));
+        if (teamSnap.exists()) authoritativeTeam = teamSnap.val();
+      } catch {
+        // Offline/read failure: the live transaction still enforces the purse.
+      }
     }
 
     const constraintError = getSquadConstraintError({
@@ -1812,6 +2115,18 @@ export const AuctionProvider = ({ children }) => {
     const nextBidSnapshot = getNextBidAmount(player, currentAuction.currentAuction?.currentBid);
     if (authoritativeBudget < nextBidSnapshot) {
       throw new Error('Insufficient budget to place this bid.');
+    }
+
+    if (isLocalRoom(currentAuction.id, currentAuction.server)) {
+      updateLocalSoloState({
+        type: 'PLACE_BID',
+        amount: nextBidSnapshot,
+        bidderId: user.uid,
+        bidderName: user.displayName || 'Manager',
+        bidderTeam: authoritativeTeam.teamId || team.teamId,
+        now: Date.now(),
+      });
+      return;
     }
 
     try {
@@ -1837,6 +2152,7 @@ export const AuctionProvider = ({ children }) => {
   }, [currentAuction, user, team, getSyncedTime, handleFirebaseError]);
 
   const updatePlayerTeam = useCallback(async (roomId, userId, newTeamId) => {
+    if (isLocalRoom(roomId, currentAuction?.server)) return;
     const rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
     if (!rtdbRoomSnap.exists()) return;
     
@@ -1882,10 +2198,19 @@ export const AuctionProvider = ({ children }) => {
   }, []);
   
   const updateRoomSettings = useCallback(async (roomId, settings) => {
+    if (isLocalRoom(roomId, currentAuction?.server)) {
+      updateLocalSoloState({ type: 'UPDATE_SETTINGS', settings, now: Date.now() });
+      return;
+    }
     await updateRtdb(ref(rtdb, `auctions/${roomId}/room`), { settings });
-  }, []);
+  }, [currentAuction?.server, updateLocalSoloState]);
 
   const pauseAuction = useCallback(async (roomId) => {
+    if (isLocalRoom(roomId, currentAuction?.server)) {
+      updateLocalSoloState({ type: 'PAUSE_AUCTION', now: Date.now() });
+      return;
+    }
+
     if (!user || !currentAuction || currentAuction.hostId !== user.uid) return;
 
     // Prevent pause race condition: only pause if actively bidding and > 2s remaining
@@ -1901,9 +2226,14 @@ export const AuctionProvider = ({ children }) => {
       type: 'log',
       timestamp: serverTimestampRtdb()
     });
-  }, [user, currentAuction, getSyncedTime]);
+  }, [user, currentAuction, getSyncedTime, updateLocalSoloState]);
 
   const resumeAuction = useCallback(async (roomId) => {
+    if (isLocalRoom(roomId, currentAuction?.server)) {
+      updateLocalSoloState({ type: 'RESUME_AUCTION', now: Date.now() });
+      return;
+    }
+
     if (!user || !currentAuction || currentAuction.hostId !== user.uid) return;
     
     const liveRef = ref(rtdb, `auctions/${roomId}/live`);
@@ -1939,7 +2269,21 @@ export const AuctionProvider = ({ children }) => {
   }, [getSyncedTime, user, currentAuction]);
 
   const endAuction = useCallback(async (roomId) => {
-    if (!user || !currentAuction || currentAuction.hostId !== user.uid) return;
+    const isLocal = isLocalRoom(roomId, currentAuction?.server);
+    if (!isLocal && (!user || !currentAuction || currentAuction.hostId !== user.uid)) return;
+
+    const soloResult = await handleSoloEndAuction({
+      roomId,
+      server: currentAuction?.server,
+      isHost: isLocal ? true : currentAuction.hostId === user?.uid,
+      updateLocalSoloState,
+      saveLocalSoloRoom,
+      navigate,
+      onPersist: persistSoloAuction,
+    });
+    if (soloResult.handled) {
+      return;
+    }
 
     const server = normalizeServer(currentAuction?.server || getActiveServer());
     const rtdbInstance = getRtdb(server);
@@ -1978,7 +2322,7 @@ export const AuctionProvider = ({ children }) => {
         }
       }, 30000);
     }
-  }, [user, currentAuction, flushAuctionToFirestore]);
+  }, [user, currentAuction, updateLocalSoloState, navigate, flushAuctionToFirestore, persistSoloAuction]);
 
 
 
@@ -2017,6 +2361,7 @@ export const AuctionProvider = ({ children }) => {
   }, [getSyncedTime]);
 
   const addBotTeam = useCallback(async (roomId, teamId) => {
+    if (isLocalRoom(roomId, currentAuction?.server)) return;
     const rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
     if (!rtdbRoomSnap.exists()) return;
     const data = rtdbRoomSnap.val();
@@ -2059,6 +2404,7 @@ export const AuctionProvider = ({ children }) => {
   }, []);
 
   const removeBotTeam = useCallback(async (roomId, botUserId) => {
+    if (isLocalRoom(roomId, currentAuction?.server)) return;
     const rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
     if (!rtdbRoomSnap.exists()) return;
 
@@ -2072,6 +2418,7 @@ export const AuctionProvider = ({ children }) => {
   }, []);
 
   const fillEmptyTeamsWithBots = useCallback(async (roomId) => {
+    if (isLocalRoom(roomId, currentAuction?.server)) return;
     const rtdbRoomSnap = await get(ref(rtdb, `auctions/${roomId}/room`));
     if (!rtdbRoomSnap.exists()) return;
     const data = rtdbRoomSnap.val();
@@ -2284,7 +2631,9 @@ export const AuctionProvider = ({ children }) => {
     fillEmptyTeamsWithBots,
     skipCurrentPlayerSolo,
     fastForwardAuctionSolo,
-    getSyncedTime
+    getSyncedTime,
+    soloLockStatus,
+    takeOverSoloAuction
   };
 
   return (

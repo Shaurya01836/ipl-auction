@@ -29,8 +29,13 @@ import Footer from '../components/Footer';
 import PageLoader from '../components/PageLoader';
 import PageBackground from '../components/PageBackground';
 import useRoomServer from '../hooks/useRoomServer';
-import { withServerParam } from '../lib/auctionServers';
+import { SERVER_LOCAL, withServerParam } from '../lib/auctionServers';
 import useDocumentTitle from '../hooks/useDocumentTitle';
+import { ref, set } from 'firebase/database';
+import { getRtdb } from '../lib/firebase';
+import { isSoloBotRoom } from '../lib/botSimulation';
+import { convertLobbyToSolo } from '../lib/lobbyConversion';
+import { supabase } from '../lib/supabase';
 
 // Small-screen detection (matches the 767px breakpoint used in index.css).
 // Framer-motion elements render without any animation when this is true.
@@ -209,6 +214,21 @@ const Lobby = () => {
       setIsStarting(true);
       setActionError(null);
       try {
+        const isSolo = isSoloBotRoom(currentAuction?.players || []);
+        if (isSolo) {
+          await convertLobbyToSolo({
+            roomId: id,
+            user,
+            currentUserPlayer,
+            currentAuction,
+            server,
+            rtdbInstance: getRtdb(server),
+            supabaseClient: supabase,
+            navigate,
+          });
+          return;
+        }
+
         await startAuction(id);
         navigate(withServerParam(`/auction/${id}`, server));
       } catch (error) {

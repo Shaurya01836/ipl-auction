@@ -103,18 +103,11 @@ export default function AuctionActivityFeed({ activeCount = 0 }) {
       {/* Card Header */}
       <div className="flex flex-col flex-shrink-0">
         <h2 className="text-sm sm:text-base font-pixel uppercase text-white tracking-wider leading-none flex items-center gap-2">
-          <span className="w-5 flex justify-center">🔥</span>
           <span>LIVE AUCTION ROOMS</span>
         </h2>
         
         {/* Active Hubs Counter right under title */}
         <div className="flex items-center gap-2 mt-2 select-none">
-          <span className="w-5 flex justify-center">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-            </span>
-          </span>
           <span className="text-[10px] font-pixel text-green-400 uppercase tracking-widest leading-none mt-[1px]">
            {activeCount !== undefined && activeCount !== null ? activeCount : fakeCount}+ Active rooms
           </span>

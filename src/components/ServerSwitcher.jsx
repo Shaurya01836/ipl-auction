@@ -6,7 +6,8 @@ import React from 'react';
  * - Desktop/Laptop (>= lg): compact inline segmented control on the same line as the header.
  */
 export default function ServerSwitcher({ servers, value, onChange, className = '' }) {
-  if (!servers || servers.length < 2) return null;
+  const visibleServers = (servers || []).filter((server) => !server?.isLocal);
+  if (visibleServers.length < 2) return null;
 
   return (
     <div
@@ -14,7 +15,7 @@ export default function ServerSwitcher({ servers, value, onChange, className = '
       aria-label="Auction server"
       className={`grid grid-cols-4 lg:inline-flex items-center gap-1 lg:gap-0.5 rounded-lg border border-white/10 bg-white/[0.02] p-1 lg:p-0.5 w-full lg:w-auto shrink-0 ${className}`}
     >
-      {servers.map((server) => {
+      {visibleServers.map((server) => {
         const active = server.id === value;
         return (
           <button

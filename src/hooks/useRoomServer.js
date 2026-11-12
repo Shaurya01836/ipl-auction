@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   DEFAULT_AUCTION_SERVER,
+  SERVER_LOCAL,
   getPreferredServer,
   getServerFromSearch,
   normalizeServer,
@@ -8,6 +9,7 @@ import {
 } from '../lib/auctionServers';
 import { resolveRoomServer } from '../lib/auctionServerDirectory';
 import { isServerAvailable, setActiveServer } from '../lib/firebase';
+import { isLocalRoom, loadLocalSoloRoom } from '../lib/localAuctionEngine';
 
 const EMPTY_RESOLUTION = {
   roomId: null,
@@ -36,6 +38,16 @@ export default function useRoomServer(roomId) {
 
     const searchStr = typeof window !== 'undefined' ? window.location.search : '';
     const hint = getServerFromSearch(searchStr);
+
+    if (isLocalRoom(roomId, hint, Boolean(loadLocalSoloRoom(roomId)))) {
+      setResolution({
+        roomId,
+        server: SERVER_LOCAL,
+        ready: true,
+        error: null,
+      });
+      return;
+    }
 
     resolveRoomServer(roomId, hint)
       .catch((lookupError) => {

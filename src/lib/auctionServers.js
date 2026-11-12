@@ -11,10 +11,19 @@ export const SERVER_1 = 'server-1'; // Main: ipl-auction-1cdbc
 export const SERVER_2 = 'server-2'; // Node 2: ipl-auction-2-947e7
 export const SERVER_3 = 'server-3'; // Node 3: ipl-auction-3
 export const SERVER_4 = 'server-4'; // Node 4: paypact-b5b52
+export const SERVER_LOCAL = 'local'; // Device-local solo engine (zero RTDB connections)
 
 export const PRIMARY_SERVER = SERVER_1;
 export const SECONDARY_SERVER = SERVER_2;
 export const DEFAULT_AUCTION_SERVER = SERVER_1;
+
+export const LOCAL_SERVER_META = Object.freeze({
+  id: SERVER_LOCAL,
+  label: 'Local (Solo)',
+  shortLabel: 'Solo',
+  description: 'Device Local (Zero Connections)',
+  isLocal: true,
+});
 
 export const AUCTION_SERVERS = Object.freeze([
   {
@@ -58,9 +67,12 @@ const LEGACY_SERVER_MAP = {
 };
 const PREFERRED_SERVER_KEY = 'ipl-auction:preferred-server';
 
-/** True when the value is one of the known server ids or legacy aliases. */
+/** True when the value is one of the known server ids, local solo, or legacy aliases. */
 export function isValidServer(value) {
-  return typeof value === 'string' && (SERVER_IDS.has(value) || Boolean(LEGACY_SERVER_MAP[value]));
+  return (
+    typeof value === 'string' &&
+    (SERVER_IDS.has(value) || value === SERVER_LOCAL || Boolean(LEGACY_SERVER_MAP[value]))
+  );
 }
 
 /**
@@ -70,6 +82,7 @@ export function isValidServer(value) {
 export function normalizeServer(value, fallback = DEFAULT_AUCTION_SERVER) {
   if (typeof value === 'string') {
     if (SERVER_IDS.has(value)) return value;
+    if (value === SERVER_LOCAL) return SERVER_LOCAL;
     if (LEGACY_SERVER_MAP[value]) return LEGACY_SERVER_MAP[value];
   }
   return fallback;
@@ -78,6 +91,7 @@ export function normalizeServer(value, fallback = DEFAULT_AUCTION_SERVER) {
 /** Metadata for a server id. Unknown ids return the primary server metadata. */
 export function getServerMeta(value) {
   const id = normalizeServer(value);
+  if (id === SERVER_LOCAL) return LOCAL_SERVER_META;
   return (
     AUCTION_SERVERS.find((server) => server.id === id) || AUCTION_SERVERS[0]
   );
@@ -135,6 +149,8 @@ export function getPreferredServer() {
 
 export function setPreferredServer(server) {
   if (typeof window === 'undefined') return;
+  // Never persist local solo server as preferred default for new cloud rooms
+  if (server === SERVER_LOCAL) return;
   try {
     window.localStorage.setItem(
       PREFERRED_SERVER_KEY,

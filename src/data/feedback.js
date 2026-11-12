@@ -58,6 +58,14 @@ export const FEEDBACK_ITEMS = [
     detail: 'Playing 1 human vs 9 bots no longer feels sluggish. Pass lets bots battle instantly in-memory, while Finish Auction simulates remaining lots and takes you straight to final squad ratings.',
   },
   {
+    id: 'fb-8',
+    status: 'shipped',
+    title: '100% Local Solo vs. Bots (No Server Needed)',
+    note: 'Run full solo auctions locally in your browser with zero server connection or RTDB quota usage.',
+    tag: 'OFFLINE SOLO',
+    detail: 'Solo vs 9 AI bots runs entirely on your device with offline state persistence, zero Firebase RTDB socket usage, and instant local simulation.',
+  },
+  {
     id: 'fb-6',
     status: 'shipped',
     title: 'Multi-server redundancy & room directory',
