@@ -2,11 +2,12 @@
   "rules": {
     ".read": true,
     ".write": true,
-    "messages": {
+    "auctions": {
       "$roomId": {
-        ".indexOn": ["timestamp"]
+        "messages": {
+          ".indexOn": ["timestamp"]
+        }
       }
     }
   }
 }
-
