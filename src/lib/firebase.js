@@ -5,12 +5,10 @@ import { getDatabase, ref, onValue, goOffline, goOnline } from "firebase/databas
 import {
   AUCTION_SERVERS,
   DEFAULT_AUCTION_SERVER,
+  deriveProjectId,
   getPreferredServer,
   normalizeServer,
   SERVER_1,
-  SERVER_2,
-  SERVER_3,
-  SERVER_4,
 } from "./auctionServers.js";
 
 const rawEnv = (typeof import.meta !== 'undefined' && import.meta.env) ? import.meta.env : (typeof process !== 'undefined' && process.env ? process.env : {});
@@ -46,44 +44,11 @@ if (typeof window !== 'undefined') {
 }
 export { analytics };
 
-// ─── Four RTDB backends ───
-// Server 1 (Main): ipl-auction-1cdbc (Auth, Firestore, and primary RTDB with security rules)
-// Server 2: ipl-auction-2-947e7
-// Server 3: ipl-auction-3
-// Server 4: paypact-b5b52
-// Dedicated override apps isolate connections and credentials so API keys match
-// their respective project IDs.
-
-const server2DatabaseURL = (
-  rawEnv.VITE_RTDB_2_URL ||
-  rawEnv.VITE_RTDB_FIREBASE_DATABASE_URL ||
-  'https://ipl-auction-2-947e7-default-rtdb.asia-southeast1.firebasedatabase.app'
-).trim();
-
-const server3DatabaseURL = (
-  rawEnv.VITE_RTDB_3_URL ||
-  rawEnv.VITE_RTDB_B_URL ||
-  'https://ipl-auction-3-default-rtdb.asia-southeast1.firebasedatabase.app'
-).trim();
-
-const server4DatabaseURL = (
-  rawEnv.VITE_RTDB_4_URL ||
-  rawEnv.VITE_RTDB_A_URL ||
-  'https://paypact-b5b52-default-rtdb.asia-southeast1.firebasedatabase.app'
-).trim();
-
-const SERVER_2_APP_NAME = 'ipl-auction-rtdb-2';
-const SERVER_3_APP_NAME = 'ipl-auction-rtdb-3';
-const SERVER_4_APP_NAME = 'ipl-auction-rtdb-4';
-
-function deriveProjectId(databaseURL) {
-  try {
-    const host = new URL(databaseURL).hostname;
-    return host.match(/^(.+?)-default-rtdb/)?.[1];
-  } catch {
-    return undefined;
-  }
-}
+// ─── Dynamic RTDB Multi-Server Backends ───
+// Server 1 (Main): Auth, Firestore, and primary RTDB with security rules.
+// Additional servers (Node 2, 3, 4, 5, etc.) are dynamically initialized from
+// AUCTION_SERVERS and environment variables with dedicated override apps so
+// credentials match their respective Firebase project IDs.
 
 function createOverrideDatabase(databaseURL, appName, envPrefix) {
   if (!databaseURL) return null;
@@ -92,12 +57,13 @@ function createOverrideDatabase(databaseURL, appName, envPrefix) {
     const overrideApp = existing || initializeApp(
       Object.fromEntries(
         Object.entries({
-          apiKey:            rawEnv[`${envPrefix}_API_KEY`],
-          authDomain:        rawEnv[`${envPrefix}_AUTH_DOMAIN`],
+          apiKey:            rawEnv[`${envPrefix}_API_KEY`] || rawEnv.VITE_FIREBASE_API_KEY,
+          authDomain:        rawEnv[`${envPrefix}_AUTH_DOMAIN`] || rawEnv.VITE_FIREBASE_AUTH_DOMAIN,
           databaseURL,
           projectId:
             rawEnv[`${envPrefix}_PROJECT_ID`] ||
-            deriveProjectId(databaseURL),
+            deriveProjectId(databaseURL) ||
+            rawEnv.VITE_FIREBASE_PROJECT_ID,
           storageBucket:     rawEnv[`${envPrefix}_STORAGE_BUCKET`],
           messagingSenderId: rawEnv[`${envPrefix}_MESSAGING_SENDER_ID`],
           appId:             rawEnv[`${envPrefix}_APP_ID`],
@@ -113,24 +79,29 @@ function createOverrideDatabase(databaseURL, appName, envPrefix) {
 }
 
 const server1Rtdb = getDatabase(app);
-const server2Rtdb =
-  createOverrideDatabase(server2DatabaseURL, SERVER_2_APP_NAME, 'VITE_RTDB_2') ||
-  createOverrideDatabase(server2DatabaseURL, SERVER_2_APP_NAME, 'VITE_RTDB_FIREBASE');
-const server3Rtdb =
-  createOverrideDatabase(server3DatabaseURL, SERVER_3_APP_NAME, 'VITE_RTDB_3') ||
-  createOverrideDatabase(server3DatabaseURL, SERVER_3_APP_NAME, 'VITE_RTDB_B');
-const server4Rtdb =
-  createOverrideDatabase(server4DatabaseURL, SERVER_4_APP_NAME, 'VITE_RTDB_4') ||
-  createOverrideDatabase(server4DatabaseURL, SERVER_4_APP_NAME, 'VITE_RTDB_A');
-
-export const SECONDARY_SERVER_ENABLED = Boolean(server2Rtdb || server3Rtdb || server4Rtdb);
 
 const SERVER_DATABASES = {
   [SERVER_1]: server1Rtdb,
-  ...(server2Rtdb ? { [SERVER_2]: server2Rtdb } : {}),
-  ...(server3Rtdb ? { [SERVER_3]: server3Rtdb } : {}),
-  ...(server4Rtdb ? { [SERVER_4]: server4Rtdb } : {}),
 };
+
+AUCTION_SERVERS.forEach((server) => {
+  if (server.id === SERVER_1) return;
+  const num = server.id.replace('server-', '');
+  const appName = `ipl-auction-rtdb-${num}`;
+  const envPrefix = `VITE_RTDB_${num}`;
+
+  const rtdb =
+    createOverrideDatabase(server.databaseUrl, appName, envPrefix) ||
+    (num === '2' ? createOverrideDatabase(server.databaseUrl, appName, 'VITE_RTDB_FIREBASE') : null) ||
+    (num === '3' ? createOverrideDatabase(server.databaseUrl, appName, 'VITE_RTDB_B') : null) ||
+    (num === '4' ? createOverrideDatabase(server.databaseUrl, appName, 'VITE_RTDB_A') : null);
+
+  if (rtdb) {
+    SERVER_DATABASES[server.id] = rtdb;
+  }
+});
+
+export const SECONDARY_SERVER_ENABLED = Object.keys(SERVER_DATABASES).length > 1;
 
 /** True when the server has a configured database. */
 export function isServerAvailable(server) {

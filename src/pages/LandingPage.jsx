@@ -44,6 +44,7 @@ import {
   Trash2,
   RefreshCw,
   Clock,
+  ShieldCheck,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -145,7 +146,7 @@ const LandingPage = () => {
   const [activeTab, setActiveTab] = useState("new");
   const [auctionType, setAuctionType] = useState("mega"); 
   const [playSolo, setPlaySolo] = useState(false);
-  const [isPublicRoom, setIsPublicRoom] = useState(true);
+  const [isPublicRoom, setIsPublicRoom] = useState(false);
   const [roomCode, setRoomCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -174,11 +175,11 @@ const LandingPage = () => {
     setPreferredServer(selectedServer);
   }, [selectedServer]);
 
-  // Public Lobbies state
-  const [publicRooms, setPublicRooms] = useState([]);
-  const [lobbiesLoading, setLobbiesLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterMode, setFilterMode] = useState("all");
+  // Aggregated platform stats (zero row egress — HEAD count query only)
+  const [auctionStats, setAuctionStats] = useState({
+    activeCount: 0,
+    totalRecent: 0,
+  });
 
   // History state
   const [historyData, setHistoryData] = useState([]);
@@ -212,87 +213,53 @@ const LandingPage = () => {
     }
   }, []);
 
-  // Client-side cache for Public Lobbies to stop redundant Supabase egress on frequent renders
-  const publicLobbiesCacheRef = useRef({ data: null, timestamp: 0 });
-  const abortControllerRef = useRef(null);
+  // Client-side cache for platform stats (5-minute TTL to eliminate Supabase egress)
+  const statsCacheRef = useRef({ data: null, timestamp: 0 });
 
-  // Fetch Public Lobbies directly from Supabase (optimized egress, minimal columns)
-  const fetchPublicLobbies = async (force = false) => {
+  const fetchAuctionStats = useCallback(async (force = false) => {
     const now = Date.now();
-    if (!force && publicLobbiesCacheRef.current.data && now - publicLobbiesCacheRef.current.timestamp < 30000) {
-      setPublicRooms(publicLobbiesCacheRef.current.data);
+    if (!force && statsCacheRef.current.data && now - statsCacheRef.current.timestamp < 300000) {
+      setAuctionStats(statsCacheRef.current.data);
       return;
     }
 
-    if (!abortControllerRef.current) {
-      abortControllerRef.current = new AbortController();
-    }
-    const signal = abortControllerRef.current.signal;
+    if (!supabase) return;
 
-    setLobbiesLoading(true);
     try {
-      if (supabase) {
-        const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
-        const threeHoursAgoISO = new Date(
-          Date.now() - THREE_HOURS_MS,
-        ).toISOString();
+      const SIX_HOURS_AGO = new Date(now - 6 * 60 * 60 * 1000).toISOString();
+      const TWENTY_FOUR_HOURS_AGO = new Date(now - 24 * 60 * 60 * 1000).toISOString();
 
-        // Optimized egress: Exclude heavy player_order and banned_players arrays (server is inside settings)
-        const { data: supabaseRooms, error } = await supabase
+      // Zero-payload count queries (head: true transfers only HTTP headers, 0 bytes body egress)
+      const [activeRes, recentRes] = await Promise.all([
+        supabase
           .from("auctions")
-          .select("id, host_name, status, auction_type, players, squad_limit, settings, created_at")
-          .in("status", ["waiting", "active"])
-          .eq("is_public", true)
-          .eq("host_online", true)
-          .gte("created_at", threeHoursAgoISO)
-          .order("created_at", { ascending: false })
-          .abortSignal(signal);
-          
-        if (!error && supabaseRooms && supabaseRooms.length > 0) {
-          const list = supabaseRooms.map((r) => {
-            const players = r.players || [];
-            const uniquePlayers = [];
-            const seenIds = new Set();
-            players.forEach((p) => {
-              const pid = p?.id || p?.userId;
-              if (pid && !seenIds.has(pid)) {
-                seenIds.add(pid);
-                uniquePlayers.push(p);
-              }
-            });
+          .select("*", { count: "exact", head: true })
+          .eq("status", "active")
+          .gte("created_at", SIX_HOURS_AGO),
+        supabase
+          .from("auctions")
+          .select("*", { count: "exact", head: true })
+          .gte("created_at", TWENTY_FOUR_HOURS_AGO),
+      ]);
 
-            const host =
-              uniquePlayers.find((p) => p.isHost) || uniquePlayers[0];
-            return {
-              roomId: r.id,
-              server: getAuctionServer(r),
-              hostName: r.host_name || host?.name || "Manager",
-              status: r.status,
-              auctionType: r.auction_type || "mega",
-              players: uniquePlayers,
-              squadLimit: toFiniteNumber(r.squad_limit, 25),
-              settings: r.settings || {},
-            };
-          });
-          publicLobbiesCacheRef.current = { data: list, timestamp: Date.now() };
-          setPublicRooms(list);
-          setLobbiesLoading(false);
-          return;
-        }
-      }
-      setPublicRooms([]);
+      const stats = {
+        activeCount: activeRes?.count ?? 0,
+        totalRecent: recentRes?.count ?? 0,
+      };
+
+      statsCacheRef.current = { data: stats, timestamp: Date.now() };
+      setAuctionStats(stats);
     } catch {
-      setPublicRooms([]);
-    } finally {
-      setLobbiesLoading(false);
+      // Best-effort stats - UI falls back to animated activity indicator
     }
-  };
-
-  useEffect(() => {
-    fetchPublicLobbies();
   }, []);
 
+  useEffect(() => {
+    fetchAuctionStats();
+  }, [fetchAuctionStats]);
+
   // Fetch auction history directly from Supabase
+  const abortControllerRef = useRef(null);
   const historyRequestRef = useRef(false);
   const historyCacheRef = useRef(new Map());
 
@@ -438,24 +405,6 @@ const LandingPage = () => {
     fetchHistory();
   }, [user?.uid, fetchHistory]);
 
-  // Filtered public rooms
-  const filteredPublicRooms = useMemo(() => {
-    return publicRooms.filter((room) => {
-      const matchesServer = room.server === selectedServer;
-      const matchesSearch =
-        room.roomId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        room.hostName.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesMode =
-        filterMode === "all" || room.auctionType === filterMode;
-      return matchesServer && matchesSearch && matchesMode;
-    });
-  }, [publicRooms, selectedServer, searchQuery, filterMode]);
-
-  const serverRoomCount = useMemo(
-    () => publicRooms.filter((room) => room.server === selectedServer).length,
-    [publicRooms, selectedServer],
-  );
-
   const filteredHistory = useMemo(() => {
     if (historyFilter === "all") return historyData;
     return historyData.filter(
@@ -465,7 +414,7 @@ const LandingPage = () => {
     );
   }, [historyData, historyFilter]);
 
-  // Confirm + delete an individual session from Supabase history & public list
+  // Confirm + delete an individual session from Supabase history
   const handleDeleteHistory = async () => {
     const session = sessionToDelete;
     if (!session) return;
@@ -475,7 +424,6 @@ const LandingPage = () => {
 
     // Optimistically update the UI immediately so no refresh is needed
     setHistoryData((prev) => prev.filter((item) => item.id !== teamDocId));
-    setPublicRooms((prev) => prev.filter((room) => room.roomId !== roomId));
     if (expandedSession === teamDocId) setExpandedSession(null);
     setSessionToDelete(null);
 
@@ -727,7 +675,7 @@ const LandingPage = () => {
           <div className="bg-[#0c0d10] rounded-[2.2rem] border border-white/10 grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch divide-y lg:divide-y-0 lg:divide-x divide-white/10 overflow-hidden">
             {/* Left Side: Live Activity Feed */}
             <div className="lg:col-span-7 w-full flex flex-col p-6 md:p-8 relative">
-              <AuctionActivityFeed activeCount={publicRooms.length} />
+              <AuctionActivityFeed stats={auctionStats} />
             </div>
 
             {/* Right Side: Welcome Login Form */}
@@ -892,7 +840,7 @@ const LandingPage = () => {
         <div className="bg-[#0c0d10] rounded-[2.2rem] border border-white/10 grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch divide-y lg:divide-y-0 lg:divide-x divide-white/10 overflow-hidden">
           {/* Left Side: Live signings */}
           <div className="lg:col-span-5 w-full flex flex-col p-6 md:p-8 relative">
-            <AuctionActivityFeed activeCount={publicRooms.length} />
+            <AuctionActivityFeed stats={auctionStats} />
           </div>
 
           {/* Right Side: Create/Join/History form */}
@@ -933,18 +881,13 @@ const LandingPage = () => {
                 <button
                   type="button"
                   onClick={() => setActiveTab("join")}
-                  className={`pb-3 px-3 sm:pb-3.5 sm:px-5 font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all duration-200 border-b-2 relative flex items-center gap-1.5 shrink-0 ${
+                  className={`pb-3 px-3 sm:pb-3.5 sm:px-5 font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all duration-200 border-b-2 relative shrink-0 ${
                     activeTab === "join"
                       ? "border-slate-400/70 text-slate-100"
                       : "border-transparent text-gray-400 hover:text-gray-300"
                   }`}
                 >
-                  <span>Join</span>
-                  {serverRoomCount > 0 && (
-                    <span className="bg-slate-500/20 text-slate-200 text-[9px] px-1.5 py-0.2 rounded-full font-extrabold ml-0.5">
-                      {serverRoomCount}
-                    </span>
-                  )}
+                  Join
                 </button>
                 <button
                   type="button"
@@ -1170,34 +1113,6 @@ const LandingPage = () => {
                   </div>
                 </div>
 
-                {/* Room Visibility Toggle — cloud rooms only */}
-                {!playSolo && (
-                  <div className="p-3 sm:p-4 bg-white/[0.02] border border-white/5 rounded-xl sm:rounded-2xl flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <h2 className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider flex items-center gap-1.5">
-                        Public Room Visibility
-                      </h2>
-                      <p className="text-[8px] sm:text-[9px] text-gray-400 font-medium">
-                        {isPublicRoom
-                          ? "Listed in the Public Rooms Directory for anyone to join"
-                          : "Private room — accessible only via Room Code link"}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setIsPublicRoom(!isPublicRoom)}
-                      aria-label="Toggle public room visibility"
-                      className={`w-10 h-5 sm:w-12 sm:h-6 rounded-full transition-colors p-1 flex items-center cursor-pointer shrink-0 ${
-                        isPublicRoom
-                          ? "bg-slate-400 justify-end"
-                          : "bg-white/10 justify-start"
-                      }`}
-                    >
-                      <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-slate-900 shadow-md" />
-                    </button>
-                  </div>
-                )}
-
                 {/* Solo vs AI bots Toggle */}
                 <div className="p-3 sm:p-4 bg-white/[0.02] border border-white/5 rounded-xl sm:rounded-2xl flex items-center justify-between gap-3">
                   <div className="min-w-0">
@@ -1323,148 +1238,33 @@ const LandingPage = () => {
                   </button>
                 </form>
 
-                {/* Public Lobbies Directory Section */}
-                <div className="relative py-1 sm:py-2 flex items-center justify-center">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-white/5" />
+                {/* Private Room Guidance & Practice CTA */}
+                <div className="p-3.5 sm:p-4 bg-white/[0.02] border border-white/5 rounded-xl sm:rounded-2xl space-y-2.5 mt-2">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck size={14} className="text-slate-300 shrink-0" />
+                    <span className="text-[10px] sm:text-xs font-bold text-white tracking-wide uppercase">
+                      Private Friend Lobbies
+                    </span>
                   </div>
-                  <span className="relative bg-[#0c0d10] px-3 sm:px-4 text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
-                    Or join a public lobby
-                  </span>
-                </div>
-
-                <div className="space-y-2.5 sm:space-y-3 pt-0 sm:pt-1">
-                  <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center justify-between">
-                    <div className="relative w-full sm:flex-1 flex gap-2">
-                      <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search room code or manager..."
-                        className="w-full bg-white/[0.03] border border-white/10 focus:border-white/30 rounded-xl px-3 sm:px-3.5 py-1.5 sm:py-2 text-[10px] sm:text-xs text-white placeholder:text-gray-400 focus:outline-none transition-all font-medium"
-                      />
-                      <button
-                        onClick={fetchPublicLobbies}
-                        disabled={lobbiesLoading}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-gray-300 hover:text-white hover:bg-white/10 transition-all disabled:opacity-40 cursor-pointer shrink-0"
-                        title="Refresh Lobbies"
-                      >
-                        <RefreshCw
-                          size={10}
-                          className={lobbiesLoading ? "animate-spin" : ""}
-                        />
-                        Refresh
-                      </button>
-                    </div>
-
-                    <div className="flex items-center gap-1 w-full sm:w-auto overflow-x-auto custom-scrollbar no-scrollbar py-0.5">
-                      {[
-                        { id: "all", label: "All" },
-                        { id: "mega", label: "Mega" },
-                        { id: "sprint11", label: "11-Classic" },
-                        { id: "sprint5", label: "5-Sprint" },
-                      ].map((mode) => (
-                        <button
-                          key={mode.id}
-                          type="button"
-                          onClick={() => setFilterMode(mode.id)}
-                          className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[8px] sm:text-[9px] font-bold uppercase tracking-wider transition-all cursor-pointer shrink-0 ${
-                            filterMode === mode.id
-                              ? "bg-white/10 text-white border border-white/20"
-                              : "bg-transparent text-gray-400 hover:text-gray-300 border border-transparent"
-                          }`}
-                        >
-                          {mode.label}
-                        </button>
-                      ))}
-                    </div>
+                  <p className="text-[9px] sm:text-[10px] text-gray-400 font-medium leading-relaxed">
+                    Auctions on CrickAuction are private to your squad. Enter your host’s 6-character room code above to join the live bidding war.
+                  </p>
+                  <div className="pt-2 flex items-center justify-between border-t border-white/5">
+                    <span className="text-[8px] sm:text-[9px] text-gray-500 font-medium">
+                      No room code?
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab("new");
+                        setPlaySolo(true);
+                      }}
+                      className="text-[8px] sm:text-[9px] font-bold text-slate-300 hover:text-white uppercase tracking-wider flex items-center gap-1 transition-colors cursor-pointer"
+                    >
+                      <span>Practice in Solo Arena</span>
+                      <ChevronRight size={10} />
+                    </button>
                   </div>
-
-                  {lobbiesLoading ? (
-                    <div className="flex flex-col items-center justify-center py-6 sm:py-8 text-gray-400">
-                      <Loader2
-                        size={18}
-                        className="animate-spin mb-2 text-slate-400"
-                      />
-                      <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                        Scanning active rooms...
-                      </p>
-                    </div>
-                  ) : filteredPublicRooms.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-5 sm:py-8 text-center bg-white/[0.01] border border-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4">
-                      <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
-                        No Active Public Lobbies
-                      </p>
-                      <p className="text-[9px] sm:text-[10px] text-gray-400 font-medium">
-                        No open public rooms on this server right now. Create
-                        one to get started!
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-1.5 sm:space-y-2 max-h-[220px] sm:max-h-[310px] overflow-y-auto custom-scrollbar pr-0.5">
-                      {filteredPublicRooms.map((room) => (
-                        <div
-                          key={room.roomId}
-                          className="p-2 sm:p-3 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 hover:border-white/10 rounded-xl transition-all duration-200 flex flex-row items-center justify-between gap-2 sm:gap-3 group"
-                        >
-                          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-1.5">
-                                <h2 className="text-[10px] sm:text-xs font-bold text-white tracking-tight truncate max-w-[96px] xs:max-w-[160px] sm:max-w-none">
-                                  {room.hostName}'s Room -
-                                </h2>
-                                <span className="text-white font-mono font-bold text-[9px] sm:text-xs tracking-wider shrink-0">
-                                  {room.roomId}
-                                </span>
-                              </div>
-
-                              <div className="flex items-center gap-1 sm:gap-1.5 text-[8px] sm:text-[10px] text-gray-400 font-medium mt-0.5 truncate">
-                                <span
-                                  className={`px-1 sm:px-1.5 py-0.2 rounded font-black text-[7px] sm:text-[8px] uppercase tracking-wider ${room.status === "active" ? "bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse" : "bg-green-500/20 text-green-400 border border-green-500/30"}`}
-                                >
-                                  {room.status === "active"
-                                    ? "LIVE"
-                                    : "WAITING"}
-                                </span>
-
-                                <span className="shrink-0">•</span>
-                                <span className="text-gray-400 truncate">
-                                  {room.auctionType === "sprint5"
-                                    ? "5-Sprint"
-                                    : room.auctionType === "sprint11"
-                                      ? "11-Classic"
-                                      : "Mega"}
-                                </span>
-                                <span className="shrink-0">•</span>
-                                <span className="text-gray-500 truncate">
-                                  {getServerMeta(room.server).shortLabel}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              navigate(
-                                withServerParam(
-                                  `/lobby/${room.roomId}`,
-                                  room.server,
-                                ),
-                              );
-                            }}
-                            className="px-2.5 sm:px-4 py-1.5 sm:py-2 bg-white/10 hover:bg-white/20 border border-white/10 text-white font-black text-[8px] sm:text-[10px] uppercase tracking-wider rounded-lg transition-all active:scale-95 flex items-center gap-1 shrink-0 cursor-pointer shadow-md"
-                          >
-                            <span>Join</span>
-                            <ChevronRight
-                              size={12}
-                              className="sm:w-3.5 sm:h-3.5"
-                            />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
             )}

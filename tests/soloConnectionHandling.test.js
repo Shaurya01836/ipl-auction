@@ -103,8 +103,8 @@ test('ServerSwitcher correctly excludes any server with isLocal: true', () => {
 
   const visible = allServers.filter((s) => !s.isLocal);
 
-  assert.equal(allServers.length, 5);
-  assert.equal(visible.length, 4);
+  assert.equal(allServers.length, AUCTION_SERVERS.length + 1);
+  assert.equal(visible.length, AUCTION_SERVERS.length);
   assert.ok(!visible.some((s) => s.id === SERVER_LOCAL));
   assert.ok(!visible.some((s) => s.isLocal));
 });

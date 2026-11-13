@@ -13,7 +13,7 @@ export default function ServerSwitcher({ servers, value, onChange, className = '
     <div
       role="group"
       aria-label="Auction server"
-      className={`grid grid-cols-4 lg:inline-flex items-center gap-1 lg:gap-0.5 rounded-lg border border-white/10 bg-white/[0.02] p-1 lg:p-0.5 w-full lg:w-auto shrink-0 ${className}`}
+      className={`flex flex-wrap lg:inline-flex items-center gap-1 lg:gap-0.5 rounded-lg border border-white/10 bg-white/[0.02] p-1 lg:p-0.5 w-full lg:w-auto shrink-0 ${className}`}
     >
       {visibleServers.map((server) => {
         const active = server.id === value;
@@ -24,7 +24,7 @@ export default function ServerSwitcher({ servers, value, onChange, className = '
             onClick={() => onChange?.(server.id)}
             aria-pressed={active}
             title={server.description}
-            className={`flex items-center justify-center rounded-md px-1.5 lg:px-2.5 py-2 lg:py-1 text-[8.5px] lg:text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap text-center ${
+            className={`flex-1 min-w-[54px] lg:flex-initial flex items-center justify-center rounded-md px-1.5 lg:px-2.5 py-2 lg:py-1 text-[8.5px] lg:text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap text-center ${
               active
                 ? 'bg-slate-500/20 text-slate-100 border border-slate-400/30 shadow-sm'
                 : 'border border-transparent text-gray-400 hover:text-gray-200 hover:bg-white/[0.02]'

@@ -1,0 +1,12 @@
+{
+  "rules": {
+    ".read": true,
+    ".write": true,
+    "messages": {
+      "$roomId": {
+        ".indexOn": ["timestamp"]
+      }
+    }
+  }
+}
+

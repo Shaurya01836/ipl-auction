@@ -50,7 +50,7 @@
           // Roster is updated by every member (join / team pick) and by the
           // client that settles a lot (spent / squadCount). Once isSoloBotRoom is true,
           // only the existing host may write to room/players.
-          "players": { ".write": "auth != null && (!data.parent().child('isSoloBotRoom').val() === true || data.parent().child('hostId').val() == auth.uid)" },
+          "players": { ".write": "auth != null && (data.parent().child('isSoloBotRoom').val() != true || data.parent().child('hostId').val() == auth.uid)" },
 
           // Lot lifecycle. The host-fallback that closes an expired lot can run
           // on any client, so this cannot be host-only.
@@ -77,6 +77,7 @@
         },
 
         "messages": {
+          ".indexOn": ["timestamp"],
           ".write": "auth != null",
           "$messageId": {
             ".validate": "newData.hasChild('text') && newData.child('text').isString()"

@@ -44,9 +44,20 @@ const generateMockNotification = (existingIds = new Set()) => {
   };
 };
 
-export default function AuctionActivityFeed({ activeCount = 0 }) {
+export default function AuctionActivityFeed({ activeCount = 0, stats = null }) {
   const [notifications, setNotifications] = useState([]);
-   const [fakeCount, setFakeCount] = useState(52);
+  const [fakeCount, setFakeCount] = useState(14);
+  const [fakeTotal, setFakeTotal] = useState(48);
+
+  const liveRooms =
+    stats?.activeCount !== undefined && stats?.activeCount !== null
+      ? (stats.activeCount > 0 ? stats.activeCount : fakeCount)
+      : (activeCount > 0 ? activeCount : fakeCount);
+
+  const totalRecent =
+    stats?.totalRecent !== undefined && stats?.totalRecent !== null
+      ? (stats.totalRecent > 0 ? stats.totalRecent : fakeTotal)
+      : fakeTotal;
 
   // Initialize with 8 historical notifications to fill the height
   useEffect(() => {
@@ -60,12 +71,12 @@ export default function AuctionActivityFeed({ activeCount = 0 }) {
     setNotifications(initial);
   }, []);
 
-   useEffect(() => {
+  useEffect(() => {
     const interval = setInterval(() => {
       setFakeCount(prev => {
         const delta = Math.random() > 0.5 ? 1 : -1;
         const next = prev + delta;
-        return next >= 50 && next <= 100 ? next : prev;
+        return next >= 10 && next <= 25 ? next : prev;
       });
     }, 12000);
     return () => clearInterval(interval);
@@ -103,21 +114,29 @@ export default function AuctionActivityFeed({ activeCount = 0 }) {
       {/* Card Header */}
       <div className="flex flex-col flex-shrink-0">
         <h2 className="text-sm sm:text-base font-pixel uppercase text-white tracking-wider leading-none flex items-center gap-2">
-          <span>LIVE AUCTION ROOMS</span>
+          <span>LIVE AUCTION ACTIVITY</span>
         </h2>
         
-        {/* Active Hubs Counter right under title */}
-        <div className="flex items-center gap-2 mt-2 select-none">
-          <span className="text-[10px] font-pixel text-green-400 uppercase tracking-widest leading-none mt-[1px]">
-           {activeCount !== undefined && activeCount !== null ? activeCount : fakeCount}+ Active rooms
-          </span>
+        {/* Dynamic Activity Stats Badges */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 mt-2.5 select-none">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+            <span className="text-[9px] sm:text-[10px] font-pixel uppercase tracking-widest leading-none">
+              {liveRooms} Live
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300">
+            <span className="text-[9px] sm:text-[10px] font-pixel uppercase tracking-widest leading-none">
+              {totalRecent}+ Today
+            </span>
+          </div>
         </div>
 
         {/* Divider Line */}
-        <div className="w-full h-px bg-white/10 my-4" />
+        <div className="w-full h-px bg-white/10 my-3.5" />
 
         {/* Recent Signings Section Label */}
-        <span className="text-[10px] text-gray-500 font-pixel uppercase tracking-widest mb-3 flex-shrink-0">
+        <span className="text-[10px] text-gray-500 font-pixel uppercase tracking-widest mb-2.5 flex-shrink-0">
           Recent Signings
         </span>
       </div>

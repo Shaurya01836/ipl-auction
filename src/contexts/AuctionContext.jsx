@@ -30,7 +30,11 @@ import {
   push,
   serverTimestamp as serverTimestampRtdb,
   query as queryRtdb,
-  limitToLast
+  limitToLast,
+  onChildAdded,
+  onChildChanged,
+  onChildRemoved,
+  orderByChild
 } from 'firebase/database';
 import { 
   doc, 
@@ -1892,18 +1896,58 @@ export const AuctionProvider = ({ children }) => {
     });
 
 
-    const unsubTeams = onValue(ref(roomRtdb, `auctions/${auctionId}/teams`), async (snapshot) => {
-      if (snapshot.exists()) {
+    const teamsRef = ref(roomRtdb, `auctions/${auctionId}/teams`);
+    const teamsMap = new Map();
+
+    const syncTeams = () => {
+      const teamsArr = Array.from(teamsMap.values());
+      setRoomTeams(teamsArr);
+      if (userId) {
+        const myTeam = teamsArr.find(t => t.id === `${auctionId}_${userId}` || t.userId === userId);
+        if (myTeam) setTeam(myTeam);
+        else setTeam(null);
+      }
+      checkLoaded();
+    };
+
+    // Granular child listeners: only changed team nodes are transmitted over RTDB
+    const unsubTeamAdded = onChildAdded(teamsRef, (snapshot) => {
+      if (!alive) return;
+      teamsLoaded = true;
+      const t = snapshot.val();
+      if (t) {
+        teamsMap.set(snapshot.key, { id: `${auctionId}_${t.userId}`, ...t });
+        syncTeams();
+      }
+    }, (error) => {
+      setLoading(false);
+      handleFirebaseError(error);
+    });
+
+    const unsubTeamChanged = onChildChanged(teamsRef, (snapshot) => {
+      if (!alive) return;
+      const t = snapshot.val();
+      if (t) {
+        teamsMap.set(snapshot.key, { id: `${auctionId}_${t.userId}`, ...t });
+        syncTeams();
+      }
+    }, (error) => {
+      handleFirebaseError(error);
+    });
+
+    const unsubTeamRemoved = onChildRemoved(teamsRef, (snapshot) => {
+      if (!alive) return;
+      teamsMap.delete(snapshot.key);
+      syncTeams();
+    }, (error) => {
+      handleFirebaseError(error);
+    });
+
+    // Check if teams exist in RTDB or if persistent fallback is needed
+    get(teamsRef).then((snapshot) => {
+      if (!alive) return;
+      if (snapshot.exists() && snapshot.hasChildren()) {
         teamsLoaded = true;
-        const teamsObj = snapshot.val();
-        const teamsArr = Object.values(teamsObj).map(t => ({ id: `${auctionId}_${t.userId}`, ...t }));
-        setRoomTeams(teamsArr);
-        
-        if (userId) {
-          const myTeam = teamsArr.find(t => t.id === `${auctionId}_${userId}`);
-          if (myTeam) setTeam(myTeam);
-          else setTeam(null);
-        }
         checkLoaded();
       } else if (!didTeamsFallback) {
         didTeamsFallback = true;
@@ -1937,14 +1981,8 @@ export const AuctionProvider = ({ children }) => {
             if (!alive) return;
 
             teamsLoaded = true;
-            setRoomTeams(teamsArr);
-
-            if (userId) {
-              const myTeam = teamsArr.find(t => t.id === `${auctionId}_${userId}` || t.userId === userId);
-              if (myTeam) setTeam(myTeam);
-              else setTeam(null);
-            }
-            checkLoaded();
+            teamsArr.forEach(t => teamsMap.set(t.id, t));
+            syncTeams();
 
             if (teamsArr.length > 0) {
               // Fill only absent team nodes: a delayed fallback must never reset
@@ -1961,12 +1999,11 @@ export const AuctionProvider = ({ children }) => {
           } catch(e) { handleFirebaseError(e); }
         }, 500);
       }
-    }, (error) => {
-      setLoading(false);
-      handleFirebaseError(error);
+    }).catch((e) => {
+      handleFirebaseError(e);
     });
 
-    const msgQuery = queryRtdb(ref(roomRtdb, `auctions/${auctionId}/messages`), limitToLast(50));
+    const msgQuery = queryRtdb(ref(roomRtdb, `auctions/${auctionId}/messages`), orderByChild('timestamp'), limitToLast(25));
     const unsubMessages = onValue(msgQuery, (snapshot) => {
       messagesLoaded = true;
       if (snapshot.exists()) {
@@ -2012,7 +2049,9 @@ export const AuctionProvider = ({ children }) => {
       unsubPresence();
       unsubAuction();
       unsubLive();
-      unsubTeams();
+      unsubTeamAdded();
+      unsubTeamChanged();
+      unsubTeamRemoved();
       unsubMessages();
       // Set offline on component unmount
       set(myPresenceRef, { online: false, lastSeen: serverTimestampRtdb() });

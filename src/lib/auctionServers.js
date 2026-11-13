@@ -1,17 +1,25 @@
 /**
- * Auction server registry and small, dependency-free helpers.
+ * Auction server registry and environment-driven helpers.
  *
- * The live room data lives in two separate Firebase Realtime Databases. The
- * Supabase `auctions` row is the shared directory that tells every client which
- * database a room belongs to. Keep this module free of Firebase/Supabase imports
- * so it can be unit-tested with plain `node --test`.
+ * Realtime Database backends are fully dynamic and configurable via environment
+ * variables without code changes:
+ * - VITE_ENABLED_SERVERS: Comma-separated list to enable/order servers (e.g. "server-1,server-2,server-3,server-4,server-5")
+ * - VITE_RTDB_<N>_URL: URL for server-N (e.g. VITE_RTDB_4_URL=https://ipl-auction-4-default-rtdb...)
+ *
+ * Keep this module free of Firebase/Supabase imports so it can be unit-tested
+ * with plain `node --test`.
  */
 
-export const SERVER_1 = 'server-1'; // Main: ipl-auction-1cdbc
-export const SERVER_2 = 'server-2'; // Node 2: ipl-auction-2-947e7
-export const SERVER_3 = 'server-3'; // Node 3: ipl-auction-3
-export const SERVER_4 = 'server-4'; // Node 4: paypact-b5b52
-export const SERVER_LOCAL = 'local'; // Device-local solo engine (zero RTDB connections)
+const rawEnv = (typeof import.meta !== 'undefined' && import.meta.env)
+  ? import.meta.env
+  : (typeof process !== 'undefined' && process.env ? process.env : {});
+
+export const SERVER_1 = 'server-1';
+export const SERVER_2 = 'server-2';
+export const SERVER_3 = 'server-3';
+export const SERVER_4 = 'server-4';
+export const SERVER_5 = 'server-5';
+export const SERVER_LOCAL = 'local';
 
 export const PRIMARY_SERVER = SERVER_1;
 export const SECONDARY_SERVER = SERVER_2;
@@ -25,40 +33,112 @@ export const LOCAL_SERVER_META = Object.freeze({
   isLocal: true,
 });
 
-export const AUCTION_SERVERS = Object.freeze([
-  {
-    id: SERVER_1,
-    label: 'Server 1',
-    shortLabel: 'S1',
-    description: 'Main (1cdbc)',
-    databaseUrl: 'https://ipl-auction-1cdbc-default-rtdb.asia-southeast1.firebasedatabase.app',
-    projectId: 'ipl-auction-1cdbc',
-  },
-  {
-    id: SERVER_2,
-    label: 'Server 2',
-    shortLabel: 'S2',
-    description: 'Node 2 (947e7)',
-    databaseUrl: 'https://ipl-auction-2-947e7-default-rtdb.asia-southeast1.firebasedatabase.app',
-    projectId: 'ipl-auction-2-947e7',
-  },
-  {
-    id: SERVER_3,
-    label: 'Server 3',
-    shortLabel: 'S3',
-    description: 'Node 3',
-    databaseUrl: 'https://ipl-auction-3-default-rtdb.asia-southeast1.firebasedatabase.app',
-    projectId: 'ipl-auction-3',
-  },
-  {
-    id: SERVER_4,
-    label: 'Server 4',
-    shortLabel: 'S4',
-    description: 'Node 4 (Paypact)',
-    databaseUrl: 'https://paypact-b5b52-default-rtdb.asia-southeast1.firebasedatabase.app',
-    projectId: 'paypact-b5b52',
-  },
-]);
+export function deriveProjectId(databaseUrl) {
+  if (!databaseUrl) return '';
+  try {
+    const host = new URL(databaseUrl).hostname;
+    return host.match(/^(.+?)-default-rtdb/)?.[1] || host.split('.')[0];
+  } catch {
+    return '';
+  }
+}
+
+function buildAuctionServers() {
+  const BASE_DEFINITIONS = [
+    {
+      id: SERVER_1,
+      num: 1,
+      label: 'Server 1',
+      shortLabel: 'S1',
+      url: rawEnv.VITE_RTDB_1_URL || rawEnv.VITE_FIREBASE_DATABASE_URL || 'https://ipl-auction-1cdbc-default-rtdb.asia-southeast1.firebasedatabase.app',
+      projectId: rawEnv.VITE_RTDB_1_PROJECT_ID || rawEnv.VITE_FIREBASE_PROJECT_ID || 'ipl-auction-1cdbc',
+    },
+    {
+      id: SERVER_2,
+      num: 2,
+      label: 'Server 2',
+      shortLabel: 'S2',
+      url: rawEnv.VITE_RTDB_2_URL || rawEnv.VITE_RTDB_FIREBASE_DATABASE_URL || 'https://ipl-auction-2-947e7-default-rtdb.asia-southeast1.firebasedatabase.app',
+      projectId: rawEnv.VITE_RTDB_2_PROJECT_ID || rawEnv.VITE_RTDB_FIREBASE_PROJECT_ID || 'ipl-auction-2-947e7',
+    },
+    {
+      id: SERVER_3,
+      num: 3,
+      label: 'Server 3',
+      shortLabel: 'S3',
+      url: rawEnv.VITE_RTDB_3_URL || rawEnv.VITE_RTDB_B_URL || 'https://ipl-auction-3-default-rtdb.asia-southeast1.firebasedatabase.app',
+      projectId: rawEnv.VITE_RTDB_3_PROJECT_ID || rawEnv.VITE_RTDB_B_PROJECT_ID || 'ipl-auction-3',
+    },
+    {
+      id: SERVER_4,
+      num: 4,
+      label: 'Server 4',
+      shortLabel: 'S4',
+      url: rawEnv.VITE_RTDB_4_URL || rawEnv.VITE_RTDB_A_URL || 'https://ipl-auction-4-default-rtdb.asia-southeast1.firebasedatabase.app',
+      projectId: rawEnv.VITE_RTDB_4_PROJECT_ID || rawEnv.VITE_RTDB_A_PROJECT_ID || 'ipl-auction-4',
+    },
+    {
+      id: SERVER_5,
+      num: 5,
+      label: 'Server 5',
+      shortLabel: 'S5',
+      url: rawEnv.VITE_RTDB_5_URL || 'https://ipl-auction-5-default-rtdb.asia-southeast1.firebasedatabase.app',
+      projectId: rawEnv.VITE_RTDB_5_PROJECT_ID || 'ipl-auction-5',
+    },
+  ];
+
+  // Dynamically register any additional servers from environment (e.g. VITE_RTDB_6_URL up to 12)
+  for (let i = 6; i <= 12; i++) {
+    const url = rawEnv[`VITE_RTDB_${i}_URL`];
+    if (url) {
+      BASE_DEFINITIONS.push({
+        id: `server-${i}`,
+        num: i,
+        label: `Server ${i}`,
+        shortLabel: `S${i}`,
+        url,
+        projectId: rawEnv[`VITE_RTDB_${i}_PROJECT_ID`] || deriveProjectId(url) || `server-${i}`,
+      });
+    }
+  }
+
+  const serverMap = new Map();
+  BASE_DEFINITIONS.forEach((s) => {
+    const cleanUrl = (s.url || '').trim();
+    if (!cleanUrl) return;
+    const projectId = s.projectId || deriveProjectId(cleanUrl) || s.id;
+    serverMap.set(s.id, {
+      id: s.id,
+      label: s.label,
+      shortLabel: s.shortLabel,
+      description: `Node ${s.num} (${projectId})`,
+      databaseUrl: cleanUrl,
+      projectId,
+    });
+  });
+
+  // If VITE_ENABLED_SERVERS is specified in environment, filter & order accordingly
+  if (rawEnv.VITE_ENABLED_SERVERS) {
+    const enabled = rawEnv.VITE_ENABLED_SERVERS
+      .split(',')
+      .map((id) => id.trim().toLowerCase())
+      .filter(Boolean);
+
+    const filtered = [];
+    for (const id of enabled) {
+      if (serverMap.has(id)) {
+        filtered.push(serverMap.get(id));
+      }
+    }
+    if (filtered.length > 0) {
+      return filtered;
+    }
+  }
+
+  return Array.from(serverMap.values());
+}
+
+export const AUCTION_SERVERS = Object.freeze(buildAuctionServers());
 
 const SERVER_IDS = new Set(AUCTION_SERVERS.map((server) => server.id));
 const LEGACY_SERVER_MAP = {
@@ -69,6 +149,9 @@ const PREFERRED_SERVER_KEY = 'ipl-auction:preferred-server';
 
 /** True when the value is one of the known server ids, local solo, or legacy aliases. */
 export function isValidServer(value) {
+  if (value && typeof value === 'object' && value.id) {
+    value = value.id;
+  }
   return (
     typeof value === 'string' &&
     (SERVER_IDS.has(value) || value === SERVER_LOCAL || Boolean(LEGACY_SERVER_MAP[value]))
@@ -80,6 +163,9 @@ export function isValidServer(value) {
  * Pass `null` as the fallback when the caller needs to detect an invalid value.
  */
 export function normalizeServer(value, fallback = DEFAULT_AUCTION_SERVER) {
+  if (value && typeof value === 'object' && value.id) {
+    value = value.id;
+  }
   if (typeof value === 'string') {
     if (SERVER_IDS.has(value)) return value;
     if (value === SERVER_LOCAL) return SERVER_LOCAL;
@@ -99,11 +185,6 @@ export function getServerMeta(value) {
 
 /**
  * Read the server from a Supabase auction row.
- *
- * In existing deployments prior to 4-server clustering, `primary` was assigned
- * to paypact-b5b52 (Server 4) and `secondary` was assigned to ipl-auction-3
- * (Server 3). We resolve these legacy tags directly to their physical servers
- * to preserve all existing rooms without requiring data migration.
  */
 export function getAuctionServer(record) {
   if (!record) return DEFAULT_AUCTION_SERVER;
