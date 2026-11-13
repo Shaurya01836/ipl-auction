@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="rcb-red" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E31825"/>
+      <stop offset="60%" stop-color="#BD0E18"/>
+      <stop offset="100%" stop-color="#73050C"/>
+    </linearGradient>
+    <linearGradient id="rcb-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE89A"/>
+      <stop offset="50%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#8C6F19"/>
+    </linearGradient>
+    <filter id="rcb-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  <!-- Shield Base (Split Black & Red) -->
+  <path d="M60,6 L108,20 L100,78 L60,114 L20,78 L12,20 Z" fill="#0D0D0E" stroke="url(#rcb-gold)" stroke-width="3" filter="url(#rcb-shadow)"/>
+  <path d="M60,14 L100,26 L94,74 L60,105 L26,74 L20,26 Z" fill="url(#rcb-red)"/>
+  <!-- Royal Crown / Lion Crest Accent -->
+  <path d="M46,40 L52,26 L60,34 L68,26 L74,40 L68,44 L52,44 Z" fill="url(#rcb-gold)"/>
+  <!-- Diagonal Slash -->
+  <line x1="28" y1="34" x2="92" y2="92" stroke="url(#rcb-gold)" stroke-width="2" stroke-dasharray="6,4" opacity="0.4"/>
+  <!-- Monogram text -->
+  <text x="60" y="80" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="28" fill="#ffffff" letter-spacing="1">RCB</text>
+  <!-- Gold Bottom Trim -->
+  <polygon points="60,90 74,86 60,100 46,86" fill="url(#rcb-gold)"/>
+</svg>

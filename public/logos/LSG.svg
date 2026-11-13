@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="lsg-blue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#008FD5"/>
+      <stop offset="50%" stop-color="#005A9C"/>
+      <stop offset="100%" stop-color="#002E54"/>
+    </linearGradient>
+    <linearGradient id="lsg-orange" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF7A33"/>
+      <stop offset="100%" stop-color="#E64500"/>
+    </linearGradient>
+    <filter id="lsg-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  <!-- Winged Aerodynamic Shield -->
+  <polygon points="60,6 106,20 96,84 60,114 24,84 14,20" fill="url(#lsg-blue)" stroke="#ffffff" stroke-width="2.5" filter="url(#lsg-shadow)"/>
+  <!-- Multi-Color Aerodynamic Wings -->
+  <path d="M60,18 C72,24 86,22 92,16 C86,28 76,34 60,34 Z" fill="url(#lsg-orange)"/>
+  <path d="M60,18 C48,24 34,22 28,16 C34,28 44,34 60,34 Z" fill="url(#lsg-orange)"/>
+  <path d="M60,26 C70,32 80,32 86,28 C80,38 72,42 60,42 Z" fill="#00E5FF"/>
+  <path d="M60,26 C50,32 40,32 34,28 C40,38 48,42 60,42 Z" fill="#00E5FF"/>
+  <!-- Inner Line -->
+  <polygon points="60,16 98,28 90,80 60,105 30,80 22,28" fill="none" stroke="#ffffff" stroke-width="1" stroke-opacity="0.3"/>
+  <!-- Monogram text -->
+  <text x="60" y="80" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="28" font-style="italic" fill="#ffffff" letter-spacing="1">LSG</text>
+  <!-- Base Orange Bar -->
+  <polygon points="44,88 76,88 60,95" fill="url(#lsg-orange)"/>
+</svg>

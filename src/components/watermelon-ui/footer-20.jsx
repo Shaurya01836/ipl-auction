@@ -224,6 +224,16 @@ export default function Footer20() {
           </div>
         </div>
 
+        {/* Non-Affiliation Legal Disclaimer */}
+        <motion.div
+          {...itemProps}
+          className="pt-6 pb-8 border-t border-white/[0.06] text-xs text-gray-500 leading-relaxed max-w-4xl"
+        >
+          <p>
+            <strong className="text-gray-400 font-medium">Disclaimer:</strong> CrickAuction is an independent, fan-made tactical cricket simulation game developed strictly for educational and entertainment purposes. It is not affiliated with, endorsed by, sponsored by, or associated with the Board of Control for Cricket in India (BCCI), the Indian Premier League (IPL), or any participating franchise. All team names, logos, player names, and associated trademarks remain the sole intellectual property of their respective rights holders.
+          </p>
+        </motion.div>
+
         {/* Giant Watermark Text SVG */}
         <motion.div
           {...textProps}

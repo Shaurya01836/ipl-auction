@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="pbks-red" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E81B23"/>
+      <stop offset="60%" stop-color="#C01017"/>
+      <stop offset="100%" stop-color="#7A050B"/>
+    </linearGradient>
+    <linearGradient id="pbks-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE89C"/>
+      <stop offset="50%" stop-color="#DDA625"/>
+      <stop offset="100%" stop-color="#996E0D"/>
+    </linearGradient>
+    <filter id="pbks-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  <!-- Curved Pointed Shield -->
+  <path d="M60,6 C90,14 106,18 106,42 C106,78 86,98 60,114 C34,98 14,78 14,42 C14,18 30,14 60,6 Z" fill="url(#pbks-red)" stroke="url(#pbks-gold)" stroke-width="3" filter="url(#pbks-shadow)"/>
+  <!-- Golden Lion Crest Crown -->
+  <path d="M40,38 L48,24 L60,32 L72,24 L80,38 L72,42 L48,42 Z" fill="url(#pbks-gold)"/>
+  <!-- Inner Line -->
+  <path d="M60,15 C85,21 98,24 98,43 C98,72 80,90 60,104 C40,90 22,72 22,43 C22,24 35,21 60,15 Z" fill="none" stroke="#ffffff" stroke-width="1.2" stroke-opacity="0.3"/>
+  <!-- Monogram text -->
+  <text x="60" y="78" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="24" fill="#ffffff" letter-spacing="1">PBKS</text>
+  <!-- Triple Chevron Wings -->
+  <path d="M46,86 L60,94 L74,86 L60,98 Z" fill="url(#pbks-gold)"/>
+</svg>

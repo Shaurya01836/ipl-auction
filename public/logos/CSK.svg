@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="csk-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFDD00"/>
+      <stop offset="60%" stop-color="#FDB913"/>
+      <stop offset="100%" stop-color="#D98A00"/>
+    </linearGradient>
+    <linearGradient id="csk-blue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14438E"/>
+      <stop offset="100%" stop-color="#09204A"/>
+    </linearGradient>
+    <filter id="csk-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+  <!-- Shield Base -->
+  <path d="M60,8 L106,20 C106,68 88,96 60,114 C32,96 14,68 14,20 Z" fill="url(#csk-bg)" stroke="url(#csk-blue)" stroke-width="3.5" filter="url(#csk-shadow)"/>
+  <!-- Inner Line -->
+  <path d="M60,16 L98,26 C98,66 82,90 60,105 C38,90 22,66 22,26 Z" fill="none" stroke="#ffffff" stroke-width="1.2" stroke-opacity="0.4"/>
+  <!-- 3-Peak Roaring Crown Motif -->
+  <path d="M42,42 L48,28 L60,36 L72,28 L78,42 L72,48 L48,48 Z" fill="url(#csk-blue)"/>
+  <circle cx="48" cy="26" r="2" fill="#ffffff"/>
+  <circle cx="60" cy="33" r="2.5" fill="#ffffff"/>
+  <circle cx="72" cy="26" r="2" fill="#ffffff"/>
+  <!-- Monogram text -->
+  <text x="60" y="80" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="28" fill="url(#csk-blue)" letter-spacing="1">CSK</text>
+  <!-- Base Stars -->
+  <polygon points="60,88 62,93 67,93 63,96 65,101 60,98 55,101 57,96 53,93 58,93" fill="url(#csk-blue)"/>
+</svg>

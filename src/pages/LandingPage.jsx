@@ -137,8 +137,8 @@ const mergeHistorySessions = (localSessions, remoteSessions) => {
 
 const LandingPage = () => {
   useDocumentTitle(
-    "IPL Auction Simulator & Game | Live IPL Mega Auction 2026",
-    "Play the ultimate multiplayer IPL Auction Simulator online. Host live IPL Mega Auctions with friends, manage purse budgets, bid on top T20 players, and build championship squads!",
+    "CrickAuction - Multiplayer T20 Auction Simulator | Fan-Made Cricket Game",
+    "An independent, fan-made multiplayer T20 cricket auction simulator. Host tactical auctions with friends, manage squad budgets, and draft your dream T20 squad.",
   );
 
   const [selectedTeam, setSelectedTeam] = useState("MI");
@@ -691,7 +691,7 @@ const LandingPage = () => {
 
         <div className="text-center mb-3 sm:mb-4 z-10 relative max-w-2xl px-2 sm:px-4 mt-1 sm:mt-2">
           <h1 className="sr-only">
-            IPL Auction Simulator & Game - Live IPL Mega Auction 2026
+            CrickAuction - Fan-Made Multiplayer T20 Cricket Auction Simulator
           </h1>
 
           <div className="text-[clamp(1.25rem,2.8vw,2.35rem)] font-pixel leading-none text-balance bg-clip-text text-transparent bg-gradient-to-b from-white via-white/90 to-white/60">
@@ -856,7 +856,7 @@ const LandingPage = () => {
       {/* Hero */}
       <div className="text-center mb-3 sm:mb-4 z-10 relative max-w-2xl px-2 sm:px-4 mt-1 sm:mt-2">
         <h1 className="sr-only">
-          IPL Auction Simulator & Game - Live IPL Mega Auction 2026
+          CrickAuction - Fan-Made Multiplayer T20 Cricket Auction Simulator
         </h1>
 
         <div className="text-[clamp(1.25rem,2.8vw,2.35rem)] font-pixel leading-none text-balance bg-clip-text text-transparent bg-gradient-to-b from-white via-white/90 to-white/60">
@@ -1033,7 +1033,7 @@ const LandingPage = () => {
                         <span
                           className={`text-[7px] sm:text-[8px] font-black uppercase text-center tracking-tighter truncate w-full ${selectedTeam === t.id ? "text-white" : "text-gray-400"}`}
                         >
-                          {t.name.split(" ").slice(0, 1)}
+                          {t.shortName || t.name.split(" ")[0]}
                         </span>
                       </button>
                     ))}

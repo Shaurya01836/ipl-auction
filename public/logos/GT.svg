@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="gt-navy" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E385B"/>
+      <stop offset="50%" stop-color="#0E2138"/>
+      <stop offset="100%" stop-color="#050C16"/>
+    </linearGradient>
+    <linearGradient id="gt-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFEAA8"/>
+      <stop offset="50%" stop-color="#CFA751"/>
+      <stop offset="100%" stop-color="#8F6C23"/>
+    </linearGradient>
+    <linearGradient id="gt-cyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#55E6FF"/>
+      <stop offset="100%" stop-color="#00A3E0"/>
+    </linearGradient>
+    <filter id="gt-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  <!-- Sharp Titanium Prism Shield -->
+  <polygon points="60,6 108,24 94,84 60,114 26,84 12,24" fill="url(#gt-navy)" stroke="url(#gt-gold)" stroke-width="3" filter="url(#gt-shadow)"/>
+  <!-- Inner Cyan Line -->
+  <polygon points="60,15 100,30 88,80 60,105 32,80 20,30" fill="none" stroke="url(#gt-cyan)" stroke-width="1.2" stroke-opacity="0.5"/>
+  <!-- Titan Lightning Apex Blade -->
+  <polygon points="60,18 72,38 60,34 64,48 48,32 58,34" fill="url(#gt-cyan)"/>
+  <polygon points="60,18 52,32 60,30" fill="url(#gt-gold)"/>
+  <!-- Monogram text -->
+  <text x="60" y="82" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="34" font-style="italic" fill="url(#gt-gold)" letter-spacing="1">GT</text>
+  <!-- Sleek Cyan Underline -->
+  <polygon points="40,90 80,90 60,96" fill="url(#gt-cyan)"/>
+</svg>

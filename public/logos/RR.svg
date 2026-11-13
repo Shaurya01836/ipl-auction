@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="rr-pink" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF2E93"/>
+      <stop offset="50%" stop-color="#D8006E"/>
+      <stop offset="100%" stop-color="#8E0048"/>
+    </linearGradient>
+    <linearGradient id="rr-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE8A0"/>
+      <stop offset="50%" stop-color="#E5B23D"/>
+      <stop offset="100%" stop-color="#A57A18"/>
+    </linearGradient>
+    <filter id="rr-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  <!-- Royal Shield with Blue Outer -->
+  <polygon points="60,6 106,20 98,82 60,114 22,82 14,20" fill="#002855" stroke="url(#rr-gold)" stroke-width="3" filter="url(#rr-shadow)"/>
+  <!-- Inner Pink Field -->
+  <polygon points="60,14 98,26 90,76 60,104 30,76 22,26" fill="url(#rr-pink)"/>
+  <!-- Royal Castle Crown -->
+  <path d="M42,38 L42,26 L48,26 L48,30 L54,26 L60,32 L66,26 L72,30 L72,26 L78,26 L78,38 Z" fill="url(#rr-gold)"/>
+  <circle cx="60" cy="24" r="2.5" fill="url(#rr-gold)"/>
+  <!-- Inner Gold Trim -->
+  <polygon points="60,20 92,30 86,72 60,98 34,72 28,30" fill="none" stroke="#ffffff" stroke-width="1" stroke-opacity="0.35"/>
+  <!-- Monogram text -->
+  <text x="60" y="80" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="34" font-style="italic" fill="url(#rr-gold)" letter-spacing="2">RR</text>
+  <!-- Royal Stars -->
+  <circle cx="48" cy="88" r="2" fill="url(#rr-gold)"/>
+  <circle cx="60" cy="90" r="2.5" fill="url(#rr-gold)"/>
+  <circle cx="72" cy="88" r="2" fill="url(#rr-gold)"/>
+</svg>

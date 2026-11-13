@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="kkr-purple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F2683"/>
+      <stop offset="50%" stop-color="#3A1864"/>
+      <stop offset="100%" stop-color="#1F0838"/>
+    </linearGradient>
+    <linearGradient id="kkr-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF0A0"/>
+      <stop offset="50%" stop-color="#ECC348"/>
+      <stop offset="100%" stop-color="#9C7715"/>
+    </linearGradient>
+    <filter id="kkr-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  <!-- Shield with Crown Flame -->
+  <polygon points="60,6 104,24 96,82 60,114 24,82 16,24" fill="url(#kkr-purple)" stroke="url(#kkr-gold)" stroke-width="3" filter="url(#kkr-shadow)"/>
+  <!-- Knight Corinthian Crest / Fire Flame -->
+  <path d="M60,16 C68,26 78,32 78,42 C72,42 66,36 60,44 C54,36 48,42 42,42 C42,32 52,26 60,16 Z" fill="url(#kkr-gold)"/>
+  <circle cx="60" cy="30" r="3" fill="#ffffff"/>
+  <!-- Inner Line -->
+  <polygon points="60,20 94,33 88,78 60,104 32,78 26,33" fill="none" stroke="#ffffff" stroke-width="1" stroke-opacity="0.25"/>
+  <!-- Monogram text -->
+  <text x="60" y="80" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="28" fill="url(#kkr-gold)" letter-spacing="1">KKR</text>
+  <!-- Sword Guard Chevron -->
+  <path d="M44,88 L60,94 L76,88 L60,98 Z" fill="url(#kkr-gold)"/>
+</svg>

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="mi-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#005DAA"/>
+      <stop offset="50%" stop-color="#003E7E"/>
+      <stop offset="100%" stop-color="#001F44"/>
+    </linearGradient>
+    <linearGradient id="mi-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FCE182"/>
+      <stop offset="50%" stop-color="#D1AB3E"/>
+      <stop offset="100%" stop-color="#9A7720"/>
+    </linearGradient>
+    <filter id="mi-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  <!-- Shield Base -->
+  <polygon points="60,6 108,22 96,86 60,114 24,86 12,22" fill="url(#mi-bg)" stroke="url(#mi-gold)" stroke-width="3" filter="url(#mi-shadow)"/>
+  <!-- Inner Shield Trim -->
+  <polygon points="60,14 100,27 90,80 60,105 30,80 20,27" fill="none" stroke="#ffffff" stroke-width="1" stroke-opacity="0.25"/>
+  <!-- Razor Vortex Chevron -->
+  <path d="M60,20 L76,46 L60,40 L44,46 Z" fill="url(#mi-gold)"/>
+  <path d="M60,30 L84,58 L60,50 L36,58 Z" fill="url(#mi-gold)" opacity="0.8"/>
+  <!-- Monogram text -->
+  <text x="60" y="85" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="34" font-style="italic" fill="#ffffff" letter-spacing="1">MI</text>
+  <!-- Accent Sub-ribbon -->
+  <rect x="38" y="93" width="44" height="3" rx="1.5" fill="url(#mi-gold)"/>
+</svg>

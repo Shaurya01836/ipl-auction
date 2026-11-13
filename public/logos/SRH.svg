@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="srh-orange" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF7B25"/>
+      <stop offset="60%" stop-color="#F25100"/>
+      <stop offset="100%" stop-color="#9C2A00"/>
+    </linearGradient>
+    <linearGradient id="srh-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE066"/>
+      <stop offset="100%" stop-color="#F39C12"/>
+    </linearGradient>
+    <filter id="srh-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  <!-- Shield with Black Base -->
+  <polygon points="60,6 108,24 96,84 60,114 24,84 12,24" fill="#121212" stroke="url(#srh-gold)" stroke-width="3" filter="url(#srh-shadow)"/>
+  <!-- Inner Fiery Orange Field -->
+  <polygon points="60,14 100,29 90,78 60,105 30,78 20,29" fill="url(#srh-orange)"/>
+  <!-- Rising Sun Sunburst Rays -->
+  <path d="M60,42 L52,22 L60,26 L68,22 Z" fill="url(#srh-gold)"/>
+  <path d="M60,42 L42,28 L50,30 L60,42 Z" fill="url(#srh-gold)"/>
+  <path d="M60,42 L78,28 L70,30 L60,42 Z" fill="url(#srh-gold)"/>
+  <circle cx="60" cy="40" r="10" fill="#121212"/>
+  <!-- Soaring Eagle Wings Accent -->
+  <path d="M36,46 C48,40 56,44 60,48 C64,44 72,40 84,46 C74,52 64,50 60,54 C56,50 46,52 36,46 Z" fill="url(#srh-gold)"/>
+  <!-- Monogram text -->
+  <text x="60" y="82" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="28" font-style="italic" fill="#ffffff" letter-spacing="1">SRH</text>
+  <!-- Gold Flare Bar -->
+  <polygon points="46,88 74,88 68,92 52,92" fill="url(#srh-gold)"/>
+</svg>

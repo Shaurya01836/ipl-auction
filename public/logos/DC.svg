@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="dc-blue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0066B2"/>
+      <stop offset="60%" stop-color="#004B87"/>
+      <stop offset="100%" stop-color="#00284D"/>
+    </linearGradient>
+    <linearGradient id="dc-red" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF334B"/>
+      <stop offset="100%" stop-color="#C7001E"/>
+    </linearGradient>
+    <filter id="dc-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  <!-- Shield Base -->
+  <polygon points="60,6 106,18 96,86 60,114 24,86 14,18" fill="url(#dc-blue)" stroke="#ffffff" stroke-width="2.5" filter="url(#dc-shadow)"/>
+  <!-- Tiger Claws Tri-Chevron in Red -->
+  <path d="M42,22 L54,38 L48,40 L38,24 Z" fill="url(#dc-red)"/>
+  <path d="M56,18 L64,36 L56,38 L50,18 Z" fill="url(#dc-red)"/>
+  <path d="M70,18 L64,38 L72,36 L78,18 Z" fill="url(#dc-red)"/>
+  <path d="M78,22 L66,40 L72,38 L82,24 Z" fill="url(#dc-red)"/>
+  <!-- Inner Line -->
+  <polygon points="60,16 98,26 88,80 60,105 32,80 22,26" fill="none" stroke="url(#dc-red)" stroke-width="1.5" stroke-opacity="0.7"/>
+  <!-- Monogram text -->
+  <text x="60" y="82" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="34" font-style="italic" fill="#ffffff" letter-spacing="1">DC</text>
+  <!-- Base Red Bar -->
+  <rect x="42" y="90" width="36" height="3" rx="1.5" fill="url(#dc-red)"/>
+</svg>
