@@ -119,9 +119,8 @@ export const DEV_NOTE_CONFIG = {
   chips: [
     'Free-tier hosting',
     'Solo dev',
-    'Your Support',
+    'Community feedback',
   ],
-  supportBtnText: 'Support the project',
   feedbackBtnText: 'Send feedback',
 };
 

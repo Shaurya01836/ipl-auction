@@ -30,11 +30,11 @@ const CATEGORY_CONFIG = {
 };
 
 const STAR_BAR_GRADIENTS = {
-  5: 'from-emerald-500 to-teal-400',
-  4: 'from-teal-500 to-sky-400',
-  3: 'from-amber-500 to-yellow-400',
-  2: 'from-orange-500 to-amber-500',
-  1: 'from-rose-500 to-orange-500',
+  5: 'from-emerald-400 to-teal-400',
+  4: 'from-teal-400 to-sky-400',
+  3: 'from-amber-400 to-yellow-400',
+  2: 'from-amber-500 to-rose-400',
+  1: 'from-rose-400 to-rose-600',
 };
 
 const OverviewTab = ({
@@ -55,22 +55,22 @@ const OverviewTab = ({
       {/* 2-Column Grid: Rating Insights & Category Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Card 1: Rating Distribution */}
-        <div className="bg-[#0b0b0b] border border-white/[0.08] rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+        <div className="bg-[#0c0d10] border border-white/10 rounded-[1.75rem] p-5 sm:p-6 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)] flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
               <div>
-                <h3 className="text-xs font-bold text-white tracking-wide">
+                <h3 className="font-pixel text-xs sm:text-sm uppercase tracking-tight text-white">
                   Rating Distribution
                 </h3>
-                <p className="text-[10px] text-gray-500">
+                <p className="text-[10px] text-slate-400 mt-0.5">
                   {totalRated} verified reviews
                 </p>
               </div>
 
               {/* Big avg score badge */}
-              <div className="flex items-baseline gap-1 bg-white/[0.03] border border-white/5 px-2.5 py-1 rounded-xl">
-                <span className="text-base font-black text-amber-400">{stats.avgRating}</span>
-                <span className="text-[10px] font-bold text-gray-500">★</span>
+              <div className="flex items-baseline gap-1 bg-white/[0.04] border border-white/10 px-2.5 py-1 rounded-xl">
+                <span className="font-pixel text-base text-amber-400">{stats.avgRating}</span>
+                <span className="text-[10px] font-bold text-slate-400">★</span>
               </div>
             </div>
 
@@ -79,7 +79,7 @@ const OverviewTab = ({
               {[5, 4, 3, 2, 1].map((rating) => {
                 const count = stats.starCounts[rating] || 0;
                 const pct = totalRated > 0 ? (count / totalRated) * 100 : 0;
-                const gradient = STAR_BAR_GRADIENTS[rating] || 'from-amber-500 to-[#ff5500]';
+                const gradient = STAR_BAR_GRADIENTS[rating] || 'from-amber-400 to-yellow-400';
 
                 return (
                   <div key={rating} className="flex items-center gap-3 group">
@@ -97,7 +97,7 @@ const OverviewTab = ({
                       />
                     </div>
 
-                    <div className="w-12 text-right text-[11px] font-medium text-gray-400 tabular-nums">
+                    <div className="w-12 text-right text-[11px] font-medium text-slate-400 tabular-nums">
                       {count} <span className="text-gray-600 text-[10px]">({pct.toFixed(0)}%)</span>
                     </div>
                   </div>
@@ -108,19 +108,19 @@ const OverviewTab = ({
         </div>
 
         {/* Card 2: Feedback Categories Breakdown */}
-        <div className="bg-[#0b0b0b] border border-white/[0.08] rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+        <div className="bg-[#0c0d10] border border-white/10 rounded-[1.75rem] p-5 sm:p-6 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)] flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
               <div>
-                <h3 className="text-xs font-bold text-white tracking-wide">
+                <h3 className="font-pixel text-xs sm:text-sm uppercase tracking-tight text-white">
                   Feedback Categories
                 </h3>
-                <p className="text-[10px] text-gray-500">
+                <p className="text-[10px] text-slate-400 mt-0.5">
                   Submissions by topic
                 </p>
               </div>
 
-              <span className="text-[10px] font-semibold text-gray-400 px-2 py-0.5 rounded-md bg-white/[0.03] border border-white/5">
+              <span className="text-[10px] font-semibold text-slate-300 px-2.5 py-0.5 rounded-md bg-white/[0.04] border border-white/10">
                 {stats.totalFeedbacks} total
               </span>
             </div>
@@ -135,22 +135,22 @@ const OverviewTab = ({
                 return (
                   <div
                     key={catKey}
-                    className="p-3.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.035] border border-white/[0.06] transition-all flex flex-col justify-between group"
+                    className="p-3.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 hover:border-white/10 transition-all flex flex-col justify-between group"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
                         <span className={`w-2 h-2 rounded-full ${conf.dot}`} />
-                        <span className="text-[11px] font-medium text-gray-400">
+                        <span className="text-[11px] font-medium text-slate-300">
                           {conf.label}
                         </span>
                       </div>
-                      <span className="text-[10px] text-gray-500 font-semibold tabular-nums">
+                      <span className="text-[10px] text-slate-400 font-semibold tabular-nums">
                         {pct}%
                       </span>
                     </div>
 
                     <div className="mt-2.5">
-                      <div className="text-xl font-bold text-white">
+                      <div className="font-pixel text-xl text-white">
                         {count}
                       </div>
                     </div>
@@ -163,23 +163,23 @@ const OverviewTab = ({
       </div>
 
       {/* Recent Feedback Feed Preview (Minimal & Clean) */}
-      <div className="bg-[#0b0b0b] border border-white/[0.08] rounded-2xl p-5 shadow-xl space-y-3.5">
+      <div className="bg-[#0c0d10] border border-white/10 rounded-[1.75rem] p-5 sm:p-6 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)] space-y-3.5">
         <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
           <div>
-            <h3 className="text-xs font-bold text-white tracking-wide">
+            <h3 className="font-pixel text-xs sm:text-sm uppercase tracking-tight text-white">
               Recent Feedbacks
             </h3>
-            <p className="text-[10px] text-gray-500">
+            <p className="text-[10px] text-slate-400 mt-0.5">
               Latest submissions
             </p>
           </div>
 
           <button
             onClick={onViewAllFeedbacks}
-            className="text-[11px] font-semibold text-[#ff5500] hover:text-[#ff7733] transition-colors flex items-center gap-1 cursor-pointer"
+            className="text-xs font-bold text-slate-300 hover:text-white transition-colors flex items-center gap-1 cursor-pointer active:scale-[0.98]"
           >
             <span>View All ({feedbacks.length})</span>
-            <ChevronRight className="w-3 h-3" />
+            <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
 

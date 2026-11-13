@@ -46,7 +46,6 @@ import {
   Clock,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
-import BuyMeACoffee from "../components/BuyMeACoffee";
 import ConfirmDialog from "../components/ConfirmDialog";
 import AuctionActivityFeed from "../components/AuctionActivityFeed";
 import Footer from "../components/Footer";
@@ -689,7 +688,6 @@ const LandingPage = () => {
           <Navbar />
         </div>
         <main className="relative w-full flex-1 flex flex-col items-center justify-start pt-6 sm:pt-8 px-3 sm:px-4 z-10 pb-20 sm:pb-32">
-          <BuyMeACoffee />
 
         <div className="text-center mb-3 sm:mb-4 z-10 relative max-w-2xl px-2 sm:px-4 mt-1 sm:mt-2">
           <h1 className="sr-only">
@@ -854,7 +852,6 @@ const LandingPage = () => {
         <Navbar />
       </div>
       <main className="relative w-full flex-1 flex flex-col items-center justify-start pt-6 sm:pt-8 px-3 sm:px-4 z-10 pb-20 sm:pb-32">
-        <BuyMeACoffee />
 
       {/* Hero */}
       <div className="text-center mb-3 sm:mb-4 z-10 relative max-w-2xl px-2 sm:px-4 mt-1 sm:mt-2">

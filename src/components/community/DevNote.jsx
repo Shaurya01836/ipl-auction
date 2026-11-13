@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MessageSquare, Coffee, Heart, Code2, Sparkles } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 import { DEV_NOTE_CONFIG } from '../../data/feedback';
 
 export default function DevNote() {
@@ -8,11 +8,6 @@ export default function DevNote() {
   const openFeedback = () => {
     window.dispatchEvent(new CustomEvent('open-feedback-modal'));
     document.getElementById('feedback-fab-button')?.click();
-  };
-
-  const openSupport = () => {
-    // Triggers the existing BuyMeACoffee support modal
-    document.getElementById('support-fab-button')?.click();
   };
 
   return (
@@ -82,16 +77,6 @@ export default function DevNote() {
         >
           <MessageSquare size={13} />
           <span>{DEV_NOTE_CONFIG.feedbackBtnText}</span>
-        </button>
-
-        {/* Support the project secondary button (only appears here) */}
-        <button
-          type="button"
-          onClick={openSupport}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white font-pixel text-[10px] uppercase tracking-wider transition-all cursor-pointer active:scale-95"
-        >
-          <Coffee size={13} className="text-slate-300" />
-          <span>{DEV_NOTE_CONFIG.supportBtnText}</span>
         </button>
       </div>
     </div>

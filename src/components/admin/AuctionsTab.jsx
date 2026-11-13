@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Search, Gavel, ExternalLink, Trash2 } from 'lucide-react';
+import { Search, ExternalLink, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getAuctionServer, withServerParam } from '../../lib/auctionServers';
 import PaginationControls from './PaginationControls';
@@ -25,15 +25,15 @@ const AuctionsTab = ({
       className="space-y-4 sm:space-y-6"
     >
       {/* Filter Bar */}
-      <div className="bg-[#0c0c0c] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4">
+      <div className="bg-[#0c0d10] border border-white/10 rounded-[1.5rem] sm:rounded-[1.75rem] p-4 sm:p-6 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4">
         <div className="relative w-full md:w-80">
-          <Search className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={auctionSearch}
             onChange={(e) => setAuctionSearch(e.target.value)}
             placeholder="Search room title or room code..."
-            className="w-full bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/50 font-bold"
+            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-white/30 font-semibold transition-colors"
           />
         </div>
 
@@ -42,9 +42,9 @@ const AuctionsTab = ({
             <button
               key={st}
               onClick={() => setAuctionStatusFilter(st)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer shrink-0 ${auctionStatusFilter === st
-                ? 'bg-blue-600 text-white'
-                : 'bg-white/5 hover:bg-white/10 text-gray-400'
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shrink-0 active:scale-[0.98] ${auctionStatusFilter === st
+                ? 'bg-white text-black shadow-[0_4px_20px_rgba(255,255,255,0.08)]'
+                : 'bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/10'
                 }`}
             >
               {st}
@@ -55,12 +55,11 @@ const AuctionsTab = ({
 
       {/* Auctions Content */}
       {filteredAuctions.length === 0 ? (
-        <div className="bg-[#0c0c0c] border border-white/10 rounded-2xl sm:rounded-3xl p-8 sm:p-12 text-center space-y-3">
-          <Gavel className="w-8 sm:w-10 h-8 sm:h-10 text-gray-600 mx-auto" />
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">
+        <div className="bg-[#0c0d10] border border-white/10 rounded-[1.5rem] sm:rounded-[1.75rem] p-8 sm:p-12 text-center space-y-2 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)]">
+          <p className="font-pixel text-xs sm:text-sm uppercase tracking-tight text-white">
             No Auctions Found in Supabase
           </p>
-          <p className="text-[10px] font-bold text-gray-600 uppercase">
+          <p className="text-xs text-slate-400">
             Check status filter or search input.
           </p>
         </div>
@@ -71,7 +70,7 @@ const AuctionsTab = ({
             {paginatedAuctions.map((auc) => (
               <div
                 key={auc.id}
-                className="bg-[#0c0c0c] border border-white/10 rounded-2xl p-4 shadow-xl space-y-3"
+                className="bg-[#0c0d10] border border-white/10 rounded-2xl p-4 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)] space-y-3"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
@@ -125,7 +124,7 @@ const AuctionsTab = ({
           </div>
 
           {/* Desktop View: Table Layout */}
-          <div className="hidden md:block bg-[#0c0c0c] border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
+          <div className="hidden md:block bg-[#0c0d10] border border-white/10 rounded-[1.75rem] overflow-hidden shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)]">
             <div className="overflow-x-auto custom-scrollbar">
               <table className="w-full text-left text-xs text-gray-300 min-w-[650px]">
                 <thead className="bg-white/5 text-[9px] font-black uppercase tracking-[0.2em] text-gray-500 border-b border-white/10">

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Search, SlidersHorizontal, Users } from 'lucide-react';
+import { Search, SlidersHorizontal } from 'lucide-react';
 import PaginationControls from './PaginationControls';
 
 const PLAYERS_PER_PAGE = 12;
@@ -67,37 +67,37 @@ const PlayersTab = ({
       className="space-y-6"
     >
       {/* Search & Filters */}
-      <div className="bg-[#0c0c0c] border border-white/10 rounded-2xl p-4 sm:p-5 flex flex-col gap-3 sm:gap-4 shadow-2xl">
+      <div className="bg-[#0c0d10] border border-white/10 rounded-[1.5rem] p-4 sm:p-5 flex flex-col gap-3 sm:gap-4 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)]">
         <div className="flex flex-col md:flex-row gap-3">
           {/* Search */}
           <div className="flex-1 relative group">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-gray-500 group-focus-within:text-[#ff5500] transition-colors" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-slate-500 group-focus-within:text-white transition-colors" />
             <input
               type="text"
               placeholder="Search by Player Name, Country, or Set..."
               value={playerSearch}
               onChange={(e) => setPlayerSearch(e.target.value)}
-              className="w-full bg-[#151515] border border-white/10 rounded-xl pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-white placeholder-gray-600 focus:outline-none focus:border-[#ff5500]/50 focus:ring-1 focus:ring-[#ff5500]/50 transition-all"
+              className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-white placeholder-slate-500 focus:outline-none focus:border-white/30 transition-all"
             />
           </div>
 
           {/* Sort Selector */}
           <div className="flex items-center gap-2">
-            <div className="bg-[#151515] border border-white/10 rounded-xl px-3 py-2 sm:py-2.5 flex items-center gap-2 w-full md:w-auto">
-              <SlidersHorizontal className="w-4 h-4 text-gray-400 shrink-0" />
-              <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-gray-400 shrink-0 hidden xs:inline">Sort:</span>
+            <div className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 sm:py-2.5 flex items-center gap-2 w-full md:w-auto">
+              <SlidersHorizontal className="w-4 h-4 text-slate-400 shrink-0" />
+              <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 shrink-0 hidden xs:inline">Sort:</span>
               <select
                 value={playerSortBy}
                 onChange={(e) => setPlayerSortBy(e.target.value)}
                 className="bg-transparent text-white text-xs font-bold outline-none cursor-pointer pr-2 w-full"
               >
-                <option value="default" className="bg-[#151515] text-white">Default (Set Order)</option>
-                <option value="rating_desc" className="bg-[#151515] text-white">Rating: High to Low ★</option>
-                <option value="rating_asc" className="bg-[#151515] text-white">Rating: Low to High</option>
-                <option value="price_desc" className="bg-[#151515] text-white">Base Price: High to Low</option>
-                <option value="price_asc" className="bg-[#151515] text-white">Base Price: Low to High</option>
-                <option value="matches_desc" className="bg-[#151515] text-white">Matches: Most Played</option>
-                <option value="name_asc" className="bg-[#151515] text-white">Name: A to Z</option>
+                <option value="default" className="bg-[#0c0d10] text-white">Default (Set Order)</option>
+                <option value="rating_desc" className="bg-[#0c0d10] text-white">Rating: High to Low ★</option>
+                <option value="rating_asc" className="bg-[#0c0d10] text-white">Rating: Low to High</option>
+                <option value="price_desc" className="bg-[#0c0d10] text-white">Base Price: High to Low</option>
+                <option value="price_asc" className="bg-[#0c0d10] text-white">Base Price: Low to High</option>
+                <option value="matches_desc" className="bg-[#0c0d10] text-white">Matches: Most Played</option>
+                <option value="name_asc" className="bg-[#0c0d10] text-white">Name: A to Z</option>
               </select>
             </div>
           </div>
@@ -115,9 +115,9 @@ const PlayersTab = ({
             <button
               key={roleItem.id}
               onClick={() => setPlayerRoleFilter(roleItem.id)}
-              className={`px-4 py-2 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${playerRoleFilter === roleItem.id
-                ? 'bg-[#ff5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.3)]'
-                : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+              className={`px-4 py-2 rounded-xl font-bold text-[10px] sm:text-xs uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap active:scale-[0.98] ${playerRoleFilter === roleItem.id
+                ? 'bg-white text-black shadow-[0_4px_20px_rgba(255,255,255,0.08)]'
+                : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 border border-white/5'
                 }`}
             >
               {roleItem.label}
@@ -127,12 +127,11 @@ const PlayersTab = ({
       </div>
 
       {filtered.length === 0 ? (
-        <div className="bg-[#0c0c0c] border border-white/10 rounded-3xl p-8 sm:p-12 text-center shadow-2xl">
-          <Users className="w-10 sm:w-12 h-10 sm:h-12 text-gray-700 mx-auto mb-4" />
-          <h3 className="text-sm sm:text-base font-black uppercase tracking-widest text-white mb-2">
+        <div className="bg-[#0c0d10] border border-white/10 rounded-[1.75rem] p-8 sm:p-12 text-center shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)] space-y-2">
+          <h3 className="font-pixel text-sm sm:text-base uppercase tracking-tight text-white">
             No Players Found
           </h3>
-          <p className="text-xs text-gray-500 font-medium max-w-md mx-auto">
+          <p className="text-xs text-slate-400 font-normal max-w-md mx-auto">
             We couldn't find any players matching your search criteria.
           </p>
         </div>
@@ -144,7 +143,7 @@ const PlayersTab = ({
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               onClick={() => setSelectedPlayer(player)}
-              className="bg-[#0d0d0d] border border-white/8 rounded-xl p-4 flex flex-col gap-3 shadow-md hover:border-white/20 hover:bg-[#111111] transition-all duration-200 cursor-pointer group"
+              className="bg-white/[0.02] border border-white/5 rounded-xl p-4 flex flex-col gap-3 shadow-[0_4px_24px_rgba(0,0,0,0.5)] hover:border-white/15 hover:bg-white/[0.05] transition-all duration-200 cursor-pointer group transform-gpu"
             >
               {/* Header row: Photo + Name + Role + Rating */}
               <div className="flex items-start gap-3">

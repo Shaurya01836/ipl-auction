@@ -21,10 +21,11 @@ const PlayerDetailModal = ({
           />
 
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            initial={{ opacity: 0, scale: 0.98, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 15 }}
-            className="relative w-full max-w-lg bg-[#0c0c0c] border border-white/15 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-6 z-10 max-h-[90vh] overflow-y-auto custom-scrollbar"
+            exit={{ opacity: 0, scale: 0.98, y: 15 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="relative w-full max-w-lg bg-[#0c0d10] border border-white/10 rounded-[1.75rem] sm:rounded-[2rem] p-6 sm:p-7 shadow-[0_25px_60px_rgba(0,0,0,0.85)] space-y-6 z-10 max-h-[90vh] overflow-y-auto custom-scrollbar backdrop-blur-xl"
           >
             {/* Header with Close */}
             <div className="flex items-center justify-between pb-3 border-b border-white/10">

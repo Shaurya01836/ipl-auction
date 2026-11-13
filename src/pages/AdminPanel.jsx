@@ -5,29 +5,17 @@ import { useQuota } from '../contexts/QuotaContext';
 import { isUserAdmin } from '../lib/adminAuth';
 import { db } from '../lib/firebase';
 import { supabase } from '../lib/supabase';
-import { collection, getDocs, deleteDoc, updateDoc, doc, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, updateDoc, doc, query, orderBy, getCountFromServer } from 'firebase/firestore';
 import {
-  Home,
-  ShieldAlert,
-  Gavel,
-  MessageSquare,
-  Star,
   RefreshCw,
-  CheckCircle2,
-  AlertCircle,
-  Users,
-  LogOut,
-  Clock,
-  ArrowLeft,
-  Sparkles,
-  Database,
-  Activity,
-  Flame,
   Lock,
   LogIn,
+  ShieldAlert,
+  LogOut,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Footer from '../components/Footer';
+import PageBackground from '../components/PageBackground';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import { IPL_PLAYERS } from '../data/players';
 
@@ -57,6 +45,37 @@ const WORKFLOW_STATUSES = [
 
 const FEEDBACKS_PER_PAGE = 8;
 const AUCTIONS_PER_PAGE = 8;
+
+// ─── Admin Dashboard Cache (5-minute TTL to reduce Firestore & Supabase load) ───
+const ADMIN_CACHE_KEY = 'crickauction_admin_cache';
+const ADMIN_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+const getCachedAdminData = () => {
+  try {
+    const raw = sessionStorage.getItem(ADMIN_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !parsed.timestamp) return null;
+    if (Date.now() - parsed.timestamp > ADMIN_CACHE_TTL) {
+      sessionStorage.removeItem(ADMIN_CACHE_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const setCachedAdminData = (payload) => {
+  try {
+    sessionStorage.setItem(
+      ADMIN_CACHE_KEY,
+      JSON.stringify({ ...payload, timestamp: payload.timestamp || Date.now() })
+    );
+  } catch (e) {
+    console.warn('[admin] Failed to save session cache:', e);
+  }
+};
 
 const getRatingBadgeStyle = (rating = 0) => {
   if (rating >= 75) {
@@ -165,6 +184,7 @@ const AdminPanel = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [isFromCache, setIsFromCache] = useState(false);
 
   // Firestore Data
   const [feedbacks, setFeedbacks] = useState([]);
@@ -222,10 +242,28 @@ const AdminPanel = () => {
     setPlayerPage(1);
   }, [playerSearch, playerRoleFilter, playerSortBy]);
 
-  // Fetch all admin data
+  // Fetch all admin data (with 5-minute session cache to prevent database load)
   const fetchData = useCallback(async (showRefreshingSpinner = false) => {
+    // If not a manual refresh, use cached data if fresh (<= 5 min)
+    if (!showRefreshingSpinner) {
+      const cached = getCachedAdminData();
+      if (cached) {
+        setFeedbacks(cached.feedbacks || []);
+        setFirestoreAuctionsCount(cached.firestoreAuctionsCount || 0);
+        setSupabaseAuctions(cached.supabaseAuctions || []);
+        setSupabaseTotalAuctionsCount(cached.supabaseTotalAuctionsCount || 0);
+        setSupabaseActiveCount(cached.supabaseActiveCount || 0);
+        setSupabaseCompletedCount(cached.supabaseCompletedCount || 0);
+        setLastUpdated(new Date(cached.timestamp));
+        setIsFromCache(true);
+        setLoading(false);
+        return;
+      }
+    }
+
     if (showRefreshingSpinner) setRefreshing(true);
     else setLoading(true);
+    setIsFromCache(false);
     setError(null);
 
     try {
@@ -281,10 +319,15 @@ const AdminPanel = () => {
 
         let fsCount = 0;
         try {
-          const fsAuctionsSnap = await getDocs(collection(db, 'auctions'));
-          fsCount = fsAuctionsSnap.size;
-        } catch (e) {
-          console.warn('Could not count firestore auctions:', e);
+          const countSnap = await getCountFromServer(collection(db, 'auctions'));
+          fsCount = countSnap.data().count;
+        } catch {
+          try {
+            const fsAuctionsSnap = await getDocs(collection(db, 'auctions'));
+            fsCount = fsAuctionsSnap.size;
+          } catch (e) {
+            console.warn('Could not count firestore auctions:', e);
+          }
         }
 
         return { fbList, fsCount };
@@ -337,7 +380,19 @@ const AdminPanel = () => {
       setSupabaseActiveCount(sbRes.activeCount);
       setSupabaseCompletedCount(sbRes.completedCount);
 
-      setLastUpdated(new Date());
+      const now = new Date();
+      setLastUpdated(now);
+
+      // Cache the result for this session
+      setCachedAdminData({
+        feedbacks: fsRes.fbList,
+        firestoreAuctionsCount: fsRes.fsCount,
+        supabaseAuctions: sbRes.auctions,
+        supabaseTotalAuctionsCount: sbRes.totalCount,
+        supabaseActiveCount: sbRes.activeCount,
+        supabaseCompletedCount: sbRes.completedCount,
+        timestamp: now.getTime(),
+      });
     } catch (err) {
       console.error('Error fetching admin data:', err);
       handleFirebaseError(err);
@@ -480,9 +535,14 @@ const AdminPanel = () => {
         ...updateFields,
         updatedAt: new Date()
       });
-      setFeedbacks((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, ...updateFields } : item))
-      );
+      setFeedbacks((prev) => {
+        const next = prev.map((item) => (item.id === id ? { ...item, ...updateFields } : item));
+        const cached = getCachedAdminData();
+        if (cached) {
+          setCachedAdminData({ ...cached, feedbacks: next });
+        }
+        return next;
+      });
       setActionSuccess('Feedback updated successfully.');
       setTimeout(() => setActionSuccess(null), 2000);
     } catch (err) {
@@ -502,7 +562,14 @@ const AdminPanel = () => {
     setIsDeleting(true);
     try {
       await deleteDoc(doc(db, 'feedbacks', id));
-      setFeedbacks((prev) => prev.filter((item) => item.id !== id));
+      setFeedbacks((prev) => {
+        const next = prev.filter((item) => item.id !== id);
+        const cached = getCachedAdminData();
+        if (cached) {
+          setCachedAdminData({ ...cached, feedbacks: next });
+        }
+        return next;
+      });
       setActionSuccess('Feedback entry deleted successfully.');
       setTimeout(() => setActionSuccess(null), 3000);
     } catch (err) {
@@ -528,7 +595,18 @@ const AdminPanel = () => {
         console.warn('[admin] Failed to delete Firestore auction mirror', e);
       }
 
-      setSupabaseAuctions((prev) => prev.filter((item) => item.id !== id));
+      setSupabaseAuctions((prev) => {
+        const next = prev.filter((item) => item.id !== id);
+        const cached = getCachedAdminData();
+        if (cached) {
+          setCachedAdminData({
+            ...cached,
+            supabaseAuctions: next,
+            supabaseTotalAuctionsCount: Math.max(0, (cached.supabaseTotalAuctionsCount || 1) - 1),
+          });
+        }
+        return next;
+      });
       setActionSuccess('Auction room deleted from database.');
       setTimeout(() => setActionSuccess(null), 3000);
     } catch (err) {
@@ -561,29 +639,36 @@ const AdminPanel = () => {
   // ─── Render Authentication Lock Screen if Not Admin ───
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 sm:w-96 h-72 sm:h-96 bg-[#ff5500]/10 blur-[140px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-10 right-10 w-48 sm:w-72 h-48 sm:h-72 bg-blue-600/5 blur-[120px] rounded-full pointer-events-none" />
+      <div className="relative min-h-screen bg-transparent flex flex-col font-sans text-white overflow-x-clip items-center justify-center p-4 sm:p-6 selection:bg-white/20 selection:text-white">
+        <PageBackground />
+        <div className="fixed top-1/4 right-1/4 w-80 sm:w-96 h-80 sm:h-96 bg-white/[0.02] blur-[120px] rounded-full pointer-events-none z-0" />
+        <div className="fixed bottom-10 left-1/4 w-80 sm:w-96 h-80 sm:h-96 bg-slate-500/[0.02] blur-[120px] rounded-full pointer-events-none z-0" />
 
         <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          initial={{ opacity: 0, y: 20, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          className="relative max-w-sm sm:max-w-md w-full bg-[#0c0c0c] border border-white/10 rounded-3xl sm:rounded-[2.5rem] p-6 sm:p-10 text-center shadow-[0_25px_70px_rgba(0,0,0,0.8)] backdrop-blur-xl"
+          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className="relative max-w-sm sm:max-w-md w-full bg-[#0c0d10] border border-white/10 rounded-[1.75rem] sm:rounded-[2.5rem] p-6 sm:p-10 text-center shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)] backdrop-blur-xl z-10"
         >
-          <div className="w-14 sm:w-16 h-14 sm:h-16 mx-auto rounded-2xl bg-[#ff5500]/10 border border-[#ff5500]/30 flex items-center justify-center text-[#ff5500] mb-5 sm:mb-6 shadow-[0_0_30px_rgba(255,85,0,0.2)]">
-            <Lock className="w-7 sm:w-8 h-7 sm:h-8" />
+          <div className="w-14 sm:w-16 h-14 sm:h-16 mx-auto rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white mb-5 sm:mb-6 shadow-[0_4px_20px_rgba(255,255,255,0.05)]">
+            <Lock className="w-7 sm:w-8 h-7 sm:h-8 text-slate-300" />
           </div>
 
-          <h2 className="text-lg sm:text-xl font-black uppercase tracking-[0.2em] text-white mb-2">
-            Admin Portal Access
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 font-pixel text-[9px] sm:text-[10px] tracking-widest text-slate-300 uppercase mb-3">
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+            <span>AUTHENTICATION</span>
+          </div>
+
+          <h2 className="font-pixel text-lg sm:text-2xl uppercase tracking-tight text-white mb-2">
+            ADMIN PORTAL ACCESS
           </h2>
-          <p className="text-xs text-gray-400 font-medium leading-relaxed mb-6 sm:mb-8">
-            Authentication required to access the IPL Auction Hub system management dashboard.
+          <p className="text-xs sm:text-sm text-slate-400 font-normal leading-relaxed mb-6 sm:mb-8">
+            Authentication required to access the CrickAuction system management dashboard.
           </p>
 
           <button
             onClick={loginWithGoogle}
-            className="w-full py-3.5 px-5 sm:px-6 rounded-2xl bg-gradient-to-r from-[#ff5500] to-[#ff8c00] text-white font-black uppercase tracking-[0.15em] text-xs hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_10px_30px_rgba(255,85,0,0.3)] flex items-center justify-center gap-3 cursor-pointer"
+            className="w-full py-3.5 px-5 sm:px-6 rounded-2xl bg-white text-black hover:bg-slate-200 font-bold uppercase tracking-wider text-xs active:scale-[0.98] transition-all shadow-[0_10px_30px_rgba(255,255,255,0.08)] flex items-center justify-center gap-3 cursor-pointer"
           >
             <LogIn className="w-4 h-4" />
             <span>Sign In with Google</span>
@@ -592,9 +677,9 @@ const AdminPanel = () => {
           <div className="mt-5 sm:mt-6 pt-5 sm:pt-6 border-t border-white/5">
             <Link
               to="/"
-              className="inline-flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-white uppercase tracking-wider transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white uppercase tracking-wider transition-colors"
             >
-              <ArrowLeft className="w-3.5 h-3.5" /> Back to Landing Page
+              ← Back to Landing Page
             </Link>
           </div>
         </motion.div>
@@ -604,35 +689,42 @@ const AdminPanel = () => {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 sm:w-96 h-72 sm:h-96 bg-red-600/10 blur-[150px] rounded-full pointer-events-none" />
+      <div className="relative min-h-screen bg-transparent flex flex-col font-sans text-white overflow-x-clip items-center justify-center p-4 sm:p-6 selection:bg-white/20 selection:text-white">
+        <PageBackground />
+        <div className="fixed top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 sm:w-96 h-80 sm:h-96 bg-rose-500/[0.03] blur-[150px] rounded-full pointer-events-none z-0" />
 
         <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          initial={{ opacity: 0, y: 20, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          className="relative max-w-sm sm:max-w-md w-full bg-[#0c0c0c] border border-red-500/20 rounded-3xl sm:rounded-[2.5rem] p-6 sm:p-10 text-center shadow-[0_25px_70px_rgba(0,0,0,0.8)] backdrop-blur-xl"
+          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className="relative max-w-sm sm:max-w-md w-full bg-[#0c0d10] border border-rose-500/20 rounded-[1.75rem] sm:rounded-[2.5rem] p-6 sm:p-10 text-center shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)] backdrop-blur-xl z-10"
         >
-          <div className="w-14 sm:w-16 h-14 sm:h-16 mx-auto rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-500 mb-5 sm:mb-6 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
+          <div className="w-14 sm:w-16 h-14 sm:h-16 mx-auto rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 mb-5 sm:mb-6">
             <ShieldAlert className="w-7 sm:w-8 h-7 sm:h-8" />
           </div>
 
-          <h2 className="text-lg sm:text-xl font-black uppercase tracking-[0.2em] text-white mb-2">
-            403 — Access Denied
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 font-pixel text-[9px] sm:text-[10px] tracking-widest text-rose-400 uppercase mb-3">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+            <span>403 FORBIDDEN</span>
+          </div>
+
+          <h2 className="font-pixel text-lg sm:text-2xl uppercase tracking-tight text-white mb-2">
+            ACCESS DENIED
           </h2>
-          <p className="text-xs text-gray-400 font-medium leading-relaxed mb-6">
-            Logged in as <span className="text-white font-bold">{user.email}</span>. You do not have permission to view or manage the administrator control hub.
+          <p className="text-xs sm:text-sm text-slate-400 font-normal leading-relaxed mb-6">
+            Logged in as <span className="text-white font-semibold">{user.email}</span>. You do not have permission to view or manage the administrator control hub.
           </p>
 
           <div className="space-y-3">
             <button
               onClick={logout}
-              className="w-full py-3 px-4 rounded-xl bg-white/5 border border-white/10 text-white font-bold uppercase tracking-wider text-xs hover:bg-white/10 transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-3 px-4 rounded-xl bg-white/5 border border-white/10 text-white font-bold uppercase tracking-wider text-xs hover:bg-white/10 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               <LogOut className="w-4 h-4" /> Switch Account / Logout
             </button>
             <Link
               to="/"
-              className="block w-full py-3 px-4 rounded-xl bg-[#ff5500]/10 border border-[#ff5500]/20 text-[#ff5500] font-black uppercase tracking-wider text-xs hover:bg-[#ff5500]/20 transition-all text-center"
+              className="block w-full py-3 px-4 rounded-xl bg-white text-black hover:bg-slate-200 font-bold uppercase tracking-wider text-xs active:scale-[0.98] transition-all text-center shadow-[0_10px_30px_rgba(255,255,255,0.08)]"
             >
               Return to Landing Page
             </Link>
@@ -644,29 +736,29 @@ const AdminPanel = () => {
 
   // ─── Admin Dashboard Interface ───
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex flex-col selection:bg-[#ff5500] selection:text-white relative">
-      {/* Background Glow ambient layers */}
-      <div className="fixed top-0 left-1/4 -translate-y-1/2 w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bg-[#ff5500]/5 blur-[180px] rounded-full pointer-events-none z-0" />
-      <div className="fixed bottom-0 right-1/4 translate-y-1/2 w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bg-blue-600/5 blur-[180px] rounded-full pointer-events-none z-0" />
+    <div className="relative min-h-screen bg-transparent flex flex-col font-sans text-white overflow-x-clip selection:bg-white/20 selection:text-white">
+      <PageBackground />
+
+      {/* Atmospheric depth blurs (no orange/colored halos) */}
+      <div className="fixed top-0 right-1/4 w-80 sm:w-96 h-80 sm:h-96 bg-white/[0.02] blur-[120px] rounded-full pointer-events-none z-0" />
+      <div className="fixed bottom-0 left-1/4 w-80 sm:w-96 h-80 sm:h-96 bg-slate-500/[0.02] blur-[120px] rounded-full pointer-events-none z-0" />
 
       {/* Top Header Bar */}
-      <header className="sticky top-0 z-50 bg-[#050505]/85 backdrop-blur-2xl border-b border-white/10 px-4 sm:px-6 py-3.5 sm:py-4">
+      <header className="sticky top-0 z-50 bg-[#0a0d14]/90 backdrop-blur-md border-b border-white/10 px-4 sm:px-6 py-3.5 sm:py-4">
         <div className="max-w-7xl mx-auto flex flex-row items-center justify-between gap-2 sm:gap-4">
           <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => navigate('/')}
-              className="p-2 sm:px-4 sm:py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl sm:rounded-2xl transition-all group flex items-center gap-2 cursor-pointer"
+              className="px-3 py-1.5 sm:px-3.5 sm:py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl sm:rounded-2xl transition-all text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-white cursor-pointer active:scale-[0.98]"
             >
-              <Home size={14} className="text-gray-400 group-hover:text-white transition-colors sm:w-[16px] sm:h-[16px]" />
-              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">Home</span>
+              ← Home
             </button>
 
             <div className="h-6 w-px bg-white/10 hidden md:block" />
 
-            <div className="hidden lg:flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
-              <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400">
-                Admin Panel
-              </span>
+            <div className="hidden lg:inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 font-pixel text-[9px] sm:text-[10px] tracking-widest text-slate-300 uppercase">
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+              <span>ADMIN PANEL</span>
             </div>
           </div>
 
@@ -674,16 +766,16 @@ const AdminPanel = () => {
             <button
               onClick={() => fetchData(true)}
               disabled={refreshing}
-              className="p-2 sm:px-3.5 sm:py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold uppercase tracking-wider text-gray-300 hover:text-white transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2"
+              className="p-2 sm:px-3.5 sm:py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold uppercase tracking-wider text-slate-300 hover:text-white transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2 active:scale-[0.98]"
               title="Refresh Data"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-[#ff5500]' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-white' : ''}`} />
               <span className="hidden sm:inline">Refresh</span>
             </button>
 
             <div className="flex items-center gap-1.5 sm:gap-2 bg-white/5 border border-white/10 px-2.5 sm:px-3 py-1.5 rounded-xl">
-              <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-[#ff5500]" />
-              <span className="text-[10px] sm:text-xs font-bold text-gray-300 truncate max-w-[90px] xs:max-w-[130px] sm:max-w-[180px]">
+              <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-emerald-400" />
+              <span className="text-[10px] sm:text-xs font-semibold text-slate-300 truncate max-w-[90px] xs:max-w-[130px] sm:max-w-[180px]">
                 {user.email}
               </span>
             </div>
@@ -698,12 +790,9 @@ const AdminPanel = () => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-red-500/10 border border-red-500/30 p-3.5 sm:p-4 rounded-2xl flex items-center justify-between text-red-400 text-xs font-bold uppercase tracking-wider"
+            className="bg-rose-500/10 border border-rose-500/20 p-3.5 sm:p-4 rounded-2xl flex items-center justify-between text-rose-400 text-xs font-semibold uppercase tracking-wider"
           >
-            <div className="flex items-center gap-3">
-              <AlertCircle className="w-4 sm:w-5 h-4 sm:h-5 flex-shrink-0" />
-              <span>{error}</span>
-            </div>
+            <span>{error}</span>
             <button onClick={() => setError(null)} className="hover:text-white p-1">✕</button>
           </motion.div>
         )}
@@ -713,134 +802,97 @@ const AdminPanel = () => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-emerald-500/10 border border-emerald-500/30 p-3.5 sm:p-4 rounded-2xl flex items-center justify-between text-emerald-400 text-xs font-bold uppercase tracking-wider"
+            className="bg-emerald-500/10 border border-emerald-500/20 p-3.5 sm:p-4 rounded-2xl flex items-center justify-between text-emerald-400 text-xs font-semibold uppercase tracking-wider"
           >
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="w-4 sm:w-5 h-4 sm:h-5 flex-shrink-0" />
-              <span>{actionSuccess}</span>
-            </div>
+            <span>{actionSuccess}</span>
           </motion.div>
         )}
 
         {/* Top Metric Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-          <motion.div
-            whileHover={{ y: -2 }}
-            className="bg-[#0c0c0c] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 relative overflow-hidden shadow-2xl group"
-          >
-            <div className="absolute top-0 right-0 w-20 sm:w-24 h-20 sm:h-24 bg-[#ff5500]/5 rounded-bl-full pointer-events-none group-hover:bg-[#ff5500]/10 transition-colors" />
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
-                Firestore Rooms
-              </span>
-              <div className="w-8 sm:w-10 h-8 sm:h-10 rounded-xl sm:rounded-2xl bg-[#ff5500]/10 border border-[#ff5500]/20 flex items-center justify-center text-[#ff5500]">
-                <Flame className="w-4 sm:w-5 h-4 sm:h-5" />
-              </div>
-            </div>
-            <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          <div className="bg-[#0c0d10] border border-white/10 rounded-2xl sm:rounded-[1.75rem] p-4 sm:p-6 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)]">
+            <span className="font-pixel text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400 block mb-2">
+              Firestore Rooms
+            </span>
+            <div className="font-pixel text-2xl sm:text-3xl text-white tracking-tight">
               {loading ? <span className="animate-pulse text-gray-600">---</span> : stats.totalFirestoreAuctions}
             </div>
-            <p className="text-[8px] sm:text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-2 flex items-center gap-1.5">
-              <Database className="w-3 h-3 text-[#ff5500]" /> Legacy Room Docs
+            <p className="text-[10px] sm:text-xs font-normal text-slate-400 mt-2">
+              Legacy Room Docs
             </p>
-          </motion.div>
+          </div>
 
-          <motion.div
-            whileHover={{ y: -2 }}
-            className="bg-[#0c0c0c] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 relative overflow-hidden shadow-2xl group"
-          >
-            <div className="absolute top-0 right-0 w-20 sm:w-24 h-20 sm:h-24 bg-blue-500/5 rounded-bl-full pointer-events-none group-hover:bg-blue-500/10 transition-colors" />
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
-                Supabase Auctions
-              </span>
-              <div className="w-8 sm:w-10 h-8 sm:h-10 rounded-xl sm:rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
-                <Gavel className="w-4 sm:w-5 h-4 sm:h-5" />
-              </div>
-            </div>
-            <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          <div className="bg-[#0c0d10] border border-white/10 rounded-2xl sm:rounded-[1.75rem] p-4 sm:p-6 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)]">
+            <span className="font-pixel text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400 block mb-2">
+              Supabase Auctions
+            </span>
+            <div className="font-pixel text-2xl sm:text-3xl text-white tracking-tight">
               {loading ? <span className="animate-pulse text-gray-600">---</span> : stats.totalSupabaseAuctions}
             </div>
-            <p className="text-[8px] sm:text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-2 flex items-center gap-1.5">
-              <Activity className="w-3 h-3 text-blue-400" /> {stats.activeSbAuctions} Active · {stats.completedSbAuctions} Done
+            <p className="text-[10px] sm:text-xs font-normal text-slate-400 mt-2">
+              {stats.activeSbAuctions} Active · {stats.completedSbAuctions} Done
             </p>
-          </motion.div>
+          </div>
 
-          <motion.div
-            whileHover={{ y: -2 }}
-            className="bg-[#0c0c0c] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 relative overflow-hidden shadow-2xl group"
-          >
-            <div className="absolute top-0 right-0 w-20 sm:w-24 h-20 sm:h-24 bg-amber-500/5 rounded-bl-full pointer-events-none group-hover:bg-amber-500/10 transition-colors" />
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
-                User Feedbacks
-              </span>
-              <div className="w-8 sm:w-10 h-8 sm:h-10 rounded-xl sm:rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-                <MessageSquare className="w-4 sm:w-5 h-4 sm:h-5" />
-              </div>
-            </div>
-            <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          <div className="bg-[#0c0d10] border border-white/10 rounded-2xl sm:rounded-[1.75rem] p-4 sm:p-6 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)]">
+            <span className="font-pixel text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400 block mb-2">
+              User Feedbacks
+            </span>
+            <div className="font-pixel text-2xl sm:text-3xl text-white tracking-tight">
               {loading ? <span className="animate-pulse text-gray-600">---</span> : stats.totalFeedbacks}
             </div>
-            <p className="text-[8px] sm:text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-2 flex items-center gap-1.5">
-              <CheckCircle2 className="w-3 h-3 text-amber-400" /> Firestore Collection Records
+            <p className="text-[10px] sm:text-xs font-normal text-slate-400 mt-2">
+              Firestore Records
             </p>
-          </motion.div>
+          </div>
 
-          <motion.div
-            whileHover={{ y: -2 }}
-            className="bg-[#0c0c0c] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 relative overflow-hidden shadow-2xl group"
-          >
-            <div className="absolute top-0 right-0 w-20 sm:w-24 h-20 sm:h-24 bg-emerald-500/5 rounded-bl-full pointer-events-none group-hover:bg-emerald-500/10 transition-colors" />
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
-                Avg Rating
-              </span>
-              <div className="w-8 sm:w-10 h-8 sm:h-10 rounded-xl sm:rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                <Star className="w-4 sm:w-5 h-4 sm:h-5 fill-emerald-400" />
-              </div>
-            </div>
-            <div className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-baseline gap-2">
+          <div className="bg-[#0c0d10] border border-white/10 rounded-2xl sm:rounded-[1.75rem] p-4 sm:p-6 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)]">
+            <span className="font-pixel text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400 block mb-2">
+              Avg Rating
+            </span>
+            <div className="font-pixel text-2xl sm:text-3xl text-white tracking-tight flex items-baseline gap-2">
               {loading ? <span className="animate-pulse text-gray-600">---</span> : stats.avgRating}
-              <span className="text-xs font-bold text-gray-500">/ 5.0</span>
+              <span className="font-sans text-xs font-normal text-slate-400">/ 5.0</span>
             </div>
-            <p className="text-[8px] sm:text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-2 flex items-center gap-1.5">
-              <Sparkles className="w-3 h-3 text-emerald-400" /> Satisfaction Score
+            <p className="text-[10px] sm:text-xs font-normal text-slate-400 mt-2">
+              Satisfaction Score
             </p>
-          </motion.div>
+          </div>
         </div>
 
         {/* Navigation Tabs */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
           <div className="flex items-center gap-2 overflow-x-auto custom-scrollbar no-scrollbar py-1 w-full sm:w-auto">
             {[
-              { id: 'overview', label: 'Overview', icon: Activity },
-              { id: 'feedbacks', label: `Feedbacks (${feedbacks.length})`, icon: MessageSquare },
-              { id: 'auctions', label: `Supabase Auctions`, icon: Gavel },
-              { id: 'players', label: `Players (${IPL_PLAYERS.length})`, icon: Users },
+              { id: 'overview', label: 'Overview' },
+              { id: 'feedbacks', label: `Feedbacks (${feedbacks.length})` },
+              { id: 'auctions', label: `Auctions` },
+              { id: 'players', label: `Players (${IPL_PLAYERS.length})` },
             ].map((tabItem) => {
-              const Icon = tabItem.icon;
               const isActive = activeTab === tabItem.id;
               return (
                 <button
                   key={tabItem.id}
                   onClick={() => navigate(tabItem.id === 'overview' ? '/admin' : `/admin/${tabItem.id}`)}
-                  className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-wider transition-all duration-200 shrink-0 cursor-pointer ${isActive
-                    ? 'bg-[#ff5500] text-white shadow-[0_4px_20px_rgba(255,85,0,0.3)]'
-                    : 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/5'
+                  className={`px-3.5 sm:px-4 py-2 rounded-xl font-bold text-[10px] sm:text-xs uppercase tracking-wider transition-all duration-200 shrink-0 cursor-pointer active:scale-[0.98] ${isActive
+                    ? 'bg-white text-black shadow-[0_4px_20px_rgba(255,255,255,0.08)]'
+                    : 'bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/10'
                     }`}
                 >
-                  <Icon className="w-3.5 h-3.5" />
-                  <span>{tabItem.label}</span>
+                  {tabItem.label}
                 </button>
               );
             })}
           </div>
 
           {lastUpdated && (
-            <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
-              <Clock className="w-3 h-3 text-[#ff5500]" />
-              Updated: {lastUpdated.toLocaleTimeString()}
+            <span className="text-[9px] sm:text-[10px] font-semibold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
+              <span>Updated: {lastUpdated.toLocaleTimeString()}</span>
+              {isFromCache && (
+                <span className="text-[8px] font-bold text-slate-400 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded tracking-normal normal-case">
+                  cached
+                </span>
+              )}
             </span>
           )}
         </div>

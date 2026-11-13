@@ -3,12 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search,
   X,
-  Star,
-  Bookmark,
-  Trash2,
   ChevronDown,
   ChevronUp,
-  MessageSquare,
+  Star,
 } from 'lucide-react';
 import PaginationControls from './PaginationControls';
 
@@ -46,21 +43,21 @@ const FeedbacksTab = ({
       className="space-y-4"
     >
       {/* Clean Header & Filter Bar */}
-      <div className="bg-[#0c0c0c] border border-white/10 rounded-2xl p-4 shadow-xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div className="bg-[#0c0d10] border border-white/10 rounded-[1.5rem] p-4 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         {/* Search */}
         <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             value={feedbackSearch}
             onChange={(e) => setFeedbackSearch(e.target.value)}
             placeholder="Search feedback message, user, email, or notes..."
-            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-8 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#ff5500]/50 font-medium transition-colors"
+            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-8 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-white/30 font-medium transition-colors"
           />
           {feedbackSearch && (
             <button
               onClick={() => setFeedbackSearch('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white p-1 cursor-pointer"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1 cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -71,14 +68,14 @@ const FeedbacksTab = ({
         <div className="flex items-center gap-2 flex-wrap">
           {/* Status Dropdown */}
           <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5">
-            <span className="text-[10px] font-bold text-gray-500 uppercase">Status:</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Status:</span>
             <select
               value={feedbackStatusFilter}
               onChange={(e) => setFeedbackStatusFilter(e.target.value)}
               className="bg-transparent text-xs font-bold text-white focus:outline-none cursor-pointer"
             >
               {workflowStatuses.map((st) => (
-                <option key={st.id} value={st.id} className="bg-[#151515] text-white">
+                <option key={st.id} value={st.id} className="bg-[#0c0d10] text-white">
                   {st.label}
                 </option>
               ))}
@@ -87,14 +84,14 @@ const FeedbacksTab = ({
 
           {/* Category Dropdown */}
           <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5">
-            <span className="text-[10px] font-bold text-gray-500 uppercase">Category:</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Category:</span>
             <select
               value={feedbackCategory}
               onChange={(e) => setFeedbackCategory(e.target.value)}
               className="bg-transparent text-xs font-bold text-white focus:outline-none cursor-pointer"
             >
               {categories.map((cat) => (
-                <option key={cat.id} value={cat.id} className="bg-[#151515] text-white">
+                <option key={cat.id} value={cat.id} className="bg-[#0c0d10] text-white">
                   {cat.label}
                 </option>
               ))}
@@ -103,18 +100,18 @@ const FeedbacksTab = ({
 
           {/* Rating Dropdown */}
           <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5">
-            <span className="text-[10px] font-bold text-gray-500 uppercase">Rating:</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Rating:</span>
             <select
               value={feedbackStarFilter}
               onChange={(e) => setFeedbackStarFilter(Number(e.target.value))}
               className="bg-transparent text-xs font-bold text-white focus:outline-none cursor-pointer"
             >
-              <option value={0} className="bg-[#151515] text-white">All Ratings ({feedbacks.length})</option>
-              <option value={5} className="bg-[#151515] text-white">5 Stars ★</option>
-              <option value={4} className="bg-[#151515] text-white">4 Stars ★</option>
-              <option value={3} className="bg-[#151515] text-white">3 Stars ★</option>
-              <option value={2} className="bg-[#151515] text-white">2 Stars ★</option>
-              <option value={1} className="bg-[#151515] text-white">1 Star ★</option>
+              <option value={0} className="bg-[#0c0d10] text-white">All Ratings ({feedbacks.length})</option>
+              <option value={5} className="bg-[#0c0d10] text-white">5 Stars ★</option>
+              <option value={4} className="bg-[#0c0d10] text-white">4 Stars ★</option>
+              <option value={3} className="bg-[#0c0d10] text-white">3 Stars ★</option>
+              <option value={2} className="bg-[#0c0d10] text-white">2 Stars ★</option>
+              <option value={1} className="bg-[#0c0d10] text-white">1 Star ★</option>
             </select>
           </div>
         </div>
@@ -122,17 +119,16 @@ const FeedbacksTab = ({
 
       {/* List View Container */}
       {filteredFeedbacks.length === 0 ? (
-        <div className="bg-[#0c0c0c] border border-white/10 rounded-2xl p-10 text-center space-y-3 shadow-xl">
-          <MessageSquare className="w-8 h-8 text-gray-600 mx-auto" />
-          <p className="text-sm font-bold text-white">No Feedbacks Found</p>
-          <p className="text-xs text-gray-500 max-w-sm mx-auto">
+        <div className="bg-[#0c0d10] border border-white/10 rounded-[1.5rem] p-10 text-center space-y-2 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)]">
+          <p className="font-pixel text-sm uppercase tracking-tight text-white">No Feedbacks Found</p>
+          <p className="text-xs text-slate-400 max-w-sm mx-auto">
             Try clearing or adjusting search query, category, or status filters.
           </p>
         </div>
       ) : (
         <>
           {/* Clean List View with Expandable Rows */}
-          <div className="bg-[#0c0c0c] border border-white/10 rounded-2xl overflow-hidden shadow-xl divide-y divide-white/5">
+          <div className="bg-[#0c0d10] border border-white/10 rounded-[1.5rem] overflow-hidden shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)] divide-y divide-white/5">
             {paginatedFeedbacks.map((fb) => {
               const isExpanded = expandedFeedbackIds.has(fb.id);
               const catStyle = getFeedbackCategoryStyle(fb.category);
@@ -246,68 +242,34 @@ const FeedbacksTab = ({
                           </div>
 
                           {/* Full Feedback Message Card */}
-                          <div className="bg-[#0e0e0e] border border-white/5 rounded-xl p-3.5 text-xs text-gray-200 leading-relaxed whitespace-pre-wrap selection:bg-[#ff5500]/20">
+                          <div className="bg-white/[0.02] border border-white/5 rounded-xl p-3.5 text-xs text-slate-200 leading-relaxed whitespace-pre-wrap selection:bg-white/20">
                             {fb.feedback}
                           </div>
 
-                          {/* Actions & Internal Note Row */}
-                          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 pt-0.5">
-                            {/* Controls: Rating, Status, Star, Delete */}
-                            <div className="flex items-center gap-2 flex-wrap">
-                              {/* Rating Edit */}
-                              <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-xl px-2.5 py-1.5">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase">Rating:</span>
-                                <select
-                                  value={currentRating}
-                                  onChange={(e) => handleUpdateFeedback(fb.id, { rating: Number(e.target.value) })}
-                                  className="bg-transparent text-xs font-bold text-amber-400 focus:outline-none cursor-pointer"
-                                >
-                                  {[1, 2, 3, 4, 5].map((star) => (
-                                    <option key={star} value={star} className="bg-[#151515] text-amber-400">
-                                      {star} ★
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-
-                              {/* Status Edit */}
-                              <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-xl px-2.5 py-1.5">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase">Status:</span>
-                                <select
-                                  value={fb.status || 'new'}
-                                  onChange={(e) => handleUpdateFeedback(fb.id, { status: e.target.value })}
-                                  className="bg-transparent text-xs font-bold text-white focus:outline-none cursor-pointer"
-                                >
-                                  <option value="new" className="bg-[#151515] text-blue-400">New</option>
-                                  <option value="in_progress" className="bg-[#151515] text-amber-400">In Progress</option>
-                                  <option value="resolved" className="bg-[#151515] text-emerald-400">Resolved</option>
-                                </select>
-                              </div>
-
-                              {/* Star / Bookmark Toggle */}
+                          {/* Minimal Actions & Internal Note Row */}
+                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-1">
+                            {/* Actions: Star & Delete */}
+                            <div className="flex items-center gap-2">
                               <button
                                 onClick={() => handleUpdateFeedback(fb.id, { isStarred: !fb.isStarred })}
-                                className={`px-2.5 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${fb.isStarred
+                                className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] ${fb.isStarred
                                   ? 'bg-amber-500/15 border-amber-500/30 text-amber-400'
-                                  : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
+                                  : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
                                   }`}
                               >
-                                <Bookmark className={`w-3.5 h-3.5 ${fb.isStarred ? 'fill-amber-400' : ''}`} />
-                                <span>{fb.isStarred ? 'Starred' : 'Star'}</span>
+                                <span>{fb.isStarred ? '★ Starred' : '☆ Star'}</span>
                               </button>
 
-                              {/* Delete button */}
                               <button
                                 onClick={() => setDeleteTarget({ type: 'feedback', id: fb.id, title: fb.email || 'Feedback' })}
-                                className="px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-rose-500/15 border border-white/10 hover:border-rose-500/30 text-xs font-bold text-gray-400 hover:text-rose-400 flex items-center gap-1.5 transition-all cursor-pointer"
+                                className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-rose-500/15 border border-white/10 hover:border-rose-500/30 text-xs font-semibold text-slate-400 hover:text-rose-400 transition-all cursor-pointer active:scale-[0.98]"
                               >
-                                <Trash2 className="w-3.5 h-3.5" />
-                                <span>Delete</span>
+                                Delete
                               </button>
                             </div>
 
                             {/* Internal Note Field */}
-                            <div className="relative flex-1 md:max-w-xs">
+                            <div className="relative flex-1 sm:max-w-xs">
                               <input
                                 type="text"
                                 defaultValue={fb.adminNote || ''}
@@ -323,7 +285,7 @@ const FeedbacksTab = ({
                                     e.currentTarget.blur();
                                   }
                                 }}
-                                className="w-full bg-[#0e0e0e] border border-white/10 focus:border-[#ff5500]/50 rounded-xl px-3 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none transition-colors"
+                                className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none transition-colors"
                               />
                               {savingNoteId === fb.id && (
                                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-400 font-bold text-[9px] animate-pulse">
