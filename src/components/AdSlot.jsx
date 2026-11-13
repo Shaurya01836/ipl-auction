@@ -54,15 +54,17 @@ const AdSlot = ({
         <span className="text-[8px] font-black uppercase tracking-[0.35em] text-gray-500">{label}</span>
         <div className="h-px w-10 bg-white/10" />
       </div>
-      <ins
-        ref={adRef}
-        className="adsbygoogle block min-h-[90px] rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden text-center"
-        style={{ display: 'block' }}
-        data-ad-client={clientId}
-        data-ad-slot={slot}
-        data-ad-format="auto"
-        data-full-width-responsive="true"
-      />
+      <div className="w-full text-center overflow-hidden">
+        <ins
+          ref={adRef}
+          className="adsbygoogle"
+          style={{ display: 'block' }}
+          data-ad-client={clientId}
+          data-ad-slot={slot}
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+        />
+      </div>
     </section>
   );
 };
