@@ -57,7 +57,7 @@ const AuctionsTab = ({
       {filteredAuctions.length === 0 ? (
         <div className="bg-[#0c0d10] border border-white/10 rounded-[1.5rem] sm:rounded-[1.75rem] p-8 sm:p-12 text-center space-y-2 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)]">
           <p className="font-pixel text-xs sm:text-sm uppercase tracking-tight text-white">
-            No Auctions Found in Supabase
+            No Auctions Found in Directory
           </p>
           <p className="text-xs text-slate-400">
             Check status filter or search input.

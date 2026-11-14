@@ -14,7 +14,11 @@ import {
   rtdb,
   waitForServerConnection,
 } from '../lib/firebase';
-import { supabase } from '../lib/supabase';
+import {
+  updateAuctionRecord,
+  flushTeamsData,
+  fetchTeamsForAuction,
+} from '../lib/directoryApi';
 import { IPL_PLAYERS } from '../data/players';
 import { evaluateBotBid } from '../lib/botEngine';
 import { isSoloBotRoom, simulateBotLot, simulateRemainingAuction } from '../lib/botSimulation';
@@ -129,7 +133,7 @@ const pauseLiveLot = (rtdbInstance, roomId, nowMs) =>
     return { ...live, status: 'paused', remainingMs: Math.max(0, remainingMs) };
   });
 
-const mapSupabaseAuction = (sData) => ({
+const mapDirectoryAuction = (sData) => ({
   id: sData.id,
   hostId: sData.host_id,
   hostName: sData.host_name,
@@ -322,67 +326,57 @@ export const AuctionProvider = ({ children }) => {
       throw rtdbErr;
     }
 
-    // Write to Supabase (shared directory for both RTDBs, 0 Firestore cost).
-    // The helper also works before the optional top-level `server` column is
-    // migrated by falling back to `settings.server`.
+    // Write to directory (cross-server uniqueness guard and discovery).
     try {
-      if (supabase) {
-        // Insert, not upsert: `auctions.id` is the cross-server uniqueness
-        // guard. A racing create receives 23505 instead of overwriting the
-        // other room, and we clean up the losing RTDB room.
-        const mirror = await insertAuctionWithServer({
-          id: roomId,
-          host_id: userId,
-          host_name: playerDetails.name,
-          host_online: true,
-          is_public: !!isPublic,
-          status: 'waiting',
-          auction_type: auctionType,
-          squad_limit: squadLimit,
-          overseas_limit: overseasLimit,
-          players: [{
-            id: userId,
-            name: playerDetails.name,
-            team: playerDetails.team,
-            teamName: teamDetails?.name || 'Unknown',
-            isHost: true
-          }],
-          settings
-        }, actualServer);
+      const mirror = await insertAuctionWithServer({
+        id: roomId,
+        host_id: userId,
+        host_name: playerDetails.name,
+        host_online: true,
+        is_public: !!isPublic,
+        status: 'waiting',
+        auction_type: auctionType,
+        squad_limit: squadLimit,
+        overseas_limit: overseasLimit,
+        players: [{
+          id: userId,
+          name: playerDetails.name,
+          team: playerDetails.team,
+          teamName: teamDetails?.name || 'Unknown',
+          isHost: true
+        }],
+        settings
+      }, actualServer);
 
-        if (mirror.error?.code === '23505') {
-          try {
-            await remove(ref(rtdb, `auctions/${roomId}`));
-          } catch {
-            // Best effort cleanup.
-          }
-          goOfflineServer(actualServer);
-          throw createRoomCodeTakenError();
+      if (mirror.error?.code === '23505' || mirror.error?.code === 'ROOM_CODE_TAKEN') {
+        try {
+          await remove(ref(rtdb, `auctions/${roomId}`));
+        } catch {
+          // Best effort cleanup.
         }
+        goOfflineServer(actualServer);
+        throw createRoomCodeTakenError();
+      }
 
-        if (mirror.error) {
-          // The invite link still carries ?server=, so the room remains usable
-          // even if this directory write fails.
-          console.warn('[auction] Failed to mirror new room to Supabase', mirror.error);
-        }
+      if (mirror.error) {
+        console.warn('[auction] Failed to mirror new room to directory', mirror.error);
+      }
 
-        if (playerDetails.team) {
-          await supabase.from('teams').upsert({
-            id: `${roomId}_${userId}`,
-            auction_id: roomId,
-            user_id: userId,
-            team_id: playerDetails.team,
-            team_name: teamDetails?.name || 'Unknown',
-            budget_remaining: budget,
-            spent: 0,
-            squad: []
-          });
-        }
+      if (playerDetails.team) {
+        await flushTeamsData([{
+          id: `${roomId}_${userId}`,
+          auction_id: roomId,
+          user_id: userId,
+          team_id: playerDetails.team,
+          team_name: teamDetails?.name || 'Unknown',
+          budget_remaining: budget,
+          spent: 0,
+          squad: []
+        }]);
       }
     } catch (sErr) {
       if (sErr?.code === 'ROOM_CODE_TAKEN') throw sErr;
-      // Non-blocking Supabase fallback: RTDB already holds the room.
-      console.warn('[auction] Failed to mirror new room to Supabase', sErr);
+      console.warn('[auction] Failed to mirror new room to directory', sErr);
     }
 
     return {
@@ -403,12 +397,12 @@ export const AuctionProvider = ({ children }) => {
       const roomSnap = await get(ref(rtdbInstance, `auctions/${roomId}/room`));
       const teamsSnap = await get(ref(rtdbInstance, `auctions/${roomId}/teams`));
 
-      if (!roomSnap.exists() || !supabase) return false;
+      if (!roomSnap.exists()) return false;
 
       const roomData = roomSnap.val();
       const teamsData = teamsSnap.exists() ? teamsSnap.val() : {};
 
-      // Flush to Supabase (0 Firestore cost)
+      // Flush to directory
       const mirror = await upsertAuctionWithServer({
         id: roomId,
         host_id: roomData.hostId || '',
@@ -422,12 +416,12 @@ export const AuctionProvider = ({ children }) => {
         ...(roomData.playerOrder ? { player_order: roomData.playerOrder } : {})
       }, server);
       if (mirror.error) {
-        console.warn('[auction] Failed to flush room to Supabase', mirror.error);
+        console.warn('[auction] Failed to flush room to directory', mirror.error);
       } else {
         persisted = true;
       }
 
-      const supabaseTeams = Object.entries(teamsData).map(([docId, teamVal]) => {
+      const directoryTeams = Object.entries(teamsData).map(([docId, teamVal]) => {
         const rawSquad = teamVal.squad;
         const squadArr = Array.isArray(rawSquad) ? rawSquad : (rawSquad ? Object.values(rawSquad) : []);
         return {
@@ -442,10 +436,10 @@ export const AuctionProvider = ({ children }) => {
         };
       });
 
-      if (supabaseTeams.length > 0) {
-        const { error: teamsErr } = await supabase.from('teams').upsert(supabaseTeams);
+      if (directoryTeams.length > 0) {
+        const { error: teamsErr } = await flushTeamsData(directoryTeams);
         if (teamsErr) {
-          console.warn('[auction] Failed to flush teams to Supabase', teamsErr);
+          console.warn('[auction] Failed to flush teams to directory', teamsErr);
           persisted = false;
         }
       }
@@ -453,7 +447,7 @@ export const AuctionProvider = ({ children }) => {
       return persisted;
     } catch (err) {
       // Lobby sync is best-effort; Realtime Database remains the live source.
-      console.warn('[auction] Failed to sync lobby teams to Supabase', err);
+      console.warn('[auction] Failed to sync lobby teams to directory', err);
       return false;
     }
   }, [currentAuction?.server]);
@@ -461,19 +455,18 @@ export const AuctionProvider = ({ children }) => {
   // Persist a finished device-local solo auction so its summary survives this
   // browser. Runs only when the player explicitly ends the auction.
   const persistSoloAuction = useCallback(async (state) => {
-    if (!supabase) return false;
     const payload = buildSoloPersistPayload(state);
     if (!payload) return false;
     try {
       const { error } = await upsertAuctionWithServer(payload.auction, SERVER_LOCAL);
       if (error) throw error;
       if (payload.teams.length > 0) {
-        const { error: teamsError } = await supabase.from('teams').upsert(payload.teams);
+        const { error: teamsError } = await flushTeamsData(payload.teams);
         if (teamsError) throw teamsError;
       }
       return true;
     } catch (err) {
-      console.warn('[solo] Failed to save completed auction to Supabase', err);
+      console.warn('[solo] Failed to save completed auction to directory', err);
       return false;
     }
   }, []);
@@ -580,13 +573,11 @@ export const AuctionProvider = ({ children }) => {
         // Graceful fallback if the RTDB sub-path rule is pending deploy.
       }
 
-      if (supabase) {
-        try {
-          await supabase.from('auctions').update({ status: 'active' }).eq('id', roomId);
-        } catch (sErr) {
-          // Non-fatal: RTDB status remains authoritative for the live auction.
-          console.warn('[auction] Failed to mirror active status to Supabase', sErr);
-        }
+      try {
+        await updateAuctionRecord(roomId, { status: 'active' });
+      } catch (sErr) {
+        // Non-fatal: RTDB status remains authoritative for the live auction.
+        console.warn('[auction] Failed to mirror active status to directory', sErr);
       }
 
       if (disposition === 'start') {
@@ -1418,7 +1409,7 @@ export const AuctionProvider = ({ children }) => {
     if (!roomWasMissing) {
       data = rtdbRoomSnap.val();
     } else if (directoryRecord) {
-      data = mapSupabaseAuction(directoryRecord);
+      data = mapDirectoryAuction(directoryRecord);
     } else {
       const roomSnap = await getDoc(doc(db, 'auctions', roomId));
       if (!roomSnap.exists()) throw new Error("Room not found!");
@@ -1521,15 +1512,6 @@ export const AuctionProvider = ({ children }) => {
         };
       });
       if (!roomTx.committed) return;
-
-      // Sync player removal to Supabase
-      /*
-      try {
-        if (supabase) {
-          await supabase.from('auctions').update({ players: updatedPlayers, banned_players: updatedBanned }).eq('id', roomId);
-        }
-      } catch (sErr) {}
-      */
 
       // 3. Delete team in RTDB
       await set(ref(rtdb, `auctions/${roomId}/teams/${roomId}_${playerObj.id}`), null);
@@ -1910,12 +1892,9 @@ export const AuctionProvider = ({ children }) => {
     // N writes per transition.
     let lastHostOnlineSynced = null; // last value we pushed (null = unknown)
     const syncHostOnline = (next) => {
-      if (!supabase || next === lastHostOnlineSynced) return;
+      if (next === lastHostOnlineSynced) return;
       lastHostOnlineSynced = next; // optimistic: parallel presence ticks won't double-write
-      supabase
-        .from('auctions')
-        .update({ host_online: next })
-        .eq('id', auctionId)
+      updateAuctionRecord(auctionId, { host_online: next })
         .then(() => {})
         .catch(() => { lastHostOnlineSynced = null; }); // allow a later retry
     };
@@ -2030,11 +2009,9 @@ export const AuctionProvider = ({ children }) => {
           if (auctionLoaded) return;
           try {
             let data = null;
-            if (supabase) {
-              const { data: sData } = await supabase.from('auctions').select('*').eq('id', auctionId).maybeSingle();
-              if (sData) {
-                data = mapSupabaseAuction(sData);
-              }
+            const sData = await fetchAuctionRecord(auctionId);
+            if (sData) {
+              data = mapDirectoryAuction(sData);
             }
 
             if (!data) {
@@ -2137,20 +2114,18 @@ export const AuctionProvider = ({ children }) => {
           if (teamsLoaded) return;
           try {
             let teamsArr = [];
-            if (supabase) {
-              const { data: sTeams } = await supabase.from('teams').select('*').eq('auction_id', auctionId);
-              if (sTeams && sTeams.length > 0) {
-                teamsArr = sTeams.map(t => ({
-                  id: t.id,
-                  auctionId: t.auction_id,
-                  userId: t.user_id,
-                  teamId: t.team_id,
-                  teamName: t.team_name,
-                  budgetRemaining: t.budget_remaining ?? 120,
-                  spent: t.spent || 0,
-                  squad: t.squad || []
-                }));
-              }
+            const sTeams = await fetchTeamsForAuction(auctionId);
+            if (sTeams && sTeams.length > 0) {
+              teamsArr = sTeams.map(t => ({
+                id: t.id,
+                auctionId: t.auction_id || t.auctionId,
+                userId: t.user_id || t.userId,
+                teamId: t.team_id || t.teamId,
+                teamName: t.team_name || t.teamName,
+                budgetRemaining: t.budget_remaining ?? t.budgetRemaining ?? 120,
+                spent: t.spent || 0,
+                squad: t.squad || []
+              }));
             }
 
             if (teamsArr.length === 0) {
@@ -2388,14 +2363,6 @@ export const AuctionProvider = ({ children }) => {
           : p,
       ),
     );
-
-    /*
-    try {
-      if (supabase) {
-        await supabase.from('auctions').update({ players: updatedPlayers }).eq('id', roomId);
-      }
-    } catch (sErr) {}
-    */
 
     // Update RTDB team node (0 Firestore cost in lobby!)
     const rtdbTeamSnap = await get(ref(rtdb, `auctions/${roomId}/teams/${roomId}_${userId}`));

@@ -3,6 +3,7 @@ import { localAuctionReducer, saveLocalSoloRoom, loadLocalSoloRoom } from './loc
 import { SERVER_LOCAL, withServerParam } from './auctionServers.js';
 import { ref, set } from 'firebase/database';
 import { goOfflineAllServers } from './firebase.js';
+import { deleteAuctionRecord, updateAuctionRecord } from './directoryApi.js';
 
 /**
  * Converts a 1-human + bots cloud lobby into a 100% device-local solo auction.
@@ -76,9 +77,8 @@ export async function convertLobbyToSolo({
     }
   }
 
-  // 5. Best-effort Supabase cleanup: attempt delete with 1 retry;
-  // if delete fails (e.g. missing RLS delete policy), fall back to updating status to 'cancelled'.
-  // If both fail, warn and continue to local mode (user's solo save is already verified).
+  // 5. Best-effort directory cleanup: attempt delete with 1 retry;
+  // if delete fails, fall back to updating status to 'cancelled'.
   if (supabaseClient) {
     let deleted = false;
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -106,6 +106,15 @@ export async function convertLobbyToSolo({
           }
         }
       }
+    }
+  } else {
+    try {
+      const { error } = await deleteAuctionRecord(roomId);
+      if (error) {
+        await updateAuctionRecord(roomId, { status: 'cancelled' });
+      }
+    } catch {
+      // Best-effort cleanup
     }
   }
 

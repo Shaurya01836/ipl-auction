@@ -1,0 +1,10 @@
+name = "crickauction-api"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# Bind Cloudflare D1 database
+[[d1_databases]]
+binding = "DB"
+database_name = "crickauction-db"
+database_id = "4ca10b3a-3ca8-46dd-937d-bc9a13b39ac1"
+

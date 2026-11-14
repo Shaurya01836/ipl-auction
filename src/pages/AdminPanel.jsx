@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useQuota } from '../contexts/QuotaContext';
 import { isUserAdmin } from '../lib/adminAuth';
 import { db } from '../lib/firebase';
-import { supabase } from '../lib/supabase';
+import { fetchAdminAuctions, deleteAuctionRecord } from '../lib/directoryApi';
 import { collection, getDocs, deleteDoc, updateDoc, doc, query, orderBy, getCountFromServer } from 'firebase/firestore';
 import {
   RefreshCw,
@@ -333,34 +333,18 @@ const AdminPanel = () => {
         return { fbList, fsCount };
       })();
 
-      // 2. Fetch Supabase Auctions with Exact Counts (no 1k ceiling)
-      const supabasePromises = (async () => {
+      // 2. Fetch Directory Auctions with Exact Counts
+      const directoryPromises = (async () => {
         try {
-          const [totalRes, activeRes, completedRes, listRes] = await Promise.all([
-            supabase.from('auctions').select('*', { count: 'exact', head: true }),
-            supabase.from('auctions').select('*', { count: 'exact', head: true }).neq('status', 'completed'),
-            supabase.from('auctions').select('*', { count: 'exact', head: true }).eq('status', 'completed'),
-            supabase
-              .from('auctions')
-              .select('id, host_name, status, auction_type, settings, created_at')
-              .order('created_at', { ascending: false })
-              .limit(100)
-          ]);
-
-          if (listRes.error) throw listRes.error;
-
-          const exactTotal = typeof totalRes.count === 'number' ? totalRes.count : (listRes.data?.length || 0);
-          const exactActive = typeof activeRes.count === 'number' ? activeRes.count : (listRes.data?.filter((a) => (a.status || '').toLowerCase() !== 'completed').length || 0);
-          const exactCompleted = typeof completedRes.count === 'number' ? completedRes.count : (listRes.data?.filter((a) => (a.status || '').toLowerCase() === 'completed').length || 0);
-
+          const res = await fetchAdminAuctions();
           return {
-            auctions: listRes.data || [],
-            totalCount: exactTotal,
-            activeCount: exactActive,
-            completedCount: exactCompleted,
+            auctions: res.auctions || [],
+            totalCount: res.totalCount || 0,
+            activeCount: res.activeCount || 0,
+            completedCount: res.completedCount || 0,
           };
-        } catch (sbErr) {
-          console.warn('Supabase fetch error:', sbErr);
+        } catch (dErr) {
+          console.warn('Directory fetch error:', dErr);
           return {
             auctions: [],
             totalCount: 0,
@@ -370,7 +354,7 @@ const AdminPanel = () => {
         }
       })();
 
-      const [fsRes, sbRes] = await Promise.all([firestorePromises, supabasePromises]);
+      const [fsRes, sbRes] = await Promise.all([firestorePromises, directoryPromises]);
 
       setFeedbacks(fsRes.fbList);
       setFirestoreAuctionsCount(fsRes.fsCount);
@@ -584,13 +568,13 @@ const AdminPanel = () => {
   const handleDeleteAuction = async (id) => {
     setIsDeleting(true);
     try {
-      const { error: sbErr } = await supabase.from('auctions').delete().eq('id', id);
-      if (sbErr) throw sbErr;
+      const { error: dErr } = await deleteAuctionRecord(id);
+      if (dErr) throw dErr;
 
       try {
         await deleteDoc(doc(db, 'auctions', id));
       } catch (e) {
-        // The Supabase row is already deleted; the Firestore mirror is
+        // The directory row is already deleted; the Firestore mirror is
         // best-effort cleanup, so log without failing the whole action.
         console.warn('[admin] Failed to delete Firestore auction mirror', e);
       }
@@ -824,7 +808,7 @@ const AdminPanel = () => {
 
           <div className="bg-[#0c0d10] border border-white/10 rounded-2xl sm:rounded-[1.75rem] p-4 sm:p-6 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)]">
             <span className="font-pixel text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400 block mb-2">
-              Supabase Auctions
+              Directory Auctions
             </span>
             <div className="font-pixel text-2xl sm:text-3xl text-white tracking-tight">
               {loading ? <span className="animate-pulse text-gray-600">---</span> : stats.totalSupabaseAuctions}

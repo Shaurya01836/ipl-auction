@@ -35,7 +35,6 @@ import { ref, set } from 'firebase/database';
 import { getRtdb } from '../lib/firebase';
 import { isSoloBotRoom } from '../lib/botSimulation';
 import { convertLobbyToSolo } from '../lib/lobbyConversion';
-import { supabase } from '../lib/supabase';
 
 // Small-screen detection (matches the 767px breakpoint used in index.css).
 // Framer-motion elements render without any animation when this is true.
@@ -223,7 +222,6 @@ const Lobby = () => {
             currentAuction,
             server,
             rtdbInstance: getRtdb(server),
-            supabaseClient: supabase,
             navigate,
           });
           return;

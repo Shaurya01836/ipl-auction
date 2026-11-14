@@ -5,7 +5,7 @@ import { useQuota } from '../contexts/QuotaContext';
 import { IPL_PLAYERS } from '../data/players';
 import { TEAMS } from '../data/teams';
 import { toPng } from 'html-to-image';
-import { supabase } from '../lib/supabase';
+import { fetchAuctionRecord, fetchTeamsForAuction } from '../lib/directoryApi';
 import { db, getRtdb, goOnlineServer } from '../lib/firebase';
 import { ref, get } from 'firebase/database';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
@@ -148,34 +148,22 @@ const AuctionSummary = () => {
           // auction may still have been copied to Supabase, so fall through.
         }
 
-        // 1. Persistent Supabase store
-        if (supabase) {
-          // Optimized egress: Exclude heavy player_order column
-          const { data: aData, error: auctionError } = await supabase
-            .from('auctions')
-            .select('id, host_id, host_name, status, auction_type, squad_limit, overseas_limit, players, settings')
-            .eq('id', id)
-            .maybeSingle();
-          if (auctionError) throw auctionError;
+        // 1. Persistent Directory store
+        const aData = await fetchAuctionRecord(id);
+        const tData = aData ? await fetchTeamsForAuction(id) : [];
 
-          const { data: tData, error: teamsError } = await supabase
-            .from('teams')
-            .select('id, auction_id, user_id, team_id, team_name, budget_remaining, spent, squad')
-            .eq('auction_id', id);
-          if (teamsError) throw teamsError;
-
-          if (aData && isMounted) {
-            setDbAuction({
-              id: aData.id,
-              hostId: aData.host_id,
-              hostName: aData.host_name,
-              status: aData.status || 'completed',
-              auctionType: aData.auction_type || 'mega',
-              squadLimit: toFiniteNumber(aData.squad_limit, 25),
-              overseasLimit: toFiniteNumber(aData.overseas_limit, 8),
-              players: aData.players || [],
-              settings: aData.settings || { budget: 120, bidTimer: 10 }
-            });
+        if (aData && isMounted) {
+          setDbAuction({
+            id: aData.id,
+            hostId: aData.host_id || aData.hostId,
+            hostName: aData.host_name || aData.hostName,
+            status: aData.status || 'completed',
+            auctionType: aData.auction_type || aData.auctionType || 'mega',
+            squadLimit: toFiniteNumber(aData.squad_limit || aData.squadLimit, 25),
+            overseasLimit: toFiniteNumber(aData.overseas_limit || aData.overseasLimit, 8),
+            players: aData.players || [],
+            settings: aData.settings || { budget: 120, bidTimer: 10 }
+          });
 
             const parsedTeams = (tData || []).map(t => {
               const rawSquad = t.squad;
@@ -235,7 +223,6 @@ const AuctionSummary = () => {
             setSummaryLoading(false);
             return;
           }
-        }
 
         // A local solo auction has no RTDB/Firestore copy; stop here.
         if (isLocal) {
