@@ -7,7 +7,6 @@ export const FEEDBACK_COLUMNS = [
   { id: 'heard', label: 'HEARD', description: 'Raw complaints & suggestions' },
   { id: 'working', label: 'WORKING ON', description: 'Actively in progress' },
   { id: 'shipped', label: 'SHIPPED', description: 'Done & live in production' },
-  { id: 'not_doing', label: 'NOT DOING (AND WHY)', description: 'Declined with honest reasons' },
 ];
 
 export const FEEDBACK_ITEMS = [
@@ -52,10 +51,10 @@ export const FEEDBACK_ITEMS = [
   {
     id: 'fb-5',
     status: 'shipped',
-    title: 'Solo vs. Bots: Pass & Fast-Forward simulation',
-    note: 'Instant "Pass" skips unwanted lots to bots; "Fast Forward" simulates remaining rounds.',
-    tag: 'SOLO PLAY',
-    detail: 'Playing 1 human vs 9 bots no longer feels sluggish. Pass lets bots battle instantly in-memory, while Finish Auction simulates remaining lots and takes you straight to final squad ratings.',
+    title: 'Pass button: Solo vs. Bots & Cloud Multiplayer',
+    note: 'Instant pass in Solo vs. Bots, and unanimous consensus pass in Cloud Multiplayer rooms.',
+    tag: 'AUCTION FLOW',
+    detail: 'Fast-pass unwanted lots directly to bots or skip celebrations early. In multiplayer cloud auctions, passing requires consent from all human managers (including the highest bidder) to ensure 100% fair play.',
   },
   {
     id: 'fb-8',
@@ -72,16 +71,6 @@ export const FEEDBACK_ITEMS = [
     note: 'Dual-server failover routing prevents room lockout when Primary RTDB reaches capacity.',
     tag: 'RELIABILITY',
     detail: 'Automated fallback probe selects the least loaded database server on room creation with zero downtime.',
-  },
-
-  // ── NOT DOING (AND WHY) ──
-  {
-    id: 'fb-7',
-    status: 'not_doing',
-    title: 'Skip player button',
-    note: 'Admin could skip marquee players and rig the auction.',
-    tag: 'FAIR PLAY',
-    detail: 'An unchecked skip button lets hosts bypass premier players until their rivals run out of purse, compromising competitive fairness.',
   },
 ];
 

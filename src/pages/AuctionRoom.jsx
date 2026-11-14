@@ -73,6 +73,8 @@ const AuctionRoom = () => {
       messages,
       updateRoomSettings,
       kickPlayer,
+      passCurrentLot,
+      votePassLot,
       skipCurrentPlayerSolo,
       fastForwardAuctionSolo,
       getSyncedTime,
@@ -152,15 +154,29 @@ const AuctionRoom = () => {
    const [isFastForwarding, setIsFastForwarding] = useState(false);
    const [showFastForwardConfirm, setShowFastForwardConfirm] = useState(false);
 
+   // Multiplayer consensus pass tracking
+   const activeHumans = useMemo(() => {
+      return (currentAuction?.players || []).filter(p => p.team && !p.isBot && !String(p.id).startsWith('bot_'));
+   }, [currentAuction?.players]);
+
+   const requiredPassHumans = activeHumans;
+
+   const currentPasses = displayAuctionState?.passes || {};
+   const passedCount = requiredPassHumans.filter(p => currentPasses[p.id]).length;
+   const totalRequired = Math.max(1, requiredPassHumans.length);
+   const hasUserPassed = Boolean(currentPasses[user?.uid]);
+
    const handleSoloSkip = async () => {
-      if (isSkippingLot || displayAuctionState?.status !== 'bidding') return;
+      if (isSkippingLot) return;
+      const status = displayAuctionState?.status;
+      if (status !== 'bidding' && status !== 'sold' && status !== 'unsold') return;
       setIsSkippingLot(true);
       try {
-         await skipCurrentPlayerSolo(id);
+         await votePassLot(id, user?.uid);
       } catch (err) {
-         console.warn('[auction] Solo skip error', err);
+         console.warn('[auction] Pass lot error', err);
       } finally {
-         setTimeout(() => setIsSkippingLot(false), 500);
+         setTimeout(() => setIsSkippingLot(false), 400);
       }
    };
 
@@ -292,11 +308,48 @@ const AuctionRoom = () => {
       return IPL_PLAYERS.find(p => p.id === displayAuctionState?.playerId) || IPL_PLAYERS[0];
    }, [displayAuctionState?.playerId]);
 
-   const [isTtsEnabled, setIsTtsEnabled] = useState(true);
-   const [ttsSpeed, setTtsSpeed] = useState(1.15); // configurable pace
-   const [ttsPitch, setTtsPitch] = useState(0.95); // configurable pitch
+   const loadSavedVoiceSettings = () => {
+      if (typeof window === 'undefined') return null;
+      try {
+         const raw = window.localStorage.getItem('crickauction_voice_settings');
+         return raw ? JSON.parse(raw) : null;
+      } catch {
+         return null;
+      }
+   };
+
+   const [isTtsEnabled, setIsTtsEnabled] = useState(() => {
+      const saved = loadSavedVoiceSettings();
+      return saved?.enabled !== undefined ? Boolean(saved.enabled) : true;
+   });
+   const [ttsSpeed, setTtsSpeed] = useState(() => {
+      const saved = loadSavedVoiceSettings();
+      return typeof saved?.speed === 'number' ? saved.speed : 1.15;
+   });
+   const [ttsPitch, setTtsPitch] = useState(() => {
+      const saved = loadSavedVoiceSettings();
+      return typeof saved?.pitch === 'number' ? saved.pitch : 0.95;
+   });
    const [availableVoices, setAvailableVoices] = useState([]);
-   const [selectedVoiceName, setSelectedVoiceName] = useState('');
+   const [selectedVoiceName, setSelectedVoiceName] = useState(() => {
+      const saved = loadSavedVoiceSettings();
+      return typeof saved?.voiceName === 'string' ? saved.voiceName : '';
+   });
+
+   // Persist voice settings to localStorage whenever changed
+   useEffect(() => {
+      if (typeof window === 'undefined') return;
+      try {
+         window.localStorage.setItem('crickauction_voice_settings', JSON.stringify({
+            enabled: isTtsEnabled,
+            speed: ttsSpeed,
+            pitch: ttsPitch,
+            voiceName: selectedVoiceName,
+         }));
+      } catch {
+         // Storage disabled / private mode
+      }
+   }, [isTtsEnabled, ttsSpeed, ttsPitch, selectedVoiceName]);
 
    const lastSpokenPlayerIdRef = useRef(null);
    const lastSpokenBidRef = useRef(0);
@@ -382,10 +435,13 @@ const AuctionRoom = () => {
                filtered = filtered.slice(0, 5);
             }
 
-            setAvailableVoices(filtered);
-
-            // Set default selected voice (default to David)
-            if (!selectedVoiceName && filtered.length > 0) {
+            // Include user's saved voice if present on device
+            if (selectedVoiceName) {
+               const savedMatch = voices.find(v => v.name === selectedVoiceName);
+               if (savedMatch && !filtered.some(v => v.name === selectedVoiceName)) {
+                  filtered.unshift(savedMatch);
+               }
+            } else if (filtered.length > 0) {
                const defaultVoice = filtered.find(v => v.name.toLowerCase().includes("david")) ||
                   filtered.find(v =>
                      v.name.includes("Neerja") ||
@@ -398,6 +454,8 @@ const AuctionRoom = () => {
                   setSelectedVoiceName(defaultVoice.name);
                }
             }
+
+            setAvailableVoices(filtered);
          };
 
          updateVoices();
@@ -1146,7 +1204,7 @@ const AuctionRoom = () => {
          </header>
 
          <div className="w-full flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden relative pb-[max(4.5rem,calc(3.75rem+env(safe-area-inset-bottom)))] md:pb-0">
-            <aside className={`${mobileTab === 'squad' ? 'flex' : 'hidden'} md:flex w-full md:w-56 lg:w-64 xl:w-80 bg-[#0c0d10]/90 backdrop-blur-xl border-r border-white/10 flex-col h-full max-h-[calc(100dvh-7.5rem)] md:max-h-[calc(100dvh-3.5rem)] compact:max-h-[calc(100dvh-3rem)] overflow-hidden relative z-10`}>
+            <aside className={`${mobileTab === 'squad' ? 'flex' : 'hidden'} md:flex flex-1 md:flex-none md:shrink-0 w-full md:w-56 lg:w-64 xl:w-80 bg-[#0c0d10]/90 backdrop-blur-xl border-r border-white/10 flex-col h-full overflow-hidden relative z-10`}>
                <div className="h-14 compact:h-12 border-b border-white/10 bg-[#0c0d10] flex items-center px-6 shrink-0">
                   <span className="text-[10px] compact:text-[9px] font-pixel text-slate-400 uppercase tracking-widest leading-none">Auction Teams</span>
                </div>
@@ -1279,7 +1337,7 @@ const AuctionRoom = () => {
                </div>
             </aside>
 
-            <div className={`${mobileTab === 'arena' ? 'flex' : 'hidden'} md:flex flex-col flex-1 h-full max-h-[calc(100dvh-7.5rem)] md:max-h-[calc(100dvh-3.5rem)] compact:max-h-[calc(100dvh-3rem)] overflow-hidden relative z-10`}>
+            <div className={`${mobileTab === 'arena' ? 'flex' : 'hidden'} md:flex flex-col flex-1 h-full overflow-hidden relative z-10`}>
                {/* Center Scrollable Main Body */}
                <main className="flex-1 overflow-y-auto p-4 md:p-8 compact:p-4 pb-28 sm:pb-12 md:pb-8 flex flex-col items-center custom-scrollbar touch-pan-y">
                   <div className="w-full max-w-4xl flex flex-col gap-4 md:gap-6">
@@ -1599,21 +1657,41 @@ const AuctionRoom = () => {
                                     })()}
 
                                     <div className="flex gap-2 sm:gap-3 md:gap-4">
-                                       {/* Solo vs AI Bots Skip / Pass Button */}
-                                       {isSoloVsBots && !spectateMode && (
+                                       {/* Pass / Next Lot Button (Every Human Manager during bidding; Host during celebration) */}
+                                       {!spectateMode && (displayAuctionState?.status === 'bidding' || isAdmin) && (
                                           <button
                                              type="button"
                                              onClick={handleSoloSkip}
-                                             disabled={isSkippingLot || displayAuctionState?.status !== 'bidding' || displayAuctionState?.highBidderId === user?.uid}
-                                             className="px-3 sm:px-4 h-12 sm:h-14 xl:h-18 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-slate-300 hover:text-white rounded-2xl flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed font-pixel text-[10px] sm:text-xs tracking-wider cursor-pointer shrink-0"
-                                             title="Pass player to bots immediately"
+                                             disabled={isSkippingLot || (displayAuctionState?.status !== 'bidding' && displayAuctionState?.status !== 'sold' && displayAuctionState?.status !== 'unsold')}
+                                             className={`px-3 sm:px-4 h-12 sm:h-14 xl:h-18 border rounded-2xl flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed font-pixel text-[10px] sm:text-xs tracking-wider cursor-pointer shrink-0 ${
+                                                hasUserPassed && displayAuctionState?.status === 'bidding'
+                                                   ? 'bg-amber-500/20 border-amber-500/40 text-amber-300 hover:bg-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.2)]'
+                                                   : 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-white/20 text-slate-300 hover:text-white'
+                                             }`}
+                                             title={
+                                                displayAuctionState?.status === 'sold' || displayAuctionState?.status === 'unsold'
+                                                   ? 'Advance to next lot immediately'
+                                                   : totalRequired > 1
+                                                   ? hasUserPassed
+                                                      ? `You agreed to pass (${passedCount}/${totalRequired} agreed). Click to undo.`
+                                                      : `Vote to pass this player (${passedCount}/${totalRequired} agreed)`
+                                                   : 'Pass / unsold current player'
+                                             }
                                           >
                                              {isSkippingLot ? (
                                                 <Loader2 size={16} className="animate-spin text-slate-400" />
                                              ) : (
                                                 <>
                                                    <SkipForward size={14} />
-                                                   <span>PASS</span>
+                                                   <span>
+                                                      {displayAuctionState?.status === 'sold' || displayAuctionState?.status === 'unsold'
+                                                         ? 'NEXT'
+                                                         : totalRequired > 1
+                                                         ? hasUserPassed
+                                                            ? `PASSED (${passedCount}/${totalRequired})`
+                                                            : `PASS (${passedCount}/${totalRequired})`
+                                                         : 'PASS'}
+                                                   </span>
                                                 </>
                                              )}
                                           </button>
@@ -1654,7 +1732,7 @@ const AuctionRoom = () => {
                </main>
             </div>
 
-            <aside className={`${(mobileTab === 'activity' || mobileTab === 'chat') ? 'flex' : 'hidden'} md:flex w-full md:w-64 lg:w-72 xl:w-96 bg-[#0c0d10]/90 backdrop-blur-xl border-l border-white/10 flex-col h-full max-h-[calc(100dvh-7.5rem)] md:max-h-[calc(100dvh-3.5rem)] compact:max-h-[calc(100dvh-3rem)] overflow-hidden relative z-10`}>
+            <aside className={`${(mobileTab === 'activity' || mobileTab === 'chat') ? 'flex' : 'hidden'} md:flex flex-1 md:flex-none md:shrink-0 w-full md:w-64 lg:w-72 xl:w-96 bg-[#0c0d10]/90 backdrop-blur-xl border-l border-white/10 flex-col h-full overflow-hidden relative z-10`}>
                {/* Premium Tabs Header */}
                <div className="h-14 compact:h-12 bg-[#0c0d10] border-b border-white/10 flex items-center shrink-0 w-full">
                   <button
@@ -1791,7 +1869,7 @@ const AuctionRoom = () => {
                            initial={{ opacity: 0, y: 10 }}
                            animate={{ opacity: 1, y: 0 }}
                            exit={{ opacity: 0, y: -10 }}
-                           className="flex-1 flex flex-col min-h-0 h-full p-1 sm:p-2 overflow-hidden"
+                           className="flex-1 flex flex-col min-h-0 h-full w-full overflow-hidden"
                         >
                            <TextChat roomId={id} />
                         </motion.div>

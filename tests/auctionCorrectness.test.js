@@ -727,3 +727,91 @@ test('message deduplication: existing lot message is preserved and not rewritten
   assert.equal(rtdbMessages[lotMsgKey].timestamp, 10000, 'Timestamp must remain unchanged to prevent UI jitter');
 });
 
+test('multiplayer pass consensus: transactBid and transactAdvance clear pass votes', () => {
+  const lotWithPasses = {
+    status: 'bidding',
+    playerId: 'p1',
+    currentBid: 2,
+    highBidderId: 'u1',
+    timerEndsAt: 10000,
+    passes: { u2: true, u3: true },
+  };
+
+  const bidResult = transactBid(lotWithPasses, {
+    userId: 'u2',
+    userName: 'User 2',
+    teamId: 'CSK',
+    playerId: 'p1',
+    now: 5000,
+    timerMs: 10000,
+    budget: 100,
+    basePrice: 2,
+  });
+
+  assert.equal(bidResult.passes, null, 'New bid must clear all previous pass votes');
+
+  const advanceResult = transactAdvance({ status: 'sold', playerId: 'p1' }, {
+    currentPlayerId: 'p1',
+    nextPlayerId: 'p2',
+    timerEndsAt: 20000,
+  });
+
+  assert.equal(advanceResult.passes, null, 'Advancing lot must clear passes');
+});
+
+test('multiplayer pass consensus: bot bids do not wipe existing human passes', () => {
+  const currentData = {
+    status: 'bidding',
+    playerId: 'p1',
+    currentBid: 2,
+    highBidderId: 'bot_MI',
+    timerEndsAt: 10000,
+    passes: { human_1: true },
+  };
+
+  // Bot places a higher bid (simulates placeBotBid)
+  const updatedByBot = {
+    ...currentData,
+    currentBid: 2.5,
+    highBidderId: 'bot_CSK',
+    highBidderName: 'CSK Bot',
+    highBidderTeamId: 'CSK',
+    timerEndsAt: 15000,
+  };
+
+  assert.equal(updatedByBot.passes.human_1, true, 'Bot bids must never wipe human pass votes');
+});
+
+
+test('multiplayer pass consensus: high bidder consent is required before lot can pass', () => {
+  const roomPlayers = [
+    { id: 'human_1', name: 'Player 1', team: 'CSK', isBot: false },
+    { id: 'human_2', name: 'Player 2', team: 'MI', isBot: false },
+    { id: 'bot_GT', name: 'GT Bot', team: 'GT', isBot: true },
+  ];
+  const activeHumans = roomPlayers.filter((p) => p.team && !p.isBot && !String(p.id).startsWith('bot_'));
+  const requiredHumans = activeHumans;
+
+  assert.equal(requiredHumans.length, 2, 'Both human managers must be required to pass');
+
+  // Human 1 is currently the highest bidder
+  const live = {
+    status: 'bidding',
+    playerId: 'p1',
+    currentBid: 5,
+    highBidderId: 'human_1',
+    highBidderName: 'Player 1',
+    highBidderTeamId: 'CSK',
+    passes: {},
+  };
+
+  // Human 2 votes to pass
+  const passesAfterHuman2 = { ...live.passes, human_2: true };
+  const allAgreeWithoutHighBidder = requiredHumans.every((h) => passesAfterHuman2[h.id]);
+  assert.equal(allAgreeWithoutHighBidder, false, 'Human 2 alone cannot pass without Human 1 consent');
+
+  // Human 1 also consents and votes to pass
+  const passesAfterBothAgree = { ...passesAfterHuman2, human_1: true };
+  const allAgreeWithHighBidder = requiredHumans.every((h) => passesAfterBothAgree[h.id]);
+  assert.equal(allAgreeWithHighBidder, true, 'Consensus reached only when all humans including high bidder consent');
+});

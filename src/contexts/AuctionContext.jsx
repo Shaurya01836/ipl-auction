@@ -840,10 +840,16 @@ export const AuctionProvider = ({ children }) => {
   }, [user?.uid]);
 
   /**
-   * Fast-pass the current lot in solo-bot mode:
-   * Cancels pending timer, immediately resolves the lot among bots, advances without human delay.
+   * Pass current lot in both Solo and Cloud multiplayer rooms:
+   * - If lot is in sold/unsold state: advances immediately without waiting out celebration.
+   * - If lot is in bidding state:
+   *   - No bots in room: marks lot unsold immediately (or sells to active bidder if any).
+   *   - Bots in room: bots evaluate player in-memory (quick sold to highest bot or leave unsold).
+   * Atomically updates winning team, room summary, live lot, and system activity logs.
    */
-  const skipCurrentPlayerSolo = useCallback(async (roomId) => {
+  const passCurrentLot = useCallback(async (roomId) => {
+    if (!roomId) return;
+
     if (isLocalRoom(roomId, currentAuction?.server)) {
       const live = currentAuction?.currentAuction || currentAuction?.currentLot;
       if (live && (live.status === 'sold' || live.status === 'unsold')) {
@@ -859,85 +865,168 @@ export const AuctionProvider = ({ children }) => {
     endingPlayerRef.current = true;
 
     try {
-      const liveRef = ref(rtdb, `auctions/${roomId}/live`);
-      const roomRef = ref(rtdb, `auctions/${roomId}/room`);
-      const [liveSnap, roomSnap] = await Promise.all([get(liveRef), get(roomRef)]);
-      if (!liveSnap.exists() || !roomSnap.exists()) return;
+      const server = normalizeServer(currentAuction?.server || getActiveServer());
+      const rtdbInstance = getRtdb(server);
+      const liveRef = ref(rtdbInstance, `auctions/${roomId}/live`);
+      const roomRef = ref(rtdbInstance, `auctions/${roomId}/room`);
 
+      const liveSnap = await get(liveRef);
+      if (!liveSnap.exists()) return;
       const live = liveSnap.val();
-      const room = roomSnap.val();
+
+      // If already resolved (sold/unsold), passing advances immediately to next lot
+      if (live.status === 'sold' || live.status === 'unsold') {
+        const roomSnap = await get(roomRef);
+        const room = roomSnap.exists() ? roomSnap.val() : {};
+        const order = room.playerOrder || Array.from({ length: IPL_PLAYERS.length }, (_, i) => i);
+        const currentPlayerId = live.playerId;
+        const curIdx = order.findIndex((idx) => IPL_PLAYERS[idx] && IPL_PLAYERS[idx].id === currentPlayerId);
+        const nextIdx = curIdx !== -1 ? order[curIdx + 1] : order[0];
+
+        if (nextIdx !== undefined && IPL_PLAYERS[nextIdx]) {
+          const nextPlayer = IPL_PLAYERS[nextIdx];
+          const now = getSyncedTime();
+          await runTransactionRtdb(liveRef, (currentLive) =>
+            transactAdvance(currentLive, {
+              currentPlayerId,
+              nextPlayerId: nextPlayer.id,
+              timerEndsAt: now + (room.settings?.bidTimer || 10) * 1000,
+            }),
+          );
+        } else {
+          await updateRtdb(roomRef, { status: 'completed' });
+          await updateRtdb(liveRef, { status: 'completed' });
+          await flushAuctionToFirestore(roomId, server);
+        }
+        return;
+      }
+
       if (live.status !== 'bidding') return;
+
+
 
       const player = IPL_PLAYERS.find((p) => p.id === live.playerId);
       if (!player) return;
+
+      const [roomSnap, teamsSnap] = await Promise.all([
+        get(roomRef),
+        get(ref(rtdbInstance, `auctions/${roomId}/teams`)),
+      ]);
+      const room = roomSnap.exists() ? roomSnap.val() : {};
+      const allTeams = teamsSnap.exists() ? Object.values(teamsSnap.val()) : [];
 
       const initialBudget = toFiniteNumber(room.settings?.budget, 120.0);
       const squadLimit = toFiniteNumber(room.squadLimit, 25);
       const overseasLimit = toFiniteNumber(room.overseasLimit, 8);
 
-      // Fetch fresh teams
-      const teamsSnap = await get(ref(rtdb, `auctions/${roomId}/teams`));
-      const teamsVal = teamsSnap.exists() ? teamsSnap.val() : {};
-      const allTeams = Object.values(teamsVal);
-
-      // Explicitly reject if cloud room is not a solo bot room!
-      if (!isSoloBotRoom(room.players || allTeams)) {
-        console.warn('[auction] skipCurrentPlayerSolo rejected: not a solo bot room');
-        return;
-      }
-
-      const botTeams = allTeams.filter((t) => t.userId && (t.userId.startsWith('bot_') || t.userId !== user?.uid));
-
-      // Simulate lot strictly among bots
-      const lotRes = simulateBotLot({
-        player,
-        botTeams,
-        currentBid: live.currentBid || 0,
-        highBidderId: live.highBidderId || '',
-        highBidderName: live.highBidderName || '',
-        highBidderTeamId: live.highBidderTeamId || '',
-        squadLimit,
-        overseasLimit,
-        initialBudget,
-      });
+      // Filter genuine AI bots only (userId starts with 'bot_')
+      const botTeams = allTeams.filter((t) => t.userId && String(t.userId).startsWith('bot_'));
 
       const now = getSyncedTime();
-      if (lotRes.isSold) {
-        // Atomic update of winning bot team
-        const winnerDocKey = `${roomId}_${lotRes.winnerId}`;
-        const winningTeam = allTeams.find((t) => t.userId === lotRes.winnerId);
-        const existingSquad = winningTeam?.squad || [];
-        const updatedSquad = [
-          ...existingSquad,
-          {
-            id: player.id,
-            name: player.name,
-            role: player.role,
-            bid: lotRes.finalBid,
-            team: lotRes.winnerTeamId,
-          },
-        ];
-        const newSpent = toFiniteNumber(winningTeam?.spent, 0) + lotRes.finalBid;
-        const newBudgetRemaining = Math.max(0, toFiniteNumber(winningTeam?.budgetRemaining, initialBudget) - lotRes.finalBid);
+      let isSold = false;
+      let winnerId = '';
+      let winnerName = '';
+      let winnerTeamId = '';
+      let finalBid = 0;
 
-        await updateRtdb(ref(rtdb, `auctions/${roomId}/teams/${winnerDocKey}`), {
-          squad: updatedSquad,
-          spent: newSpent,
-          budgetRemaining: newBudgetRemaining,
+      if (botTeams.length === 0) {
+        // No bots in room: if someone already placed a bid, award to them; otherwise unsold
+        if (live.highBidderId && toFiniteNumber(live.currentBid, 0) > 0) {
+          isSold = true;
+          winnerId = live.highBidderId;
+          winnerName = live.highBidderName;
+          winnerTeamId = live.highBidderTeamId;
+          finalBid = toFiniteNumber(live.currentBid, 0);
+        } else {
+          isSold = false;
+        }
+      } else {
+        // Bots exist in room: let AI evaluate whether to buy (quick sold) or leave unsold
+        const lotRes = simulateBotLot({
+          player,
+          botTeams,
+          currentBid: live.currentBid || 0,
+          highBidderId: live.highBidderId || '',
+          highBidderName: live.highBidderName || '',
+          highBidderTeamId: live.highBidderTeamId || '',
+          squadLimit,
+          overseasLimit,
+          initialBudget,
         });
 
-        // Set lot sold
+        if (lotRes.isSold) {
+          isSold = true;
+          winnerId = lotRes.winnerId;
+          winnerName = lotRes.winnerName;
+          winnerTeamId = lotRes.winnerTeamId;
+          finalBid = lotRes.finalBid;
+        } else if (live.highBidderId && toFiniteNumber(live.currentBid, 0) > 0) {
+          isSold = true;
+          winnerId = live.highBidderId;
+          winnerName = live.highBidderName;
+          winnerTeamId = live.highBidderTeamId;
+          finalBid = toFiniteNumber(live.currentBid, 0);
+        } else {
+          isSold = false;
+        }
+      }
+
+      const teamDetails = TEAMS.find((t) => t.id === winnerTeamId);
+      const buyerDisplayName = teamDetails?.name || winnerName;
+
+      if (isSold) {
+        const winnerDocKey = `${roomId}_${winnerId}`;
+        const teamRef = ref(rtdbInstance, `auctions/${roomId}/teams/${winnerDocKey}`);
+        const teamTx = await runTransactionRtdb(teamRef, (currentTeam) =>
+          transactTeamSale(currentTeam, {
+            roomId,
+            playerId: player.id,
+            bid: finalBid,
+            winnerId,
+            winnerTeamId,
+            winnerName: buyerDisplayName,
+            initialBudget,
+          }),
+        );
+
+        const committedTeam = teamTx?.snapshot?.val();
+        const committedTotalSpent = toFiniteNumber(committedTeam?.spent, 0);
+        const committedSquadCount = Array.isArray(committedTeam?.squad) ? committedTeam.squad.length : 0;
+
+        await runTransactionRtdb(roomRef, (currentRoom) =>
+          transactRoomPlayersSale(currentRoom, {
+            winnerId,
+            totalSpent: committedTotalSpent,
+            squadCount: committedSquadCount,
+          }),
+        );
+
         await set(liveRef, {
           ...live,
           status: 'sold',
-          currentBid: lotRes.finalBid,
-          highBidderId: lotRes.winnerId,
-          highBidderName: lotRes.winnerName,
-          highBidderTeamId: lotRes.winnerTeamId,
+          currentBid: finalBid,
+          highBidderId: winnerId,
+          highBidderName: buyerDisplayName,
+          highBidderTeamId: winnerTeamId,
           timerEndsAt: now,
         });
+
+        const lotMsgKey = `lot_${player.id}`;
+        await set(ref(rtdbInstance, `auctions/${roomId}/messages/${lotMsgKey}`), {
+          userId: 'system',
+          userName: 'System',
+          text: `${player.name} SOLD to ${buyerDisplayName} for \u20b9${finalBid} Cr`,
+          type: 'sold_card',
+          metadata: {
+            playerId: player.id,
+            teamId: winnerTeamId,
+            bid: finalBid,
+            buyerId: winnerId,
+            buyerName: buyerDisplayName,
+          },
+          timestamp: serverTimestampRtdb(),
+        });
       } else {
-        // Set lot unsold
         await set(liveRef, {
           ...live,
           status: 'unsold',
@@ -947,38 +1036,131 @@ export const AuctionProvider = ({ children }) => {
           highBidderTeamId: '',
           timerEndsAt: now,
         });
+
+        const lotMsgKey = `lot_${player.id}`;
+        await set(ref(rtdbInstance, `auctions/${roomId}/messages/${lotMsgKey}`), {
+          userId: 'system',
+          userName: 'System',
+          text: `${player.name} went unsold`,
+          type: 'log',
+          timestamp: serverTimestampRtdb(),
+        });
       }
 
-      // Quick advance without waiting 5 seconds
+      // Quick advance after 1.5s on sold or 1s on unsold
       const order = room.playerOrder || Array.from({ length: IPL_PLAYERS.length }, (_, i) => i);
       const curIdx = order.findIndex((idx) => IPL_PLAYERS[idx] && IPL_PLAYERS[idx].id === player.id);
       const nextIdx = curIdx !== -1 ? order[curIdx + 1] : order[0];
 
-      if (nextIdx !== undefined && IPL_PLAYERS[nextIdx]) {
-        const nextPlayer = IPL_PLAYERS[nextIdx];
-        await set(liveRef, {
-          playerId: nextPlayer.id,
-          currentBid: 0,
-          highBidderId: '',
-          highBidderName: 'No Bids',
-          timerEndsAt: now + (room.settings?.bidTimer || 10) * 1000,
-          status: 'bidding',
-        });
-      } else {
-        // Last player: complete room
-        const server = normalizeServer(currentAuction?.server || getActiveServer());
-        const rtdbInstance = getRtdb(server);
-        await updateRtdb(ref(rtdbInstance, `auctions/${roomId}/room`), { status: 'completed' });
-        await updateRtdb(ref(rtdbInstance, `auctions/${roomId}/live`), { status: 'completed' });
-        await flushAuctionToFirestore(roomId, server);
-      }
+      setTimeout(async () => {
+        try {
+          if (nextIdx !== undefined && IPL_PLAYERS[nextIdx]) {
+            const nextPlayer = IPL_PLAYERS[nextIdx];
+            const advanceNow = getSyncedTime();
+            await runTransactionRtdb(liveRef, (currentLive) =>
+              transactAdvance(currentLive, {
+                currentPlayerId: player.id,
+                nextPlayerId: nextPlayer.id,
+                timerEndsAt: advanceNow + (room.settings?.bidTimer || 10) * 1000,
+              }),
+            );
+          } else {
+            await updateRtdb(roomRef, { status: 'completed' });
+            await updateRtdb(liveRef, { status: 'completed' });
+            await flushAuctionToFirestore(roomId, server);
+          }
+        } catch (advErr) {
+          console.warn('[auction] passCurrentLot auto-advance non-fatal error', advErr);
+        } finally {
+          endingPlayerRef.current = false;
+        }
+      }, isSold ? 1500 : 1000);
+
     } catch (err) {
-      console.error('[auction] skipCurrentPlayerSolo error', err);
+      console.error('[auction] passCurrentLot error', err);
+      endingPlayerRef.current = false;
     } finally {
       isSimulatingRef.current = false;
-      endingPlayerRef.current = false;
     }
   }, [user?.uid, getSyncedTime, currentAuction?.server, flushAuctionToFirestore]);
+
+  // Backward-compatible alias
+  const skipCurrentPlayerSolo = passCurrentLot;
+
+  /**
+   * Multiplayer consensus pass vote:
+   * Records a user's pass vote. If all eligible non-leading human managers have agreed,
+   * automatically triggers passCurrentLot.
+   */
+  const votePassLot = useCallback(async (roomId, userId) => {
+    if (!roomId) return;
+
+    if (isLocalRoom(roomId, currentAuction?.server)) {
+      await passCurrentLot(roomId);
+      return;
+    }
+
+    const callerId = userId || user?.uid;
+    if (!callerId) return;
+
+    const server = normalizeServer(currentAuction?.server || getActiveServer());
+    const rtdbInstance = getRtdb(server);
+    const liveRef = ref(rtdbInstance, `auctions/${roomId}/live`);
+    const roomRef = ref(rtdbInstance, `auctions/${roomId}/room`);
+
+    const liveSnap = await get(liveRef);
+    if (!liveSnap.exists()) return;
+    const live = liveSnap.val();
+
+    // If already in sold/unsold state, advance immediately
+    if (live.status === 'sold' || live.status === 'unsold') {
+      await passCurrentLot(roomId);
+      return;
+    }
+
+    if (live.status !== 'bidding') return;
+
+    const roomSnap = await get(roomRef);
+    const room = roomSnap.exists() ? roomSnap.val() : {};
+
+    const roomPlayers = Array.isArray(room.players) ? room.players : Object.values(room.players || {});
+    const activeHumans = roomPlayers.filter((p) => p.team && !p.isBot && !String(p.id).startsWith('bot_'));
+    const requiredHumans = activeHumans;
+
+    // If 1 or fewer human managers (solo or 1 human + bots), 1 vote reaches consensus instantly
+    if (requiredHumans.length <= 1) {
+      await passCurrentLot(roomId);
+      return;
+    }
+
+    let consensusReached = false;
+    await runTransactionRtdb(liveRef, (currentLive) => {
+      if (!currentLive || currentLive.status !== 'bidding') return currentLive;
+
+      const currentPasses = currentLive.passes || {};
+      const newPasses = { ...currentPasses };
+
+      if (newPasses[callerId]) {
+        delete newPasses[callerId];
+      } else {
+        newPasses[callerId] = true;
+      }
+
+      const allAgree = requiredHumans.every((h) => newPasses[h.id]);
+      if (allAgree) {
+        consensusReached = true;
+      }
+
+      return {
+        ...currentLive,
+        passes: newPasses,
+      };
+    });
+
+    if (consensusReached) {
+      await passCurrentLot(roomId);
+    }
+  }, [user?.uid, currentAuction?.server, passCurrentLot]);
 
   /**
    * Fast-forward entire remaining auction:
@@ -2668,6 +2850,8 @@ export const AuctionProvider = ({ children }) => {
     addBotTeam,
     removeBotTeam,
     fillEmptyTeamsWithBots,
+    passCurrentLot,
+    votePassLot,
     skipCurrentPlayerSolo,
     fastForwardAuctionSolo,
     getSyncedTime,

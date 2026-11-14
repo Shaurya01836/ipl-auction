@@ -19,11 +19,6 @@ const columnStyles = {
     dot: 'bg-emerald-400',
     cardBorder: 'border-white/10 hover:border-emerald-500/30',
   },
-  not_doing: {
-    badgeBg: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-    dot: 'bg-rose-400',
-    cardBorder: 'border-white/10 hover:border-rose-500/30',
-  },
 };
 
 export default function FeedbackBoard() {
@@ -59,8 +54,8 @@ export default function FeedbackBoard() {
         })}
       </div>
 
-      {/* 4-Column Board Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 sm:gap-4">
+      {/* 3-Column Board Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
         {FEEDBACK_COLUMNS.map((col) => {
           const colItems = FEEDBACK_ITEMS.filter((item) => item.status === col.id);
           const style = columnStyles[col.id];

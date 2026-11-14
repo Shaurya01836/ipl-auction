@@ -122,7 +122,7 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
    }, [showGifPicker, fetchGifs]);
 
    return (
-      <div className="relative flex flex-col h-full bg-transparent w-full">
+      <div className="relative flex flex-col flex-1 h-full min-h-0 bg-transparent w-full">
          {onToggleCollapse && (
             <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
                <button
@@ -197,7 +197,7 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
                {chatError && (
                   <p role="alert" className="px-3 pt-2 text-[9px] compact:text-[8px] font-bold text-red-400">{chatError}</p>
                )}
-               <form onSubmit={handleSend} className="p-3 border-t border-white/5 bg-white/[0.01] flex gap-2 relative">
+               <form onSubmit={handleSend} className="p-3 border-t border-white/5 bg-white/[0.01] flex gap-2 relative shrink-0">
                   <button
                      type="button"
                      onClick={() => setShowGifPicker(!showGifPicker)}

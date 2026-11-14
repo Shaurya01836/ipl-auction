@@ -251,22 +251,6 @@ const GameGuide = () => {
           <ChevronRight size={14} className="text-gray-600" />
           <span className="text-white">Rulebook & Guide</span>
         </div>
-
-        <div className="flex items-center gap-3">
-          <Link
-            to="/about"
-            className="text-xs text-gray-400 hover:text-white transition-colors font-medium hidden sm:inline"
-          >
-            About Us
-          </Link>
-          <Link
-            to="/"
-            className="text-xs font-semibold px-3 py-1.5 rounded-md bg-slate-500/25 hover:bg-slate-500/35 border border-slate-400/30 text-white transition-colors flex items-center gap-1.5"
-          >
-            <span>Play Now</span>
-            <ArrowRight size={12} />
-          </Link>
-        </div>
       </header>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex flex-col lg:flex-row gap-8 lg:gap-24 items-start w-full flex-1">
@@ -293,10 +277,6 @@ const GameGuide = () => {
         {/* Main Content */}
         <main className="flex-1 max-w-3xl w-full pb-20">
           <div className="mb-8 sm:mb-12 border-b border-white/10 pb-6 sm:pb-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/15 text-slate-300 text-xs font-semibold uppercase tracking-wider mb-3">
-              <BookOpen size={13} />
-              <span>IPL Mega Auction 2026 Manual</span>
-            </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-4">
               Rulebook & Gameplay Guide
             </h1>

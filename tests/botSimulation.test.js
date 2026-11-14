@@ -47,6 +47,20 @@ test('simulateBotLot: resolves bidding or unsold without crashing', () => {
   }
 });
 
+test('simulateBotLot: with 0 bots always yields unsold', () => {
+  const player = IPL_PLAYERS[0];
+  const result = simulateBotLot({
+    player,
+    botTeams: [],
+    initialBudget: 120,
+    squadLimit: 25,
+    overseasLimit: 8,
+  });
+  assert.equal(result.isSold, false);
+  assert.equal(result.winnerId, '');
+  assert.equal(result.finalBid, 0);
+});
+
 test('simulateRemainingAuction: preserves human squad while drafting for bots', () => {
   const humanTeam = {
     userId: 'user_shaurya',

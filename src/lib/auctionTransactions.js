@@ -38,6 +38,7 @@ export function transactBid(currentData, {
     highBidderName: userName,
     highBidderTeamId: teamId,
     timerEndsAt: now + timerMs,
+    passes: null,
   };
 }
 
@@ -136,5 +137,6 @@ export function transactAdvance(currentLive, {
     highBidderName: 'No Bids',
     timerEndsAt,
     status: 'bidding',
+    passes: null,
   };
 }
