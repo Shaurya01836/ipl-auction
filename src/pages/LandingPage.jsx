@@ -15,7 +15,7 @@ import {
   deleteUserHistoryEntry,
   deleteAuctionRecord,
   getPublicRooms,
-  fetchAdminAuctions,
+  fetchPlatformStats,
 } from "../lib/directoryApi";
 import { generateRoomCode, normalizeRoomCode, generateSoloRoomCode } from "../lib/roomCodes";
 import { ref, remove } from "firebase/database";
@@ -214,7 +214,9 @@ const LandingPage = () => {
         !room.server ||
         normalizeServer(room.server) === normalizeServer(selectedServer);
 
-      return matchesSearch && matchesMode && matchesServer;
+      const matchesHostOnline = room.hostOnline !== false;
+
+      return matchesSearch && matchesMode && matchesServer && matchesHostOnline;
     });
   }, [publicRooms, searchQuery, filterMode, selectedServer]);
 
@@ -267,12 +269,7 @@ const LandingPage = () => {
     }
 
     try {
-      const res = await fetchAdminAuctions();
-      const stats = {
-        activeCount: res.activeCount || 0,
-        totalRecent: res.totalCount || 0,
-      };
-
+      const stats = await fetchPlatformStats(force);
       statsCacheRef.current = { data: stats, timestamp: Date.now() };
       setAuctionStats(stats);
     } catch {

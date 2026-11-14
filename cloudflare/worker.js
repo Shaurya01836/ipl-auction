@@ -47,6 +47,46 @@ function stringifyJsonField(val) {
   return typeof val === 'string' ? val : JSON.stringify(val);
 }
 
+// ─── Rate Limiter (Sliding 60s Window per Client IP) ───
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+let lastRateLimitCleanup = Date.now();
+
+function cleanupRateLimits(now) {
+  if (now - lastRateLimitCleanup < 5 * 60 * 1000) return;
+  lastRateLimitCleanup = now;
+  for (const [key, entry] of rateLimitMap.entries()) {
+    if (now > entry.resetAt) {
+      rateLimitMap.delete(key);
+    }
+  }
+}
+
+function checkRateLimit(ip, category = 'read') {
+  if (!ip) return { allowed: true };
+  const now = Date.now();
+  cleanupRateLimits(now);
+
+  const key = `${category}:${ip}`;
+  let entry = rateLimitMap.get(key);
+
+  if (!entry || now > entry.resetAt) {
+    entry = { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS };
+    rateLimitMap.set(key, entry);
+    return { allowed: true };
+  }
+
+  entry.count += 1;
+  // Maximum operations per 60-second window per IP
+  const maxLimit = category === 'write' ? 40 : 60;
+  if (entry.count > maxLimit) {
+    const retryAfter = Math.max(1, Math.ceil((entry.resetAt - now) / 1000));
+    return { allowed: false, retryAfter };
+  }
+
+  return { allowed: true };
+}
+
 export default {
   async fetch(request, env, ctx) {
     const origin = request.headers.get('Origin') || request.headers.get('Referer') || '';
@@ -102,21 +142,47 @@ export default {
       }
     }
 
+    // 3. Server-Side Rate Limiter (Per client IP)
+    const clientIp =
+      request.headers.get('CF-Connecting-IP') ||
+      request.headers.get('X-Forwarded-For') ||
+      'unknown';
+    const isMutation = ['POST', 'PATCH', 'DELETE'].includes(request.method);
+    const rateLimit = checkRateLimit(clientIp, isMutation ? 'write' : 'read');
+
+    if (!rateLimit.allowed) {
+      return new Response(
+        JSON.stringify({
+          error: `Rate limit exceeded: Too many requests. Please wait ${rateLimit.retryAfter}s before retrying.`,
+          retryAfter: rateLimit.retryAfter,
+        }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'Retry-After': String(rateLimit.retryAfter),
+            ...getCorsHeaders(origin),
+          },
+        },
+      );
+    }
+
     try {
 
       // ─── 1. Public Rooms Directory (Edge-Cached 5s) ───
       if (request.method === 'GET' && path === '/api/public-rooms') {
         const cache = caches.default;
-        const cacheKey = new Request(url.toString(), request);
+        const cacheUrl = new URL(url.origin + '/api/public-rooms');
+        const cacheKey = new Request(cacheUrl.toString(), { method: 'GET' });
         let cached = await cache.match(cacheKey);
         if (cached) return cached;
 
-        // Active waiting rooms created in the last 2 hours
+        // Active waiting rooms created in the last 2 hours with online admin/host
         const twoHoursAgo = Date.now() - 2 * 60 * 60 * 1000;
         const { results } = await env.DB.prepare(
-          `SELECT id, server, auction_type, squad_limit, overseas_limit, settings, players, created_at 
+          `SELECT id, server, auction_type, squad_limit, overseas_limit, settings, players, host_online, created_at 
            FROM auctions 
-           WHERE is_public = 1 AND status = 'waiting' AND created_at >= ? 
+           WHERE is_public = 1 AND status = 'waiting' AND host_online = 1 AND created_at >= ? 
            ORDER BY created_at DESC LIMIT 20`
         ).bind(twoHoursAgo).all();
 
@@ -130,13 +196,39 @@ export default {
             playerCount: Array.isArray(players) ? players.length : 1,
             maxPlayers: 10,
             hostName: Array.isArray(players) && players[0] ? players[0].name : 'Host',
+            hostOnline: r.host_online !== 0,
             budget: settings.budget || 120,
             createdAt: r.created_at,
           };
         });
 
         const response = json({ data: formatted }, 200, {
-          'Cache-Control': 'public, max-age=3, s-maxage=5, stale-while-revalidate=10',
+          'Cache-Control': 'public, max-age=4, s-maxage=5, stale-while-revalidate=10',
+        });
+        ctx.waitUntil(cache.put(cacheKey, response.clone()));
+        return response;
+      }
+
+      // ─── 1.1 Fast Platform Stats (Edge-Cached 60s) ───
+      if (request.method === 'GET' && path === '/api/stats') {
+        const cache = caches.default;
+        const cacheUrl = new URL(url.origin + '/api/stats');
+        const cacheKey = new Request(cacheUrl.toString(), { method: 'GET' });
+        let cached = await cache.match(cacheKey);
+        if (cached) return cached;
+
+        const [totalRes, activeRes] = await env.DB.batch([
+          env.DB.prepare(`SELECT COUNT(*) AS count FROM auctions`),
+          env.DB.prepare(`SELECT COUNT(*) AS count FROM auctions WHERE status != 'completed'`),
+        ]);
+
+        const data = {
+          totalCount: totalRes.results?.[0]?.count || 0,
+          activeCount: activeRes.results?.[0]?.count || 0,
+        };
+
+        const response = json(data, 200, {
+          'Cache-Control': 'public, max-age=30, s-maxage=60, stale-while-revalidate=120',
         });
         ctx.waitUntil(cache.put(cacheKey, response.clone()));
         return response;
@@ -172,6 +264,7 @@ export default {
           auction_type = 'mega',
           status = 'waiting',
           is_public = 1,
+          host_online = 1,
           squad_limit = 25,
           overseas_limit = 8,
           settings,
@@ -195,12 +288,13 @@ export default {
 
         await env.DB.prepare(
           `INSERT INTO auctions (
-            id, server, auction_type, status, is_public, squad_limit, overseas_limit, settings, players, banned_players, created_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            id, server, auction_type, status, is_public, host_online, squad_limit, overseas_limit, settings, players, banned_players, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(id) DO UPDATE SET
             server = excluded.server,
             status = excluded.status,
             is_public = excluded.is_public,
+            host_online = excluded.host_online,
             settings = COALESCE(excluded.settings, auctions.settings),
             players = COALESCE(excluded.players, auctions.players),
             banned_players = COALESCE(excluded.banned_players, auctions.banned_players)`
@@ -210,6 +304,7 @@ export default {
           auction_type,
           status,
           is_public ? 1 : 0,
+          host_online ? 1 : 0,
           squad_limit,
           overseas_limit,
           stringifyJsonField(settings),
@@ -232,6 +327,10 @@ export default {
         if (body.status !== undefined) {
           updates.push('status = ?');
           bindings.push(body.status);
+        }
+        if (body.host_online !== undefined) {
+          updates.push('host_online = ?');
+          bindings.push(body.host_online ? 1 : 0);
         }
         if (body.players !== undefined) {
           updates.push('players = ?');

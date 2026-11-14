@@ -37,14 +37,46 @@ async function request(endpoint, options = {}) {
   return body;
 }
 
-/** Get live public rooms (edge cached 5s on Cloudflare) */
-export async function getPublicRooms() {
+let publicRoomsCache = { data: null, timestamp: 0 };
+const PUBLIC_ROOMS_TTL_MS = 5000;
+
+/** Get live public rooms (edge cached 5s on Cloudflare + 5s in-memory) */
+export async function getPublicRooms(force = false) {
+  const now = Date.now();
+  if (!force && publicRoomsCache.data && now - publicRoomsCache.timestamp < PUBLIC_ROOMS_TTL_MS) {
+    return publicRoomsCache.data;
+  }
   try {
     const res = await request('/api/public-rooms');
-    return res.data || [];
+    const data = res.data || [];
+    publicRoomsCache = { data, timestamp: now };
+    return data;
   } catch (err) {
     console.warn('[directoryApi] Failed to fetch public rooms', err);
-    return [];
+    return publicRoomsCache.data || [];
+  }
+}
+
+let platformStatsCache = { data: null, timestamp: 0 };
+const PLATFORM_STATS_TTL_MS = 60000;
+
+/** Lightweight platform stats (edge cached 60s + 60s in-memory) */
+export async function fetchPlatformStats(force = false) {
+  const now = Date.now();
+  if (!force && platformStatsCache.data && now - platformStatsCache.timestamp < PLATFORM_STATS_TTL_MS) {
+    return platformStatsCache.data;
+  }
+  try {
+    const res = await request('/api/stats');
+    const data = {
+      totalCount: res.totalCount || 0,
+      activeCount: res.activeCount || 0,
+    };
+    platformStatsCache = { data, timestamp: now };
+    return data;
+  } catch (err) {
+    console.warn('[directoryApi] Failed to fetch platform stats', err);
+    return platformStatsCache.data || { totalCount: 0, activeCount: 0 };
   }
 }
 

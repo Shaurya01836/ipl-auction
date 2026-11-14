@@ -1882,16 +1882,14 @@ export const AuctionProvider = ({ children }) => {
       }
     });
 
-    // ─── host_online (Supabase directory) ← RTDB presence mirror ───
-    // The public directory reads a plain `host_online` boolean from Supabase, but
-    // the RTDB is the source of truth for presence (its server-side onDisconnect
-    // flips a member to offline even on a hard crash / closed tab). To keep
-    // Supabase in sync WITHOUT a heartbeat, we mirror the derived value to
-    // Supabase only when it actually changes, and only from a single elected
-    // client (the online member with the lowest uid) so N members never cause
-    // N writes per transition.
-    let lastHostOnlineSynced = null; // last value we pushed (null = unknown)
+    // ─── host_online (directory) ← RTDB presence mirror ───
+    // The public directory reads a plain `host_online` boolean, but the RTDB is the
+    // source of truth for presence. Only PUBLIC rooms are listed in the directory, so
+    // we strictly skip private rooms to eliminate unnecessary database writes.
+    // Start with true because room creation already initializes host_online: 1 in D1.
+    let lastHostOnlineSynced = true;
     const syncHostOnline = (next) => {
+      if (!currentRoomData?.isPublic) return;
       if (next === lastHostOnlineSynced) return;
       lastHostOnlineSynced = next; // optimistic: parallel presence ticks won't double-write
       updateAuctionRecord(auctionId, { host_online: next })

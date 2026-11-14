@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS auctions (
   auction_type TEXT DEFAULT 'mega',
   status TEXT DEFAULT 'waiting',
   is_public INTEGER DEFAULT 1,
+  host_online INTEGER DEFAULT 1,
   squad_limit INTEGER DEFAULT 25,
   overseas_limit INTEGER DEFAULT 8,
   settings TEXT,         -- JSON string
@@ -16,7 +17,7 @@ CREATE TABLE IF NOT EXISTS auctions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_auctions_public_waiting 
-ON auctions (is_public, status, created_at DESC);
+ON auctions (is_public, status, host_online, created_at DESC);
 
 CREATE INDEX IF NOT EXISTS idx_auctions_created_at 
 ON auctions (created_at DESC);
