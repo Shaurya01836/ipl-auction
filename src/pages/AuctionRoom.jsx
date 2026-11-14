@@ -97,6 +97,30 @@ const AuctionRoom = () => {
    const celebrationAudioRef = useRef(null);
    const fallbackAudioRef = useRef(null);
    const redirectedToLobbyRef = useRef(false);
+   const roomShellCleanupRef = useRef(null);
+
+   // Pin the room shell to the live viewport height. 100dvh can stay stale after
+   // a refresh or a DevTools emulation switch, which makes the panels taller than
+   // their content and leaves nothing to scroll (overscroll-behavior: contain
+   // then blocks the page fallback too).
+   const bindRoomShell = useCallback((node) => {
+      roomShellCleanupRef.current?.();
+      roomShellCleanupRef.current = null;
+      if (!node) return;
+
+      const syncHeight = () => {
+         if (window.innerHeight) node.style.height = `${window.innerHeight}px`;
+      };
+
+      syncHeight();
+      window.addEventListener('resize', syncHeight);
+      window.addEventListener('orientationchange', syncHeight);
+      roomShellCleanupRef.current = () => {
+         node.style.height = '';
+         window.removeEventListener('resize', syncHeight);
+         window.removeEventListener('orientationchange', syncHeight);
+      };
+   }, []);
    const [newTimerValue, setNewTimerValue] = useState(currentAuction?.settings?.bidTimer || 10);
    const [optimisticState, setOptimisticState] = useState(null);
    const [joiningTeam, setJoiningTeam] = useState(null);
@@ -1094,7 +1118,7 @@ const AuctionRoom = () => {
    }
 
    return (
-      <div className="h-screen-safe bg-[#000000] text-white font-sans flex flex-col items-center overflow-hidden relative selection:bg-white/20 selection:text-white">
+      <div ref={bindRoomShell} className="h-screen-safe bg-[#000000] text-white font-sans flex flex-col items-center overflow-hidden relative selection:bg-white/20 selection:text-white">
          <PageBackground showArt={false} />
 
          <header className="w-full h-14 compact:h-12 bg-[#0c0d10] backdrop-blur-md border-b border-white/10 flex flex-row items-center justify-between px-2.5 sm:px-4 md:px-6 z-50 gap-2 shrink-0">
@@ -1339,7 +1363,7 @@ const AuctionRoom = () => {
 
             <div className={`${mobileTab === 'arena' ? 'flex' : 'hidden'} md:flex flex-col flex-1 h-full overflow-hidden relative z-10`}>
                {/* Center Scrollable Main Body */}
-               <main className="flex-1 overflow-y-auto p-4 md:p-8 compact:p-4 pb-28 sm:pb-12 md:pb-8 flex flex-col items-center custom-scrollbar touch-pan-y">
+               <main className="flex-1 min-h-0 overflow-y-auto p-4 md:p-8 compact:p-4 pb-28 sm:pb-12 md:pb-8 flex flex-col items-center custom-scrollbar touch-pan-y">
                   <div className="w-full max-w-4xl flex flex-col gap-4 md:gap-6">
                      <AnimatePresence mode="wait">
                         {(displayAuctionState?.status === 'sold' || displayAuctionState?.status === 'unsold') ? (() => {
