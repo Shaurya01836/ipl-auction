@@ -1145,13 +1145,13 @@ const AuctionRoom = () => {
             </div>
          </header>
 
-         <div className="w-full flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden relative pb-16 md:pb-0">
+         <div className="w-full flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden relative pb-[max(4.5rem,calc(3.75rem+env(safe-area-inset-bottom)))] md:pb-0">
             <aside className={`${mobileTab === 'squad' ? 'flex' : 'hidden'} md:flex w-full md:w-56 lg:w-64 xl:w-80 bg-[#0c0d10]/90 backdrop-blur-xl border-r border-white/10 flex-col h-full max-h-[calc(100dvh-7.5rem)] md:max-h-[calc(100dvh-3.5rem)] compact:max-h-[calc(100dvh-3rem)] overflow-hidden relative z-10`}>
                <div className="h-14 compact:h-12 border-b border-white/10 bg-[#0c0d10] flex items-center px-6 shrink-0">
                   <span className="text-[10px] compact:text-[9px] font-pixel text-slate-400 uppercase tracking-widest leading-none">Auction Teams</span>
                </div>
 
-               <div className="flex-1 overflow-y-auto p-4 compact:p-3 custom-scrollbar touch-pan-y min-h-0">
+               <div className="flex-1 overflow-y-auto p-4 compact:p-3 pb-28 sm:pb-8 md:pb-4 custom-scrollbar touch-pan-y min-h-0">
                   {(liveTeamRatings?.rankedTeams || TEAMS).map((t, idx) => {
                      const teamDoc = roomTeams.find(doc => doc.teamId === t.id);
                      const manager = currentAuction?.players?.find(p => p.id === teamDoc?.userId);
@@ -1279,9 +1279,9 @@ const AuctionRoom = () => {
                </div>
             </aside>
 
-            <div className={`${mobileTab === 'arena' ? 'flex' : 'hidden'} md:flex flex-col flex-1 h-full overflow-hidden relative z-10`}>
+            <div className={`${mobileTab === 'arena' ? 'flex' : 'hidden'} md:flex flex-col flex-1 h-full max-h-[calc(100dvh-7.5rem)] md:max-h-[calc(100dvh-3.5rem)] compact:max-h-[calc(100dvh-3rem)] overflow-hidden relative z-10`}>
                {/* Center Scrollable Main Body */}
-               <main className="flex-1 overflow-y-auto p-4 md:p-8 compact:p-4 flex flex-col items-center custom-scrollbar">
+               <main className="flex-1 overflow-y-auto p-4 md:p-8 compact:p-4 pb-28 sm:pb-12 md:pb-8 flex flex-col items-center custom-scrollbar touch-pan-y">
                   <div className="w-full max-w-4xl flex flex-col gap-4 md:gap-6">
                      <AnimatePresence mode="wait">
                         {(displayAuctionState?.status === 'sold' || displayAuctionState?.status === 'unsold') ? (() => {
@@ -1698,7 +1698,7 @@ const AuctionRoom = () => {
                            exit={{ opacity: 0, y: -10 }}
                            className="flex-1 flex flex-col min-h-0 overflow-hidden h-full"
                         >
-                           <div className="flex-1 overflow-y-auto p-3 sm:p-4 compact:p-3 custom-scrollbar relative touch-pan-y min-h-0 pb-16 sm:pb-4">
+                           <div className="flex-1 overflow-y-auto p-3 sm:p-4 compact:p-3 custom-scrollbar relative touch-pan-y min-h-0 pb-28 sm:pb-8 md:pb-4">
                               {/* Timeline line */}
                               <div className="absolute left-6 sm:left-10 top-6 bottom-6 w-[1px] bg-white/5 pointer-events-none" />
 
@@ -1791,7 +1791,7 @@ const AuctionRoom = () => {
                            initial={{ opacity: 0, y: 10 }}
                            animate={{ opacity: 1, y: 0 }}
                            exit={{ opacity: 0, y: -10 }}
-                           className="flex-1 flex flex-col min-h-0 h-full p-2 pb-16 sm:pb-2 overflow-hidden"
+                           className="flex-1 flex flex-col min-h-0 h-full p-1 sm:p-2 overflow-hidden"
                         >
                            <TextChat roomId={id} />
                         </motion.div>

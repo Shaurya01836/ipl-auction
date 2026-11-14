@@ -139,7 +139,7 @@ const TextChat = ({ roomId, isCollapsed, onToggleCollapse }) => {
          {!isCollapsed && (
             <>
                {/* Messages Scroll Area */}
-               <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-4 compact:p-3 space-y-3 custom-scrollbar flex flex-col min-h-0">
+               <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-4 compact:p-3 pb-6 space-y-3 custom-scrollbar flex flex-col min-h-0 touch-pan-y">
                   {chatMessages.length === 0 ? (
                      <div className="flex-1 flex flex-col items-center justify-center opacity-30 p-8 text-center my-auto">
                         <MessageSquare size={24} className="text-gray-500 mb-2 animate-pulse" />
