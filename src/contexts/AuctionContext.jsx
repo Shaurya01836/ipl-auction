@@ -2408,7 +2408,7 @@ export const AuctionProvider = ({ children }) => {
     if (!teamDetails) return;
 
     const botUserId = `bot_${teamId}`;
-    const botName = `${teamDetails.name} Bot`;
+    const botName = teamDetails.botName || `${teamDetails.name} Bot`;
 
     const playersTx = await runTransactionRtdb(
       ref(rtdb, `auctions/${roomId}/room/players`),
@@ -2472,7 +2472,7 @@ export const AuctionProvider = ({ children }) => {
           .filter(t => !takenTeamIds.has(t.id))
           .map(t => ({
             id: `bot_${t.id}`,
-            name: `${t.name} Bot`,
+            name: t.botName || `${t.name} Bot`,
             team: t.id,
             teamName: t.name,
             isHost: false,

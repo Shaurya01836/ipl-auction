@@ -114,6 +114,8 @@ test('localAuctionReducer: initializes 1 human + 9 bots with mode budgets', () =
   // 9 Bot teams check
   const botPlayers = state.players.filter((p) => p.isBot);
   assert.equal(botPlayers.length, 9);
+  const gtBot = botPlayers.find((p) => p.team === 'GT');
+  assert.equal(gtBot?.name, 'Nehra Ji');
   assert.equal(state.roomTeams.every((t) => t.budgetRemaining === 120.0), true);
 
   // Initial lot check: opens at 0 so the first bid is exactly the base price

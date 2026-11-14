@@ -38,6 +38,7 @@ import PageLoader from '../components/PageLoader';
 import PageBackground from '../components/PageBackground';
 import ConfirmDialog from '../components/ConfirmDialog';
 import AuctionCountdown from '../components/AuctionCountdown';
+import AdSlot, { DEFAULT_AUCTION_ROOM_SLOT } from '../components/AdSlot';
 import useRoomServer from '../hooks/useRoomServer';
 import { SERVER_LOCAL, withServerParam } from '../lib/auctionServers';
 import { isLocalRoom } from '../lib/localAuctionEngine';
@@ -1144,7 +1145,7 @@ const AuctionRoom = () => {
             </div>
          </header>
 
-         <div className="w-full flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden relative">
+         <div className="w-full flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden relative pb-16 md:pb-0">
             <aside className={`${mobileTab === 'squad' ? 'flex' : 'hidden'} md:flex w-full md:w-56 lg:w-64 xl:w-80 bg-[#0c0d10]/90 backdrop-blur-xl border-r border-white/10 flex-col h-full max-h-[calc(100dvh-7.5rem)] md:max-h-[calc(100dvh-3.5rem)] compact:max-h-[calc(100dvh-3rem)] overflow-hidden relative z-10`}>
                <div className="h-14 compact:h-12 border-b border-white/10 bg-[#0c0d10] flex items-center px-6 shrink-0">
                   <span className="text-[10px] compact:text-[9px] font-pixel text-slate-400 uppercase tracking-widest leading-none">Auction Teams</span>
@@ -1521,7 +1522,7 @@ const AuctionRoom = () => {
                               const shortName = bidderTeam?.id || displayAuctionState.highBidderTeamId;
                               const fullName = bidderTeam?.name || shortName;
                               const rawBidderName = displayAuctionState?.highBidderName || shortName;
-                              const bidderName = rawBidderName.length > 10 ? `${rawBidderName.slice(0, 10)}...` : rawBidderName;
+                              const bidderName = rawBidderName.length > 22 ? `${rawBidderName.slice(0, 22)}...` : rawBidderName;
 
                               return (
                                  <div
@@ -1641,11 +1642,19 @@ const AuctionRoom = () => {
                            </motion.div>
                         )}
                      </AnimatePresence>
+
+                     {/* Arena Ad Slot (strictly visible on mobile screens only; hidden on laptop/desktop) */}
+                     <div className="w-full block md:hidden">
+                        <AdSlot
+                           slot={import.meta.env.VITE_ADSENSE_AUCTION_ROOM_SLOT || DEFAULT_AUCTION_ROOM_SLOT}
+                           className="w-full mt-2 mb-6"
+                        />
+                     </div>
                   </div>
                </main>
             </div>
 
-            <aside className={`${(mobileTab === 'activity' || mobileTab === 'chat') ? 'flex' : 'hidden'} md:flex w-full md:w-64 lg:w-72 xl:w-96 bg-[#0c0d10]/90 backdrop-blur-xl border-l border-white/10 flex-col h-full md:max-h-[calc(100dvh-3.5rem)] compact:max-h-[calc(100dvh-3rem)] relative z-10`}>
+            <aside className={`${(mobileTab === 'activity' || mobileTab === 'chat') ? 'flex' : 'hidden'} md:flex w-full md:w-64 lg:w-72 xl:w-96 bg-[#0c0d10]/90 backdrop-blur-xl border-l border-white/10 flex-col h-full max-h-[calc(100dvh-7.5rem)] md:max-h-[calc(100dvh-3.5rem)] compact:max-h-[calc(100dvh-3rem)] overflow-hidden relative z-10`}>
                {/* Premium Tabs Header */}
                <div className="h-14 compact:h-12 bg-[#0c0d10] border-b border-white/10 flex items-center shrink-0 w-full">
                   <button
@@ -1679,7 +1688,7 @@ const AuctionRoom = () => {
                </div>
 
                {/* Tab Panels */}
-               <div className="flex-1 min-h-0 flex flex-col relative">
+               <div className="flex-1 min-h-0 flex flex-col relative overflow-hidden">
                   <AnimatePresence mode="wait">
                      {sidebarTab === 'activity' || isSoloVsBots ? (
                         <motion.div
@@ -1687,9 +1696,9 @@ const AuctionRoom = () => {
                            initial={{ opacity: 0, y: 10 }}
                            animate={{ opacity: 1, y: 0 }}
                            exit={{ opacity: 0, y: -10 }}
-                           className="flex-1 flex flex-col min-h-0 h-full"
+                           className="flex-1 flex flex-col min-h-0 overflow-hidden h-full"
                         >
-                           <div className="flex-1 overflow-y-auto p-3 sm:p-4 compact:p-3 custom-scrollbar h-full relative">
+                           <div className="flex-1 overflow-y-auto p-3 sm:p-4 compact:p-3 custom-scrollbar relative touch-pan-y min-h-0 pb-16 sm:pb-4">
                               {/* Timeline line */}
                               <div className="absolute left-6 sm:left-10 top-6 bottom-6 w-[1px] bg-white/5 pointer-events-none" />
 
@@ -1782,7 +1791,7 @@ const AuctionRoom = () => {
                            initial={{ opacity: 0, y: 10 }}
                            animate={{ opacity: 1, y: 0 }}
                            exit={{ opacity: 0, y: -10 }}
-                           className="flex-1 flex flex-col min-h-0 h-full p-2"
+                           className="flex-1 flex flex-col min-h-0 h-full p-2 pb-16 sm:pb-2 overflow-hidden"
                         >
                            <TextChat roomId={id} />
                         </motion.div>
@@ -1792,7 +1801,8 @@ const AuctionRoom = () => {
             </aside>
          </div>
 
-         <div className="w-full shrink-0 bg-[#0c0d10]/95 backdrop-blur-2xl border-t border-white/10 flex md:hidden z-50 pb-[max(0.75rem,env(safe-area-inset-bottom))] relative">
+         {/* Mobile Bottom Navigation Bar: fixed to bottom on mobile screens, hidden on laptop/desktop */}
+         <div className="fixed bottom-0 inset-x-0 w-full bg-[#0c0d10]/95 backdrop-blur-2xl border-t border-white/10 flex md:hidden z-50 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             <div className="flex w-full h-14 items-center justify-around px-2 sm:px-4">
                <button onClick={() => setMobileTab('squad')} className={`flex flex-col items-center justify-center w-14 sm:w-16 gap-0.5 transition-all duration-300 ${mobileTab === 'squad' ? 'text-white translate-y-0' : 'text-gray-500 hover:text-gray-400 translate-y-0.5'}`}>
                   <div className={`p-1 rounded-lg transition-colors duration-300 ${mobileTab === 'squad' ? 'bg-white/10 text-white' : 'bg-transparent text-gray-400'}`}>

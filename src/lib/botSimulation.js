@@ -80,7 +80,7 @@ export function simulateBotLot({
         leadingBidderId = decision.botUserId;
         leadingTeamId = decision.teamId;
         const teamObj = TEAMS.find((t) => t.id === decision.teamId);
-        leadingBidderName = teamObj ? `${teamObj.name} Bot` : 'Bot';
+        leadingBidderName = teamObj?.botName || (teamObj ? `${teamObj.name} Bot` : 'Bot');
         someoneBid = true;
         bidsPlaced++;
         break; // Next bid step

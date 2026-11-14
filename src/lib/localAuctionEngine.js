@@ -118,7 +118,7 @@ export function localAuctionReducer(state, action) {
         const botId = `bot_${t.id}`;
         players.push({
           id: botId,
-          name: `${t.name} Bot`,
+          name: t.botName || `${t.name} Bot`,
           team: t.id,
           teamName: t.name,
           isHost: false,
@@ -237,7 +237,7 @@ export function localAuctionReducer(state, action) {
       const timerSec = state.settings?.bidTimer || 10;
       const teamObj = TEAMS.find((t) => t.id === bidderTeam.teamId);
       const bidderName = bidderTeam.userId.startsWith('bot_')
-        ? `${teamObj?.name || 'Bot'} Bot`
+        ? (teamObj?.botName || `${teamObj?.name || 'Bot'} Bot`)
         : state.hostName || 'Manager';
 
       const updatedLot = {
@@ -297,7 +297,7 @@ export function localAuctionReducer(state, action) {
 
         if (decision && decision.shouldBid) {
           const teamObj = TEAMS.find((t) => t.id === decision.teamId);
-          const botName = teamObj ? `${teamObj.name} Bot` : 'Bot';
+          const botName = teamObj?.botName || (teamObj ? `${teamObj.name} Bot` : 'Bot');
           const timerSec = state.settings?.bidTimer || 10;
 
           const updatedLot = {
