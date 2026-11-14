@@ -1350,7 +1350,7 @@ const LandingPage = () => {
                               </div>
 
                               <div className="flex items-center gap-1 sm:gap-1.5 text-[8px] sm:text-[10px] text-gray-400 font-medium mt-0.5 truncate">
-                                <span className="px-1 sm:px-1.5 py-0.2 rounded font-black text-[7px] sm:text-[8px] uppercase tracking-wider bg-green-500/20 text-green-400 border border-green-500/30">
+                                <span className="px-1.5 py-0.5 rounded font-black text-[7px] sm:text-[8px] uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">
                                   WAITING
                                 </span>
 
