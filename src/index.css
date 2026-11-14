@@ -33,6 +33,14 @@
   }
 }
 
+/* Mobile auction room: the header and bottom nav must stay put and only the
+   panel between them may scroll, so the page itself never scrolls. */
+@media (max-width: 767px) {
+  html:has(.auction-room-shell) {
+    overflow: hidden;
+  }
+}
+
 body {
   margin: 0;
   font-family: var(--font-sans);

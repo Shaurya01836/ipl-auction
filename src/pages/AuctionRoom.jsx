@@ -99,17 +99,18 @@ const AuctionRoom = () => {
    const redirectedToLobbyRef = useRef(false);
    const roomShellCleanupRef = useRef(null);
 
-   // Pin the room shell to the live viewport height. 100dvh can stay stale after
-   // a refresh or a DevTools emulation switch, which makes the panels taller than
-   // their content and leaves nothing to scroll (overscroll-behavior: contain
-   // then blocks the page fallback too).
+   // On laptops 100dvh can stay stale after a refresh or a DevTools emulation
+   // switch, which makes the panels taller than their content and leaves nothing
+   // to scroll. Pin the desktop shell to the live height; on mobile the shell is
+   // `fixed inset-0`, so the viewport itself sizes it.
    const bindRoomShell = useCallback((node) => {
       roomShellCleanupRef.current?.();
       roomShellCleanupRef.current = null;
       if (!node) return;
 
       const syncHeight = () => {
-         if (window.innerHeight) node.style.height = `${window.innerHeight}px`;
+         const desktop = window.matchMedia('(min-width: 768px)').matches;
+         node.style.height = desktop && window.innerHeight ? `${window.innerHeight}px` : '';
       };
 
       syncHeight();
@@ -1118,7 +1119,7 @@ const AuctionRoom = () => {
    }
 
    return (
-      <div ref={bindRoomShell} className="h-screen-safe bg-[#000000] text-white font-sans flex flex-col items-center overflow-hidden relative selection:bg-white/20 selection:text-white">
+      <div ref={bindRoomShell} className="auction-room-shell max-md:fixed max-md:inset-0 md:relative md:h-screen-safe bg-[#000000] text-white font-sans flex flex-col items-center overflow-hidden selection:bg-white/20 selection:text-white">
          <PageBackground showArt={false} />
 
          <header className="w-full h-14 compact:h-12 bg-[#0c0d10] backdrop-blur-md border-b border-white/10 flex flex-row items-center justify-between px-2.5 sm:px-4 md:px-6 z-50 gap-2 shrink-0">
