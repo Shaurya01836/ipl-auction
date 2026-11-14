@@ -17,6 +17,7 @@ const GameGuide       = lazy(() => import('./pages/GameGuide'))
 const AboutUs         = lazy(() => import('./pages/AboutUs'))
 const PrivacyPolicy   = lazy(() => import('./pages/PrivacyPolicy'))
 const TermsConditions = lazy(() => import('./pages/TermsConditions'))
+const PhotoCredits    = lazy(() => import('./pages/PhotoCredits'))
 const AdminPanel      = lazy(() => import('./pages/AdminPanel'))
 const NotFound        = lazy(() => import('./pages/NotFound'))
 
@@ -68,6 +69,12 @@ function App() {
                   } />
                   <Route path="/terms" element={
                     <Suspense fallback={<PageFallback />}><TermsConditions /></Suspense>
+                  } />
+                  <Route path="/credits" element={
+                    <Suspense fallback={<PageFallback />}><PhotoCredits /></Suspense>
+                  } />
+                  <Route path="/photo-credits" element={
+                    <Suspense fallback={<PageFallback />}><PhotoCredits /></Suspense>
                   } />
                   <Route path="/lobby/:id" element={
                     <Suspense fallback={<PageFallback />}><Lobby /></Suspense>

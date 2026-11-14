@@ -33,6 +33,7 @@ import {
   computeTeamSpent,
   countOverseas,
   formatCrores,
+  getPlayerAvatar,
   isOverseasPlayer,
   toFiniteNumber,
 } from '../lib/auctionDisplay';
@@ -471,7 +472,7 @@ const AuctionSummary = () => {
                           loading="lazy"
                           onError={(e) => {
                             e.target.onerror = null;
-                            e.target.src = 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(player.name || 'Player');
+                            e.target.src = getPlayerAvatar(player?.name);
                           }}
                           className="w-full h-full object-cover filter drop-shadow-md" 
                         />
@@ -670,7 +671,7 @@ const AuctionSummary = () => {
                                                       loading="lazy"
                                                       onError={(e) => {
                                                         e.target.onerror = null;
-                                                        e.target.src = 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(p.name || 'Player');
+                                                        e.target.src = getPlayerAvatar(p?.name);
                                                       }}
                                                       className="w-full h-full object-cover" 
                                                     />
@@ -704,7 +705,7 @@ const AuctionSummary = () => {
                                                    loading="lazy"
                                                    onError={(e) => {
                                                      e.target.onerror = null;
-                                                     e.target.src = 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(p.name || 'Player');
+                                                     e.target.src = getPlayerAvatar(p?.name);
                                                    }}
                                                    className="w-full h-full object-cover" 
                                                  />

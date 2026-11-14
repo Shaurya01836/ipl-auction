@@ -6,6 +6,7 @@ import {
   computeTeamSpent,
   countOverseas,
   formatCrores,
+  getPlayerAvatar,
   isOverseasPlayer,
   r2,
   resolveSquadPlayer,
@@ -141,3 +142,19 @@ test('r2 rounds to two decimal places and handles floating point drift', () => {
   assert.equal(r2(undefined), 0);
   assert.equal(r2('45.678'), 45.68);
 });
+
+test('getPlayerAvatar generates offline-safe inline SVG data URI with player initials', () => {
+  const vk = getPlayerAvatar('Virat Kohli');
+  assert.ok(vk.startsWith('data:image/svg+xml;utf8,'));
+  assert.ok(decodeURIComponent(vk).includes('VK'));
+
+  const single = getPlayerAvatar('Dhoni');
+  assert.ok(decodeURIComponent(single).includes('DH'));
+
+  const empty = getPlayerAvatar('');
+  assert.ok(decodeURIComponent(empty).includes('PL'));
+
+  const nullVal = getPlayerAvatar(null);
+  assert.ok(decodeURIComponent(nullVal).includes('PL'));
+});
+

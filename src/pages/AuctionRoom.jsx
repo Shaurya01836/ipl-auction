@@ -47,6 +47,7 @@ import {
    computeTeamSpent,
    countOverseas,
    formatCrores,
+   getPlayerAvatar,
    isOverseasPlayer,
    toFiniteNumber,
 } from '../lib/auctionDisplay';
@@ -1340,7 +1341,7 @@ const AuctionRoom = () => {
                                                  alt={currentPlayer?.name || 'Player'}
                                                  onError={(e) => {
                                                     e.target.onerror = null;
-                                                    e.target.src = 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(currentPlayer?.name || 'Player');
+                                                    e.target.src = getPlayerAvatar(currentPlayer?.name);
                                                  }}
                                               />
                                            </div>
@@ -1412,7 +1413,7 @@ const AuctionRoom = () => {
                      className="w-full h-full object-cover object-top"
                      onError={(e) => {
                         e.currentTarget.onerror = null;
-                        e.currentTarget.src = 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(currentPlayer.name || 'IPL');
+                        e.currentTarget.src = getPlayerAvatar(currentPlayer?.name);
                      }}
                   />
                   {/* Mobile Gradient Overlay: fades bottom of hero into card without touching player face */}
@@ -2291,7 +2292,7 @@ const SoldCard = ({ msg }) => {
                         alt={player?.name || 'Sold Player'}
                         onError={(e) => {
                            e.target.onerror = null;
-                           e.target.src = 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(player?.name || 'Player');
+                           e.target.src = getPlayerAvatar(player?.name);
                         }}
                      />
                   </div>

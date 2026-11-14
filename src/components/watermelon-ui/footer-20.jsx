@@ -173,6 +173,14 @@ export default function Footer20() {
                     Privacy Policy
                   </Link>
                 </li>
+                <li>
+                  <Link
+                    to="/credits"
+                    className="text-[14px] text-gray-400 hover:text-white transition-colors"
+                  >
+                    Photo Credits
+                  </Link>
+                </li>
               </ul>
             </motion.div>
 

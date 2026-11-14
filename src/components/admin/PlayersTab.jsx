@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import PaginationControls from './PaginationControls';
+import { getPlayerAvatar } from '../../lib/auctionDisplay';
 
 const PLAYERS_PER_PAGE = 12;
 
@@ -149,13 +150,13 @@ const PlayersTab = ({
               <div className="flex items-start gap-3">
                 <div className="w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-[#1a1a1a] border border-white/8">
                   <img
-                    src={player.image || 'https://documents.iplt20.com/ipl/IPLHeadshot2026/default.png'}
+                    src={player.image || getPlayerAvatar(player?.name)}
                     alt={player.name}
                     className="w-full h-full object-cover"
                     loading="lazy"
                     onError={(e) => {
                       e.target.onerror = null;
-                      e.target.src = 'https://documents.iplt20.com/ipl/IPLHeadshot2026/default.png';
+                      e.target.src = getPlayerAvatar(player?.name);
                     }}
                   />
                 </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Star, Activity } from 'lucide-react';
+import { getPlayerAvatar } from '../../lib/auctionDisplay';
 
 const PlayerDetailModal = ({
   player,
@@ -49,12 +50,12 @@ const PlayerDetailModal = ({
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-2xl bg-gradient-to-br from-gray-800 to-black overflow-hidden border border-white/15 shadow-xl">
                 <img
-                  src={player.image || 'https://documents.iplt20.com/ipl/IPLHeadshot2026/default.png'}
+                  src={player.image || getPlayerAvatar(player?.name)}
                   alt={player.name}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     e.target.onerror = null;
-                    e.target.src = 'https://documents.iplt20.com/ipl/IPLHeadshot2026/default.png';
+                    e.target.src = getPlayerAvatar(player?.name);
                   }}
                 />
               </div>

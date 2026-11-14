@@ -148,3 +148,22 @@ export const shouldStickToBottom = (
 
   return height - top - viewport <= threshold;
 };
+
+/**
+ * Generate a client-side SVG data URI avatar with player initials.
+ * Zero external network calls (eliminates external dicebear dependencies).
+ */
+export const getPlayerAvatar = (name = 'Player') => {
+  const cleanName = typeof name === 'string' && name.trim() ? name.trim() : 'Player';
+  const parts = cleanName.split(/\s+/).filter(Boolean);
+  const initials = (
+    parts.length >= 2
+      ? parts[0][0] + parts[parts.length - 1][0]
+      : parts[0]?.slice(0, 2) || 'P'
+  ).toUpperCase();
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#0c0d10"/><circle cx="50" cy="50" r="42" fill="#151821" stroke="rgba(255,255,255,0.12)" stroke-width="2"/><text x="50" y="58" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-weight="900" font-size="34" fill="#ffffff" text-anchor="middle" dominant-baseline="middle">${initials}</text></svg>`;
+
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+};
+
