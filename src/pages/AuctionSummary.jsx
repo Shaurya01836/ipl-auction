@@ -487,7 +487,7 @@ const AuctionSummary = () => {
                             {player.teamId}
                           </div>
                           <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
-                            {player.role} • {player.teamName}
+                            {player.role} • {player.teamId || TEAMS.find(t => t.id === player.team)?.name || player.teamName}
                           </p>
                         </div>
                       </div>

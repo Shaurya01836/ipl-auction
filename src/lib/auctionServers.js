@@ -19,6 +19,8 @@ export const SERVER_2 = 'server-2';
 export const SERVER_3 = 'server-3';
 export const SERVER_4 = 'server-4';
 export const SERVER_5 = 'server-5';
+export const SERVER_6 = 'server-6';
+export const SERVER_7 = 'server-7';
 export const SERVER_LOCAL = 'local';
 
 export const PRIMARY_SERVER = SERVER_1;
@@ -50,45 +52,61 @@ function buildAuctionServers() {
       num: 1,
       label: 'Server 1',
       shortLabel: 'S1',
-      url: rawEnv.VITE_RTDB_1_URL || rawEnv.VITE_FIREBASE_DATABASE_URL || 'https://ipl-auction-1cdbc-default-rtdb.asia-southeast1.firebasedatabase.app',
-      projectId: rawEnv.VITE_RTDB_1_PROJECT_ID || rawEnv.VITE_FIREBASE_PROJECT_ID || 'ipl-auction-1cdbc',
+      url: rawEnv.VITE_RTDB_1_URL || rawEnv.VITE_FIREBASE_DATABASE_URL || '',
+      projectId: rawEnv.VITE_RTDB_1_PROJECT_ID || rawEnv.VITE_FIREBASE_PROJECT_ID || '',
     },
     {
       id: SERVER_2,
       num: 2,
       label: 'Server 2',
       shortLabel: 'S2',
-      url: rawEnv.VITE_RTDB_2_URL || rawEnv.VITE_RTDB_FIREBASE_DATABASE_URL || 'https://ipl-auction-2-947e7-default-rtdb.asia-southeast1.firebasedatabase.app',
-      projectId: rawEnv.VITE_RTDB_2_PROJECT_ID || rawEnv.VITE_RTDB_FIREBASE_PROJECT_ID || 'ipl-auction-2-947e7',
+      url: rawEnv.VITE_RTDB_2_URL || rawEnv.VITE_RTDB_FIREBASE_DATABASE_URL || '',
+      projectId: rawEnv.VITE_RTDB_2_PROJECT_ID || rawEnv.VITE_RTDB_FIREBASE_PROJECT_ID || '',
     },
     {
       id: SERVER_3,
       num: 3,
       label: 'Server 3',
       shortLabel: 'S3',
-      url: rawEnv.VITE_RTDB_3_URL || rawEnv.VITE_RTDB_B_URL || 'https://ipl-auction-3-default-rtdb.asia-southeast1.firebasedatabase.app',
-      projectId: rawEnv.VITE_RTDB_3_PROJECT_ID || rawEnv.VITE_RTDB_B_PROJECT_ID || 'ipl-auction-3',
+      url: rawEnv.VITE_RTDB_3_URL || rawEnv.VITE_RTDB_B_URL || '',
+      projectId: rawEnv.VITE_RTDB_3_PROJECT_ID || rawEnv.VITE_RTDB_B_PROJECT_ID || '',
     },
     {
       id: SERVER_4,
       num: 4,
       label: 'Server 4',
       shortLabel: 'S4',
-      url: rawEnv.VITE_RTDB_4_URL || rawEnv.VITE_RTDB_A_URL || 'https://ipl-auction-4-default-rtdb.asia-southeast1.firebasedatabase.app',
-      projectId: rawEnv.VITE_RTDB_4_PROJECT_ID || rawEnv.VITE_RTDB_A_PROJECT_ID || 'ipl-auction-4',
+      url: rawEnv.VITE_RTDB_4_URL || rawEnv.VITE_RTDB_A_URL || '',
+      projectId: rawEnv.VITE_RTDB_4_PROJECT_ID || rawEnv.VITE_RTDB_A_PROJECT_ID || '',
     },
     {
       id: SERVER_5,
       num: 5,
       label: 'Server 5',
       shortLabel: 'S5',
-      url: rawEnv.VITE_RTDB_5_URL || 'https://ipl-auction-5-default-rtdb.asia-southeast1.firebasedatabase.app',
-      projectId: rawEnv.VITE_RTDB_5_PROJECT_ID || 'ipl-auction-5',
+      url: rawEnv.VITE_RTDB_5_URL || '',
+      projectId: rawEnv.VITE_RTDB_5_PROJECT_ID || '',
+    },
+    {
+      id: SERVER_6,
+      num: 6,
+      label: 'Server 6',
+      shortLabel: 'S6',
+      url: rawEnv.VITE_RTDB_6_URL || '',
+      projectId: rawEnv.VITE_RTDB_6_PROJECT_ID || '',
+    },
+    {
+      id: SERVER_7,
+      num: 7,
+      label: 'Server 7',
+      shortLabel: 'S7',
+      url: rawEnv.VITE_RTDB_7_URL || '',
+      projectId: rawEnv.VITE_RTDB_7_PROJECT_ID || '',
     },
   ];
 
-  // Dynamically register any additional servers from environment (e.g. VITE_RTDB_6_URL up to 12)
-  for (let i = 6; i <= 12; i++) {
+  // Dynamically register any additional servers from environment (e.g. VITE_RTDB_8_URL up to 12)
+  for (let i = 8; i <= 12; i++) {
     const url = rawEnv[`VITE_RTDB_${i}_URL`];
     if (url) {
       BASE_DEFINITIONS.push({
@@ -116,6 +134,21 @@ function buildAuctionServers() {
       projectId,
     });
   });
+
+  // If no server URLs are configured in environment (e.g. pure offline unit testing without .env),
+  // provide fallback dummy records so registry functions never crash on empty lists.
+  if (serverMap.size === 0) {
+    BASE_DEFINITIONS.forEach((s) => {
+      serverMap.set(s.id, {
+        id: s.id,
+        label: s.label,
+        shortLabel: s.shortLabel,
+        description: `Node ${s.num} (${s.id})`,
+        databaseUrl: `https://${s.id}-mock.firebaseio.com`,
+        projectId: s.id,
+      });
+    });
+  }
 
   // If VITE_ENABLED_SERVERS is specified in environment, filter & order accordingly
   if (rawEnv.VITE_ENABLED_SERVERS) {

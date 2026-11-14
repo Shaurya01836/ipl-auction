@@ -1,6 +1,6 @@
 import { getApps, initializeApp } from "firebase/app";
 import { getAuth, signInAnonymously } from "firebase/auth";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
 import { getDatabase, ref, onValue, goOffline, goOnline } from "firebase/database";
 import {
   AUCTION_SERVERS,
@@ -25,14 +25,21 @@ const firebaseConfig = {
   measurementId: rawEnv.VITE_FIREBASE_MEASUREMENT_ID || 'G-DUMMY'
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
-export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({
-    tabManager: persistentMultipleTabManager()
-  })
-});
+
+let firestoreDb;
+try {
+  firestoreDb = initializeFirestore(app, {
+    localCache: persistentLocalCache({
+      tabManager: persistentMultipleTabManager()
+    })
+  });
+} catch {
+  firestoreDb = getFirestore(app);
+}
+export const db = firestoreDb;
 // Defer Analytics until after first paint — removes it from the critical path
 let analytics = null;
 if (typeof window !== 'undefined') {

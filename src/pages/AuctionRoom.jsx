@@ -2246,7 +2246,7 @@ const AuctionRoom = () => {
                                  <div className={`w-12 h-12 rounded-2xl bg-white/5 border border-white/10 p-1.5 flex items-center justify-center`}>
                                     <img src={TEAMS.find(t => t.id === player.team)?.logo} alt="Player Team Logo" className="w-full h-full object-contain" />
                                  </div>
-                                 <div><h5 className="text-sm font-black uppercase flex items-center gap-2">{player.name}{player.isHost && <span className="px-1.5 py-0.5 bg-white/10 text-slate-300 border border-white/10 font-pixel text-[8px] rounded-md">HOST</span>}</h5><p className="text-[10px] font-bold text-gray-500 uppercase">{player.teamName}</p></div>
+                                 <div><h5 className="text-sm font-black uppercase flex items-center gap-2">{player.name}{player.isHost && <span className="px-1.5 py-0.5 bg-white/10 text-slate-300 border border-white/10 font-pixel text-[8px] rounded-md">HOST</span>}</h5><p className="text-[10px] font-bold text-gray-500 uppercase">{TEAMS.find(t => t.id === player.team)?.name || player.team || player.teamName}</p></div>
                               </div>
                               {!player.isHost && (
                                  <button onClick={async () => { if (window.confirm(`Are you sure you want to kick ${player.name}?`)) { try { await kickPlayer(id, player); } catch { setError('Failed to remove that manager. Please try again.'); setTimeout(() => setError(''), 3000); } } }} className="px-4 py-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all opacity-0 group-hover:opacity-100 cursor-pointer">Kick Player</button>

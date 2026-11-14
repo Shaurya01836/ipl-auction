@@ -101,16 +101,16 @@ import {
   handleSoloSendMessage,
 } from '../lib/soloAuctionSession';
 const TEAMS = [
-  { id: 'MI', name: 'Mumbai Indians', color: 'bg-blue-600' },
-  { id: 'CSK', name: 'Chennai Super Kings', color: 'bg-yellow-400 text-black' },
-  { id: 'RCB', name: 'Royal Challengers Bengaluru', color: 'bg-red-600' },
-  { id: 'KKR', name: 'Kolkata Knight Riders', color: 'bg-purple-800' },
-  { id: 'DC', name: 'Delhi Capitals', color: 'bg-blue-500' },
-  { id: 'PBKS', name: 'Punjab Kings', color: 'bg-red-500' },
-  { id: 'RR', name: 'Rajasthan Royals', color: 'bg-pink-600' },
-  { id: 'SRH', name: 'Sunrisers Hyderabad', color: 'bg-orange-500' },
-  { id: 'GT', name: 'Gujarat Titans', color: 'bg-slate-700' },
-  { id: 'LSG', name: 'Lucknow Super Giants', color: 'bg-pink-800' },
+  { id: 'MI', name: 'MI', color: 'bg-blue-600' },
+  { id: 'CSK', name: 'CSK', color: 'bg-yellow-400 text-black' },
+  { id: 'RCB', name: 'RCB', color: 'bg-red-600' },
+  { id: 'KKR', name: 'KKR', color: 'bg-purple-800' },
+  { id: 'DC', name: 'DC', color: 'bg-blue-500' },
+  { id: 'PBKS', name: 'PBKS', color: 'bg-red-500' },
+  { id: 'RR', name: 'RR', color: 'bg-pink-600' },
+  { id: 'SRH', name: 'SRH', color: 'bg-orange-500' },
+  { id: 'GT', name: 'GT', color: 'bg-slate-700' },
+  { id: 'LSG', name: 'LSG', color: 'bg-pink-800' },
 ];
 
 const createRoomCodeTakenError = () => {

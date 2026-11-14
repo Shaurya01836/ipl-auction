@@ -72,12 +72,14 @@ test('withServerParam preserves existing query strings and hashes', () => {
 });
 
 test('server metadata covers all configured servers and always has a fallback', () => {
-  assert.equal(AUCTION_SERVERS.length, 5);
+  assert.equal(AUCTION_SERVERS.length, 7);
   assert.equal(getServerMeta('server-1').label, 'Server 1');
   assert.equal(getServerMeta('server-2').label, 'Server 2');
   assert.equal(getServerMeta('server-3').label, 'Server 3');
   assert.equal(getServerMeta('server-4').label, 'Server 4');
   assert.equal(getServerMeta('server-5').label, 'Server 5');
+  assert.equal(getServerMeta('server-6').label, 'Server 6');
+  assert.equal(getServerMeta('server-7').label, 'Server 7');
   assert.equal(getServerMeta('secondary').label, 'Server 2');
   assert.equal(getServerMeta('unknown').id, AUCTION_SERVERS[0].id);
 });

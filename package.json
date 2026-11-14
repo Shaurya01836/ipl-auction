@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node --test"
+    "test": "node --env-file-if-exists=.env --test"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",
