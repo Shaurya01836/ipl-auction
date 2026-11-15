@@ -119,7 +119,7 @@ const PrivacyPolicy = () => {
 
           <div className="mb-8 sm:mb-12 border-b border-white/10 pb-6 sm:pb-8">
             <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-4">Privacy Policy</h1>
-            <p className="text-sm text-gray-500 mb-6">Last updated: October 2, 2026</p>
+            <p className="text-sm text-gray-500 mb-6">Last updated: November 15, 2026</p>
             <p className="text-base text-[#E5E5E5] leading-relaxed">
               This policy explains what information CrickAuction collects, how it is used, and which third-party services are involved. We aim to collect only the minimal data necessary to provide a real-time multiplayer auction experience.
             </p>
@@ -133,7 +133,7 @@ const PrivacyPolicy = () => {
                 <ul className="list-disc pl-5 space-y-2 text-gray-400">
                   <li><strong className="text-gray-200">Account information:</strong> If you sign in with Google, we collect your display name, email address, and profile picture URL.</li>
                   <li><strong className="text-gray-200">Auction data:</strong> We store the state of the auction rooms you create or join, including team configurations, bids, and chat messages.</li>
-                  <li><strong className="text-gray-200">Device information:</strong> We may collect non-personally identifiable information such as browser type, screen resolution, and operating system for diagnostic purposes.</li>
+                  <li><strong className="text-gray-200">Device & network information:</strong> We collect non-personally identifiable device specifications (browser type, screen resolution, operating system) and IP addresses for edge security, rate limiting, and ad fraud prevention.</li>
                 </ul>
               </div>
             </section>
@@ -164,7 +164,7 @@ const PrivacyPolicy = () => {
               <h2 className="text-xl font-semibold text-white mb-4">4. Auction and room data</h2>
               <div className="space-y-4 text-[#E5E5E5] text-base leading-relaxed">
                 <p>
-                  Auction rooms, bids, rosters, and associated configurations are stored in the Firebase Realtime Database. This data is retained to allow users to resume interrupted auctions and review past auction results. We do not use this data for any marketing or advertising purposes.
+                  Auction rooms, bids, rosters, and associated configurations are stored in the Firebase Realtime Database. This data is retained to allow users to resume interrupted auctions and review past auction results. We do not use auction gameplay data for marketing or advertising purposes.
                 </p>
               </div>
             </section>
@@ -196,6 +196,10 @@ const PrivacyPolicy = () => {
                 <p>CrickAuction integrates with the following third-party services:</p>
                 <ul className="list-disc pl-5 space-y-2 text-gray-400">
                   <li><strong>Firebase (Google):</strong> For authentication, real-time database, and hosting.</li>
+                  <li><strong>Cloudflare:</strong> For edge network acceleration, DDoS mitigation, and API rate limiting.</li>
+                  <li>
+                    <strong>Google AdSense & Certified Ad Buyers:</strong> For programmatic ad delivery. In ad requests, user IP addresses and technical device identifiers may be shared with Google and certified advertising buyers (demand-side platforms) for regional ad targeting, frequency capping, and ad fraud detection.
+                  </li>
                 </ul>
                 <p>
                   These services have their own privacy policies governing how they handle data processed on our behalf.
@@ -208,6 +212,9 @@ const PrivacyPolicy = () => {
               <div className="space-y-4 text-[#E5E5E5] text-base leading-relaxed">
                 <p>
                   You have the right to request the deletion of your account and associated data. If you wish to have your data removed from our systems, please contact us. You can also revoke CrickAuction's access to your Google account via your Google Account permissions dashboard.
+                </p>
+                <p>
+                  To manage personalized advertising preferences or opt out of interest-based ads served by Google and its advertising partners, visit <a href="https://adssettings.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors underline">Google Ads Settings</a>.
                 </p>
               </div>
             </section>

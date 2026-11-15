@@ -57,7 +57,7 @@ export default function CookieConsent() {
 
             {/* Description */}
             <p className="text-xs text-slate-400 font-sans leading-relaxed">
-              We use essential local storage to keep auction bids synced in real time.{' '}
+              We use cookies and essential local storage to keep auction bids synced in real time and support site features and advertising.{' '}
               <Link to="/privacy" className="text-white underline underline-offset-2 hover:text-slate-300 transition-colors">
                 Privacy Policy
               </Link>
