@@ -177,14 +177,14 @@ export default {
         let cached = await cache.match(cacheKey);
         if (cached) return cached;
 
-        // Active waiting rooms created in the last 2 hours with online admin/host
-        const twoHoursAgo = Date.now() - 2 * 60 * 60 * 1000;
+        // Active waiting rooms created in the last 20 minutes with online admin/host
+        const twentyMinutesAgo = Date.now() - 20 * 60 * 1000;
         const { results } = await env.DB.prepare(
           `SELECT id, server, auction_type, squad_limit, overseas_limit, settings, players, host_online, created_at 
            FROM auctions 
            WHERE is_public = 1 AND status = 'waiting' AND host_online = 1 AND created_at >= ? 
            ORDER BY created_at DESC LIMIT 20`
-        ).bind(twoHoursAgo).all();
+        ).bind(twentyMinutesAgo).all();
 
         const formatted = (results || []).map((r) => {
           const players = parseJsonField(r.players, []);

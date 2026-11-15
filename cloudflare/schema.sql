@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS auctions (
   id TEXT PRIMARY KEY,
   server TEXT NOT NULL DEFAULT 'server-1',
   auction_type TEXT DEFAULT 'mega',
-  status TEXT DEFAULT 'waiting',
+  status TEXT DEFAULT 'waiting', -- 'waiting' | 'active' | 'paused' | 'completed' | 'cancelled'
   is_public INTEGER DEFAULT 1,
   host_online INTEGER DEFAULT 1,
   squad_limit INTEGER DEFAULT 25,

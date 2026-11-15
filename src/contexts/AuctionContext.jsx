@@ -198,6 +198,13 @@ export const AuctionProvider = ({ children }) => {
     if (isLocalRoom(roomId, server)) {
       return;
     }
+
+    const prevRoom = localStorage.getItem('crickauction_active_hosted_room');
+    if (prevRoom && prevRoom !== roomId) {
+      updateAuctionRecord(prevRoom, { status: 'cancelled', host_online: 0 }).catch(() => {});
+    }
+    localStorage.setItem('crickauction_active_hosted_room', roomId);
+
     const requestedServer = normalizeServer(server);
 
     // A full free-plan database never opens its socket. Probe the chosen server
@@ -1938,6 +1945,9 @@ export const AuctionProvider = ({ children }) => {
           const isReporter = !reporterId || reporterId === userId;
           if (hostWasOnline === true && !hostOnline && isReporter) {
             void pauseLiveLot(roomRtdb, auctionId, getSyncedTime());
+            if (currentRoomData.status === 'active') {
+              updateAuctionRecord(auctionId, { status: 'paused' }).catch(() => {});
+            }
           }
           hostWasOnline = hostOnline;
         }
@@ -2221,14 +2231,17 @@ export const AuctionProvider = ({ children }) => {
       // Set offline on component unmount
       set(myPresenceRef, { online: false, lastSeen: serverTimestampRtdb() });
 
-      // Mark the room offline in the directory when the HOST leaves a waiting public room.
-      if (currentRoomData && currentRoomData.hostId === userId && currentRoomData.isPublic && currentRoomData.status === 'waiting') {
-        syncHostOnline(false);
-        // The socket stays open for a few seconds after unmount, so onDisconnect
-        // does not fire yet. Pause directly; peers do the same on the presence flip.
-        void pauseLiveLot(roomRtdb, auctionId, getSyncedTime());
-        // Clean navigation away from the room disarms onDisconnect so it does not
-        // fire 5s later when the delayed socket closure runs.
+      // Mark the room cancelled and offline when the HOST leaves an unstarted waiting room.
+      if (currentRoomData && currentRoomData.hostId === userId) {
+        if (currentRoomData.status === 'waiting') {
+          if (currentRoomData.isPublic) syncHostOnline(false);
+          updateAuctionRecord(auctionId, { status: 'cancelled', host_online: 0 }).catch(() => {});
+          try { localStorage.removeItem('crickauction_active_hosted_room'); } catch {}
+        }
+        if (currentRoomData.status === 'active') {
+          void pauseLiveLot(roomRtdb, auctionId, getSyncedTime());
+          updateAuctionRecord(auctionId, { status: 'paused' }).catch(() => {});
+        }
         disarmDisconnectPause();
       }
 
@@ -2420,6 +2433,8 @@ export const AuctionProvider = ({ children }) => {
       type: 'log',
       timestamp: serverTimestampRtdb()
     });
+
+    updateAuctionRecord(roomId, { status: 'paused' }).catch(() => {});
   }, [user, currentAuction, getSyncedTime, updateLocalSoloState]);
 
   const resumeAuction = useCallback(async (roomId) => {
@@ -2460,6 +2475,8 @@ export const AuctionProvider = ({ children }) => {
       type: 'log',
       timestamp: serverTimestampRtdb()
     });
+
+    updateAuctionRecord(roomId, { status: 'active' }).catch(() => {});
   }, [getSyncedTime, user, currentAuction]);
 
   const endAuction = useCallback(async (roomId) => {

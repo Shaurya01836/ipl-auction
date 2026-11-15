@@ -235,6 +235,18 @@ const LandingPage = () => {
 
   const [isGuestMode, setIsGuestMode] = useState(false);
   const [guestName, setGuestName] = useState("");
+  const [cooldownRemaining, setCooldownRemaining] = useState(0);
+
+  useEffect(() => {
+    const checkCooldown = () => {
+      const cooldownUntil = parseInt(localStorage.getItem('crickauction_room_cooldown_until') || '0', 10);
+      const rem = Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000));
+      setCooldownRemaining(rem);
+    };
+    checkCooldown();
+    const interval = setInterval(checkCooldown, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const { user, loginWithGoogle, loginAsGuest, logout } = useAuth();
   const { createRoom, joinRoomDb } = useAuction();
@@ -545,6 +557,17 @@ const LandingPage = () => {
       const displayName = user.displayName || "Manager";
 
       if (activeTab === "new") {
+        if (!playSolo) {
+          const cooldownUntil = parseInt(localStorage.getItem('crickauction_room_cooldown_until') || '0', 10);
+          const remainingSeconds = Math.ceil((cooldownUntil - Date.now()) / 1000);
+          if (remainingSeconds > 0) {
+            setError(`Please wait ${remainingSeconds}s before creating another auction room.`);
+            setTimeout(() => setError(""), 4000);
+            setIsSubmitting(false);
+            return;
+          }
+        }
+
         let newRoomId = null;
         let result = null;
 
@@ -579,6 +602,9 @@ const LandingPage = () => {
 
         const actualServer = result?.server || selectedServer;
         setSelectedServer(actualServer);
+        if (!playSolo) {
+          localStorage.setItem('crickauction_room_cooldown_until', String(Date.now() + 30000));
+        }
         if (result?.fellBack) {
           setNotice(
             `${getServerMeta(result.requestedServer).label} was full, so this room was created on ${getServerMeta(actualServer).label}.`,
@@ -1174,12 +1200,14 @@ const LandingPage = () => {
                 <div className="pt-1 sm:pt-2">
                   <button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || (cooldownRemaining > 0 && !playSolo)}
                     className="w-full h-10 sm:h-12 relative overflow-hidden group/submit rounded-xl bg-white hover:bg-slate-200 text-black shadow-[0_10px_30px_rgba(255,255,255,0.08)] disabled:opacity-50 cursor-pointer transition-all active:scale-[0.98]"
                   >
                     <div className="relative flex items-center justify-center gap-2 font-black uppercase tracking-[0.16em] sm:tracking-[0.2em] text-[10px] sm:text-xs">
                       {isSubmitting ? (
                         <Loader2 size={18} className="animate-spin" />
+                      ) : cooldownRemaining > 0 && !playSolo ? (
+                        <span>Wait {cooldownRemaining}s to Create</span>
                       ) : (
                         <>
                           <span>{playSolo ? "Start Solo Auction" : "Start Auction"}</span>
@@ -1608,8 +1636,10 @@ const LandingPage = () => {
                                         session.status === "completed"
                                           ? "bg-green-500/10 text-green-500"
                                           : session.status === "active"
-                                            ? "bg-yellow-500/10 text-yellow-500"
-                                            : "bg-gray-500/10 text-gray-400"
+                                            ? "bg-emerald-500/10 text-emerald-400"
+                                            : session.status === "paused"
+                                              ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                              : "bg-gray-500/10 text-gray-400"
                                       }`}
                                     >
                                       {session.status}

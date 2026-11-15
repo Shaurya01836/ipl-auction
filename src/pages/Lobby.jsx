@@ -17,7 +17,9 @@ import {
   Bot,
   Info,
   X,
-  Eye
+  Eye,
+  AlertTriangle,
+  Clock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -31,10 +33,11 @@ import PageBackground from '../components/PageBackground';
 import useRoomServer from '../hooks/useRoomServer';
 import { SERVER_LOCAL, withServerParam } from '../lib/auctionServers';
 import useDocumentTitle from '../hooks/useDocumentTitle';
-import { ref, set } from 'firebase/database';
+import { ref, set, update as updateRtdb } from 'firebase/database';
 import { getRtdb } from '../lib/firebase';
 import { isSoloBotRoom } from '../lib/botSimulation';
 import { convertLobbyToSolo } from '../lib/lobbyConversion';
+import { updateAuctionRecord } from '../lib/directoryApi';
 
 // Small-screen detection (matches the 767px breakpoint used in index.css).
 // Framer-motion elements render without any animation when this is true.
@@ -80,6 +83,44 @@ const Lobby = () => {
   });
 
   const isAdmin = currentAuction?.hostId === user?.uid;
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+
+  const handleExitRequest = () => {
+    if (isAdmin && currentAuction?.status === 'waiting') {
+      setShowExitConfirm(true);
+    } else {
+      navigate('/');
+    }
+  };
+
+  const handleConfirmExitAndCancel = async () => {
+    setShowExitConfirm(false);
+    try {
+      localStorage.setItem('crickauction_room_cooldown_until', String(Date.now() + 30000));
+      const rtdbInstance = getRtdb(server);
+      await updateRtdb(ref(rtdbInstance, `auctions/${id}/room`), { status: 'cancelled' }).catch(() => {});
+      await updateAuctionRecord(id, { status: 'cancelled', host_online: 0 }).catch(() => {});
+    } finally {
+      navigate('/');
+    }
+  };
+
+  useEffect(() => {
+    if (!isAdmin || currentAuction?.status !== 'waiting') return;
+
+    window.history.pushState({ inLobby: true }, '');
+
+    const handlePopState = () => {
+      window.history.pushState({ inLobby: true }, '');
+      setShowExitConfirm(true);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [isAdmin, currentAuction?.status]);
+
   const players = currentAuction?.players || [];
   const teamCount = countAuctionTeams(players);
   const canStartAuction = teamCount >= MIN_TEAMS_TO_START;
@@ -437,7 +478,8 @@ const Lobby = () => {
     return <PageLoader text="Connecting to Lobby..." />;
   }
 
-  if (!currentAuction) {
+  if (!currentAuction || currentAuction.status === 'cancelled') {
+    const isCancelled = currentAuction?.status === 'cancelled';
     return (
       <div className="relative min-h-screen bg-transparent flex items-center justify-center p-6 text-white font-sans overflow-x-hidden">
         <PageBackground />
@@ -448,9 +490,13 @@ const Lobby = () => {
           <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-5 text-slate-300 shadow-xl">
             <ShieldAlert size={32} />
           </div>
-          <h2 className="text-2xl font-pixel uppercase tracking-tight text-white mb-2">Room Not Found</h2>
+          <h2 className="text-2xl font-pixel uppercase tracking-tight text-white mb-2">
+            {isCancelled ? 'Room Closed' : 'Room Not Found'}
+          </h2>
           <p className="text-slate-400 text-xs font-medium mb-6 leading-relaxed">
-            This auction room code (<span className="text-white font-mono font-bold">{id}</span>) does not exist, has expired, or was closed by the host.
+            {isCancelled
+              ? `The host closed auction room #${id}. Return to home to join or create an auction.`
+              : `This auction room code (${id}) does not exist, has expired, or was closed by the host.`}
           </p>
           <button
             onClick={() => navigate('/')}
@@ -511,7 +557,7 @@ const Lobby = () => {
               <Eye size={15} /> Spectate Room Only
             </button>
             <button
-              onClick={() => navigate('/')}
+              onClick={handleExitRequest}
               className="px-5 py-2.5 text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-[0.3em] transition-all cursor-pointer"
             >
               ← Cancel & Exit
@@ -541,7 +587,7 @@ const Lobby = () => {
       <div className="w-full max-w-6xl flex flex-nowrap items-center justify-between gap-1.5 sm:gap-2 md:gap-4 mb-6 md:mb-10 z-20 px-2 sm:px-4 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="flex items-center gap-1.5 sm:gap-3 md:gap-4 min-w-0">
           <button
-            onClick={() => navigate('/')}
+            onClick={handleExitRequest}
             className="shrink-0 p-2 sm:p-2.5 md:p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl sm:rounded-2xl transition-all group flex items-center gap-1.5 sm:gap-2 cursor-pointer active:scale-95"
             title="Exit Hub"
           >
@@ -941,6 +987,52 @@ const Lobby = () => {
                     </p>
                   )}
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Host Exit Confirmation Dialog */}
+      <AnimatePresence>
+        {showExitConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="w-full max-w-md bg-[#0c0d10] border border-white/10 p-6 sm:p-7 rounded-[1.75rem] shadow-2xl relative overflow-hidden text-left"
+            >
+              
+
+              <h3 className="text-base sm:text-lg font-pixel uppercase tracking-wide text-white mb-2">
+                Close Room & Exit?
+              </h3>
+
+              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed mb-4">
+                Leaving will close and cancel this auction room for all waiting players.
+              </p>
+
+              <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5 mb-6 flex items-center gap-2.5 text-xs text-amber-300/90 font-medium">
+                <Clock size={16} className="shrink-0 text-amber-400" />
+                <span>You cannot create another auction for <strong>30 seconds</strong>.</span>
+              </div>
+
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowExitConfirm(false)}
+                  className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer active:scale-95"
+                >
+                  Keep Room Open
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmExitAndCancel}
+                  className="px-5 py-2.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 hover:text-red-200 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg active:scale-95"
+                >
+                  Close & Exit
+                </button>
               </div>
             </motion.div>
           </div>

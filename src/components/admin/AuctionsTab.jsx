@@ -5,6 +5,20 @@ import { Link } from 'react-router-dom';
 import { getAuctionServer, withServerParam } from '../../lib/auctionServers';
 import PaginationControls from './PaginationControls';
 
+const getStatusBadgeStyle = (status) => {
+  switch (status) {
+    case 'completed':
+      return 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400';
+    case 'paused':
+      return 'bg-amber-500/10 border-amber-500/20 text-amber-400';
+    case 'waiting':
+      return 'bg-slate-500/10 border-slate-500/20 text-slate-400';
+    case 'active':
+    default:
+      return 'bg-blue-500/10 border-blue-500/20 text-blue-400';
+  }
+};
+
 const AuctionsTab = ({
   filteredAuctions,
   paginatedAuctions,
@@ -38,7 +52,7 @@ const AuctionsTab = ({
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-          {['all', 'active', 'completed'].map((st) => (
+          {['all', 'waiting', 'active', 'paused', 'completed'].map((st) => (
             <button
               key={st}
               onClick={() => setAuctionStatusFilter(st)}
@@ -78,10 +92,7 @@ const AuctionsTab = ({
                       ID: {auc.id}
                     </div>
                   </div>
-                  <span className={`px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider border shrink-0 ${auc.status === 'completed'
-                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                    : 'bg-blue-500/10 border-blue-500/20 text-blue-400'
-                    }`}>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider border shrink-0 ${getStatusBadgeStyle(auc.status)}`}>
                     {auc.status || 'active'}
                   </span>
                 </div>
@@ -145,10 +156,7 @@ const AuctionsTab = ({
                       </td>
 
                       <td className="py-4 px-6">
-                        <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border ${auc.status === 'completed'
-                          ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                          : 'bg-blue-500/10 border-blue-500/20 text-blue-400'
-                          }`}>
+                        <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border ${getStatusBadgeStyle(auc.status)}`}>
                           {auc.status || 'active'}
                         </span>
                       </td>

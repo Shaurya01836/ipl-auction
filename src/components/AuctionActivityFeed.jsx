@@ -47,17 +47,11 @@ const generateMockNotification = (existingIds = new Set()) => {
 export default function AuctionActivityFeed({ activeCount = 0, stats = null }) {
   const [notifications, setNotifications] = useState([]);
   const [fakeCount, setFakeCount] = useState(14);
-  const [fakeTotal, setFakeTotal] = useState(48);
 
   const liveRooms =
     stats?.activeCount !== undefined && stats?.activeCount !== null
       ? (stats.activeCount > 0 ? stats.activeCount : fakeCount)
       : (activeCount > 0 ? activeCount : fakeCount);
-
-  const totalRecent =
-    stats?.totalRecent !== undefined && stats?.totalRecent !== null
-      ? (stats.totalRecent > 0 ? stats.totalRecent : fakeTotal)
-      : fakeTotal;
 
   // Initialize with 8 historical notifications to fill the height
   useEffect(() => {
@@ -117,17 +111,11 @@ export default function AuctionActivityFeed({ activeCount = 0, stats = null }) {
           <span>LIVE AUCTION ACTIVITY</span>
         </h2>
         
-        {/* Dynamic Activity Stats Badges */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 mt-2.5 select-none">
+        {/* Dynamic Activity Stats Badge */}
+        <div className="flex items-center gap-2 sm:gap-2.5 mt-2.5 select-none">
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
             <span className="text-[9px] sm:text-[10px] font-pixel uppercase tracking-widest leading-none">
               {liveRooms} Live
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300">
-            <span className="text-[9px] sm:text-[10px] font-pixel uppercase tracking-widest leading-none">
-              {totalRecent}+ Today
             </span>
           </div>
         </div>
