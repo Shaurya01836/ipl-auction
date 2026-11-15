@@ -64,17 +64,6 @@ export default function AuctionActivityFeed({ activeCount = 0, stats = null }) {
     setNotifications(initial);
   }, []);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setFakeCount(prev => {
-        const delta = Math.random() > 0.5 ? 1 : -1;
-        const next = prev + delta;
-        return next >= 10 && next <= 25 ? next : prev;
-      });
-    }, 12000);
-    return () => clearInterval(interval);
-  }, []);
-
   // Dynamic timeout to push a new notification at variable intervals (2s to 10s)
   useEffect(() => {
     let timeoutId;

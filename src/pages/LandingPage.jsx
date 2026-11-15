@@ -517,12 +517,6 @@ const LandingPage = () => {
     e.preventDefault();
     if (!user) return;
 
-    // Abort in-flight Supabase REST queries
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-
     setIsSubmitting(true);
     try {
       // Disconnect all RTDB instances to guarantee zero open sockets
