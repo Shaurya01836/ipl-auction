@@ -13,8 +13,14 @@ function isAllowedOrigin(origin) {
       host.endsWith('.crickauction.in') ||
       host === 'localhost' ||
       host === '127.0.0.1' ||
+      host === '[::1]' ||
       host.endsWith('.web.app') ||
-      host.endsWith('.firebaseapp.com')
+      host.endsWith('.firebaseapp.com') ||
+      host.endsWith('.vercel.app') ||
+      host.endsWith('.pages.dev') ||
+      host.startsWith('192.168.') ||
+      host.startsWith('10.') ||
+      host.startsWith('172.')
     );
   } catch {
     return false;
@@ -105,11 +111,9 @@ export default {
 
     // ─── 0. CORS Preflight ───
     if (request.method === 'OPTIONS') {
-      if (origin && !isAllowedOrigin(origin)) {
-        return new Response(null, { status: 403 });
-      }
+      const allowed = isAllowedOrigin(origin);
       return new Response(null, {
-        status: 204,
+        status: allowed ? 204 : 403,
         headers: getCorsHeaders(origin),
       });
     }
@@ -123,11 +127,15 @@ export default {
     }
 
     // ─── Security Checks ───
-    // 1. Origin Restriction: Reject browser requests from unauthorized origins
-    if (origin && !isAllowedOrigin(origin)) {
+    // 1. Origin Restriction: Reject browser requests from unauthorized origins on mutating endpoints
+    const isPublicRead = request.method === 'GET' && (path === '/api/stats' || path === '/api/public-rooms');
+    if (origin && !isAllowedOrigin(origin) && !isPublicRead) {
       return new Response(JSON.stringify({ error: 'Origin not allowed' }), {
         status: 403,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getCorsHeaders(origin),
+        },
       });
     }
 
@@ -218,12 +226,11 @@ export default {
         if (cached) return cached;
 
         const row = await env.DB.prepare(
-          `SELECT total_count, active_count FROM platform_stats WHERE id = 'global' LIMIT 1`
+          `SELECT active_count FROM platform_stats WHERE id = 'global' LIMIT 1`
         ).first();
 
         const data = {
-          totalCount: row?.total_count || 1935,
-          activeCount: row?.active_count || 1475,
+          activeCount: row?.active_count || 0,
         };
 
         const response = json(data, 200, {
@@ -360,13 +367,41 @@ export default {
           const stmts = [
             env.DB.prepare(`UPDATE auctions SET ${updates.join(', ')} WHERE id = ?`).bind(...bindings),
           ];
-          if (body.status === 'completed') {
-            stmts.push(
-              env.DB.prepare(
-                `UPDATE platform_stats SET active_count = MAX(0, active_count - 1), updated_at = ? WHERE id = 'global'`
-              ).bind(Date.now())
-            );
+
+          if (body.status !== undefined) {
+            const current = await env.DB.prepare(`SELECT status FROM auctions WHERE id = ? LIMIT 1`).bind(id).first();
+            const prevStatus = current?.status || 'waiting';
+
+            if (body.status === 'completed' || body.status === 'cancelled') {
+              // Deduct if it was active or waiting (if paused, already deducted)
+              if (prevStatus === 'active' || prevStatus === 'waiting') {
+                stmts.push(
+                  env.DB.prepare(
+                    `UPDATE platform_stats SET active_count = MAX(0, active_count - 1), updated_at = ? WHERE id = 'global'`
+                  ).bind(Date.now())
+                );
+              }
+            } else if (body.status === 'paused') {
+              // Deduct when paused
+              if (prevStatus === 'active' || prevStatus === 'waiting') {
+                stmts.push(
+                  env.DB.prepare(
+                    `UPDATE platform_stats SET active_count = MAX(0, active_count - 1), updated_at = ? WHERE id = 'global'`
+                  ).bind(Date.now())
+                );
+              }
+            } else if (body.status === 'active') {
+              // Increment ONLY when resuming from paused (waiting -> active does nothing)
+              if (prevStatus === 'paused') {
+                stmts.push(
+                  env.DB.prepare(
+                    `UPDATE platform_stats SET active_count = active_count + 1, updated_at = ? WHERE id = 'global'`
+                  ).bind(Date.now())
+                );
+              }
+            }
           }
+
           await env.DB.batch(stmts);
         }
 

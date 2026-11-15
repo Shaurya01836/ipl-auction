@@ -46,12 +46,11 @@ const generateMockNotification = (existingIds = new Set()) => {
 
 export default function AuctionActivityFeed({ activeCount = 0, stats = null }) {
   const [notifications, setNotifications] = useState([]);
-  const [fakeCount, setFakeCount] = useState(14);
 
   const liveRooms =
     stats?.activeCount !== undefined && stats?.activeCount !== null
-      ? (stats.activeCount > 0 ? stats.activeCount : fakeCount)
-      : (activeCount > 0 ? activeCount : fakeCount);
+      ? stats.activeCount
+      : (activeCount !== undefined && activeCount !== null ? activeCount : 0);
 
   // Initialize with 8 historical notifications to fill the height
   useEffect(() => {

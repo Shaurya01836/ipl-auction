@@ -17,11 +17,11 @@ const CACHE_TTL_MS = 60 * 1000;
 
 async function request(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
+  const isGet = !options.method || options.method.toUpperCase() === 'GET';
   const response = await fetch(url, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
-      'X-CrickAuction-Client': 'crickauction-web',
+      ...(isGet ? {} : { 'Content-Type': 'application/json', 'X-CrickAuction-Client': 'crickauction-web' }),
       ...(options.headers || {}),
     },
   });
@@ -69,14 +69,13 @@ export async function fetchPlatformStats(force = false) {
   try {
     const res = await request('/api/stats');
     const data = {
-      totalCount: res.totalCount || 0,
       activeCount: res.activeCount || 0,
     };
     platformStatsCache = { data, timestamp: now };
     return data;
   } catch (err) {
     console.warn('[directoryApi] Failed to fetch platform stats', err);
-    return platformStatsCache.data || { totalCount: 0, activeCount: 0 };
+    return platformStatsCache.data || { activeCount: 0 };
   }
 }
 
