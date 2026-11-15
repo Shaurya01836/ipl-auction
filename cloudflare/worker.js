@@ -114,7 +114,10 @@ export default {
       const allowed = isAllowedOrigin(origin);
       return new Response(null, {
         status: allowed ? 204 : 403,
-        headers: getCorsHeaders(origin),
+        headers: {
+          ...getCorsHeaders(origin),
+          'Cache-Control': 'public, max-age=86400',
+        },
       });
     }
 
@@ -177,7 +180,7 @@ export default {
 
     try {
 
-      // ─── 1. Public Rooms Directory (Edge-Cached 5s) ───
+      // ─── 1. Public Rooms Directory & Stats Consolidated (Edge-Cached 15s) ───
       if (request.method === 'GET' && path === '/api/public-rooms') {
         const cache = caches.default;
         const cacheUrl = new URL(url.origin + '/api/public-rooms');
@@ -187,14 +190,19 @@ export default {
 
         // Active waiting rooms created in the last 20 minutes with online admin/host
         const twentyMinutesAgo = Date.now() - 20 * 60 * 1000;
-        const { results } = await env.DB.prepare(
-          `SELECT id, server, auction_type, squad_limit, overseas_limit, settings, players, host_online, created_at 
-           FROM auctions 
-           WHERE is_public = 1 AND status = 'waiting' AND host_online = 1 AND created_at >= ? 
-           ORDER BY created_at DESC LIMIT 20`
-        ).bind(twentyMinutesAgo).all();
+        const [roomsRes, statsRow] = await Promise.all([
+          env.DB.prepare(
+            `SELECT id, server, auction_type, squad_limit, overseas_limit, settings, players, host_online, created_at 
+             FROM auctions 
+             WHERE is_public = 1 AND status = 'waiting' AND host_online = 1 AND created_at >= ? 
+             ORDER BY created_at DESC LIMIT 20`
+          ).bind(twentyMinutesAgo).all(),
+          env.DB.prepare(
+            `SELECT active_count FROM platform_stats WHERE id = 'global' LIMIT 1`
+          ).first().catch(() => null),
+        ]);
 
-        const formatted = (results || []).map((r) => {
+        const formatted = (roomsRes.results || []).map((r) => {
           const players = parseJsonField(r.players, []);
           const settings = parseJsonField(r.settings, {});
           return {
@@ -210,8 +218,8 @@ export default {
           };
         });
 
-        const response = json({ data: formatted }, 200, {
-          'Cache-Control': 'public, max-age=4, s-maxage=5, stale-while-revalidate=10',
+        const response = json({ data: formatted, activeCount: statsRow?.active_count ?? 0 }, 200, {
+          'Cache-Control': 'public, max-age=10, s-maxage=15, stale-while-revalidate=30',
         });
         ctx.waitUntil(cache.put(cacheKey, response.clone()));
         return response;
@@ -234,13 +242,13 @@ export default {
         };
 
         const response = json(data, 200, {
-          'Cache-Control': 'public, max-age=30, s-maxage=60, stale-while-revalidate=120',
+          'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=120',
         });
         ctx.waitUntil(cache.put(cacheKey, response.clone()));
         return response;
       }
 
-      // ─── 2. Single Auction Lookup ───
+      // ─── 2. Single Auction Lookup (Cached 10s) ───
       if (request.method === 'GET' && path.startsWith('/api/auctions/')) {
         const id = path.replace('/api/auctions/', '').trim();
         const row = await env.DB.prepare(
@@ -248,7 +256,7 @@ export default {
         ).bind(id).first();
 
         if (!row) {
-          return json({ data: null }, 200);
+          return json({ data: null }, 200, { 'Cache-Control': 'public, max-age=5' });
         }
 
         return json({
@@ -258,6 +266,8 @@ export default {
             players: parseJsonField(row.players, []),
             banned_players: parseJsonField(row.banned_players, []),
           },
+        }, 200, {
+          'Cache-Control': 'public, max-age=10, s-maxage=15, stale-while-revalidate=30',
         });
       }
 
@@ -470,10 +480,12 @@ export default {
           squad: parseJsonField(t.squad, []),
         }));
 
-        return json({ data: formatted });
+        return json({ data: formatted }, 200, {
+          'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=600',
+        });
       }
 
-      // ─── 8. User History ───
+      // ─── 8. User History (Private Cached 60s) ───
       if (request.method === 'GET' && path === '/api/history') {
         const userId = url.searchParams.get('userId');
         if (!userId) return json({ data: [] });
@@ -507,7 +519,9 @@ export default {
           };
         });
 
-        return json({ data: formatted });
+        return json({ data: formatted }, 200, {
+          'Cache-Control': 'private, max-age=60, stale-while-revalidate=120',
+        });
       }
 
       // ─── 9. Delete User History Entry ───

@@ -289,17 +289,20 @@ const LandingPage = () => {
     }
   }, []);
 
-  useEffect(() => {
-    fetchAuctionStats();
-  }, [fetchAuctionStats]);
+  // fetchAuctionStats is retained for manual refreshes; mount sync is handled by fetchPublicRoomsList
 
-  // Fetch active public rooms from Cloudflare D1
-  const fetchPublicRoomsList = useCallback(async () => {
+  // Fetch active public rooms & synced stats from Cloudflare D1
+  const fetchPublicRoomsList = useCallback(async (force = false) => {
     setPublicRoomsLoading(true);
     setPublicRoomsError(null);
     try {
-      const rooms = await getPublicRooms();
+      const rooms = await getPublicRooms(force);
       setPublicRooms(rooms || []);
+      // Sync activeCount without firing an extra request (reads from consolidated cache)
+      const stats = await fetchPlatformStats(false);
+      if (stats?.activeCount !== undefined) {
+        setAuctionStats(stats);
+      }
     } catch (err) {
       console.warn("[landing] Failed to load public rooms", err);
       setPublicRoomsError("Failed to load public rooms");
