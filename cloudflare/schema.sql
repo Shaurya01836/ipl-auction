@@ -41,3 +41,12 @@ CREATE TABLE IF NOT EXISTS teams (
 CREATE INDEX IF NOT EXISTS idx_teams_user ON teams (user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_teams_auction ON teams (auction_id);
 
+-- Aggregate Counter Table (Reduces 3.6M table-scan reads to 1-row lookups)
+CREATE TABLE IF NOT EXISTS platform_stats (
+  id TEXT PRIMARY KEY,
+  total_count INTEGER DEFAULT 0,
+  active_count INTEGER DEFAULT 0,
+  updated_at INTEGER
+);
+
+

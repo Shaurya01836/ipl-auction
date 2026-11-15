@@ -168,6 +168,7 @@ export const AuctionProvider = ({ children }) => {
   const soloBotLoopRef = React.useRef(null);
   const soloStateManagerRef = React.useRef(null);
   const endingPlayerRef = React.useRef(false);
+  const persistedSoloRoomsRef = React.useRef(new Set());
   const serverSessionsRef = React.useRef(null);
   if (!serverSessionsRef.current) {
     serverSessionsRef.current = createServerSessionTracker();
@@ -453,8 +454,12 @@ export const AuctionProvider = ({ children }) => {
   }, [currentAuction?.server]);
 
   // Persist a finished device-local solo auction so its summary survives this
-  // browser. Runs only when the player explicitly ends the auction.
+  // browser. Runs only once when the player explicitly ends the auction or finishes.
   const persistSoloAuction = useCallback(async (state) => {
+    const roomId = state?.roomId || state?.id;
+    if (!roomId || persistedSoloRoomsRef.current.has(roomId)) return true;
+    persistedSoloRoomsRef.current.add(roomId);
+
     const payload = buildSoloPersistPayload(state);
     if (!payload) return false;
     try {
@@ -466,6 +471,7 @@ export const AuctionProvider = ({ children }) => {
       }
       return true;
     } catch (err) {
+      persistedSoloRoomsRef.current.delete(roomId);
       console.warn('[solo] Failed to save completed auction to directory', err);
       return false;
     }
@@ -1617,11 +1623,15 @@ export const AuctionProvider = ({ children }) => {
           });
         }
         if (next.status === 'completed' && !next.synced) {
+          next.synced = true;
           persistSoloAuction(next).then((saved) => {
             if (saved) {
               saveLocalSoloRoom(next, true);
+            } else {
+              next.synced = false;
             }
           }).catch((err) => {
+            next.synced = false;
             console.warn('[solo] Auto-persist to Supabase failed', err);
           });
         }
@@ -1884,12 +1894,13 @@ export const AuctionProvider = ({ children }) => {
 
     // ─── host_online (directory) ← RTDB presence mirror ───
     // The public directory reads a plain `host_online` boolean, but the RTDB is the
-    // source of truth for presence. Only PUBLIC rooms are listed in the directory, so
-    // we strictly skip private rooms to eliminate unnecessary database writes.
+    // source of truth for presence. Only PUBLIC WAITING rooms are listed in the directory, so
+    // we strictly skip private, active, and completed rooms to eliminate unnecessary database writes.
     // Start with true because room creation already initializes host_online: 1 in D1.
     let lastHostOnlineSynced = true;
     const syncHostOnline = (next) => {
       if (!currentRoomData?.isPublic) return;
+      if (currentRoomData?.status !== 'waiting') return;
       if (next === lastHostOnlineSynced) return;
       lastHostOnlineSynced = next; // optimistic: parallel presence ticks won't double-write
       updateAuctionRecord(auctionId, { host_online: next })
@@ -1909,13 +1920,12 @@ export const AuctionProvider = ({ children }) => {
 
         // Mirror the host's real presence to Supabase on transitions only.
         // Elect one reporter = the online member with the lowest uid, so exactly
-        // one client writes per transition. Peers/spectators can be the reporter
-        // too, which is what lets an abrupt host disconnect be reflected (the
-        // RTDB onDisconnect flips presence server-side even if the host crashes).
+        // one client writes per transition. Only sync once presence has actually loaded
+        // and only while the room is still in 'waiting' status.
         const reporterId = Object.keys(currentPresences)
           .filter((uid) => currentPresences[uid]?.online)
           .sort()[0];
-        if (reporterId === userId) {
+        if (reporterId === userId && presenceLoaded && currentRoomData.status === 'waiting') {
           syncHostOnline(!!currentPresences[currentRoomData.hostId]?.online);
         }
 
@@ -2211,10 +2221,8 @@ export const AuctionProvider = ({ children }) => {
       // Set offline on component unmount
       set(myPresenceRef, { online: false, lastSeen: serverTimestampRtdb() });
 
-      // Mark the room offline in the directory when the HOST leaves. This is the
-      // only writer for the "lone host leaves / no peers left to mirror" case;
-      // otherwise the peer-elected presence mirror handles offline transitions.
-      if (currentRoomData && currentRoomData.hostId === userId) {
+      // Mark the room offline in the directory when the HOST leaves a waiting public room.
+      if (currentRoomData && currentRoomData.hostId === userId && currentRoomData.isPublic && currentRoomData.status === 'waiting') {
         syncHostOnline(false);
         // The socket stays open for a few seconds after unmount, so onDisconnect
         // does not fire yet. Pause directly; peers do the same on the presence flip.

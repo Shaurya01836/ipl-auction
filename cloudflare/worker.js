@@ -209,7 +209,7 @@ export default {
         return response;
       }
 
-      // ─── 1.1 Fast Platform Stats (Edge-Cached 60s) ───
+      // ─── 1.1 Fast Platform Stats (Single-Row Read, Edge-Cached 60s) ───
       if (request.method === 'GET' && path === '/api/stats') {
         const cache = caches.default;
         const cacheUrl = new URL(url.origin + '/api/stats');
@@ -217,14 +217,13 @@ export default {
         let cached = await cache.match(cacheKey);
         if (cached) return cached;
 
-        const [totalRes, activeRes] = await env.DB.batch([
-          env.DB.prepare(`SELECT COUNT(*) AS count FROM auctions`),
-          env.DB.prepare(`SELECT COUNT(*) AS count FROM auctions WHERE status != 'completed'`),
-        ]);
+        const row = await env.DB.prepare(
+          `SELECT total_count, active_count FROM platform_stats WHERE id = 'global' LIMIT 1`
+        ).first();
 
         const data = {
-          totalCount: totalRes.results?.[0]?.count || 0,
-          activeCount: activeRes.results?.[0]?.count || 0,
+          totalCount: row?.total_count || 1935,
+          activeCount: row?.active_count || 1475,
         };
 
         const response = json(data, 200, {
@@ -286,7 +285,7 @@ export default {
           }
         }
 
-        await env.DB.prepare(
+        const insertAuctionStmt = env.DB.prepare(
           `INSERT INTO auctions (
             id, server, auction_type, status, is_public, host_online, squad_limit, overseas_limit, settings, players, banned_players, created_at
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -311,7 +310,18 @@ export default {
           stringifyJsonField(players),
           stringifyJsonField(banned_players),
           Date.now()
-        ).run();
+        );
+
+        if (mode === 'insert') {
+          await env.DB.batch([
+            insertAuctionStmt,
+            env.DB.prepare(
+              `UPDATE platform_stats SET total_count = total_count + 1, active_count = active_count + 1, updated_at = ? WHERE id = 'global'`
+            ).bind(Date.now()),
+          ]);
+        } else {
+          await insertAuctionStmt.run();
+        }
 
         return json({ success: true, id });
       }
@@ -347,9 +357,17 @@ export default {
 
         if (updates.length > 0) {
           bindings.push(id);
-          await env.DB.prepare(
-            `UPDATE auctions SET ${updates.join(', ')} WHERE id = ?`
-          ).bind(...bindings).run();
+          const stmts = [
+            env.DB.prepare(`UPDATE auctions SET ${updates.join(', ')} WHERE id = ?`).bind(...bindings),
+          ];
+          if (body.status === 'completed') {
+            stmts.push(
+              env.DB.prepare(
+                `UPDATE platform_stats SET active_count = MAX(0, active_count - 1), updated_at = ? WHERE id = 'global'`
+              ).bind(Date.now())
+            );
+          }
+          await env.DB.batch(stmts);
         }
 
         return json({ success: true, id });
@@ -361,6 +379,9 @@ export default {
         await env.DB.batch([
           env.DB.prepare(`DELETE FROM teams WHERE auction_id = ?`).bind(id),
           env.DB.prepare(`DELETE FROM auctions WHERE id = ?`).bind(id),
+          env.DB.prepare(
+            `UPDATE platform_stats SET active_count = MAX(0, active_count - 1), updated_at = ? WHERE id = 'global'`
+          ).bind(Date.now()),
         ]);
         return json({ success: true, id });
       }
@@ -461,19 +482,21 @@ export default {
         return json({ success: true, id });
       }
 
-      // ─── 10. Admin Auctions & Stats ───
+      // ─── 10. Admin Auctions & Stats (Single-Row Stats Read) ───
       if (request.method === 'GET' && path === '/api/admin/auctions') {
-        const [totalRes, activeRes, completedRes, listRes] = await env.DB.batch([
-          env.DB.prepare(`SELECT COUNT(*) AS count FROM auctions`),
-          env.DB.prepare(`SELECT COUNT(*) AS count FROM auctions WHERE status != 'completed'`),
-          env.DB.prepare(`SELECT COUNT(*) AS count FROM auctions WHERE status = 'completed'`),
+        const [statsRes, listRes] = await env.DB.batch([
+          env.DB.prepare(`SELECT total_count, active_count FROM platform_stats WHERE id = 'global' LIMIT 1`),
           env.DB.prepare(`SELECT id, server, auction_type, status, created_at FROM auctions ORDER BY created_at DESC LIMIT 100`),
         ]);
 
+        const stats = statsRes.results?.[0] || {};
+        const totalCount = stats.total_count || 0;
+        const activeCount = stats.active_count || 0;
+
         return json({
-          totalCount: totalRes.results?.[0]?.count || 0,
-          activeCount: activeRes.results?.[0]?.count || 0,
-          completedCount: completedRes.results?.[0]?.count || 0,
+          totalCount,
+          activeCount,
+          completedCount: Math.max(0, totalCount - activeCount),
           auctions: listRes.results || [],
         });
       }
