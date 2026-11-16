@@ -70,7 +70,7 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
           ? '5-Sprint (5 players per team. High-octane sprint: Requires explosive hitters, 1 keeper, and lethal strike/death bowlers. High individual impact matters most.)'
           : 'Mega Auction (18-25 players per team. Full IPL squad: Requires starting XI excellence plus dependable bench depth and variety.)';
 
-      const teamsPayload = roomTeams.map((team) => {
+      const allTeamsData = roomTeams.map((team) => {
         const teamId = team.teamId || team.team_id;
         const squad = team.squad || [];
         const squadArr = Array.isArray(squad) ? squad : squad ? Object.values(squad) : [];
@@ -97,22 +97,62 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
           teamName: teamInfo?.name || teamId,
           spent: team.spent || 0,
           playerCount: playersWithInfo.length,
+          isDisqualified: playersWithInfo.length < minPlayers,
           roster: roster || 'None',
         };
       });
 
-      // 3. Request evaluation (cached in D1 on backend)
+      // Directly disqualify teams with incomplete squads and never send their rosters to AI
+      const eligibleTeams = allTeamsData.filter((t) => !t.isDisqualified);
+      const disqualifiedTeams = allTeamsData
+        .filter((t) => t.isDisqualified)
+        .map((t) => ({
+          teamId: t.teamId,
+          score: 0,
+          grade: 'F',
+          title: 'Disqualified',
+          verdict: `Disqualified: Did not meet the minimum ${minPlayers} players required for this format (${t.playerCount}/${minPlayers} signed).`,
+        }));
+
+      if (eligibleTeams.length === 0) {
+        const allDisqualifiedAnalysis = {
+          winner: null,
+          generatedAt: Date.now(),
+          teams: disqualifiedTeams,
+        };
+        try {
+          localStorage.setItem(`crickauction_ai_${auctionId}`, JSON.stringify(allDisqualifiedAnalysis));
+        } catch {}
+        setAiAnalysis(allDisqualifiedAnalysis);
+        setAiLoading(false);
+        return;
+      }
+
+      // 3. Request evaluation ONLY for eligible teams (cached in D1 on backend)
       const genRes = await generateAuctionAiRating(auctionId, {
         mode,
-        teams: teamsPayload,
+        teams: eligibleTeams,
         force,
       });
 
       if (genRes?.analysis) {
+        const aiTeams = genRes.analysis.teams || [];
+        const mergedTeams = [
+          ...aiTeams,
+          ...disqualifiedTeams.filter(
+            (dt) => !aiTeams.some((at) => String(at.teamId || '').toUpperCase() === String(dt.teamId || '').toUpperCase())
+          ),
+        ];
+
+        const finalAnalysis = {
+          ...genRes.analysis,
+          teams: mergedTeams,
+        };
+
         try {
-          localStorage.setItem(`crickauction_ai_${auctionId}`, JSON.stringify(genRes.analysis));
+          localStorage.setItem(`crickauction_ai_${auctionId}`, JSON.stringify(finalAnalysis));
         } catch {}
-        setAiAnalysis(genRes.analysis);
+        setAiAnalysis(finalAnalysis);
       }
       if (genRes?.cooldown) {
         setCooldown(genRes.cooldown);
@@ -163,10 +203,12 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
         avgRating: normalizedPlayers.length > 0 ? Number((totalRating / normalizedPlayers.length).toFixed(1)) : 0,
         playerCount: normalizedPlayers.length,
         isDisqualified,
-        aiScore: aiTeam?.score,
-        aiGrade: aiTeam?.grade,
-        aiTitle: aiTeam?.title,
-        aiVerdict: aiTeam?.verdict,
+        aiScore: isDisqualified ? (aiAnalysis ? 0 : undefined) : aiTeam?.score,
+        aiGrade: isDisqualified ? (aiAnalysis ? 'F' : undefined) : aiTeam?.grade,
+        aiTitle: isDisqualified ? 'Disqualified' : aiTeam?.title,
+        aiVerdict: isDisqualified
+          ? `Disqualified: Did not meet the minimum requirement of ${minPlayers} players (${normalizedPlayers.length}/${minPlayers} signed).`
+          : aiTeam?.verdict,
       };
     }).sort((a, b) => {
       if (a.isDisqualified !== b.isDisqualified) return a.isDisqualified ? 1 : -1;

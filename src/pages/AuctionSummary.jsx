@@ -31,7 +31,6 @@ import PageLoader from '../components/PageLoader';
 import useRoomServer from '../hooks/useRoomServer';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import { isLocalRoom, loadLocalSoloRoom } from '../lib/localAuctionEngine';
-import { isUserAdmin } from '../lib/adminAuth';
 import {
   computeTeamSpent,
   countOverseas,
@@ -329,15 +328,17 @@ const AuctionSummary = () => {
   const activeAuction = (currentAuction && currentAuction.id === id) ? currentAuction : dbAuction;
   const activeTeams = (roomTeams && roomTeams.length > 0 && currentAuction?.id === id) ? roomTeams : dbTeams;
 
-  const isLocal = isLocalRoom(id, server, true) || (typeof id === 'string' && id.startsWith('SOLO-')) || server === 'local';
-  const isAdmin = isUserAdmin(user, import.meta.env.VITE_ADMIN_EMAIL);
+  const isLocalSoloOwner = Boolean(
+    (isLocalRoom(id, server, true) || server === 'local' || (typeof id === 'string' && id.startsWith('SOLO-'))) &&
+    loadLocalSoloRoom(id)
+  );
+
+  const roomCreatorId = activeAuction?.hostId || activeAuction?.host_id || activeAuction?.createdBy;
   const isHost = Boolean(
-    isLocal ||
-    isAdmin ||
+    isLocalSoloOwner ||
     (user?.uid && (
-      activeAuction?.hostId === user.uid ||
-      activeAuction?.createdBy === user.uid ||
-      activeAuction?.players?.some(p => (p?.id === user.uid || p?.userId === user.uid) && (p?.isHost || p?.isAdmin))
+      (roomCreatorId && roomCreatorId === user.uid) ||
+      activeAuction?.players?.some(p => (p?.id === user.uid || p?.userId === user.uid) && Boolean(p?.isHost))
     ))
   );
 
