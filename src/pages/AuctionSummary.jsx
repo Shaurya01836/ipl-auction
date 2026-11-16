@@ -5,6 +5,7 @@ import { useQuota } from '../contexts/QuotaContext';
 import { IPL_PLAYERS } from '../data/players';
 import { TEAMS } from '../data/teams';
 import { toPng } from 'html-to-image';
+import confetti from 'canvas-confetti';
 import { fetchAuctionRecord, fetchTeamsForAuction } from '../lib/directoryApi';
 import { db, getRtdb, goOnlineServer } from '../lib/firebase';
 import { ref, get } from 'firebase/database';
@@ -38,6 +39,7 @@ import {
   toFiniteNumber,
 } from '../lib/auctionDisplay';
 
+
 const AuctionSummary = () => {
   const { id } = useParams();
   useDocumentTitle(`Auction Summary #${id || ''} | CrickAuction`, 'Final squad rosters and auction summary.', true);
@@ -50,7 +52,7 @@ const AuctionSummary = () => {
   const [expandedTeam, setExpandedTeam] = useState(null);
   const [sharingTeamId, setSharingTeamId] = useState(null);
   const [copiedTeamId, setCopiedTeamId] = useState(null);
-  const [squadViewMode, setSquadViewMode] = useState('grid');
+    const posterRefs = React.useRef({});
 
   const [dbAuction, setDbAuction] = useState(null);
   const [dbTeams, setDbTeams] = useState([]);
@@ -61,18 +63,43 @@ const AuctionSummary = () => {
   const teamCardRefs = React.useRef({});
 
   const handleShareSquadImage = async (team, squad, manager) => {
-    const cardEl = teamCardRefs.current[team.id];
+    const cardEl = posterRefs.current[team.id] || teamCardRefs.current[team.id];
     if (!cardEl) return;
 
     setSharingTeamId(team.id);
 
     try {
+      if (typeof confetti === 'function') {
+        try {
+          confetti({
+            particleCount: 40,
+            spread: 60,
+            origin: { y: 0.8 },
+            colors: ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#ffffff']
+          });
+        } catch (_) {}
+      }
+
+      const width = 800;
+      const height = Math.max(cardEl.scrollHeight || 0, cardEl.offsetHeight || 0, 700);
+
       // Generate crisp 2x PNG Blob & Data URL from element
       const dataUrl = await toPng(cardEl, {
-        cacheBust: false,
+        width,
+        height,
+        backgroundColor: '#0c0d10',
         pixelRatio: 2,
         skipFonts: true,
-        imagePlaceholder: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
+        cacheBust: false,
+        style: {
+          position: 'static',
+          left: '0',
+          top: '0',
+          margin: '0',
+          transform: 'none',
+          visibility: 'visible',
+          opacity: '1',
+        },
       });
 
       const response = await fetch(dataUrl);
@@ -543,208 +570,268 @@ const AuctionSummary = () => {
                     {/* Team Accordion Toggle */}
                     <button
                       onClick={() => setExpandedTeam(isExpanded ? null : t.id)}
-                      className={`w-full flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-4 sm:p-5 rounded-2xl sm:rounded-[2rem] bg-[#0c0d10] border transition-all duration-300 relative overflow-hidden group active:scale-[0.99] touch-manipulation gap-4 ${
-                        isExpanded ? 'border-white/20 bg-white/[0.04] shadow-2xl' : 'border-white/5 hover:border-white/15 hover:bg-white/[0.02]'
+                      className={`w-full flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-4 sm:p-5 rounded-2xl sm:rounded-[1.75rem] bg-[#0c0d10] border transition-colors duration-200 relative overflow-hidden group active:scale-[0.98] touch-manipulation gap-4 ${
+                        isExpanded ? 'border-white/20 bg-white/[0.04] shadow-2xl' : 'border-white/5 hover:border-white/10 hover:bg-white/[0.02]'
                       }`}
                     >
-                      {/* Massive Background Logo */}
+                      {/* Subtle Background Watermark Logo */}
                       <div className="absolute -right-8 -bottom-8 w-40 sm:w-64 h-40 sm:h-64 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity pointer-events-none grayscale">
-                         <img src={t.logo} alt={`${t.name} Watermark Logo`} decoding="async" loading="lazy" className="w-full h-full object-contain" />
+                         <img src={t.logo} alt="" decoding="async" loading="lazy" className="w-full h-full object-contain" />
                       </div>
 
-                      <div className="flex items-center gap-3 sm:gap-5 relative z-10">
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 p-1.5 sm:p-2 flex items-center justify-center shadow-xl shrink-0">
-                           <img src={t.logo} alt={`${t.name} Logo`} decoding="async" loading="lazy" className="w-full h-full object-contain" />
+                      <div className="flex items-center gap-3 sm:gap-4 relative z-10">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 p-1.5 sm:p-2 flex items-center justify-center shadow-lg shrink-0">
+                           <img src={t.logo} alt="" decoding="async" loading="lazy" className="w-full h-full object-contain" />
                         </div>
                         <div className="text-left min-w-0">
-                          <h3 className="text-lg sm:text-xl font-black uppercase tracking-tight group-hover:text-slate-200 transition-colors truncate text-white">{t.name}</h3>
-                          <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] sm:tracking-[0.3em] leading-none mt-1 truncate">Managed by {manager?.name || 'N/A'}</p>
+                          <h3 className="text-base sm:text-xl font-pixel uppercase tracking-tight text-white group-hover:text-slate-200 transition-colors truncate">{t.name}</h3>
+                          <p className="text-[8px] sm:text-[9px] font-pixel text-slate-400 uppercase tracking-wider leading-none mt-1 truncate">Managed by {manager?.name || 'N/A'}</p>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-6 relative z-10 border-t sm:border-t-0 pt-3 sm:pt-0 border-white/5">
                         {/* Summary Stats */}
-                        <div className="flex items-center gap-4 sm:gap-6 md:gap-10 text-left sm:text-right sm:border-r border-white/10 sm:pr-6 md:pr-10">
+                        <div className="flex items-center gap-3 sm:gap-5 md:gap-7 text-left sm:text-right sm:border-r border-white/10 sm:pr-4 md:pr-7">
                           <div className="shrink-0">
-                            <span className="block text-[7px] sm:text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Players</span>
+                            <span className="block text-[7px] sm:text-[8px] font-pixel text-slate-400 uppercase tracking-wider mb-0.5">Players</span>
                             <span className="text-xs sm:text-base font-black text-white">{squad.length}</span>
                           </div>
                           <div className="shrink-0">
-                            <span className="block text-[7px] sm:text-[8px] font-black text-purple-400 uppercase tracking-widest mb-0.5">Overseas</span>
+                            <span className="block text-[7px] sm:text-[8px] font-pixel text-purple-400 uppercase tracking-wider mb-0.5">Overseas</span>
                             <span className="text-xs sm:text-base font-black text-white">{osCount}</span>
                           </div>
                           <div className="shrink-0">
-                            <span className="block text-[7px] sm:text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Spent</span>
+                            <span className="block text-[7px] sm:text-[8px] font-pixel text-slate-400 uppercase tracking-wider mb-0.5">Spent</span>
                             <span className="text-xs sm:text-base font-black text-white">{totalSpent === null ? '—' : `₹${formatCrores(totalSpent, 1)}Cr`}</span>
                           </div>
                         </div>
 
-                        <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/5 flex items-center justify-center transition-transform duration-300 shrink-0 ${isExpanded ? 'rotate-180 bg-white text-black' : 'text-slate-400'}`}>
-                          <ChevronDown size={18} />
+                        <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-200 shrink-0 ${isExpanded ? 'rotate-180 bg-white text-black' : 'text-slate-400 group-hover:text-white group-hover:bg-white/10'}`}>
+                          <ChevronDown size={16} />
                         </div>
                       </div>
                     </button>
 
-                    {/* Squad Content */}
-                    <AnimatePresence>
-                      {isExpanded && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="overflow-hidden px-1 sm:px-3 md:px-6 mb-4"
+                    {/* Squad Content (Hardware-Accelerated CSS Grid Accordion) */}
+                    <div
+                      className={`grid transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] px-1 sm:px-3 md:px-6 mb-4 ${
+                        isExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+                      }`}
+                    >
+                      <div className="overflow-hidden">
+                        <div 
+                           ref={el => teamCardRefs.current[t.id] = el}
+                           className="bg-[#0c0d10] border-x border-b border-white/10 rounded-b-2xl sm:rounded-b-[1.75rem] p-4 sm:p-6 space-y-6 sm:space-y-8 relative overflow-hidden shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)]"
                         >
-                          <div 
-                             ref={el => teamCardRefs.current[t.id] = el}
-                             className="bg-[#0c0d10] border-x border-b border-white/10 rounded-b-2xl sm:rounded-b-[2rem] p-4 sm:p-6 space-y-6 sm:space-y-8 relative overflow-hidden"
-                          >
-                             {/* Watermark Logo for Exported Image */}
-                             <div className="absolute right-4 top-4 w-32 h-32 opacity-5 pointer-events-none grayscale">
-                                <img src={t.logo} alt={`${t.name} Logo Watermark`} className="w-full h-full object-contain" />
-                             </div>
+                           {/* Watermark Logo for Exported Image */}
+                           <div className="absolute right-4 top-4 w-32 h-32 opacity-5 pointer-events-none grayscale">
+                              <img src={t.logo} alt="" decoding="async" loading="lazy" className="w-full h-full object-contain" />
+                           </div>
 
-                             {/* View Mode Toggle */}
-                             <div className="flex justify-end relative z-10 mb-2 sm:mb-4">
-                               <div className="bg-white/5 border border-white/10 p-1 rounded-xl flex items-center gap-1">
+                           {/* Top Toolbar: Primary Share CTA */}
+                           <div className="flex items-center justify-end gap-3 relative z-10 mb-4 sm:mb-6 pb-4 border-b border-white/10">
+                             <button 
+                               onClick={() => handleShareSquadImage(t, squad, manager)}
+                               disabled={sharingTeamId === t.id}
+                               className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-white hover:bg-slate-200 text-black font-pixel text-[8px] sm:text-[9px] uppercase tracking-wider transition-colors duration-150 shadow-[0_10px_30px_rgba(255,255,255,0.08)] active:scale-[0.98] cursor-pointer disabled:opacity-50 touch-manipulation shrink-0"
+                             >
+                               {sharingTeamId === t.id ? (
+                                 <><Loader2 size={13} className="animate-spin" /> Generating Poster...</>
+                               ) : copiedTeamId === t.id ? (
+                                 <><CheckCircle2 size={13} /> Poster Saved / Shared!</>
+                               ) : (
+                                 <><Share2 size={13} /> Share Squad Poster</>
+                               )}
+                             </button>
+                           </div>
+
+                           {/* Role-Grouped Squad List View (Zero-Jank CSS rendering) */}
+                           {['Batsman', 'Wicket-Keeper', 'All-Rounder', 'Bowler'].map(role => {
+                             const rolePlayers = squad.filter(p => p.role === role);
+                             if (rolePlayers.length === 0) return null;
+
+                             return (
+                               <div key={role} className="space-y-3 sm:space-y-4 relative z-10">
+                                 <div className="flex items-center gap-3 sm:gap-4">
+                                   <h4 className="text-[9px] sm:text-[10px] font-pixel uppercase tracking-wider text-slate-300">{role}s</h4>
+                                   <div className="flex-1 h-px bg-white/10" />
+                                   <span className="text-[8px] sm:text-[9px] font-pixel uppercase tracking-wider text-slate-400">{rolePlayers.length} Members</span>
+                                 </div>
+                                 
+                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3.5">
+                                   {rolePlayers.map((p) => (
+                                     <div 
+                                       key={p.id} 
+                                       className="transform-gpu bg-white/[0.02] border border-white/5 hover:border-white/10 hover:bg-white/[0.04] p-2.5 sm:p-3.5 rounded-xl flex items-center justify-between group/p transition-colors duration-150 active:scale-[0.98]"
+                                     >
+                                       <div className="flex items-center gap-3 min-w-0">
+                                         <div className="w-9 h-9 sm:w-11 sm:h-11 bg-black/40 border border-white/10 rounded-lg p-1 shrink-0 overflow-hidden">
+                                           <img 
+                                             src={p.image} 
+                                             alt={p.name}
+                                             decoding="async"
+                                             loading="lazy"
+                                             onError={(e) => {
+                                               e.target.onerror = null;
+                                               e.target.src = getPlayerAvatar(p?.name);
+                                             }}
+                                             className="w-full h-full object-cover" 
+                                           />
+                                         </div>
+                                         <div className="overflow-hidden min-w-0">
+                                           <h5 className="text-[11px] sm:text-[12px] font-bold uppercase tracking-tight truncate text-white">{p.name}</h5>
+                                           <div className="flex items-center gap-1.5">
+                                             <span className="text-[8px] font-pixel text-slate-400 uppercase tracking-wider">{p.type}</span>
+                                             {isOverseasPlayer(p) && <Wifi size={10} className="text-purple-400 rotate-90 shrink-0" />}
+                                           </div>
+                                         </div>
+                                       </div>
+                                       <div className="text-right shrink-0">
+                                         <div className="text-[12px] sm:text-[13px] font-black text-white">{p.bid == null ? '—' : `₹${formatCrores(p.bid)}Cr`}</div>
+                                       </div>
+                                     </div>
+                                   ))}
+                                 </div>
+                               </div>
+                             );
+                           })}
+
+                           {/* Summary Footer for Team */}
+                           <div className="pt-4 sm:pt-6 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 opacity-70 hover:opacity-100 transition-opacity relative z-10">
+                              <div className="flex items-center gap-3">
+                                 <LayoutGrid size={14} className="text-slate-400" />
+                                 <p className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] sm:tracking-[0.4em]">Composition Verified by Arena Engine</p>
+                              </div>
+                              <div className="flex gap-4">
                                  <button 
-                                   onClick={() => setSquadViewMode('grid')} 
-                                   className={`px-3 sm:px-4 py-1.5 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-[0.16em] transition-all ${squadViewMode === 'grid' ? 'bg-white text-black font-black shadow-md' : 'text-slate-400 hover:text-white'}`}
+                                    onClick={() => handleShareSquadImage(t, squad, manager)}
+                                    disabled={sharingTeamId === t.id}
+                                    className="flex items-center gap-2 text-[9px] font-black uppercase text-slate-300 hover:text-white transition-colors touch-manipulation cursor-pointer active:scale-95 disabled:opacity-50"
                                  >
-                                   List
+                                    {sharingTeamId === t.id ? (
+                                      <span className="text-slate-300 flex items-center gap-1.5"><Loader2 size={12} className="animate-spin" /> Generating Poster...</span>
+                                    ) : copiedTeamId === t.id ? (
+                                      <span className="text-emerald-400 flex items-center gap-1.5"><CheckCircle2 size={12} /> Image Downloaded!</span>
+                                    ) : (
+                                      <><Share2 size={12} /> Share Squad Image</>
+                                    )}
                                  </button>
-                                 <button 
-                                   onClick={() => setSquadViewMode('card')} 
-                                   className={`px-3 sm:px-4 py-1.5 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-[0.16em] transition-all ${squadViewMode === 'card' ? 'bg-white text-black font-black shadow-md' : 'text-slate-400 hover:text-white'}`}
-                                 >
-                                   Cards
-                                 </button>
-                               </div>
-                             </div>
+                              </div>
+                           </div>
+                        </div>
+                      </div>
+                    </div>
 
-                             {['Batsman', 'Wicket-Keeper', 'All-Rounder', 'Bowler'].map(role => {
-                              const rolePlayers = squad.filter(p => p.role === role);
-                              if (rolePlayers.length === 0) return null;
+                    {/* Hidden Container for crisp 2x PNG poster export */}
+                    <div
+                      style={{
+                        position: 'fixed',
+                        left: 0,
+                        top: 0,
+                        width: '800px',
+                        height: 0,
+                        overflow: 'hidden',
+                        pointerEvents: 'none',
+                        zIndex: -9999,
+                      }}
+                    >
+                      <div
+                        ref={(el) => (posterRefs.current[t.id] = el)}
+                        style={{
+                          width: '800px',
+                          backgroundColor: '#0c0d10',
+                          color: '#ffffff',
+                        }}
+                        className="bg-[#0c0d10] text-white p-8 rounded-3xl border border-white/15 font-sans"
+                      >
+                        {/* Watermark logo */}
+                        <div className="absolute -right-10 -bottom-10 w-72 h-72 opacity-[0.04] pointer-events-none grayscale">
+                          <img src={t.logo} alt="" className="w-full h-full object-contain" />
+                        </div>
 
-                              return (
-                                <div key={role} className="space-y-3 sm:space-y-4 relative z-10">
-                                  <div className="flex items-center gap-3 sm:gap-4">
-                                    <h4 className="text-[9px] sm:text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] sm:tracking-[0.3em]">{role}s</h4>
-                                    <div className="flex-1 h-px bg-white/10" />
-                                    <span className="text-[9px] sm:text-[10px] font-black text-slate-400">{rolePlayers.length} Members</span>
-                                  </div>
-                                  
-                                  <div className={`grid ${squadViewMode === 'card' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3.5 sm:gap-5' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3.5'}`}>
-                                    {rolePlayers.map((p, pidx) => (
-                                      <motion.div 
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: pidx * 0.04 }}
-                                        key={p.id} 
-                                        className={squadViewMode === 'card' 
-                                          ? "bg-[#0e1015]/95 border border-white/10 p-4 sm:p-5 rounded-2xl flex flex-col justify-between group/p relative overflow-hidden transition-all hover:border-white/20 hover:bg-white/[0.04]"
-                                          : "bg-white/[0.03] border border-white/5 p-2.5 sm:p-3.5 rounded-xl flex items-center justify-between group/p hover:bg-white/[0.06] hover:border-white/10 transition-all"
-                                        }
-                                      >
-                                        {squadViewMode === 'card' ? (
-                                           <>
-                                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/[0.03] blur-2xl rounded-full pointer-events-none opacity-0 group-hover/p:opacity-100 transition-opacity" />
-                                             <div className="flex items-start justify-between relative z-10 mb-4">
-                                                <div className="flex items-center gap-3.5 min-w-0">
-                                                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-black/40 border border-white/10 rounded-xl p-1 shrink-0 overflow-hidden">
-                                                    <img 
-                                                      src={p.image} 
-                                                      alt={p.name}
-                                                      decoding="async"
-                                                      loading="lazy"
-                                                      onError={(e) => {
-                                                        e.target.onerror = null;
-                                                        e.target.src = getPlayerAvatar(p?.name);
-                                                      }}
-                                                      className="w-full h-full object-cover" 
-                                                    />
-                                                  </div>
-                                                  <div className="min-w-0">
-                                                    <h5 className="text-sm sm:text-base font-black uppercase tracking-tight truncate text-white">{p.name}</h5>
-                                                    <div className="flex items-center gap-2 mt-1">
-                                                      <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">{p.type}</span>
-                                                      {isOverseasPlayer(p) && <Wifi size={12} className="text-purple-400 rotate-90 shrink-0" />}
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div className="text-right shrink-0">
-                                                  <span className="block text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Rating</span>
-                                                  <span className="text-lg sm:text-xl font-black text-white">{p.rating || 15}</span>
-                                                </div>
-                                             </div>
-                                             <div className="relative z-10 pt-3 border-t border-white/5 flex items-center justify-between">
-                                                <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Acquired For</div>
-                                                <div className="text-sm sm:text-base font-black text-emerald-400">{p.bid == null ? '—' : `₹${formatCrores(p.bid)}Cr`}</div>
-                                             </div>
-                                           </>
-                                        ) : (
-                                           <>
-                                             <div className="flex items-center gap-3 min-w-0">
-                                               <div className="w-9 h-9 sm:w-11 sm:h-11 bg-black/40 border border-white/10 rounded-lg p-1 shrink-0 overflow-hidden">
-                                                 <img 
-                                                   src={p.image} 
-                                                   alt={p.name}
-                                                   decoding="async"
-                                                   loading="lazy"
-                                                   onError={(e) => {
-                                                     e.target.onerror = null;
-                                                     e.target.src = getPlayerAvatar(p?.name);
-                                                   }}
-                                                   className="w-full h-full object-cover" 
-                                                 />
-                                               </div>
-                                               <div className="overflow-hidden min-w-0">
-                                                 <h5 className="text-[11px] sm:text-[12px] font-black uppercase tracking-tight truncate text-white">{p.name}</h5>
-                                                 <div className="flex items-center gap-1.5">
-                                                   <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{p.type}</span>
-                                                   {isOverseasPlayer(p) && <Wifi size={10} className="text-purple-400 rotate-90 shrink-0" />}
-                                                 </div>
-                                               </div>
-                                             </div>
-                                             <div className="text-right shrink-0">
-                                               <div className="text-[12px] sm:text-[13px] font-black text-emerald-400">{p.bid == null ? '—' : `₹${formatCrores(p.bid)}Cr`}</div>
-                                             </div>
-                                           </>
-                                        )}
-                                      </motion.div>
-                                    ))}
-                                  </div>
-                                </div>
-                              );
-                            })}
-
-                            {/* Summary Footer for Team */}
-                            <div className="pt-4 sm:pt-6 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 opacity-70 hover:opacity-100 transition-opacity relative z-10">
-                               <div className="flex items-center gap-3">
-                                  <LayoutGrid size={14} className="text-slate-400" />
-                                  <p className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] sm:tracking-[0.4em]">Composition Verified by Arena Engine</p>
-                               </div>
-                               <div className="flex gap-4">
-                                  <button 
-                                     onClick={() => handleShareSquadImage(t, squad, manager)}
-                                     disabled={sharingTeamId === t.id}
-                                     className="flex items-center gap-2 text-[9px] font-black uppercase text-slate-300 hover:text-white transition-colors touch-manipulation cursor-pointer active:scale-95 disabled:opacity-50"
-                                  >
-                                     {sharingTeamId === t.id ? (
-                                       <span className="text-slate-300 flex items-center gap-1.5"><Loader2 size={12} className="animate-spin" /> Generating Poster...</span>
-                                     ) : copiedTeamId === t.id ? (
-                                       <span className="text-emerald-400 flex items-center gap-1.5"><CheckCircle2 size={12} /> Image Downloaded!</span>
-                                     ) : (
-                                       <><Share2 size={12} /> Share Squad Image</>
-                                     )}
-                                  </button>
-                               </div>
+                        {/* Poster Header */}
+                        <div className="relative z-10 flex items-center justify-between pb-5 border-b border-white/10">
+                          <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/15 p-2 flex items-center justify-center">
+                              <img src={t.logo} alt="" className="w-full h-full object-contain" />
+                            </div>
+                            <div>
+                              <div className="text-[9px] font-pixel uppercase tracking-widest text-slate-400">IPL Auction • Official Squad</div>
+                              <h2 className="text-2xl font-pixel uppercase tracking-tight text-white mt-0.5">{t.name}</h2>
+                              <p className="text-[10px] font-sans text-slate-400 uppercase tracking-wider mt-0.5">
+                                Managed by {manager?.name || 'Franchise Management'}
+                              </p>
                             </div>
                           </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                          <div className="text-right">
+                            <div className="text-[11px] font-pixel uppercase tracking-wider text-white">CrickAuction</div>
+                            <div className="text-[9px] font-mono text-slate-500">crickauction.in</div>
+                          </div>
+                        </div>
+
+                        {/* Stats Ribbon */}
+                        <div className="relative z-10 grid grid-cols-3 gap-3 py-4 border-b border-white/10 text-center">
+                          <div className="bg-white/[0.02] p-2.5 rounded-xl border border-white/5">
+                            <div className="text-[8px] font-pixel uppercase tracking-wider text-slate-400 mb-1">Squad Size</div>
+                            <div className="text-base font-black text-white">{squad.length} Players</div>
+                          </div>
+                          <div className="bg-white/[0.02] p-2.5 rounded-xl border border-white/5">
+                            <div className="text-[8px] font-pixel uppercase tracking-wider text-purple-400 mb-1">Overseas</div>
+                            <div className="text-base font-black text-white">{osCount} / 8</div>
+                          </div>
+                          <div className="bg-white/[0.02] p-2.5 rounded-xl border border-white/5">
+                            <div className="text-[8px] font-pixel uppercase tracking-wider text-slate-400 mb-1">Purse Spent</div>
+                            <div className="text-base font-black text-white">₹{totalSpent === null ? '—' : formatCrores(totalSpent)}Cr</div>
+                          </div>
+                        </div>
+
+                        {/* Complete Squad Roster Grid */}
+                        <div className="relative z-10 pt-4">
+                          <div className="text-[11px] font-pixel uppercase tracking-wider text-white mb-3 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400" /> Complete Squad Roster ({squad.length})
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            {squad.map((p, idx) => (
+                              <div key={p.id || idx} className="bg-white/[0.03] border border-white/10 p-2 rounded-xl flex items-center justify-between">
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <span className="w-5 h-5 rounded bg-white/5 text-slate-300 border border-white/10 font-pixel text-[9px] flex items-center justify-center shrink-0">
+                                    {idx + 1}
+                                  </span>
+                                  <div className="w-8 h-8 rounded-lg bg-black/40 border border-white/10 overflow-hidden shrink-0">
+                                    <img 
+                                      src={p.image || getPlayerAvatar(p.name)} 
+                                      alt="" 
+                                      crossOrigin="anonymous"
+                                      loading="eager"
+                                      onError={(e) => { e.target.onerror = null; e.target.src = getPlayerAvatar(p?.name); }}
+                                      className="w-full h-full object-cover" 
+                                    />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="text-[11px] font-black text-white uppercase truncate">{p.name}</div>
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-[8px] font-pixel uppercase tracking-wider text-slate-400">{p.type || p.role}</span>
+                                      {isOverseasPlayer(p) && <span className="text-[7px] font-pixel uppercase text-purple-400">✈ OS</span>}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="text-right shrink-0">
+                                  <span className="text-[10px] font-black text-white">{p.bid == null ? '—' : `₹${formatCrores(p.bid)}Cr`}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="relative z-10 mt-5 pt-3 border-t border-white/10 flex items-center justify-between text-[8px] font-pixel uppercase tracking-widest text-slate-500">
+                          <span>Verified by CrickAuction Simulation Engine</span>
+                          <span className="font-mono">crickauction.in</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                );
+                                );
               })}
             </motion.section>
           )}

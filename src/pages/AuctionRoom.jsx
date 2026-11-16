@@ -38,7 +38,7 @@ import PageLoader from '../components/PageLoader';
 import PageBackground from '../components/PageBackground';
 import ConfirmDialog from '../components/ConfirmDialog';
 import AuctionCountdown from '../components/AuctionCountdown';
-import AdSlot, { DEFAULT_AUCTION_ROOM_SLOT } from '../components/AdSlot';
+import AdSlot, { AuctionRoomAd, DEFAULT_AUCTION_ROOM_SLOT } from '../components/AdSlot';
 import useRoomServer from '../hooks/useRoomServer';
 import { SERVER_LOCAL, withServerParam } from '../lib/auctionServers';
 import { isLocalRoom } from '../lib/localAuctionEngine';
@@ -1746,9 +1746,10 @@ const AuctionRoom = () => {
                         )}
                      </AnimatePresence>
 
-                     {/* Arena Ad Slot (strictly visible on mobile screens only; hidden on laptop/desktop) */}
+                     {/* Arena Ad Slot (strictly visible on mobile screens only; minimizable & dismissible so gameplay is never blocked) */}
                      <div className="w-full block md:hidden">
-                        <AdSlot
+                        <AuctionRoomAd
+                           roomId={id}
                            slot={import.meta.env.VITE_ADSENSE_AUCTION_ROOM_SLOT || DEFAULT_AUCTION_ROOM_SLOT}
                            className="w-full mt-2 mb-6"
                         />

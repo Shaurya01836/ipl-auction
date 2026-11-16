@@ -41,6 +41,18 @@
   }
 }
 
+/* Suppress Google Auto-Ads (Vignettes & Floating Anchors) inside live auction room so gameplay is never blocked */
+html:has(.auction-room-shell) .google-auto-placed,
+html:has(.auction-room-shell) ins.adsbygoogle[data-anchor-status],
+html:has(.auction-room-shell) .adsbygoogle-noablate,
+html:has(.auction-room-shell) iframe[id^="aswift_"][style*="position: fixed"],
+html:has(.auction-room-shell) iframe[id^="google_ads_iframe"][style*="position: fixed"],
+html:has(.auction-room-shell) div[id^="google_ads_iframe"][style*="position: fixed"] {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
 body {
   margin: 0;
   font-family: var(--font-sans);
