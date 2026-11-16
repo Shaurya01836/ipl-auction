@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS auctions (
   settings TEXT,         -- JSON string
   players TEXT,          -- JSON string
   banned_players TEXT,   -- JSON string
+  ai_analysis TEXT,      -- JSON string
   created_at INTEGER NOT NULL
 );
 

@@ -131,7 +131,7 @@ export default {
 
     // --- Security Checks ---
     // 1. Origin Restriction: Reject browser requests from unauthorized origins on mutating endpoints
-    const isPublicRead = request.method === 'GET' && (path === '/api/stats' || path === '/api/public-rooms');
+    const isPublicRead = request.method === 'GET' && (path === '/api/stats' || path === '/api/public-rooms' || path.endsWith('/ai-rating'));
     if (origin && !isAllowedOrigin(origin) && !isPublicRead) {
       return new Response(JSON.stringify({ error: 'Origin not allowed' }), {
         status: 403,
@@ -246,6 +246,149 @@ export default {
         });
         ctx.waitUntil(cache.put(cacheKey, response.clone()));
         return response;
+      }
+
+      // --- 2.0 AI Squad Rating & Analysis (Cached in D1) ---
+      if (path.endsWith('/ai-rating')) {
+        const id = path.replace('/api/auctions/', '').replace('/ai-rating', '').trim();
+
+        if (request.method === 'GET') {
+          const existing = await env.DB.prepare(
+            `SELECT ai_analysis FROM auctions WHERE id = ? LIMIT 1`
+          ).bind(id).first();
+
+          if (existing?.ai_analysis) {
+            const parsed = parseJsonField(existing.ai_analysis, null);
+            // Only serve cache if it has modern 0-100 score
+            if (parsed && parsed.winner && parsed.winner.score !== undefined) {
+              return json({
+                success: true,
+                cached: true,
+                analysis: parsed,
+              });
+            }
+          }
+          return json({ success: true, cached: false, analysis: null });
+        }
+
+        if (request.method === 'POST') {
+          const body = await request.json();
+          const { mode = 'Mega Auction', teams = [], force = false } = body;
+
+          // Check if valid modern analysis is already cached or within 60s cooldown
+          const existing = await env.DB.prepare(
+            `SELECT ai_analysis FROM auctions WHERE id = ? LIMIT 1`
+          ).bind(id).first();
+
+          if (existing?.ai_analysis) {
+            const parsed = parseJsonField(existing.ai_analysis, null);
+            if (parsed && parsed.winner && parsed.winner.score !== undefined) {
+              const ageMs = Date.now() - (parsed.generatedAt || 0);
+              // 60-second cooldown per room prevents spamming or multiple concurrent member clicks
+              if (!force || ageMs < 60 * 1000) {
+                return json({
+                  success: true,
+                  cached: true,
+                  cooldown: Math.max(0, Math.ceil((60 * 1000 - ageMs) / 1000)),
+                  analysis: parsed,
+                });
+              }
+            }
+          }
+
+          if (!teams || teams.length === 0) {
+            return json({ error: 'No teams provided for evaluation' }, 400);
+          }
+
+          if (!env.GROQ_API_KEY) {
+            return json({ error: 'AI analysis service unconfigured' }, 503);
+          }
+
+          // Build prompt with all players from each squad + mode context
+          const teamsContext = teams.map((t) => {
+            const roster = t.roster || t.players || (t.topStars ? t.topStars.map(s => s.name).join(', ') : 'None');
+            return `- [${t.teamId || t.teamName}] ${t.teamName || t.teamId} (Spent ₹${t.spent || 0}Cr, ${t.playerCount || 0} players):\n  Roster: ${roster}`;
+          }).join('\n');
+
+          const prompt = `You are a world-class IPL cricket scout and analyst.
+Analyze the complete squads for each franchise in the context of this game mode: ${mode}.
+Evaluate every player's role, squad balance, depth, and fit for this specific format.
+Give each squad a rating from 0 to 100 based on their readiness to win this format, and a 1-2 line punchy squad review.
+
+Teams:
+${teamsContext}
+
+Respond ONLY with valid JSON in this exact structure without markdown:
+{
+  "winner": {
+    "teamId": "Team code inside brackets e.g. CSK",
+    "score": 92,
+    "badge": "e.g. Best Overall Squad",
+    "title": "e.g. Tournament Favorites",
+    "verdict": "1-2 punchy lines explaining why they won the auction in this mode."
+  },
+  "teams": [
+    {
+      "teamId": "Team code inside brackets e.g. CSK",
+      "score": 92,
+      "grade": "A+",
+      "title": "e.g. Bowling Powerhouse",
+      "verdict": "1-2 punchy lines on squad strengths and weaknesses in this mode."
+    }
+  ]
+}`;
+
+          try {
+            const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${env.GROQ_API_KEY}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: 'qwen/qwen3.8-27b',
+                messages: [
+                  { role: 'system', content: 'You are an IPL cricket auction scout engine. You output strictly raw JSON matching the schema.' },
+                  { role: 'user', content: prompt },
+                ],
+                response_format: { type: 'json_object' },
+                max_tokens: 1500,
+                temperature: 0.5,
+              }),
+            });
+
+            if (!groqRes.ok) {
+              const errText = await groqRes.text();
+              console.warn('[groq-error]', groqRes.status, errText);
+              return json({ success: false, error: 'AI rating generation temporarily unavailable' }, 200);
+            }
+
+            const groqData = await groqRes.json();
+            const rawContent = groqData.choices?.[0]?.message?.content || '{}';
+            const parsed = parseJsonField(rawContent, null);
+
+            if (parsed && parsed.winner) {
+              parsed.generatedAt = Date.now();
+              // Persist to D1 (upsert so local solo rooms without an existing record also persist)
+              try {
+                await env.DB.prepare(
+                  `INSERT INTO auctions (id, status, ai_analysis, created_at)
+                   VALUES (?, 'completed', ?, unixepoch())
+                   ON CONFLICT(id) DO UPDATE SET ai_analysis = excluded.ai_analysis`
+                ).bind(id, JSON.stringify(parsed)).run();
+              } catch (dbErr) {
+                console.warn('[ai-d1-upsert-err]', dbErr);
+              }
+
+              return json({ success: true, cached: false, analysis: parsed });
+            }
+
+            return json({ success: false, error: 'Invalid analysis structure' }, 200);
+          } catch (aiErr) {
+            console.error('[ai-rating-error]', aiErr);
+            return json({ success: false, error: aiErr.message || 'AI rating failed' }, 200);
+          }
+        }
       }
 
       // --- 2. Single Auction Lookup (Cached 10s) ---

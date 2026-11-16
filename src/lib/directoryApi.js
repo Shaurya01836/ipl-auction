@@ -397,3 +397,29 @@ export async function fetchAdminAuctions() {
     };
   }
 }
+
+/** Fetch cached AI squad analysis for an auction */
+export async function getAuctionAiRating(auctionId) {
+  if (!auctionId) return { success: false, analysis: null };
+  try {
+    return await request(`/api/auctions/${auctionId}/ai-rating`);
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+/** Generate and cache AI squad analysis for an auction */
+export async function generateAuctionAiRating(auctionId, payload) {
+  if (!auctionId || !payload) return { success: false, analysis: null };
+  try {
+    return await request(`/api/auctions/${auctionId}/ai-rating`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      headers: {
+        'X-CrickAuction-Client': 'crickauction-web',
+      },
+    });
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}

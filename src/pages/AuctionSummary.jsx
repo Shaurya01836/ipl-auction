@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuction } from '../contexts/AuctionContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useQuota } from '../contexts/QuotaContext';
 import { IPL_PLAYERS } from '../data/players';
 import { TEAMS } from '../data/teams';
@@ -22,7 +23,7 @@ import {
   Zap,
   Download,
   Loader2,
-  AlertCircle
+  AlertCircle,Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SquadRating from '../components/SquadRating';
@@ -46,6 +47,7 @@ const AuctionSummary = () => {
   const navigate = useNavigate();
   const { server, ready: serverReady } = useRoomServer(id);
   const { currentAuction, roomTeams } = useAuction();
+  const { user } = useAuth();
   const { handleFirebaseError } = useQuota();
   
   const [activeTab, setActiveTab] = useState('squads');
@@ -323,6 +325,16 @@ const AuctionSummary = () => {
   const activeAuction = (currentAuction && currentAuction.id === id) ? currentAuction : dbAuction;
   const activeTeams = (roomTeams && roomTeams.length > 0 && currentAuction?.id === id) ? roomTeams : dbTeams;
 
+  const isLocal = isLocalRoom(id, server, true) || (typeof id === 'string' && id.startsWith('SOLO-')) || server === 'local';
+  const isHost = Boolean(
+    isLocal ||
+    (user?.uid && (
+      activeAuction?.hostId === user.uid ||
+      activeAuction?.createdBy === user.uid ||
+      activeAuction?.players?.some(p => (p?.id === user.uid || p?.userId === user.uid) && (p?.isHost || p?.isAdmin))
+    ))
+  );
+
   // Derived Data
   const allSoldPlayers = useMemo(() => {
     return (activeTeams || []).flatMap(rt => {
@@ -431,7 +443,7 @@ const AuctionSummary = () => {
             {[
               { id: 'squads', label: 'Squads', fullLabel: 'Team Squads', icon: Users },
               { id: 'leaderboard', label: 'Top 5', fullLabel: 'Top Expensive', icon: Trophy },
-              { id: 'fantasy', label: 'Ratings', fullLabel: 'Squad Ratings', icon: Zap },
+              { id: 'fantasy', label: 'AI Ratings', fullLabel: 'AI Squad Ratings', icon: Sparkles },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -531,6 +543,8 @@ const AuctionSummary = () => {
               <SquadRating 
                 roomTeams={activeTeams}
                 currentAuction={activeAuction}
+                auctionId={id || activeAuction?.id}
+                isHost={isHost}
               />
             </motion.section>
           ) : (
