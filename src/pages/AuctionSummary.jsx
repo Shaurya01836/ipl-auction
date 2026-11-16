@@ -31,6 +31,7 @@ import PageLoader from '../components/PageLoader';
 import useRoomServer from '../hooks/useRoomServer';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import { isLocalRoom, loadLocalSoloRoom } from '../lib/localAuctionEngine';
+import { isUserAdmin } from '../lib/adminAuth';
 import {
   computeTeamSpent,
   countOverseas,
@@ -182,6 +183,9 @@ const AuctionSummary = () => {
         const tData = aData ? await fetchTeamsForAuction(id) : [];
 
         if (aData && isMounted) {
+          const finalTeams = Array.isArray(aData.settings?.finalTeams) ? aData.settings.finalTeams : [];
+          const rawTeams = (tData && tData.length > 0) ? tData : finalTeams;
+
           setDbAuction({
             id: aData.id,
             hostId: aData.host_id || aData.hostId,
@@ -194,27 +198,27 @@ const AuctionSummary = () => {
             settings: aData.settings || { budget: 120, bidTimer: 10 }
           });
 
-            const parsedTeams = (tData || []).map(t => {
-              const rawSquad = t.squad;
-              const squadArr = Array.isArray(rawSquad) ? rawSquad : (rawSquad ? Object.values(rawSquad) : []);
-              return {
-                id: t.id,
-                auctionId: t.auction_id,
-                userId: t.user_id,
-                teamId: t.team_id,
-                teamName: t.team_name,
-                budgetRemaining: t.budget_remaining ?? null,
-                spent: toFiniteNumber(t.spent, 0),
-                squad: squadArr
-              };
-            });
+          const parsedTeams = (rawTeams || []).map(t => {
+            const rawSquad = t.squad;
+            const squadArr = Array.isArray(rawSquad) ? rawSquad : (rawSquad ? Object.values(rawSquad) : []);
+            return {
+              id: t.id,
+              auctionId: t.auction_id || t.auctionId,
+              userId: t.user_id || t.userId,
+              teamId: t.team_id || t.teamId,
+              teamName: t.team_name || t.teamName,
+              budgetRemaining: t.budget_remaining ?? t.budgetRemaining ?? null,
+              spent: toFiniteNumber(t.spent, 0),
+              squad: squadArr
+            };
+          });
 
-            // If Supabase teams already have sold players, use them immediately
-            if (parsedTeams.some(t => t.squad && t.squad.length > 0)) {
-              setDbTeams(parsedTeams);
-              setSummaryLoading(false);
-              return;
-            }
+          // If directory teams already have sold players, use them immediately
+          if (parsedTeams.some(t => t.squad && t.squad.length > 0)) {
+            setDbTeams(parsedTeams);
+            setSummaryLoading(false);
+            return;
+          }
 
             // Fallback to RTDB if Supabase flush hasn't arrived or squads are empty
             if (!isLocal) {
@@ -326,8 +330,10 @@ const AuctionSummary = () => {
   const activeTeams = (roomTeams && roomTeams.length > 0 && currentAuction?.id === id) ? roomTeams : dbTeams;
 
   const isLocal = isLocalRoom(id, server, true) || (typeof id === 'string' && id.startsWith('SOLO-')) || server === 'local';
+  const isAdmin = isUserAdmin(user, import.meta.env.VITE_ADMIN_EMAIL);
   const isHost = Boolean(
     isLocal ||
+    isAdmin ||
     (user?.uid && (
       activeAuction?.hostId === user.uid ||
       activeAuction?.createdBy === user.uid ||
@@ -556,7 +562,7 @@ const AuctionSummary = () => {
               className="max-w-5xl mx-auto space-y-3 sm:space-y-4"
             >
               {TEAMS.map((t) => {
-                const teamDoc = activeTeams.find(doc => doc.teamId === t.id);
+                const teamDoc = activeTeams.find(doc => (doc.teamId || doc.team_id) === t.id);
                 const manager = activeAuction?.players?.find(p => p.team === t.id);
                 const isExpanded = expandedTeam === t.id;
                 

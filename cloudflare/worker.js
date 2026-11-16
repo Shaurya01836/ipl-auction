@@ -613,7 +613,23 @@ Respond ONLY with valid JSON in this exact structure without markdown:
 
         const settings = parseJsonField(auctionRow?.settings, {});
         if (Array.isArray(settings?.finalTeams) && settings.finalTeams.length > 0) {
-          return json({ data: settings.finalTeams }, 200, {
+          const normalized = settings.finalTeams.map((t) => ({
+            ...t,
+            id: t.id,
+            auction_id: t.auction_id || t.auctionId,
+            auctionId: t.auctionId || t.auction_id,
+            user_id: t.user_id || t.userId,
+            userId: t.userId || t.user_id,
+            team_id: t.team_id || t.teamId,
+            teamId: t.teamId || t.team_id,
+            team_name: t.team_name || t.teamName,
+            teamName: t.teamName || t.team_name,
+            budget_remaining: t.budget_remaining ?? t.budgetRemaining ?? null,
+            budgetRemaining: t.budgetRemaining ?? t.budget_remaining ?? null,
+            spent: t.spent ?? 0,
+            squad: parseJsonField(t.squad, t.squad || []),
+          }));
+          return json({ data: normalized }, 200, {
             'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=600',
           });
         }
@@ -624,6 +640,11 @@ Respond ONLY with valid JSON in this exact structure without markdown:
 
         const formatted = (results || []).map((t) => ({
           ...t,
+          auctionId: t.auction_id,
+          userId: t.user_id,
+          teamId: t.team_id,
+          teamName: t.team_name,
+          budgetRemaining: t.budget_remaining,
           squad: parseJsonField(t.squad, []),
         }));
 

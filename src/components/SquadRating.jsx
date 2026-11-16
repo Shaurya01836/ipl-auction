@@ -71,7 +71,8 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
           : 'Mega Auction (18-25 players per team. Full IPL squad: Requires starting XI excellence plus dependable bench depth and variety.)';
 
       const teamsPayload = roomTeams.map((team) => {
-        const { teamId, squad = [] } = team;
+        const teamId = team.teamId || team.team_id;
+        const squad = team.squad || [];
         const squadArr = Array.isArray(squad) ? squad : squad ? Object.values(squad) : [];
         const teamInfo = TEAMS.find((t) => t.id === teamId);
 
@@ -131,7 +132,10 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
 
   const calculatedLeaderboard = useMemo(() => {
     return roomTeams.map(team => {
-      const { userId, userName, teamId, squad = [] } = team;
+      const teamId = team.teamId || team.team_id;
+      const userId = team.userId || team.user_id;
+      const userName = team.userName || team.teamName || team.team_name;
+      const squad = team.squad || [];
       const squadArr = Array.isArray(squad) ? squad : (squad ? Object.values(squad) : []);
 
       let totalRating = 0;
