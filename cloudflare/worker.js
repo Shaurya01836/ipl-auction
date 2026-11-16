@@ -53,7 +53,7 @@ function stringifyJsonField(val) {
   return typeof val === 'string' ? val : JSON.stringify(val);
 }
 
-// ─── Rate Limiter (Sliding 60s Window per Client IP) ───
+// --- Rate Limiter (Sliding 60s Window per Client IP) ---
 const rateLimitMap = new Map();
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 let lastRateLimitCleanup = Date.now();
@@ -109,7 +109,7 @@ export default {
       });
     };
 
-    // ─── 0. CORS Preflight ───
+    // --- 0. CORS Preflight ---
     if (request.method === 'OPTIONS') {
       const allowed = isAllowedOrigin(origin);
       return new Response(null, {
@@ -129,7 +129,7 @@ export default {
       return json({ status: 'ok', service: 'crickauction-api', timestamp: Date.now() }, 200, {}, origin);
     }
 
-    // ─── Security Checks ───
+    // --- Security Checks ---
     // 1. Origin Restriction: Reject browser requests from unauthorized origins on mutating endpoints
     const isPublicRead = request.method === 'GET' && (path === '/api/stats' || path === '/api/public-rooms');
     if (origin && !isAllowedOrigin(origin) && !isPublicRead) {
@@ -180,7 +180,7 @@ export default {
 
     try {
 
-      // ─── 1. Public Rooms Directory & Stats Consolidated (Edge-Cached 15s) ───
+      // --- 1. Public Rooms Directory & Stats Consolidated (Edge-Cached 15s) ---
       if (request.method === 'GET' && path === '/api/public-rooms') {
         const cache = caches.default;
         const cacheUrl = new URL(url.origin + '/api/public-rooms');
@@ -225,7 +225,7 @@ export default {
         return response;
       }
 
-      // ─── 1.1 Fast Platform Stats (Single-Row Read, Edge-Cached 60s) ───
+      // --- 1.1 Fast Platform Stats (Single-Row Read, Edge-Cached 60s) ---
       if (request.method === 'GET' && path === '/api/stats') {
         const cache = caches.default;
         const cacheUrl = new URL(url.origin + '/api/stats');
@@ -248,7 +248,7 @@ export default {
         return response;
       }
 
-      // ─── 2. Single Auction Lookup (Cached 10s) ───
+      // --- 2. Single Auction Lookup (Cached 10s) ---
       if (request.method === 'GET' && path.startsWith('/api/auctions/')) {
         const id = path.replace('/api/auctions/', '').trim();
         const row = await env.DB.prepare(
@@ -271,7 +271,7 @@ export default {
         });
       }
 
-      // ─── 3. Create / Upsert Auction ───
+      // --- 3. Create / Upsert Auction ---
       if (request.method === 'POST' && path === '/api/auctions') {
         const body = await request.json();
         const {
@@ -343,7 +343,7 @@ export default {
         return json({ success: true, id });
       }
 
-      // ─── 4. Patch Auction Status / Players ───
+      // --- 4. Patch Auction Status / Players ---
       if (request.method === 'PATCH' && path.startsWith('/api/auctions/')) {
         const id = path.replace('/api/auctions/', '').trim();
         const body = await request.json();
@@ -382,30 +382,12 @@ export default {
             const current = await env.DB.prepare(`SELECT status FROM auctions WHERE id = ? LIMIT 1`).bind(id).first();
             const prevStatus = current?.status || 'waiting';
 
-            if (body.status === 'completed' || body.status === 'cancelled') {
-              // Deduct if it was active or waiting (if paused, already deducted)
-              if (prevStatus === 'active' || prevStatus === 'waiting') {
+            // Only update active_count when status genuinely transitions to terminal (completed/cancelled)
+            if (body.status !== prevStatus && (body.status === 'completed' || body.status === 'cancelled')) {
+              if (prevStatus === 'active' || prevStatus === 'waiting' || prevStatus === 'paused') {
                 stmts.push(
                   env.DB.prepare(
                     `UPDATE platform_stats SET active_count = MAX(0, active_count - 1), updated_at = ? WHERE id = 'global'`
-                  ).bind(Date.now())
-                );
-              }
-            } else if (body.status === 'paused') {
-              // Deduct when paused
-              if (prevStatus === 'active' || prevStatus === 'waiting') {
-                stmts.push(
-                  env.DB.prepare(
-                    `UPDATE platform_stats SET active_count = MAX(0, active_count - 1), updated_at = ? WHERE id = 'global'`
-                  ).bind(Date.now())
-                );
-              }
-            } else if (body.status === 'active') {
-              // Increment ONLY when resuming from paused (waiting -> active does nothing)
-              if (prevStatus === 'paused') {
-                stmts.push(
-                  env.DB.prepare(
-                    `UPDATE platform_stats SET active_count = active_count + 1, updated_at = ? WHERE id = 'global'`
                   ).bind(Date.now())
                 );
               }
@@ -418,7 +400,7 @@ export default {
         return json({ success: true, id });
       }
 
-      // ─── 5. Delete Auction (Cascades to Teams) ───
+      // --- 5. Delete Auction (Cascades to Teams) ---
       if (request.method === 'DELETE' && path.startsWith('/api/auctions/')) {
         const id = path.replace('/api/auctions/', '').trim();
         await env.DB.batch([
@@ -431,12 +413,22 @@ export default {
         return json({ success: true, id });
       }
 
-      // ─── 6. Upsert Teams (Single or Batch) ───
+      // --- 6. Upsert Teams (Single or Batch) ---
       if (request.method === 'POST' && (path === '/api/teams' || path === '/api/teams/batch')) {
         const body = await request.json();
         const items = Array.isArray(body) ? body : (body.teams ? body.teams : [body]);
 
-        const statements = items.map((t) => {
+        // Server-side guard: filter out bot teams (only human profile history is stored in teams table)
+        const validTeams = items.filter((t) => {
+          const uid = t.user_id || t.userId || '';
+          return !String(uid).startsWith('bot_');
+        });
+
+        if (validTeams.length === 0) {
+          return json({ success: true, count: 0, note: 'Skipped bot teams' });
+        }
+
+        const statements = validTeams.map((t) => {
           return env.DB.prepare(
             `INSERT INTO teams (
               id, auction_id, user_id, team_id, team_name, budget_remaining, spent, squad, created_at
@@ -466,10 +458,22 @@ export default {
         return json({ success: true, count: statements.length });
       }
 
-      // ─── 7. Get Teams for Auction ───
+      // --- 7. Get Teams for Auction ---
       if (request.method === 'GET' && path === '/api/teams') {
         const auctionId = url.searchParams.get('auctionId');
         if (!auctionId) return json({ data: [] });
+
+        // Fast path: check if auction row has complete finalTeams embedded in settings
+        const auctionRow = await env.DB.prepare(
+          `SELECT settings FROM auctions WHERE id = ? LIMIT 1`
+        ).bind(auctionId).first();
+
+        const settings = parseJsonField(auctionRow?.settings, {});
+        if (Array.isArray(settings?.finalTeams) && settings.finalTeams.length > 0) {
+          return json({ data: settings.finalTeams }, 200, {
+            'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=600',
+          });
+        }
 
         const { results } = await env.DB.prepare(
           `SELECT * FROM teams WHERE auction_id = ?`
@@ -485,7 +489,7 @@ export default {
         });
       }
 
-      // ─── 8. User History (Private Cached 60s) ───
+      // --- 8. User History (Private Cached 60s) ---
       if (request.method === 'GET' && path === '/api/history') {
         const userId = url.searchParams.get('userId');
         if (!userId) return json({ data: [] });
@@ -524,14 +528,14 @@ export default {
         });
       }
 
-      // ─── 9. Delete User History Entry ───
+      // --- 9. Delete User History Entry ---
       if (request.method === 'DELETE' && path.startsWith('/api/teams/')) {
         const id = path.replace('/api/teams/', '').trim();
         await env.DB.prepare(`DELETE FROM teams WHERE id = ?`).bind(id).run();
         return json({ success: true, id });
       }
 
-      // ─── 10. Admin Auctions & Stats (Single-Row Stats Read) ───
+      // --- 10. Admin Auctions & Stats (Single-Row Stats Read) ---
       if (request.method === 'GET' && path === '/api/admin/auctions') {
         const [statsRes, listRes] = await env.DB.batch([
           env.DB.prepare(`SELECT total_count, active_count FROM platform_stats WHERE id = 'global' LIMIT 1`),

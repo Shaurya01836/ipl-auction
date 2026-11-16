@@ -369,19 +369,6 @@ export const AuctionProvider = ({ children }) => {
       if (mirror.error) {
         console.warn('[auction] Failed to mirror new room to directory', mirror.error);
       }
-
-      if (playerDetails.team) {
-        await flushTeamsData([{
-          id: `${roomId}_${userId}`,
-          auction_id: roomId,
-          user_id: userId,
-          team_id: playerDetails.team,
-          team_name: teamDetails?.name || 'Unknown',
-          budget_remaining: budget,
-          spent: 0,
-          squad: []
-        }]);
-      }
     } catch (sErr) {
       if (sErr?.code === 'ROOM_CODE_TAKEN') throw sErr;
       console.warn('[auction] Failed to mirror new room to directory', sErr);
@@ -410,25 +397,6 @@ export const AuctionProvider = ({ children }) => {
       const roomData = roomSnap.val();
       const teamsData = teamsSnap.exists() ? teamsSnap.val() : {};
 
-      // Flush to directory
-      const mirror = await upsertAuctionWithServer({
-        id: roomId,
-        host_id: roomData.hostId || '',
-        host_name: roomData.hostName || 'Manager',
-        is_public: roomData.isPublic !== false,
-        status: roomData.status || 'waiting',
-        auction_type: roomData.auctionType || 'mega',
-        players: roomData.players || [],
-        settings: roomData.settings || {},
-        banned_players: roomData.bannedPlayers || [],
-        ...(roomData.playerOrder ? { player_order: roomData.playerOrder } : {})
-      }, server);
-      if (mirror.error) {
-        console.warn('[auction] Failed to flush room to directory', mirror.error);
-      } else {
-        persisted = true;
-      }
-
       const directoryTeams = Object.entries(teamsData).map(([docId, teamVal]) => {
         const rawSquad = teamVal.squad;
         const squadArr = Array.isArray(rawSquad) ? rawSquad : (rawSquad ? Object.values(rawSquad) : []);
@@ -444,8 +412,29 @@ export const AuctionProvider = ({ children }) => {
         };
       });
 
-      if (directoryTeams.length > 0) {
-        const { error: teamsErr } = await flushTeamsData(directoryTeams);
+      // Flush to directory with finalTeams embedded inside settings in the single auctions row
+      const mirror = await upsertAuctionWithServer({
+        id: roomId,
+        host_id: roomData.hostId || '',
+        host_name: roomData.hostName || 'Manager',
+        is_public: roomData.isPublic !== false,
+        status: roomData.status || 'waiting',
+        auction_type: roomData.auctionType || 'mega',
+        players: roomData.players || [],
+        settings: { ...(roomData.settings || {}), finalTeams: directoryTeams },
+        banned_players: roomData.bannedPlayers || [],
+        ...(roomData.playerOrder ? { player_order: roomData.playerOrder } : {})
+      }, server);
+      if (mirror.error) {
+        console.warn('[auction] Failed to flush room to directory', mirror.error);
+      } else {
+        persisted = true;
+      }
+
+      // Only write genuine human teams to the teams table (used exclusively for user profile history)
+      const humanTeams = directoryTeams.filter((t) => t.user_id && !String(t.user_id).startsWith('bot_'));
+      if (humanTeams.length > 0) {
+        const { error: teamsErr } = await flushTeamsData(humanTeams);
         if (teamsErr) {
           console.warn('[auction] Failed to flush teams to directory', teamsErr);
           persisted = false;

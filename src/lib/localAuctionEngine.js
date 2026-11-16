@@ -919,21 +919,24 @@ export function buildSoloPersistPayload(state) {
       status: state.status || 'completed',
       auction_type: state.auctionType || 'mega',
       players: state.players || [],
-      settings: { ...(state.settings || {}), server: 'local' },
+      settings: { ...(state.settings || {}), server: 'local', finalTeams: teams },
       banned_players: [],
       overseas_limit: toFiniteNumber(state.overseasLimit, 8),
       squad_limit: toFiniteNumber(state.squadLimit, 25),
     },
-    teams: teams.map((t) => ({
-      id: `${roomId}_${t.userId}`,
-      auction_id: roomId,
-      user_id: t.userId || '',
-      team_id: t.teamId || '',
-      team_name: t.teamName || 'Unknown',
-      budget_remaining: toFiniteNumber(t.budgetRemaining, budget),
-      spent: toFiniteNumber(t.spent, 0),
-      squad: t.squad || [],
-    })),
+    // Only persist genuine human player teams to the teams table (for user history)
+    teams: teams
+      .filter((t) => t.userId && !String(t.userId).startsWith('bot_'))
+      .map((t) => ({
+        id: `${roomId}_${t.userId}`,
+        auction_id: roomId,
+        user_id: t.userId || '',
+        team_id: t.teamId || '',
+        team_name: t.teamName || 'Unknown',
+        budget_remaining: toFiniteNumber(t.budgetRemaining, budget),
+        spent: toFiniteNumber(t.spent, 0),
+        squad: t.squad || [],
+      })),
   };
 }
 
