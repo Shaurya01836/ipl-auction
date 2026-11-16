@@ -211,7 +211,6 @@ const LandingPage = () => {
         (room.type || "mega").toLowerCase() === filterMode.toLowerCase();
 
       const matchesServer =
-        !room.server ||
         normalizeServer(room.server) === normalizeServer(selectedServer);
 
       const matchesHostOnline = room.hostOnline !== false;
@@ -219,6 +218,15 @@ const LandingPage = () => {
       return matchesSearch && matchesMode && matchesServer && matchesHostOnline;
     });
   }, [publicRooms, searchQuery, filterMode, selectedServer]);
+
+  // Client-side active room count for the selected server
+  const serverRoomsCount = useMemo(() => {
+    return publicRooms.filter(
+      (room) =>
+        normalizeServer(room.server) === normalizeServer(selectedServer) &&
+        room.hostOnline !== false
+    ).length;
+  }, [publicRooms, selectedServer]);
 
   // Aggregated platform stats (zero row egress — HEAD count query only)
   const [auctionStats, setAuctionStats] = useState({
@@ -856,7 +864,7 @@ const LandingPage = () => {
           {/* Right Side: Create/Join/History form */}
           <div className="lg:col-span-7 w-full p-4 sm:p-6 md:p-8 flex flex-col">
             {availableServers.length > 1 && !(activeTab === "new" && playSolo) && (
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-4 mb-4 sm:mb-6">
+              <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
                 <div className="min-w-0">
                   <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest block">
                     Auction Server
@@ -865,7 +873,7 @@ const LandingPage = () => {
                     Lobbies and history are separate per server.
                   </p>
                 </div>
-                <div className="w-full lg:w-auto">
+                <div className="shrink-0">
                   <ServerSwitcher
                     servers={availableServers}
                     value={selectedServer}
@@ -891,13 +899,22 @@ const LandingPage = () => {
                 <button
                   type="button"
                   onClick={() => setActiveTab("join")}
-                  className={`pb-3 px-3 sm:pb-3.5 sm:px-5 font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all duration-200 border-b-2 relative shrink-0 ${
+                  className={`pb-3 px-3 sm:pb-3.5 sm:px-5 font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all duration-200 border-b-2 relative shrink-0 flex items-center gap-1.5 ${
                     activeTab === "join"
                       ? "border-slate-400/70 text-slate-100"
                       : "border-transparent text-gray-400 hover:text-gray-300"
                   }`}
                 >
-                  Join
+                  <span>Join</span>
+                  <span
+                    className={`px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold leading-none transition-colors ${
+                      activeTab === "join"
+                        ? "bg-white/20 text-white"
+                        : "bg-white/5 text-gray-400"
+                    }`}
+                  >
+                    {serverRoomsCount}
+                  </span>
                 </button>
                 <button
                   type="button"
@@ -1285,7 +1302,7 @@ const LandingPage = () => {
                     <div className="w-full border-t border-white/5" />
                   </div>
                   <span className="relative bg-[#0c0d10] px-3 sm:px-4 text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
-                    Or join a public lobby
+                    Or join a public lobby ({serverRoomsCount})
                   </span>
                 </div>
 

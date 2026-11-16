@@ -735,7 +735,7 @@ const AdminPanel = () => {
               onClick={() => navigate('/')}
               className="px-3 py-1.5 sm:px-3.5 sm:py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl sm:rounded-2xl transition-all text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-white cursor-pointer active:scale-[0.98]"
             >
-              ← Home
+              Home
             </button>
 
             <div className="h-6 w-px bg-white/10 hidden md:block" />

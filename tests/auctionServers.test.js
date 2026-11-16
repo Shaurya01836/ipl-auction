@@ -96,3 +96,24 @@ test('SERVER_LOCAL is recognized, normalized, and flagged as isLocal', () => {
   assert.equal(localMeta.isLocal, true);
   assert.match(localMeta.label, /Local/i);
 });
+
+test('client-side room count dynamically filters by server and host status', () => {
+  const rooms = [
+    { id: 'R1', server: 'server-1', hostOnline: true },
+    { id: 'R2', server: 'server-1', hostOnline: false }, // host offline, skipped
+    { id: 'R3', server: 'server-2', hostOnline: true },
+    { id: 'R4', server: 'server-2', hostOnline: true },
+    { id: 'R5', server: undefined, hostOnline: true }, // missing server -> defaults to server-1
+  ];
+
+  const countFor = (targetServer) =>
+    rooms.filter(
+      (r) =>
+        normalizeServer(r.server) === normalizeServer(targetServer) &&
+        r.hostOnline !== false,
+    ).length;
+
+  assert.equal(countFor('server-1'), 2); // R1 and R5 (defaulted)
+  assert.equal(countFor('server-2'), 2); // R3 and R4
+  assert.equal(countFor('server-3'), 0); // none
+});

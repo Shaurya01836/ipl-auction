@@ -70,8 +70,23 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    <!-- Cloudflare Web Analytics -->
-    <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "4b65f211b1be460b86bb03f73a9fa9ed", "spa": true}'></script>
+    <!-- Cloudflare Web Analytics (production only; skipped on localhost to avoid CORS errors and data pollution) -->
+    <script>
+      if (
+        window.location.hostname !== 'localhost' &&
+        window.location.hostname !== '127.0.0.1' &&
+        !window.location.hostname.endsWith('.local')
+      ) {
+        const beacon = document.createElement('script');
+        beacon.type = 'module';
+        beacon.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+        beacon.setAttribute(
+          'data-cf-beacon',
+          '{"token": "4b65f211b1be460b86bb03f73a9fa9ed", "spa": true}'
+        );
+        document.body.appendChild(beacon);
+      }
+    </script>
     <!-- End Cloudflare Web Analytics -->
   </body>
 </html>
