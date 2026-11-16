@@ -41,16 +41,12 @@ export default function CommunitySection() {
         </div>
 
         {/* Part 2 & 3: Two-Column Row (Dev Note & Player Ratings) */}
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-stretch">
+        <div className="relative z-10 grid grid-cols-1 gap-4 sm:gap-6 items-stretch">
           {/* Left: Dev Note (7 cols on desktop) */}
           <div className="lg:col-span-7 w-full flex">
             <DevNote />
           </div>
-
-          {/* Right: Player Ratings Lab Card (5 cols on desktop) */}
-          <div className="lg:col-span-5 w-full flex">
-            <PlayerRatingsCard />
-          </div>
+    
         </div>
       </div>
     </section>

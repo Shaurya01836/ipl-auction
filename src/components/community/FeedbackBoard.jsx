@@ -64,12 +64,12 @@ export default function FeedbackBoard() {
           return (
             <div
               key={col.id}
-              className={`flex flex-col gap-2.5 sm:gap-3 rounded-2xl p-3 sm:p-4 bg-white/[0.02] border border-white/5 lg:flex ${
+              className={`flex flex-col rounded-2xl p-3 sm:p-4 bg-white/[0.02] border border-white/5 lg:flex h-[400px] sm:h-[440px] lg:h-[460px] ${
                 isMobileHidden ? 'hidden lg:flex' : 'flex'
               }`}
             >
-              {/* Column Header */}
-              <div className="flex items-center justify-between pb-2 border-b border-white/5">
+              {/* Column Header (Fixed) */}
+              <div className="flex items-center justify-between pb-2 mb-3 border-b border-white/5 shrink-0">
                 <div className="flex items-center gap-2">
                   <span className={`w-2 h-2 rounded-full ${style.dot} shrink-0`} />
                   <h4 className="font-pixel text-[10px] sm:text-[11px] uppercase tracking-wider text-white">
@@ -81,69 +81,77 @@ export default function FeedbackBoard() {
                 </span>
               </div>
 
-              {/* Cards List */}
-              <div className="flex flex-col gap-2.5">
-                {colItems.map((item, itemIdx) => {
-                  const isExpanded = expandedId === item.id;
-                  const tiltClass = itemIdx % 2 === 0 ? 'lg:hover:-rotate-1' : 'lg:hover:rotate-1';
+              {/* Cards List (Fixed-height container with scrollable content) */}
+              <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 sm:pr-1.5 flex flex-col gap-2.5 overscroll-contain">
+                {colItems.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-center p-4">
+                    <p className="font-pixel text-[9px] uppercase tracking-widest text-slate-500">
+                      No items yet
+                    </p>
+                  </div>
+                ) : (
+                  colItems.map((item, itemIdx) => {
+                    const isExpanded = expandedId === item.id;
+                    const tiltClass = itemIdx % 2 === 0 ? 'lg:hover:-rotate-1' : 'lg:hover:rotate-1';
 
-                  return (
-                    <div
-                      key={item.id}
-                      onClick={() => toggleExpand(item.id)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          toggleExpand(item.id);
-                        }
-                      }}
-                      tabIndex={0}
-                      role="button"
-                      aria-expanded={isExpanded}
-                      className={`group relative rounded-xl p-3.5 bg-[#0e1015]/95 border cursor-pointer select-none outline-none focus-visible:ring-2 focus-visible:ring-slate-400/50 transform-gpu transition-all duration-200 active:scale-[0.98] lg:hover:-translate-y-0.5 shadow-sm hover:shadow-md ${
-                        style.cardBorder
-                      } ${tiltClass}`}
-                    >
-                      {/* Card Tag Pill */}
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <span className="font-pixel text-[8px] uppercase tracking-wider px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10">
-                          {item.tag}
-                        </span>
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => toggleExpand(item.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            toggleExpand(item.id);
+                          }
+                        }}
+                        tabIndex={0}
+                        role="button"
+                        aria-expanded={isExpanded}
+                        className={`group relative rounded-xl p-3.5 bg-[#0e1015]/95 border cursor-pointer select-none outline-none focus-visible:ring-2 focus-visible:ring-slate-400/50 transform-gpu transition-all duration-200 active:scale-[0.98] lg:hover:-translate-y-0.5 shadow-sm hover:shadow-md shrink-0 ${
+                          style.cardBorder
+                        } ${tiltClass}`}
+                      >
+                        {/* Card Tag Pill */}
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <span className="font-pixel text-[8px] uppercase tracking-wider px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10">
+                            {item.tag}
+                          </span>
 
-                        <span className="text-slate-500 group-hover:text-slate-300 transition-colors p-0.5">
-                          {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-                        </span>
+                          <span className="text-slate-500 group-hover:text-slate-300 transition-colors p-0.5">
+                            {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                          </span>
+                        </div>
+
+                        {/* Card Title */}
+                        <h5 className="font-bold text-xs sm:text-[13px] text-white leading-tight mb-1">
+                          {item.title}
+                        </h5>
+
+                        {/* One-Line Note */}
+                        <p className="text-[11px] text-slate-400 leading-relaxed font-normal">
+                          {item.note}
+                        </p>
+
+                        {/* Expandable Deep-Dive Detail (Silky 60fps collapse/expand) */}
+                        <AnimatePresence initial={false}>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                              className="mt-2.5 pt-2 border-t border-white/5 text-[11px] text-slate-300 leading-relaxed overflow-hidden"
+                            >
+                              <p className="font-medium text-slate-300">
+                                {item.detail}
+                              </p>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
-
-                      {/* Card Title */}
-                      <h5 className="font-bold text-xs sm:text-[13px] text-white leading-tight mb-1">
-                        {item.title}
-                      </h5>
-
-                      {/* One-Line Note */}
-                      <p className="text-[11px] text-slate-400 leading-relaxed font-normal">
-                        {item.note}
-                      </p>
-
-                      {/* Expandable Deep-Dive Detail (Silky 60fps collapse/expand) */}
-                      <AnimatePresence initial={false}>
-                        {isExpanded && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                            className="mt-2.5 pt-2 border-t border-white/5 text-[11px] text-slate-300 leading-relaxed overflow-hidden"
-                          >
-                            <p className="font-medium text-slate-300">
-                              {item.detail}
-                            </p>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             </div>
           );

@@ -19,23 +19,15 @@ export const FEEDBACK_ITEMS = [
     tag: 'INFRA',
     detail: 'Investigating WebSocket connection drops and free-tier socket exhaustion limits during peak tournament hours.',
   },
-  {
-    id: 'fb-2',
-    status: 'heard',
-    title: 'Some player ratings feel off',
-    note: 'A few marquee and domestic player ratings do not reflect recent T20 form.',
-    tag: 'ROSTER',
-    detail: 'Users pointed out several 2024-25 breakout stars whose base ratings in the game data need recalibration.',
-  },
 
   // ── WORKING ON ──
   {
-    id: 'fb-3',
+    id: 'fb-10',
     status: 'working',
-    title: 'Player ratings v2 (rechecking every rating)',
-    note: 'Full audit of all 250+ players with updated role weights and historical stats.',
-    tag: 'STATS',
-    detail: 'Recalibrating batting strike rates, death bowling economy, and franchise demand tiers across the whole player database.',
+    title: 'New Features & Gameplay Modes',
+    note: 'Actively building brand new features and enhancements based on community ideas.',
+    tag: 'ROADMAP',
+    detail: 'Currently working on new auction formats, custom league settings, and advanced post-auction tactical tools requested by users.',
   },
   {
     id: 'fb-4',
@@ -48,6 +40,14 @@ export const FEEDBACK_ITEMS = [
 
   // ── SHIPPED ──
   // replace with real fixes
+  {
+    id: 'fb-9',
+    status: 'shipped',
+    title: 'AI Squad Ratings & Scout Winner (0–100)',
+    note: 'Deep full-squad evaluation and AI Scout Winner badge powered by Groq LLM.',
+    tag: 'AI SCOUT',
+    detail: 'Evaluates playing XI balance, death bowling, and bench depth tailored to each game mode (Mega, 11-Classic, 5-Sprint). Includes host-only generation controls, 60s room cooldown anti-spam protection, and edge D1 caching.',
+  },
   {
     id: 'fb-5',
     status: 'shipped',
