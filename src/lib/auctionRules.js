@@ -17,36 +17,30 @@ export const shuffleArray = (array) => {
 
 /** Build the shuffled lot order for an auction type, grouped by player set. */
 export function generatePlayerOrder(auctionType = 'mega') {
-  let targetPlayers = IPL_PLAYERS.length;
-  if (auctionType === 'sprint11') targetPlayers = 150;
-  else if (auctionType === 'sprint5') targetPlayers = 75;
-
-  const marquee = [];
-  const byRole = {};
-  IPL_PLAYERS.forEach((p, i) => {
-    if (p.set.includes('Marquee')) marquee.push(i);
-    else (byRole[p.role] ||= []).push(i);
-  });
-
-  const selected = new Set(marquee);
-  const nonMarqueeTarget = Math.max(0, targetPlayers - marquee.length);
-  const nonMarqueeTotal = IPL_PLAYERS.length - marquee.length;
-  const fraction = nonMarqueeTotal > 0 ? nonMarqueeTarget / nonMarqueeTotal : 1;
-
-  Object.values(byRole).forEach((indices) => {
-    const shuffled = shuffleArray(indices);
-    const limit =
-      auctionType === 'mega' ? shuffled.length : Math.max(1, Math.ceil(shuffled.length * fraction));
-    shuffled.slice(0, limit).forEach((i) => selected.add(i));
-  });
-
-  const sets = [...new Set(IPL_PLAYERS.map((p) => p.set))];
-  const order = [];
-  sets.forEach((setName) => {
-    const idxs = [];
+  if (auctionType === 'legends') {
+    const byRole = {};
     IPL_PLAYERS.forEach((p, i) => {
-      if (p.set === setName && selected.has(i)) idxs.push(i);
+      if (p.set === 'Legends') {
+        (byRole[p.role] ||= []).push(i);
+      }
     });
+    const order = [];
+    ['Batsman', 'All-Rounder', 'Wicket-Keeper', 'Bowler'].forEach((role) => {
+      if (byRole[role]) order.push(...shuffleArray(byRole[role]));
+    });
+    return order;
+  }
+
+  // All other modes (mega, sprint11, sprint5) use all modern players with no truncation
+  const modernPool = [];
+  IPL_PLAYERS.forEach((p, i) => {
+    if (p.set !== 'Legends') modernPool.push(i);
+  });
+
+  const modernSets = [...new Set(modernPool.map((i) => IPL_PLAYERS[i].set))];
+  const order = [];
+  modernSets.forEach((setName) => {
+    const idxs = modernPool.filter((i) => IPL_PLAYERS[i].set === setName);
     order.push(...shuffleArray(idxs));
   });
   return order;

@@ -4897,5 +4897,2802 @@ export const IPL_PLAYERS = [
       "sr": 0
     },
     "rating": 2
+  },
+  {
+    "id": "p_1001",
+    "name": "AB de Villiers",
+    "role": "Wicket-Keeper",
+    "type": "Overseas",
+    "country": "RSA",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/AB_de_Villiers_2.jpg/500px-AB_de_Villiers_2.jpg",
+    "stats": {
+      "matches": 184,
+      "runs": 5162,
+      "avg": 39.71,
+      "sr": 151.69,
+      "hs": "133*"
+    },
+    "rating": 97
+  },
+  {
+    "id": "p_1002",
+    "name": "Chris Gayle",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Two_views_of_Chris_Gayle_%2848020785077%29.jpg/500px-Two_views_of_Chris_Gayle_%2848020785077%29.jpg",
+    "stats": {
+      "matches": 142,
+      "runs": 4965,
+      "avg": 39.72,
+      "sr": 148.96,
+      "hs": "175*"
+    },
+    "rating": 97
+  },
+  {
+    "id": "p_1003",
+    "name": "Lasith Malinga",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Lasith_Malinga_tossing_a_cricket_ball_at_practice.jpg/500px-Lasith_Malinga_tossing_a_cricket_ball_at_practice.jpg",
+    "stats": {
+      "matches": 122,
+      "wickets": 170,
+      "econ": 7.14,
+      "avg": 19.8,
+      "bb": "5/13"
+    },
+    "rating": 96
+  },
+  {
+    "id": "p_1004",
+    "name": "Imran Tahir",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "RSA",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Imran_Tahir.jpg/500px-Imran_Tahir.jpg",
+    "stats": {
+      "matches": 59,
+      "wickets": 82,
+      "econ": 7.76,
+      "avg": 20.77,
+      "bb": "4/12"
+    },
+    "rating": 95
+  },
+  {
+    "id": "p_1005",
+    "name": "Harbhajan Singh",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Shri_Harbhajan_Singh_2015.jpg/500px-Shri_Harbhajan_Singh_2015.jpg",
+    "stats": {
+      "matches": 163,
+      "wickets": 150,
+      "econ": 7.08,
+      "avg": 26.87,
+      "bb": "5/18"
+    },
+    "rating": 90
+  },
+  {
+    "id": "p_1006",
+    "name": "Dale Steyn",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "RSA",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/6c/Dale_Steyn_YM.jpg",
+    "stats": {
+      "matches": 95,
+      "wickets": 97,
+      "econ": 6.92,
+      "avg": 25.86,
+      "bb": "3/8"
+    },
+    "rating": 90
+  },
+  {
+    "id": "p_1007",
+    "name": "David Warner",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/DAVID_WARNER_%2811704782453%29.jpg/500px-DAVID_WARNER_%2811704782453%29.jpg",
+    "stats": {
+      "matches": 184,
+      "runs": 6565,
+      "avg": 40.52,
+      "sr": 139.77,
+      "hs": "126"
+    },
+    "rating": 89
+  },
+  {
+    "id": "p_1008",
+    "name": "Amit Mishra",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/73/Amit_Mishra.jpg",
+    "stats": {
+      "matches": 162,
+      "wickets": 174,
+      "econ": 7.37,
+      "avg": 23.82,
+      "bb": "5/17"
+    },
+    "rating": 89
+  },
+  {
+    "id": "p_1009",
+    "name": "Virender Sehwag",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Virender_Sehwag_at_the_NDTV_Marks_for_Sports_event_13.jpg/500px-Virender_Sehwag_at_the_NDTV_Marks_for_Sports_event_13.jpg",
+    "stats": {
+      "matches": 104,
+      "runs": 2728,
+      "avg": 27.56,
+      "sr": 155.44,
+      "hs": "122"
+    },
+    "rating": 89
+  },
+  {
+    "id": "p_1010",
+    "name": "Muttiah Muralitharan",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/c/c6/Photograph_of_Muttiah_Muralitharan.jpg",
+    "stats": {
+      "matches": 66,
+      "wickets": 63,
+      "econ": 6.68,
+      "avg": 26.92,
+      "bb": "3/11"
+    },
+    "rating": 89
+  },
+  {
+    "id": "p_1011",
+    "name": "Ravichandran Ashwin",
+    "role": "All-Rounder",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/The_Minister_of_State_for_Youth_Affairs_and_Sports_%28Independent_Charge%29%2C_Shri_Sarbananda_Sonowal_conferring_the_Arjuna_Award_on_cricketer_Ravichandran_Ashwin%2C_in_New_Delhi_on_July_31%2C_2015_cropped.jpg/500px-thumbnail.jpg",
+    "stats": {
+      "matches": 212,
+      "runs": 800,
+      "sr": 118.87,
+      "wickets": 180,
+      "econ": 7.12
+    },
+    "rating": 88
+  },
+  {
+    "id": "p_1012",
+    "name": "Shakib Al Hasan",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Shakib_Al_Hasan_%284%29_%28cropped%29.jpg/500px-Shakib_Al_Hasan_%284%29_%28cropped%29.jpg",
+    "stats": {
+      "matches": 71,
+      "runs": 793,
+      "sr": 124.49,
+      "wickets": 63,
+      "econ": 7.44
+    },
+    "rating": 87
+  },
+  {
+    "id": "p_1013",
+    "name": "Shane Watson",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/SHANE_WATSON_%2811705862116%29.jpg/500px-SHANE_WATSON_%2811705862116%29.jpg",
+    "stats": {
+      "matches": 145,
+      "runs": 3874,
+      "sr": 137.91,
+      "wickets": 92,
+      "econ": 7.93
+    },
+    "rating": 86
+  },
+  {
+    "id": "p_1014",
+    "name": "Moeen Ali",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "ENG",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/2018.01.06.17.47.32-Moeen_Ali_%2838876905344%29_%28cropped%29.jpg/500px-2018.01.06.17.47.32-Moeen_Ali_%2838876905344%29_%28cropped%29.jpg",
+    "stats": {
+      "matches": 67,
+      "runs": 1162,
+      "sr": 141.19,
+      "wickets": 35,
+      "econ": 7.13
+    },
+    "rating": 86
+  },
+  {
+    "id": "p_1015",
+    "name": "Anil Kumble",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/de/Anil_Kumble_%281%29.jpg",
+    "stats": {
+      "matches": 42,
+      "wickets": 45,
+      "econ": 6.58,
+      "avg": 23.51,
+      "bb": "5/5"
+    },
+    "rating": 86
+  },
+  {
+    "id": "p_1016",
+    "name": "Andre Russell",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Andre_Russell_%281%29.jpg",
+    "stats": {
+      "matches": 127,
+      "runs": 2484,
+      "sr": 174.93,
+      "wickets": 115,
+      "econ": 9.35
+    },
+    "rating": 85
+  },
+  {
+    "id": "p_1017",
+    "name": "Ashish Nehra",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Ashish_Nehra_%286160488612%29_%28cropped%29.jpg",
+    "stats": {
+      "matches": 88,
+      "wickets": 106,
+      "econ": 7.84,
+      "avg": 23.54,
+      "bb": "4/10"
+    },
+    "rating": 85
+  },
+  {
+    "id": "p_1018",
+    "name": "Chris Morris",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "RSA",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3ECM%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 35,
+      "runs": 420,
+      "sr": 132.5,
+      "wickets": 24,
+      "econ": 8.1
+    },
+    "rating": 85
+  },
+  {
+    "id": "p_1019",
+    "name": "Matthew Hayden",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Matthew_Hayden_Image.jpg/500px-Matthew_Hayden_Image.jpg",
+    "stats": {
+      "matches": 32,
+      "runs": 1107,
+      "avg": 36.9,
+      "sr": 137.52,
+      "hs": "93"
+    },
+    "rating": 85
+  },
+  {
+    "id": "p_1020",
+    "name": "Suresh Raina",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Suresh_Raina_grace_the_%27Salaam_Sachin%27_conclave.jpg/500px-Suresh_Raina_grace_the_%27Salaam_Sachin%27_conclave.jpg",
+    "stats": {
+      "matches": 205,
+      "runs": 5528,
+      "avg": 32.52,
+      "sr": 136.73,
+      "hs": "100*"
+    },
+    "rating": 84
+  },
+  {
+    "id": "p_1021",
+    "name": "Kieron Pollard",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Kieron_Pollard.jpg/500px-Kieron_Pollard.jpg",
+    "stats": {
+      "matches": 189,
+      "runs": 3412,
+      "sr": 147.32,
+      "wickets": 69,
+      "econ": 8.79
+    },
+    "rating": 84
+  },
+  {
+    "id": "p_1022",
+    "name": "Pragyan Ojha",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/PragyanOjha_.jpg/500px-PragyanOjha_.jpg",
+    "stats": {
+      "matches": 92,
+      "wickets": 89,
+      "econ": 7.36,
+      "avg": 26.2,
+      "bb": "3/11"
+    },
+    "rating": 84
+  },
+  {
+    "id": "p_1023",
+    "name": "RP Singh",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3ERS%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 82,
+      "wickets": 90,
+      "econ": 7.9,
+      "avg": 25.98,
+      "bb": "4/22"
+    },
+    "rating": 84
+  },
+  {
+    "id": "p_1024",
+    "name": "Nathan Coulter-Nile",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3ENC%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 30,
+      "wickets": 32,
+      "econ": 7.85,
+      "avg": 26.5,
+      "bb": "3/22"
+    },
+    "rating": 84
+  },
+  {
+    "id": "p_1025",
+    "name": "Piyush Chawla",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Piyush_Chawla_2019.jpg/500px-Piyush_Chawla_2019.jpg",
+    "stats": {
+      "matches": 192,
+      "wickets": 192,
+      "econ": 7.96,
+      "avg": 27.53,
+      "bb": "4/17"
+    },
+    "rating": 82
+  },
+  {
+    "id": "p_1026",
+    "name": "Adam Gilchrist",
+    "role": "Wicket-Keeper",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Adam_Gilchrist_of_Australia_%28cropped%29.jpg/500px-Adam_Gilchrist_of_Australia_%28cropped%29.jpg",
+    "stats": {
+      "matches": 80,
+      "runs": 2069,
+      "avg": 27.22,
+      "sr": 138.39,
+      "hs": "109*"
+    },
+    "rating": 82
+  },
+  {
+    "id": "p_1027",
+    "name": "Doug Bollinger",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/4/41/Doug_Bollinger.jpg",
+    "stats": {
+      "matches": 27,
+      "wickets": 37,
+      "econ": 7.22,
+      "avg": 18.73,
+      "bb": "4/13"
+    },
+    "rating": 82
+  },
+  {
+    "id": "p_1028",
+    "name": "Yusuf Pathan",
+    "role": "All-Rounder",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Yusuf_Pathan.jpg/500px-Yusuf_Pathan.jpg",
+    "stats": {
+      "matches": 174,
+      "runs": 3204,
+      "sr": 142.97,
+      "wickets": 42,
+      "econ": 7.4
+    },
+    "rating": 81
+  },
+  {
+    "id": "p_1029",
+    "name": "Faf du Plessis",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "RSA",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Faf_du_Plessis_2019_Boxing_Day.jpg/500px-Faf_du_Plessis_2019_Boxing_Day.jpg",
+    "stats": {
+      "matches": 145,
+      "runs": 4571,
+      "avg": 35.99,
+      "sr": 136.37,
+      "hs": "96"
+    },
+    "rating": 81
+  },
+  {
+    "id": "p_1030",
+    "name": "JP Duminy",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "RSA",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/JP_DUMINY_%2815681049126%29.jpg/500px-JP_DUMINY_%2815681049126%29.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 420,
+      "sr": 132.5,
+      "wickets": 24,
+      "econ": 8.1
+    },
+    "rating": 81
+  },
+  {
+    "id": "p_1031",
+    "name": "Shaun Marsh",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Shaun_Marsh.jpg/500px-Shaun_Marsh.jpg",
+    "stats": {
+      "matches": 71,
+      "runs": 2477,
+      "avg": 39.95,
+      "sr": 132.74,
+      "hs": "115"
+    },
+    "rating": 81
+  },
+  {
+    "id": "p_1032",
+    "name": "Michael Hussey",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Michael_Hussey_2022.jpg/500px-Michael_Hussey_2022.jpg",
+    "stats": {
+      "matches": 59,
+      "runs": 1977,
+      "avg": 38.76,
+      "sr": 122.64,
+      "hs": "116*"
+    },
+    "rating": 81
+  },
+  {
+    "id": "p_1033",
+    "name": "Yuvraj Singh",
+    "role": "All-Rounder",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/8/81/Yuvraj_Singh_appointed_as_Ulysse_Nardin_watch_brand_ambassador.jpeg",
+    "stats": {
+      "matches": 132,
+      "runs": 2750,
+      "sr": 129.72,
+      "wickets": 36,
+      "econ": 7.44
+    },
+    "rating": 80
+  },
+  {
+    "id": "p_1034",
+    "name": "Andrew Symonds",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Andrew_symonds_%28cropped%29.jpg/500px-Andrew_symonds_%28cropped%29.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 420,
+      "sr": 132.5,
+      "wickets": 24,
+      "econ": 8.1
+    },
+    "rating": 80
+  },
+  {
+    "id": "p_1035",
+    "name": "Kevin Pietersen",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "ENG",
+    "basePrice": 2,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Kevin_Pietersen_2014.jpg/500px-Kevin_Pietersen_2014.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 750,
+      "avg": 26.4,
+      "sr": 128.5,
+      "hs": "72"
+    },
+    "rating": 80
+  },
+  {
+    "id": "p_1036",
+    "name": "Dwayne Bravo",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Bravo_at_IIFA_2017_Green_Carpet.jpg/500px-Bravo_at_IIFA_2017_Green_Carpet.jpg",
+    "stats": {
+      "matches": 161,
+      "runs": 1560,
+      "sr": 129.57,
+      "wickets": 183,
+      "econ": 8.38
+    },
+    "rating": 79
+  },
+  {
+    "id": "p_1037",
+    "name": "Glenn Maxwell",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Glen_Maxwell_2026_%28cropped%29.jpg/500px-Glen_Maxwell_2026_%28cropped%29.jpg",
+    "stats": {
+      "matches": 134,
+      "runs": 2771,
+      "sr": 156.73,
+      "wickets": 37,
+      "econ": 8.32
+    },
+    "rating": 79
+  },
+  {
+    "id": "p_1038",
+    "name": "Zaheer Khan",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/2/27/Zaheer_Khan_at_the_CPAA_show_2018_%28cropped%29.jpg",
+    "stats": {
+      "matches": 100,
+      "wickets": 102,
+      "econ": 7.59,
+      "avg": 27.27,
+      "bb": "4/17"
+    },
+    "rating": 79
+  },
+  {
+    "id": "p_1039",
+    "name": "Munaf Patel",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Munaf_Patel_2.jpg/500px-Munaf_Patel_2.jpg",
+    "stats": {
+      "matches": 63,
+      "wickets": 74,
+      "econ": 7.51,
+      "avg": 22.95,
+      "bb": "5/21"
+    },
+    "rating": 79
+  },
+  {
+    "id": "p_1040",
+    "name": "Shane Warne",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Shane_Warne_February_2015.jpg/500px-Shane_Warne_February_2015.jpg",
+    "stats": {
+      "matches": 55,
+      "wickets": 57,
+      "econ": 7.27,
+      "avg": 25.39,
+      "bb": "3/21"
+    },
+    "rating": 79
+  },
+  {
+    "id": "p_1041",
+    "name": "Jonny Bairstow",
+    "role": "Wicket-Keeper",
+    "type": "Overseas",
+    "country": "ENG",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/2_05_Bairstow_out.jpg/500px-2_05_Bairstow_out.jpg",
+    "stats": {
+      "matches": 50,
+      "runs": 1589,
+      "avg": 35.31,
+      "sr": 144.06,
+      "hs": "114"
+    },
+    "rating": 79
+  },
+  {
+    "id": "p_1042",
+    "name": "Brendon McCullum",
+    "role": "Wicket-Keeper",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/d1/Brendon_McCullum_ONZM_%28cropped%29.jpg",
+    "stats": {
+      "matches": 109,
+      "runs": 2880,
+      "avg": 27.69,
+      "sr": 131.75,
+      "hs": "158*"
+    },
+    "rating": 78
+  },
+  {
+    "id": "p_1043",
+    "name": "Mitchell Johnson",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/MITCHELL_JOHNSON_%2811705174114%29_%28cropped%29.jpg/500px-MITCHELL_JOHNSON_%2811705174114%29_%28cropped%29.jpg",
+    "stats": {
+      "matches": 54,
+      "wickets": 61,
+      "econ": 8.28,
+      "avg": 27.9,
+      "bb": "3/27"
+    },
+    "rating": 78
+  },
+  {
+    "id": "p_1044",
+    "name": "Daniel Vettori",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Daniel_Vettori_ONZM_%28cropped%29.jpg/500px-Daniel_Vettori_ONZM_%28cropped%29.jpg",
+    "stats": {
+      "matches": 34,
+      "wickets": 28,
+      "econ": 6.79,
+      "avg": 31.39,
+      "bb": "3/15"
+    },
+    "rating": 78
+  },
+  {
+    "id": "p_1045",
+    "name": "Sachin Tendulkar",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/The_cricket_legend_Sachin_Tendulkar_at_the_Oval_Maidan_in_Mumbai_During_the_Duke_and_Duchess_of_Cambridge_Visit%2826271019082%29.jpg/500px-The_cricket_legend_Sachin_Tendulkar_at_the_Oval_Maidan_in_Mumbai_During_the_Duke_and_Duchess_of_Cambridge_Visit%2826271019082%29.jpg",
+    "stats": {
+      "matches": 78,
+      "runs": 2334,
+      "avg": 34.84,
+      "sr": 119.82,
+      "hs": "100*"
+    },
+    "rating": 77
+  },
+  {
+    "id": "p_1046",
+    "name": "Morné Morkel",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "RSA",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Morne_Morkel_as_Pakistan_bowling_coach_in_2023_%28cropped%29.jpg/500px-Morne_Morkel_as_Pakistan_bowling_coach_in_2023_%28cropped%29.jpg",
+    "stats": {
+      "matches": 70,
+      "wickets": 77,
+      "econ": 7.69,
+      "avg": 27.13,
+      "bb": "4/20"
+    },
+    "rating": 77
+  },
+
+  {
+    "id": "p_1048",
+    "name": "Andrew Tye",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/a/af/2018.02.03.20.38.56-AUSvNZL_T20_NZL_innings%2C_SCG-0001_%2838618205890%29_%28Tye_cropped%29.jpg",
+    "stats": {
+      "matches": 30,
+      "wickets": 32,
+      "econ": 7.85,
+      "avg": 26.5,
+      "bb": "3/22"
+    },
+    "rating": 76
+  },
+  {
+    "id": "p_1049",
+    "name": "Sanath Jayasuriya",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/16/Sanath_jayasuriya_portrait.jpg",
+    "stats": {
+      "matches": 30,
+      "runs": 768,
+      "sr": 144.36,
+      "wickets": 13,
+      "econ": 7.97
+    },
+    "rating": 76
+  },
+  {
+    "id": "p_1050",
+    "name": "Dinesh Karthik",
+    "role": "Wicket-Keeper",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Dinesh.Karthik.jpg/500px-Dinesh.Karthik.jpg",
+    "stats": {
+      "matches": 257,
+      "runs": 4842,
+      "avg": 26.32,
+      "sr": 135.36,
+      "hs": "97*"
+    },
+    "rating": 75
+  },
+  {
+    "id": "p_1051",
+    "name": "Sreenath Aravind",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Arvind_S_Sreenath.jpg/500px-Arvind_S_Sreenath.jpg",
+    "stats": {
+      "matches": 38,
+      "wickets": 45,
+      "econ": 8.2,
+      "avg": 23.09,
+      "bb": "4/14"
+    },
+    "rating": 75
+  },
+  {
+    "id": "p_1052",
+    "name": "Ryan Harris",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Ryan_Harris_2014_%28cropped%29.jpg/500px-Ryan_Harris_2014_%28cropped%29.jpg",
+    "stats": {
+      "matches": 37,
+      "wickets": 44,
+      "econ": 7.55,
+      "avg": 23.27,
+      "bb": "4/34"
+    },
+    "rating": 75
+  },
+  {
+    "id": "p_1053",
+    "name": "Johan Botha",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "RSA",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Johan_Botha.jpg/500px-Johan_Botha.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 420,
+      "sr": 132.5,
+      "wickets": 24,
+      "econ": 8.1
+    },
+    "rating": 75
+  },
+  {
+    "id": "p_1054",
+    "name": "Kevon Cooper",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EKC%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 30,
+      "wickets": 32,
+      "econ": 7.85,
+      "avg": 26.5,
+      "bb": "3/22"
+    },
+    "rating": 75
+  },
+  {
+    "id": "p_1055",
+    "name": "Robin Uthappa",
+    "role": "Wicket-Keeper",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Robin_Uthappa_1.jpg/500px-Robin_Uthappa_1.jpg",
+    "stats": {
+      "matches": 205,
+      "runs": 4952,
+      "avg": 27.51,
+      "sr": 130.35,
+      "hs": "88"
+    },
+    "rating": 74
+  },
+  {
+    "id": "p_1056",
+    "name": "Mohit Sharma",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EMS%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 112,
+      "wickets": 132,
+      "econ": 8.65,
+      "avg": 25.8,
+      "bb": "5/10"
+    },
+    "rating": 74
+  },
+  {
+    "id": "p_1057",
+    "name": "Jacques Kallis",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "RSA",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Jacques_Kallis_6.jpg/500px-Jacques_Kallis_6.jpg",
+    "stats": {
+      "matches": 98,
+      "runs": 2427,
+      "sr": 109.23,
+      "wickets": 65,
+      "econ": 7.89
+    },
+    "rating": 74
+  },
+  {
+    "id": "p_1058",
+    "name": "Moises Henriques",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Moises_Henriques_with_the_Sydney_Sixers.jpg/500px-Moises_Henriques_with_the_Sydney_Sixers.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 420,
+      "sr": 132.5,
+      "wickets": 24,
+      "econ": 8.1
+    },
+    "rating": 74
+  },
+  {
+    "id": "p_1059",
+    "name": "Chris Lynn",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/e/ef/Brisbane_Heat_vs_Melbourne_Stars_T20_7_%28cropped%29.jpg",
+    "stats": {
+      "matches": 42,
+      "runs": 1329,
+      "avg": 34.08,
+      "sr": 140.63,
+      "hs": "93*"
+    },
+    "rating": 74
+  },
+  {
+    "id": "p_1060",
+    "name": "Brad Hogg",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/BradleyHogg_%28cropped%29.jpg/500px-BradleyHogg_%28cropped%29.jpg",
+    "stats": {
+      "matches": 21,
+      "wickets": 23,
+      "econ": 7.47,
+      "avg": 24.78,
+      "bb": "4/29"
+    },
+    "rating": 74
+  },
+  {
+    "id": "p_1061",
+    "name": "Albie Morkel",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "RSA",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Albie_Morkel_2.jpg/500px-Albie_Morkel_2.jpg",
+    "stats": {
+      "matches": 91,
+      "runs": 974,
+      "sr": 141.98,
+      "wickets": 85,
+      "econ": 8.21
+    },
+    "rating": 73
+  },
+  {
+    "id": "p_1062",
+    "name": "Lakshmipathy Balaji",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Shubek_Gill_%28right%29_with_L_Balaji_%28left%29.jpg/500px-Shubek_Gill_%28right%29_with_L_Balaji_%28left%29.jpg",
+    "stats": {
+      "matches": 73,
+      "wickets": 76,
+      "econ": 8.05,
+      "avg": 26.68,
+      "bb": "5/24"
+    },
+    "rating": 73
+  },
+  {
+    "id": "p_1063",
+    "name": "Kumar Sangakkara",
+    "role": "Wicket-Keeper",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Kumar_Sangakkara_bat_in_hand.JPG/500px-Kumar_Sangakkara_bat_in_hand.JPG",
+    "stats": {
+      "matches": 71,
+      "runs": 1687,
+      "avg": 25.95,
+      "sr": 121.19,
+      "hs": "94"
+    },
+    "rating": 73
+  },
+  {
+    "id": "p_1064",
+    "name": "Pravin Tambe",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EPT%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 33,
+      "wickets": 28,
+      "econ": 7.75,
+      "avg": 30.46,
+      "bb": "4/20"
+    },
+    "rating": 73
+  },
+  {
+    "id": "p_1065",
+    "name": "Ravi Bopara",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "ENG",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/9/99/Ravi_Bopara.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 420,
+      "sr": 132.5,
+      "wickets": 24,
+      "econ": 8.1
+    },
+    "rating": 73
+  },
+  {
+    "id": "p_1066",
+    "name": "Naveen-ul-Haq",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3ENA%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 30,
+      "wickets": 32,
+      "econ": 7.85,
+      "avg": 26.5,
+      "bb": "3/22"
+    },
+    "rating": 73
+  },
+  {
+    "id": "p_1067",
+    "name": "Shikhar Dhawan",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/SHIKHAR_DHAWAN_%2816005494418%29.jpg/500px-SHIKHAR_DHAWAN_%2816005494418%29.jpg",
+    "stats": {
+      "matches": 222,
+      "runs": 6769,
+      "avg": 35.26,
+      "sr": 127.14,
+      "hs": "106*"
+    },
+    "rating": 72
+  },
+  {
+    "id": "p_1068",
+    "name": "Gautam Gambhir",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/0/00/Gautam_Gambhir_%28IPL_2014%29.jpg",
+    "stats": {
+      "matches": 154,
+      "runs": 4217,
+      "avg": 31.24,
+      "sr": 123.88,
+      "hs": "93"
+    },
+    "rating": 72
+  },
+  {
+    "id": "p_1069",
+    "name": "Mahela Jayawardene",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Mahela_Jayawardene_3.JPG/500px-Mahela_Jayawardene_3.JPG",
+    "stats": {
+      "matches": 80,
+      "runs": 1802,
+      "avg": 28.6,
+      "sr": 123.26,
+      "hs": "110*"
+    },
+    "rating": 72
+  },
+  {
+    "id": "p_1070",
+    "name": "Wayne Parnell",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "RSA",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/WAYNE_PARNELL_%2815520474620%29.jpg/500px-WAYNE_PARNELL_%2815520474620%29.jpg",
+    "stats": {
+      "matches": 30,
+      "wickets": 32,
+      "econ": 7.85,
+      "avg": 26.5,
+      "bb": "3/22"
+    },
+    "rating": 72
+  },
+  {
+    "id": "p_1071",
+    "name": "Lendl Simmons",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Lendl_Simmons.jpg/500px-Lendl_Simmons.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 750,
+      "avg": 26.4,
+      "sr": 128.5,
+      "hs": "72"
+    },
+    "rating": 72
+  },
+  {
+    "id": "p_1072",
+    "name": "Ambati Rayudu",
+    "role": "Wicket-Keeper",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/5/51/Ambati_Rayudu.jpg",
+    "stats": {
+      "matches": 204,
+      "runs": 4348,
+      "avg": 28.23,
+      "sr": 127.54,
+      "hs": "100*"
+    },
+    "rating": 71
+  },
+  {
+    "id": "p_1073",
+    "name": "Irfan Pathan",
+    "role": "All-Rounder",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/7f/Irfan_Pathan72.jpg",
+    "stats": {
+      "matches": 103,
+      "runs": 1139,
+      "sr": 120.4,
+      "wickets": 80,
+      "econ": 7.78
+    },
+    "rating": 71
+  },
+  {
+    "id": "p_1074",
+    "name": "Subramaniam Badrinath",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Subramaniam_Badrinath.JPG/500px-Subramaniam_Badrinath.JPG",
+    "stats": {
+      "matches": 95,
+      "runs": 1441,
+      "avg": 30.66,
+      "sr": 118.89,
+      "hs": "71*"
+    },
+    "rating": 71
+  },
+  {
+    "id": "p_1075",
+    "name": "James Faulkner",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/JAMES_FAULKNER_%2811704434875%29_%28cropped%29.jpg/500px-JAMES_FAULKNER_%2811704434875%29_%28cropped%29.jpg",
+    "stats": {
+      "matches": 60,
+      "runs": 527,
+      "sr": 135.48,
+      "wickets": 59,
+      "econ": 8.69
+    },
+    "rating": 71
+  },
+  {
+    "id": "p_1076",
+    "name": "Mohammad Nabi",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/4/49/Mohammad_Nabi-Australia.jpg",
+    "stats": {
+      "matches": 24,
+      "runs": 215,
+      "sr": 134.38,
+      "wickets": 15,
+      "econ": 7.36
+    },
+    "rating": 71
+  },
+  {
+    "id": "p_1077",
+    "name": "Aaron Finch",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/AARON_FINCH_%286299558883%29.jpg/500px-AARON_FINCH_%286299558883%29.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 750,
+      "avg": 26.4,
+      "sr": 128.5,
+      "hs": "72"
+    },
+    "rating": 70
+  },
+  {
+    "id": "p_1078",
+    "name": "Dwayne Smith",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/DWAYNE_SMITH.jpg/500px-DWAYNE_SMITH.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 750,
+      "avg": 26.4,
+      "sr": 128.5,
+      "hs": "72"
+    },
+    "rating": 70
+  },
+  {
+    "id": "p_1079",
+    "name": "Murugan Ashwin",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/M_Ashwin.jpg/500px-M_Ashwin.jpg",
+    "stats": {
+      "matches": 30,
+      "wickets": 32,
+      "econ": 7.85,
+      "avg": 26.5,
+      "bb": "3/22"
+    },
+    "rating": 70
+  },
+  {
+    "id": "p_1080",
+    "name": "Stuart Binny",
+    "role": "All-Rounder",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Stuart_Binny_%282019%29.jpg/500px-Stuart_Binny_%282019%29.jpg",
+    "stats": {
+      "matches": 95,
+      "runs": 880,
+      "sr": 128.84,
+      "wickets": 22,
+      "econ": 7.64
+    },
+    "rating": 69
+  },
+  {
+    "id": "p_1081",
+    "name": "Dhawal Kulkarni",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EDK%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 92,
+      "wickets": 86,
+      "econ": 8.31,
+      "avg": 28.77,
+      "bb": "4/14"
+    },
+    "rating": 69
+  },
+  {
+    "id": "p_1082",
+    "name": "David Hussey",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/David_Hussey_2.jpg/500px-David_Hussey_2.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 750,
+      "avg": 26.4,
+      "sr": 128.5,
+      "hs": "72"
+    },
+    "rating": 69
+  },
+  {
+    "id": "p_1083",
+    "name": "Pawan Negi",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EPN%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 30,
+      "wickets": 32,
+      "econ": 7.85,
+      "avg": 26.5,
+      "bb": "3/22"
+    },
+    "rating": 69
+  },
+  {
+    "id": "p_1084",
+    "name": "Jesse Ryder",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EJR%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 35,
+      "runs": 420,
+      "sr": 132.5,
+      "wickets": 24,
+      "econ": 8.1
+    },
+    "rating": 69
+  },
+  {
+    "id": "p_1085",
+    "name": "Evin Lewis",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EEL%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 35,
+      "runs": 750,
+      "avg": 26.4,
+      "sr": 128.5,
+      "hs": "72"
+    },
+    "rating": 69
+  },
+  {
+    "id": "p_1086",
+    "name": "Chris Woakes",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "ENG",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Chris_Woakes_2022.jpg/500px-Chris_Woakes_2022.jpg",
+    "stats": {
+      "matches": 30,
+      "wickets": 32,
+      "econ": 7.85,
+      "avg": 26.5,
+      "bb": "3/22"
+    },
+    "rating": 69
+  },
+  {
+    "id": "p_1087",
+    "name": "Rahul Dravid",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/17/Rahul_Dravid_in_2024.jpg",
+    "stats": {
+      "matches": 89,
+      "runs": 2174,
+      "avg": 28.23,
+      "sr": 115.52,
+      "hs": "75*"
+    },
+    "rating": 68
+  },
+  {
+    "id": "p_1088",
+    "name": "Cameron White",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Cameron_White.jpg/500px-Cameron_White.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 750,
+      "avg": 26.4,
+      "sr": 128.5,
+      "hs": "72"
+    },
+    "rating": 68
+  },
+
+  {
+    "id": "p_1090",
+    "name": "Owais Shah",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "ENG",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EOS%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 35,
+      "runs": 750,
+      "avg": 26.4,
+      "sr": 128.5,
+      "hs": "72"
+    },
+    "rating": 68
+  },
+  {
+    "id": "p_1092",
+    "name": "Jason Roy",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "ENG",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Jason_Roy_with_the_Sydney_Sixers.jpg/500px-Jason_Roy_with_the_Sydney_Sixers.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 750,
+      "avg": 26.4,
+      "sr": 128.5,
+      "hs": "72"
+    },
+    "rating": 67
+  },
+  {
+    "id": "p_1093",
+    "name": "Murali Vijay",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Murali_Vijay_1_%28cropped%29.jpg/500px-Murali_Vijay_1_%28cropped%29.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 750,
+      "avg": 26.4,
+      "sr": 128.5,
+      "hs": "72"
+    },
+    "rating": 66
+  },
+  {
+    "id": "p_1094",
+    "name": "Vinay Kumar",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/3/37/Vinay_Kumar_%28cricketer%29.jpg",
+    "stats": {
+      "matches": 105,
+      "wickets": 105,
+      "econ": 8.39,
+      "avg": 28.25,
+      "bb": "4/40"
+    },
+    "rating": 66
+  },
+  {
+    "id": "p_1095",
+    "name": "Ross Taylor",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Ross_Taylor_CNZM_%28cropped%29.jpg/500px-Ross_Taylor_CNZM_%28cropped%29.jpg",
+    "stats": {
+      "matches": 55,
+      "runs": 1017,
+      "avg": 25.43,
+      "sr": 123.72,
+      "hs": "81*"
+    },
+    "rating": 66
+  },
+  {
+    "id": "p_1096",
+    "name": "Tillakaratne Dilshan",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Tillakaratne_Dilshan_portrait.jpg/500px-Tillakaratne_Dilshan_portrait.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 750,
+      "avg": 26.4,
+      "sr": 128.5,
+      "hs": "72"
+    },
+    "rating": 66
+  },
+  {
+    "id": "p_1097",
+    "name": "Rishi Dhawan",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3ERD%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 30,
+      "wickets": 32,
+      "econ": 7.85,
+      "avg": 26.5,
+      "bb": "3/22"
+    },
+    "rating": 66
+  },
+  {
+    "id": "p_1098",
+    "name": "Mark Boucher",
+    "role": "Wicket-Keeper",
+    "type": "Overseas",
+    "country": "RSA",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Markboucher.jpg/500px-Markboucher.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 750,
+      "avg": 26.4,
+      "sr": 128.5,
+      "hs": "72"
+    },
+    "rating": 66
+  },
+  {
+    "id": "p_1099",
+    "name": "Graeme Smith",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "RSA",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Graeme_Smith_on_Record_SA20_Auction%2C_Young_Talent_Investment_%26_Women%E2%80%99s_Cricket_Plans%2C_2025_%28cropped%29.png",
+    "stats": {
+      "matches": 35,
+      "runs": 750,
+      "avg": 26.4,
+      "sr": 128.5,
+      "hs": "72"
+    },
+    "rating": 66
+  },
+  {
+    "id": "p_1100",
+    "name": "Daren Sammy",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/DARREN_SAMMY.jpg/500px-DARREN_SAMMY.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 420,
+      "sr": 132.5,
+      "wickets": 24,
+      "econ": 8.1
+    },
+    "rating": 66
+  },
+  {
+    "id": "p_1101",
+    "name": "Ben Cutting",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Brisbane_Heat_vs_Melbourne_Stars_T20_15.jpg/500px-Brisbane_Heat_vs_Melbourne_Stars_T20_15.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 420,
+      "sr": 132.5,
+      "wickets": 24,
+      "econ": 8.1
+    },
+    "rating": 66
+  },
+  {
+    "id": "p_1102",
+    "name": "Shaun Tait",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Shaun_Tait.jpg/500px-Shaun_Tait.jpg",
+    "stats": {
+      "matches": 21,
+      "wickets": 28,
+      "econ": 8.12,
+      "avg": 23.82,
+      "bb": "3/22"
+    },
+    "rating": 66
+  },
+  {
+    "id": "p_1103",
+    "name": "Dan Christian",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Daniel_Christian.jpg/500px-Daniel_Christian.jpg",
+    "stats": {
+      "matches": 49,
+      "runs": 460,
+      "sr": 119.17,
+      "wickets": 38,
+      "econ": 7.92
+    },
+    "rating": 65
+  },
+  {
+    "id": "p_1104",
+    "name": "Bipul Sharma",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EBS%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 30,
+      "wickets": 32,
+      "econ": 7.85,
+      "avg": 26.5,
+      "bb": "3/22"
+    },
+    "rating": 65
+  },
+  {
+    "id": "p_1105",
+    "name": "Rilee Rossouw",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "RSA",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/RILEE_ROSSOUW_%2815706681502%29.jpg/500px-RILEE_ROSSOUW_%2815706681502%29.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 750,
+      "avg": 26.4,
+      "sr": 128.5,
+      "hs": "72"
+    },
+    "rating": 65
+  },
+  {
+    "id": "p_1106",
+    "name": "Wriddhiman Saha",
+    "role": "Wicket-Keeper",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Wriddhiman_Saha.jpg/500px-Wriddhiman_Saha.jpg",
+    "stats": {
+      "matches": 170,
+      "runs": 2934,
+      "avg": 24.66,
+      "sr": 127.57,
+      "hs": "115*"
+    },
+    "rating": 64
+  },
+  {
+    "id": "p_1107",
+    "name": "Abhishek Nayar",
+    "role": "All-Rounder",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EAN%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 35,
+      "runs": 420,
+      "sr": 132.5,
+      "wickets": 24,
+      "econ": 8.1
+    },
+    "rating": 64
+  },
+  {
+    "id": "p_1108",
+    "name": "Siddarth Kaul",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3ESK%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 30,
+      "wickets": 32,
+      "econ": 7.85,
+      "avg": 26.5,
+      "bb": "3/22"
+    },
+    "rating": 64
+  },
+  {
+    "id": "p_1109",
+    "name": "Ryan ten Doeschate",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Ryan_ten_doeschate.jpg/500px-Ryan_ten_doeschate.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 750,
+      "avg": 26.4,
+      "sr": 128.5,
+      "hs": "72"
+    },
+    "rating": 64
+  },
+  {
+    "id": "p_1110",
+    "name": "Paul Valthaty",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EPV%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 23,
+      "runs": 505,
+      "avg": 22.95,
+      "sr": 120.81,
+      "hs": "120*"
+    },
+    "rating": 64
+  },
+  {
+    "id": "p_1111",
+    "name": "Josh Little",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EJL%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 30,
+      "wickets": 32,
+      "econ": 7.85,
+      "avg": 26.5,
+      "bb": "3/22"
+    },
+    "rating": 64
+  },
+  {
+    "id": "p_1112",
+    "name": "Parthiv Patel",
+    "role": "Wicket-Keeper",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Parthiv_Patel.jpg/500px-Parthiv_Patel.jpg",
+    "stats": {
+      "matches": 139,
+      "runs": 2848,
+      "avg": 22.6,
+      "sr": 120.78,
+      "hs": "81"
+    },
+    "rating": 63
+  },
+  {
+    "id": "p_1113",
+    "name": "Eoin Morgan",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "ENG",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Eoin_Morgan_2.jpg/500px-Eoin_Morgan_2.jpg",
+    "stats": {
+      "matches": 83,
+      "runs": 1405,
+      "avg": 22.66,
+      "sr": 122.6,
+      "hs": "68*"
+    },
+    "rating": 63
+  },
+  {
+    "id": "p_1114",
+    "name": "Herschelle Gibbs",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "RSA",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Herschelle_Gibbs_2025_interview_%28cropped%29.png/500px-Herschelle_Gibbs_2025_interview_%28cropped%29.png",
+    "stats": {
+      "matches": 35,
+      "runs": 750,
+      "avg": 26.4,
+      "sr": 128.5,
+      "hs": "72"
+    },
+    "rating": 63
+  },
+  {
+    "id": "p_1115",
+    "name": "Corey Anderson",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3ECA%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 35,
+      "runs": 420,
+      "sr": 132.5,
+      "wickets": 24,
+      "econ": 8.1
+    },
+    "rating": 63
+  },
+  {
+    "id": "p_1116",
+    "name": "Colin de Grandhomme",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/2018.02.03.20.52.20-AUSvNZL_T20_NZL_innings%2C_SCG_%2838618201470%29_%28de_Grandhomme_cropped%29.jpg/500px-2018.02.03.20.52.20-AUSvNZL_T20_NZL_innings%2C_SCG_%2838618201470%29_%28de_Grandhomme_cropped%29.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 420,
+      "sr": 132.5,
+      "wickets": 24,
+      "econ": 8.1
+    },
+    "rating": 63
+  },
+  {
+    "id": "p_1117",
+    "name": "Mayank Agarwal",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/2_38_Agarwal_mugshot.jpg/500px-2_38_Agarwal_mugshot.jpg",
+    "stats": {
+      "matches": 127,
+      "runs": 2661,
+      "avg": 22.94,
+      "sr": 133.45,
+      "hs": "106"
+    },
+    "rating": 62
+  },
+  {
+    "id": "p_1118",
+    "name": "Kedar Jadhav",
+    "role": "Wicket-Keeper",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EKJ%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 95,
+      "runs": 1208,
+      "avg": 22.37,
+      "sr": 123.14,
+      "hs": "69"
+    },
+    "rating": 62
+  },
+  {
+    "id": "p_1119",
+    "name": "Manan Vohra",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/MananVohra_Magic_book_of_record.jpg/500px-MananVohra_Magic_book_of_record.jpg",
+    "stats": {
+      "matches": 56,
+      "runs": 1083,
+      "avg": 22.1,
+      "sr": 130.64,
+      "hs": "95"
+    },
+    "rating": 62
+  },
+  {
+    "id": "p_1120",
+    "name": "George Bailey",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/GEORGE_BAILEY_%2811704709453%29.jpg/500px-GEORGE_BAILEY_%2811704709453%29.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 750,
+      "avg": 26.4,
+      "sr": 128.5,
+      "hs": "72"
+    },
+    "rating": 62
+  },
+  {
+    "id": "p_1121",
+    "name": "Brett Lee",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Brett_lee_closeup2.jpg",
+    "stats": {
+      "matches": 38,
+      "wickets": 25,
+      "econ": 7.51,
+      "avg": 43.8,
+      "bb": "3/15"
+    },
+    "rating": 62
+  },
+  {
+    "id": "p_1122",
+    "name": "Praveen Kumar",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Praveen_Kumar.jpg/500px-Praveen_Kumar.jpg",
+    "stats": {
+      "matches": 119,
+      "wickets": 90,
+      "econ": 7.73,
+      "avg": 36.12,
+      "bb": "3/18"
+    },
+    "rating": 61
+  },
+  {
+    "id": "p_1123",
+    "name": "Sourav Ganguly",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Sourav_Ganguly_%28late_2010s%29.jpg/500px-Sourav_Ganguly_%28late_2010s%29.jpg",
+    "stats": {
+      "matches": 59,
+      "runs": 1349,
+      "avg": 25.45,
+      "sr": 106.81,
+      "hs": "91"
+    },
+    "rating": 61
+  },
+  {
+    "id": "p_1124",
+    "name": "S Sreesanth",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Sreesanth_1.jpg/500px-Sreesanth_1.jpg",
+    "stats": {
+      "matches": 44,
+      "wickets": 40,
+      "econ": 8.14,
+      "avg": 33.2,
+      "bb": "3/29"
+    },
+    "rating": 61
+  },
+  {
+    "id": "p_1125",
+    "name": "Manvinder Bisla",
+    "role": "Wicket-Keeper",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EMB%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 39,
+      "runs": 798,
+      "avg": 21,
+      "sr": 113.68,
+      "hs": "92"
+    },
+    "rating": 61
+  },
+  {
+    "id": "p_1126",
+    "name": "Mandeep Singh",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Mandeep_Singh_2019.jpg/500px-Mandeep_Singh_2019.jpg",
+    "stats": {
+      "matches": 111,
+      "runs": 1706,
+      "avg": 20.8,
+      "sr": 123.8,
+      "hs": "77*"
+    },
+    "rating": 60
+  },
+  {
+    "id": "p_1127",
+    "name": "Tim Southee",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Tim_Southee_ONZM_%28cropped%29.jpg/500px-Tim_Southee_ONZM_%28cropped%29.jpg",
+    "stats": {
+      "matches": 54,
+      "wickets": 47,
+      "econ": 8.67,
+      "avg": 37.06,
+      "bb": "3/20"
+    },
+    "rating": 60
+  },
+  {
+    "id": "p_1128",
+    "name": "Ajit Agarkar",
+    "role": "All-Rounder",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/74/AjitAgarkar.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 420,
+      "sr": 132.5,
+      "wickets": 24,
+      "econ": 8.1
+    },
+    "rating": 60
+  },
+  {
+    "id": "p_1129",
+    "name": "Sam Billings",
+    "role": "Wicket-Keeper",
+    "type": "Overseas",
+    "country": "ENG",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Sam_Billings_Kent_V_Surrey_2015_at_Kia_Oval_Cricket_Ground_%2827190750944%29.jpg/500px-Sam_Billings_Kent_V_Surrey_2015_at_Kia_Oval_Cricket_Ground_%2827190750944%29.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 750,
+      "avg": 26.4,
+      "sr": 128.5,
+      "hs": "72"
+    },
+    "rating": 60
+  },
+  {
+    "id": "p_1130",
+    "name": "Matthew Wade",
+    "role": "Wicket-Keeper",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Matthew_Wade.jpg/500px-Matthew_Wade.jpg",
+    "stats": {
+      "matches": 35,
+      "runs": 750,
+      "avg": 26.4,
+      "sr": 128.5,
+      "hs": "72"
+    },
+    "rating": 60
+  },
+  {
+    "id": "p_1131",
+    "name": "Naman Ojha",
+    "role": "Wicket-Keeper",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/NAMAN_OJHA_%2816192960225%29.jpg/500px-NAMAN_OJHA_%2816192960225%29.jpg",
+    "stats": {
+      "matches": 113,
+      "runs": 1554,
+      "avg": 20.72,
+      "sr": 118.35,
+      "hs": "94*"
+    },
+    "rating": 58
+  },
+  {
+    "id": "p_1132",
+    "name": "Murali Kartik",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Murali_kartik_bowling.jpg/500px-Murali_kartik_bowling.jpg",
+    "stats": {
+      "matches": 30,
+      "wickets": 32,
+      "econ": 7.85,
+      "avg": 26.5,
+      "bb": "3/22"
+    },
+    "rating": 58
+  },
+  {
+    "id": "p_1133",
+    "name": "Cheteshwar Pujara",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Cheteshwar_Pujara.jpg/500px-Cheteshwar_Pujara.jpg",
+    "stats": {
+      "matches": 30,
+      "runs": 390,
+      "avg": 20.53,
+      "sr": 99.74,
+      "hs": "51"
+    },
+    "rating": 58
+  },
+  {
+    "id": "p_1134",
+    "name": "Pradeep Sangwan",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EPS%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 30,
+      "wickets": 32,
+      "econ": 7.85,
+      "avg": 26.5,
+      "bb": "3/22"
+    },
+    "rating": 57
+  },
+
+  {
+    "id": "p_1136",
+    "name": "Shreevats Goswami",
+    "role": "Wicket-Keeper",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3ESG%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 35,
+      "runs": 750,
+      "avg": 26.4,
+      "sr": 128.5,
+      "hs": "72"
+    },
+    "rating": 56
+  },
+  {
+    "id": "p_1137",
+    "name": "Manpreet Gony",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Mpsgoni.jpg/500px-Mpsgoni.jpg",
+    "stats": {
+      "matches": 44,
+      "wickets": 37,
+      "econ": 8.7,
+      "avg": 34.7,
+      "bb": "3/34"
+    },
+    "rating": 54
+  },
+  {
+    "id": "p_1138",
+    "name": "Varun Aaron",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Varun_Aaron.jpg/500px-Varun_Aaron.jpg",
+    "stats": {
+      "matches": 52,
+      "wickets": 44,
+      "econ": 8.94,
+      "avg": 34.02,
+      "bb": "3/16"
+    },
+    "rating": 53
+  },
+  {
+    "id": "p_1139",
+    "name": "Mohammad Kaif",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2220%22%20fill%3D%22%230c0d10%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2242%22%20fill%3D%22%23151821%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.12)%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2258%22%20font-family%3D%22-apple-system%2CBlinkMacSystemFont%2C'Segoe%20UI'%2CRoboto%2Csans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2234%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EMK%3C%2Ftext%3E%3C%2Fsvg%3E",
+    "stats": {
+      "matches": 29,
+      "runs": 259,
+      "avg": 14.39,
+      "sr": 103.6,
+      "hs": "34"
+    },
+    "rating": 53
+  },
+  {
+    "id": "p_1140",
+    "name": "VVS Laxman",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/VVS_Laxman99.jpg/500px-VVS_Laxman99.jpg",
+    "stats": {
+      "matches": 20,
+      "runs": 282,
+      "avg": 15.67,
+      "sr": 105.62,
+      "hs": "52"
+    },
+    "rating": 53
+  },
+  {
+    "id": "p_1141",
+    "name": "Saurabh Tiwary",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/India_Vs_New_zealand_One_day_International%2C_10_December_2010_%286160465490%29.jpg/500px-India_Vs_New_zealand_One_day_International%2C_10_December_2010_%286160465490%29.jpg",
+    "stats": {
+      "matches": 93,
+      "runs": 1495,
+      "avg": 28.75,
+      "sr": 120.1,
+      "hs": "61*"
+    },
+    "rating": 81
+  },
+  {
+    "id": "p_1142",
+    "name": "Wasim Jaffer",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Waseem_Jaffer.jpg/500px-Waseem_Jaffer.jpg",
+    "stats": {
+      "matches": 8,
+      "runs": 130,
+      "avg": 16.25,
+      "sr": 107.4,
+      "hs": "50*"
+    },
+    "rating": 78
+  },
+  {
+    "id": "p_1143",
+    "name": "Swapnil Asnodkar",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/f/f1/Swapnil_asnodkar_With_Rashid_Zirak_%28cropped%29.jpg",
+    "stats": {
+      "matches": 20,
+      "runs": 423,
+      "avg": 21.15,
+      "sr": 124.8,
+      "hs": "60"
+    },
+    "rating": 77
+  },
+  {
+    "id": "p_1144",
+    "name": "Venugopal Rao",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.5,
+    "set": "Legends",
+    "stats": {
+      "matches": 65,
+      "runs": 985,
+      "avg": 22.38,
+      "sr": 117.8,
+      "hs": "71*"
+    },
+    "rating": 77
+  },
+  {
+    "id": "p_1145",
+    "name": "Mithun Manhas",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/77/Mithun_manhas.jpg",
+    "stats": {
+      "matches": 55,
+      "runs": 514,
+      "avg": 22.34,
+      "sr": 109.8,
+      "hs": "42*"
+    },
+    "rating": 76
+  },
+  {
+    "id": "p_1146",
+    "name": "Gurkeerat Singh Mann",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.5,
+    "set": "Legends",
+    "stats": {
+      "matches": 41,
+      "runs": 511,
+      "avg": 21.29,
+      "sr": 121.1,
+      "hs": "65"
+    },
+    "rating": 76
+  },
+  {
+    "id": "p_1147",
+    "name": "Rajat Bhatia",
+    "role": "All-Rounder",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "stats": {
+      "matches": 95,
+      "runs": 342,
+      "wickets": 71,
+      "econ": 7.41,
+      "best": "4/25"
+    },
+    "rating": 82
+  },
+  {
+    "id": "p_1148",
+    "name": "Joginder Sharma",
+    "role": "All-Rounder",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.5,
+    "set": "Legends",
+    "stats": {
+      "matches": 16,
+      "runs": 36,
+      "wickets": 12,
+      "econ": 9.82,
+      "best": "2/27"
+    },
+    "rating": 78
+  },
+  {
+    "id": "p_1149",
+    "name": "Laxmi Ratan Shukla",
+    "role": "All-Rounder",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.5,
+    "set": "Legends",
+    "stats": {
+      "matches": 47,
+      "runs": 405,
+      "wickets": 15,
+      "econ": 8.24,
+      "best": "3/6"
+    },
+    "rating": 77
+  },
+  {
+    "id": "p_1150",
+    "name": "Iqbal Abdulla",
+    "role": "All-Rounder",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.5,
+    "set": "Legends",
+    "stats": {
+      "matches": 49,
+      "runs": 88,
+      "wickets": 40,
+      "econ": 7.23,
+      "best": "3/24"
+    },
+    "rating": 79
+  },
+  {
+    "id": "p_1151",
+    "name": "Parvez Rasool",
+    "role": "All-Rounder",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/PR_20231223_195458.jpg/500px-PR_20231223_195458.jpg",
+    "stats": {
+      "matches": 11,
+      "runs": 17,
+      "wickets": 4,
+      "econ": 7.25,
+      "best": "1/5"
+    },
+    "rating": 75
+  },
+  {
+    "id": "p_1152",
+    "name": "Ashok Dinda",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "stats": {
+      "matches": 78,
+      "wickets": 69,
+      "econ": 8.2,
+      "avg": 30.04,
+      "best": "4/18"
+    },
+    "rating": 81
+  },
+  {
+    "id": "p_1153",
+    "name": "Siddharth Trivedi",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 1,
+    "set": "Legends",
+    "stats": {
+      "matches": 76,
+      "wickets": 65,
+      "econ": 7.58,
+      "avg": 29.29,
+      "best": "4/25"
+    },
+    "rating": 82
+  },
+  {
+    "id": "p_1154",
+    "name": "Barinder Sran",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.5,
+    "set": "Legends",
+    "stats": {
+      "matches": 24,
+      "wickets": 18,
+      "econ": 9.4,
+      "avg": 38.39,
+      "best": "3/28"
+    },
+    "rating": 77
+  },
+  {
+    "id": "p_1155",
+    "name": "Ishwar Pandey",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.5,
+    "set": "Legends",
+    "stats": {
+      "matches": 25,
+      "wickets": 18,
+      "econ": 7.69,
+      "avg": 36.17,
+      "best": "2/23"
+    },
+    "rating": 77
+  },
+  {
+    "id": "p_1156",
+    "name": "Pankaj Singh",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.5,
+    "set": "Legends",
+    "stats": {
+      "matches": 17,
+      "wickets": 11,
+      "econ": 9.28,
+      "avg": 43,
+      "best": "2/31"
+    },
+    "rating": 76
+  },
+  {
+    "id": "p_1157",
+    "name": "Abhimanyu Mithun",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.5,
+    "set": "Legends",
+    "stats": {
+      "matches": 16,
+      "wickets": 7,
+      "econ": 9.83,
+      "avg": 65.57,
+      "best": "2/26"
+    },
+    "rating": 75
+  },
+  {
+    "id": "p_1158",
+    "name": "Shadab Jakati",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.5,
+    "set": "Legends",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Shadab_Jakati_in_2016_%2801%29.jpg/500px-Shadab_Jakati_in_2016_%2801%29.jpg",
+    "stats": {
+      "matches": 59,
+      "wickets": 47,
+      "econ": 8.01,
+      "avg": 31.45,
+      "best": "4/22"
+    },
+    "rating": 80
+  },
+  {
+    "id": "p_1159",
+    "name": "Karanveer Singh",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.5,
+    "set": "Legends",
+    "stats": {
+      "matches": 9,
+      "wickets": 11,
+      "econ": 8.89,
+      "avg": 26.64,
+      "best": "4/54"
+    },
+    "rating": 76
+  },
+  {
+    "id": "p_1160",
+    "name": "Dishant Yagnik",
+    "role": "Wicket-Keeper",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.5,
+    "set": "Legends",
+    "stats": {
+      "matches": 25,
+      "runs": 170,
+      "avg": 17,
+      "sr": 124.09,
+      "hs": "34"
+    },
+    "rating": 75
   }
 ];

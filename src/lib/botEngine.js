@@ -101,7 +101,19 @@ function computeBotValuation({ player, botTeam, squadLimit, budgetRemaining, ini
   const teamId = botTeam.teamId;
 
   // 1. Set tier drives the baseline
-  const tier = SET_TIER[set] || { base: 0.7, max: 1.1 };
+  let tier = SET_TIER[set];
+  if (!tier) {
+    if (set === 'Legends') {
+      const r = Number(player.rating) || 75;
+      if (r >= 90) tier = { base: 5.5, max: 9.5 };
+      else if (r >= 82) tier = { base: 3.5, max: 6.5 };
+      else if (r >= 75) tier = { base: 2.2, max: 4.8 };
+      else if (r >= 65) tier = { base: 1.4, max: 2.8 };
+      else tier = { base: 1.0, max: 1.8 };
+    } else {
+      tier = { base: 0.7, max: 1.1 };
+    }
+  }
 
   // 2. Team personality multiplier (role + set affinity)
   const prefs = TEAM_PREFERENCES[teamId] || {};
@@ -127,7 +139,8 @@ function computeBotValuation({ player, botTeam, squadLimit, budgetRemaining, ini
   const squadUrgency = slotsLeft <= 3 ? 1.15 : 1.0;
 
   // 6. Final max valuation
-  let maxVal = basePrice * willingnessFactor * personalityMult * urgencyBoost * squadUrgency;
+  const effectiveBase = set === 'Legends' ? Math.max(basePrice, 1.0) : basePrice;
+  let maxVal = effectiveBase * willingnessFactor * personalityMult * urgencyBoost * squadUrgency;
 
   // Personality cap overrides
   if (prefs.personality === 'aggressive') {

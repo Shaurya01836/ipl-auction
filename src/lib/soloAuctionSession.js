@@ -169,7 +169,9 @@ export function createSoloStateManager({
 
   function updateState(action) {
     if (!isLockHeldRef || !isLockHeldRef.current) {
-      console.warn('[solo] Refusing to update local solo state: lock is not held by this window.');
+      if (currentState?.status !== 'completed') {
+        console.warn('[solo] Refusing to update local solo state: lock is not held by this window.');
+      }
       return null;
     }
     if (!currentState) return null;

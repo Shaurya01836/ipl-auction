@@ -360,7 +360,7 @@ Respond ONLY with valid JSON in this exact structure without markdown:
             if (!groqRes.ok) {
               const errText = await groqRes.text();
               console.warn('[groq-error]', groqRes.status, errText);
-              return json({ success: false, error: 'AI rating generation temporarily unavailable' }, 200);
+              return json({ success: false, error: `AI rating error (${groqRes.status}): ${errText.slice(0, 300)}` }, 200);
             }
 
             const groqData = await groqRes.json();

@@ -78,10 +78,11 @@ export function localAuctionReducer(state, action) {
 
       const isSprint5 = auctionType === 'sprint5';
       const isSprint11 = auctionType === 'sprint11';
+      const isLegends = auctionType === 'legends';
 
-      const budget = isSprint5 ? 60.0 : isSprint11 ? 90.0 : 120.0;
-      const squadLimit = isSprint5 ? 5 : isSprint11 ? 11 : 25;
-      const overseasLimit = isSprint5 ? 2 : isSprint11 ? 4 : 8;
+      const budget = isSprint5 ? 60.0 : isSprint11 ? 90.0 : isLegends ? 100.0 : 120.0;
+      const squadLimit = isSprint5 ? 5 : (isSprint11 || isLegends) ? 11 : 25;
+      const overseasLimit = isSprint5 ? 2 : (isSprint11 || isLegends) ? 4 : 8;
 
       const humanTeamId = humanUser.team;
       const humanTeamObj = TEAMS.find((t) => t.id === humanTeamId) || TEAMS[0];

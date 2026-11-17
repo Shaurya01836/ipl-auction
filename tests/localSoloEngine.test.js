@@ -305,7 +305,7 @@ test('INIT_AUCTION: player order follows the shared set order, marquee first', (
 
   const setOrder = state.playerOrder.map((i) => IPL_PLAYERS[i].set);
   const contiguousSets = setOrder.filter((s, i) => i === 0 || setOrder[i - 1] !== s);
-  const expectedSets = [...new Set(IPL_PLAYERS.map((p) => p.set))];
+  const expectedSets = [...new Set(IPL_PLAYERS.filter((p) => p.set !== 'Legends').map((p) => p.set))];
 
   assert.deepEqual(contiguousSets, expectedSets);
   assert.equal(setOrder[0], 'Marquee Set 1');

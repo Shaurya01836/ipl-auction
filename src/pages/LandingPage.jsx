@@ -38,6 +38,7 @@ import {
   Loader2,
   Users,
   Trophy,
+  Crown,
   ChevronRight,
   ChevronDown,
   Check,
@@ -1017,7 +1018,7 @@ const LandingPage = () => {
                     </h2>
                   </div>
 
-                  <div className="flex flex-row gap-2 sm:gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                     <button
                       type="button"
                       onClick={() => setAuctionType("mega")}
@@ -1135,6 +1136,45 @@ const LandingPage = () => {
                       <div className="space-y-0.5 text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wide">
                         <div>5 Players</div>
                         <div>₹60 Cr Budget</div>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setAuctionType("legends")}
+                      className={`flex-1 p-2 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-200 text-left relative overflow-hidden group/mode cursor-pointer ${
+                        auctionType === "legends"
+                          ? "bg-white/[0.08] border border-white/20 scale-[1.02] shadow-[0_4px_24px_rgba(0,0,0,0.5)]"
+                          : "bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-white/10"
+                      }`}
+                    >
+                      {auctionType === "legends" && (
+                        <div className="absolute top-2 right-2 sm:top-3.5 sm:right-3.5 text-white">
+                          <Check
+                            size={10}
+                            className="sm:w-3 sm:h-3"
+                            strokeWidth={3}
+                          />
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-1.5">
+                        <Crown
+                          size={12}
+                          className={
+                            auctionType === "legends"
+                              ? "text-white sm:w-3.5 sm:h-3.5"
+                              : "text-gray-400 sm:w-3.5 sm:h-3.5"
+                          }
+                        />
+                        <span
+                          className={`text-[8px] sm:text-[10px] font-black uppercase tracking-tight ${auctionType === "legends" ? "text-white" : "text-gray-400"}`}
+                        >
+                          Legends
+                        </span>
+                      </div>
+                      <div className="space-y-0.5 text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wide">
+                        <div>11 Players</div>
+                        <div>₹100 Cr Budget</div>
                       </div>
                     </button>
                   </div>
@@ -1337,6 +1377,7 @@ const LandingPage = () => {
                         { id: "mega", label: "Mega" },
                         { id: "sprint11", label: "11-Classic" },
                         { id: "sprint5", label: "5-Sprint" },
+                        { id: "legends", label: "Legends" },
                       ].map((mode) => (
                         <button
                           key={mode.id}
@@ -1398,7 +1439,9 @@ const LandingPage = () => {
 
                                 <span className="shrink-0">•</span>
                                 <span className="text-gray-400 truncate">
-                                  {room.type === "sprint5"
+                                  {room.type === "legends"
+                                    ? "Legends"
+                                    : room.type === "sprint5"
                                     ? "5-Sprint"
                                     : room.type === "sprint11"
                                       ? "11-Classic"

@@ -48,10 +48,20 @@ test('a delayed bid click cannot land on the next lot', () => {
   assert.equal(result, undefined, 'transaction must abort when the playerId changed');
 });
 
-test('mega player order contains every player exactly once', () => {
+test('mega player order contains every modern player exactly once', () => {
+  const modernPlayers = IPL_PLAYERS.filter((p) => p.set !== 'Legends');
   const order = generatePlayerOrder('mega');
-  assert.equal(order.length, IPL_PLAYERS.length);
-  assert.equal(new Set(order).size, IPL_PLAYERS.length);
+  assert.equal(order.length, modernPlayers.length);
+  assert.equal(new Set(order).size, modernPlayers.length);
+});
+
+test('legends player order contains every legend player exactly once', () => {
+  const legendPlayers = IPL_PLAYERS.filter((p) => p.set === 'Legends');
+  const indianLegends = legendPlayers.filter((p) => p.type === 'Indian');
+  const order = generatePlayerOrder('legends');
+  assert.equal(order.length, legendPlayers.length);
+  assert.equal(new Set(order).size, legendPlayers.length);
+  assert.ok(indianLegends.length >= 70, `must have at least 70 Indian players for 10-team 11-man squads, got ${indianLegends.length}`);
 });
 
 test('team count includes human and bot franchises, not teamless spectators', () => {

@@ -5,6 +5,79 @@ import { IPL_PLAYERS } from '../data/players';
 import { TEAMS } from '../data/teams';
 import { getAuctionAiRating, generateAuctionAiRating } from '../lib/directoryApi';
 
+function generateTacticalScoutAnalysis(eligibleTeams, mode) {
+  const scoredTeams = eligibleTeams.map((t) => {
+    const players = t.playersWithInfo || [];
+    const count = players.length;
+    const avgRating = count > 0
+      ? players.reduce((sum, p) => sum + (p.rating || 75), 0) / count
+      : 75;
+
+    const bowlers = players.filter((p) => p.role === 'Bowler').length;
+    const allRounders = players.filter((p) => p.role === 'All-Rounder').length;
+    const batsmen = players.filter((p) => p.role === 'Batsman').length;
+    const keepers = players.filter((p) => p.role === 'Wicket-Keeper').length;
+
+    let balanceBonus = 0;
+    if (keepers >= 1) balanceBonus += 2;
+    if (bowlers + allRounders >= 4) balanceBonus += 3;
+    if (batsmen >= 3) balanceBonus += 2;
+
+    const rawScore = Math.round(avgRating * 0.95 + balanceBonus);
+    const score = Math.min(98, Math.max(55, rawScore));
+
+    let grade = 'B';
+    if (score >= 90) grade = 'A+';
+    else if (score >= 82) grade = 'A';
+    else if (score >= 75) grade = 'B+';
+    else if (score >= 68) grade = 'B';
+    else grade = 'C';
+
+    let title = 'Balanced Contender';
+    let verdict = `Solid squad depth with dependable balance for ${mode}.`;
+
+    if (bowlers >= 4 && bowlers > batsmen) {
+      title = 'Bowling Powerhouse';
+      verdict = 'Formidable bowling lineup with genuine wicket-takers and death-over specialists.';
+    } else if (batsmen >= 4 && batsmen > bowlers) {
+      title = 'Batting Heavyweights';
+      verdict = 'Explosive batting depth capable of chasing or setting tournament-winning totals.';
+    } else if (allRounders >= 3) {
+      title = 'Dynamic All-Round XI';
+      verdict = 'Outstanding tactical flexibility with multi-dimensional match-winners.';
+    } else if (score >= 85) {
+      title = 'Tournament Favorites';
+      verdict = 'Complete roster balance with match-winners across powerplay, middle, and death phases.';
+    }
+
+    return {
+      teamId: t.teamId,
+      score,
+      grade,
+      title,
+      verdict,
+    };
+  });
+
+  scoredTeams.sort((a, b) => b.score - a.score);
+  const best = scoredTeams[0];
+  const winner = best
+    ? {
+        teamId: best.teamId,
+        score: best.score,
+        badge: 'Best Overall Squad',
+        title: 'Tournament Champions',
+        verdict: `${best.teamId} assembled the highest-rated squad for ${mode}, combining star power with complete tactical balance.`,
+      }
+    : null;
+
+  return {
+    winner,
+    teams: scoredTeams,
+    generatedAt: Date.now(),
+  };
+}
+
 const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId, isHost = false }) => {
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
@@ -23,7 +96,7 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
   const minPlayers = useMemo(() => {
     const type = currentAuction?.auctionType || 'mega';
     if (type === 'mega') return 18;
-    if (type === 'sprint11') return 11;
+    if (type === 'sprint11' || type === 'legends') return 11;
     if (type === 'sprint5') return 5;
     return currentAuction?.settings?.minPlayers || 18;
   }, [currentAuction]);
@@ -64,7 +137,9 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
       // 2. Host-initiated evaluation: build token-friendly payload with all squad players + format context
       const auctionType = currentAuction?.auctionType || 'mega';
       const mode =
-        auctionType === 'sprint11'
+        auctionType === 'legends'
+          ? 'Legends XI (11 players per team. All-time T20/IPL legends dream XI: Requires iconic top order, legendary keeper, and ATG bowling attack.)'
+          : auctionType === 'sprint11'
           ? '11-Classic (11 players per team, no bench. Requires balanced playing XI: solid top order, reliable keeper, and at least 5 bowling options.)'
           : auctionType === 'sprint5'
           ? '5-Sprint (5 players per team. High-octane sprint: Requires explosive hitters, 1 keeper, and lethal strike/death bowlers. High individual impact matters most.)'
@@ -99,6 +174,7 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
           playerCount: playersWithInfo.length,
           isDisqualified: playersWithInfo.length < minPlayers,
           roster: roster || 'None',
+          playersWithInfo,
         };
       });
 
@@ -128,36 +204,50 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
         return;
       }
 
-      // 3. Request evaluation ONLY for eligible teams (cached in D1 on backend)
-      const genRes = await generateAuctionAiRating(auctionId, {
-        mode,
-        teams: eligibleTeams,
-        force,
-      });
+      // 3. Request evaluation (Cloud D1/Groq or resilient local tactical engine)
+      let resolvedAnalysis = null;
+      let remoteCooldown = 0;
 
-      if (genRes?.analysis) {
-        const aiTeams = genRes.analysis.teams || [];
-        const mergedTeams = [
-          ...aiTeams,
-          ...disqualifiedTeams.filter(
-            (dt) => !aiTeams.some((at) => String(at.teamId || '').toUpperCase() === String(dt.teamId || '').toUpperCase())
-          ),
-        ];
+      try {
+        const genRes = await generateAuctionAiRating(auctionId, {
+          mode,
+          teams: eligibleTeams,
+          force,
+        });
 
-        const finalAnalysis = {
-          ...genRes.analysis,
-          teams: mergedTeams,
-        };
-
-        try {
-          localStorage.setItem(`crickauction_ai_${auctionId}`, JSON.stringify(finalAnalysis));
-        } catch {}
-        setAiAnalysis(finalAnalysis);
+        if (genRes?.analysis && genRes.analysis.winner) {
+          resolvedAnalysis = genRes.analysis;
+          remoteCooldown = genRes.cooldown || 60;
+        }
+      } catch (cloudErr) {
+        console.warn('[SquadRating] Cloud AI unreachable, using tactical scout engine', cloudErr);
       }
-      if (genRes?.cooldown) {
-        setCooldown(genRes.cooldown);
-      } else if (force) {
-        setCooldown(60);
+
+      // If Cloud AI is unavailable or unconfigured, gracefully fallback to tactical scout engine
+      if (!resolvedAnalysis || !resolvedAnalysis.winner) {
+        resolvedAnalysis = generateTacticalScoutAnalysis(eligibleTeams, mode);
+        remoteCooldown = 10;
+      }
+
+      const aiTeams = resolvedAnalysis.teams || [];
+      const mergedTeams = [
+        ...aiTeams,
+        ...disqualifiedTeams.filter(
+          (dt) => !aiTeams.some((at) => String(at.teamId || '').toUpperCase() === String(dt.teamId || '').toUpperCase())
+        ),
+      ];
+
+      const finalAnalysis = {
+        ...resolvedAnalysis,
+        teams: mergedTeams,
+      };
+
+      try {
+        localStorage.setItem(`crickauction_ai_${auctionId}`, JSON.stringify(finalAnalysis));
+      } catch {}
+      setAiAnalysis(finalAnalysis);
+      if (remoteCooldown > 0) {
+        setCooldown(remoteCooldown);
       }
     } catch (err) {
       console.warn('[SquadRating] AI analysis unavailable', err);

@@ -652,6 +652,7 @@ const Lobby = () => {
                   <span className="text-[11px] font-black text-white uppercase tracking-tight">
                     {currentAuction?.auctionType === 'sprint5' ? '5-Player Sprint' :
                       currentAuction?.auctionType === 'sprint11' ? '11-Player Classic' :
+                      currentAuction?.auctionType === 'legends' ? 'All-Time Legends XI' :
                         'Mega Auction'}
                   </span>
                 </div>
