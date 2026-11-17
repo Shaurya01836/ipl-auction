@@ -221,6 +221,52 @@ const AuctionRoom = () => {
    const configuredBidTimer = toFiniteNumber(currentAuction?.settings?.bidTimer, 10);
    const isTimerPaused = displayAuctionState?.status === 'paused';
 
+   // Real-time team ratings calculated entirely in browser memory (0 DB / infra cost)
+   const liveTeamRatings = useMemo(() => {
+      const playerMap = new Map(IPL_PLAYERS.map(p => [p.id, p]));
+      const ratingMap = {};
+
+      TEAMS.forEach(team => {
+         const teamDoc = roomTeams.find(doc => doc.teamId === team.id);
+         const squad = teamDoc?.squad || [];
+
+         let totalRating = 0;
+         let ratedPlayersCount = 0;
+
+         squad.forEach(member => {
+            const pid = typeof member === 'string' ? member : member.id;
+            const pInfo = playerMap.get(pid);
+            if (pInfo?.rating) {
+               totalRating += pInfo.rating;
+               ratedPlayersCount += 1;
+            }
+         });
+
+         const avgRating = ratedPlayersCount > 0 ? (totalRating / ratedPlayersCount).toFixed(1) : null;
+
+         ratingMap[team.id] = {
+            totalRating,
+            avgRating,
+            playerCount: squad.length
+         };
+      });
+
+      // Sorted ranking descending by avgRating, then totalRating, then team name
+      const rankedTeams = [...TEAMS].sort((a, b) => {
+         const rA = ratingMap[a.id]?.avgRating ? parseFloat(ratingMap[a.id].avgRating) : 0;
+         const rB = ratingMap[b.id]?.avgRating ? parseFloat(ratingMap[b.id].avgRating) : 0;
+         if (rB !== rA) return rB - rA;
+
+         const tA = ratingMap[a.id]?.totalRating || 0;
+         const tB = ratingMap[b.id]?.totalRating || 0;
+         if (tB !== tA) return tB - tA;
+
+         return a.name.localeCompare(b.name);
+      });
+
+      return { ratingMap, rankedTeams };
+   }, [roomTeams, IPL_PLAYERS]);
+
    // Audio unlocker for mobile devices
    useEffect(() => {
       if (!celebrationAudioRef.current) {
@@ -1193,11 +1239,12 @@ const AuctionRoom = () => {
                </div>
 
                <div className="flex-1 overflow-y-auto p-4 compact:p-3 pb-28 sm:pb-8 md:pb-4 custom-scrollbar touch-pan-y min-h-0">
-                  {TEAMS.map((t) => {
+                  {(liveTeamRatings?.rankedTeams || TEAMS).map((t, idx) => {
                      const teamDoc = roomTeams.find(doc => doc.teamId === t.id);
                      const manager = currentAuction?.players?.find(p => p.id === teamDoc?.userId);
                      const isMyTeam = manager?.id === user?.uid;
                      const isSelected = selectedTeamId === (manager?.id || t.id);
+                     const ratingInfo = liveTeamRatings?.ratingMap[t.id];
 
                      return (
                         <div key={t.id} className="mb-2 last:mb-0">
@@ -1205,7 +1252,10 @@ const AuctionRoom = () => {
                               onClick={() => setSelectedTeamId(isSelected ? null : (manager?.id || t.id))}
                               className={`w-full text-left py-2.5 compact:py-2 px-3 rounded-xl border transition-all flex items-center justify-between group cursor-pointer ${isSelected ? 'bg-[#0e1015] border-white/20 shadow-[0_4px_24px_rgba(0,0,0,0.5)]' : 'bg-[#0e1015]/90 border-white/5 hover:bg-white/[0.05] hover:border-white/10'}`}
                            >
-                              <div className="flex items-center gap-2.5">
+                              <div className="flex items-center gap-2">
+                                 <span className="font-pixel text-[10px] compact:text-[9px] text-slate-400 font-bold w-3.5 text-center shrink-0">
+                                    {idx + 1}
+                                 </span>
                                  <div className="w-8 h-8 compact:w-7 compact:h-7 rounded-lg bg-white/5 p-1 flex items-center justify-center shrink-0">
                                     <img src={t.logo} alt={`${t.name} Logo`} className="w-full h-full object-contain" />
                                  </div>
@@ -1232,7 +1282,9 @@ const AuctionRoom = () => {
                                     <span className="text-[10px] compact:text-[9px] font-bold block leading-none text-gray-200">
                                        ₹{formatCrores(teamDoc?.budgetRemaining ?? toFiniteNumber(currentAuction?.settings?.budget, 120))} Cr
                                     </span>
-                                    <span className="text-[8px] compact:text-[7px] font-bold text-gray-500 uppercase tracking-widest mt-0.5 block">{teamDoc?.squad?.length || 0}/{toFiniteNumber(currentAuction?.squadLimit, 25)}</span>
+                                    <span className="text-[8px] compact:text-[7px] font-bold text-gray-500 uppercase tracking-widest mt-0.5 block">
+                                       {teamDoc?.squad?.length || 0}/{toFiniteNumber(currentAuction?.squadLimit, 25)}
+                                    </span>
                                  </div>
                                  <ChevronDown size={12} className={`text-gray-500 transition-transform duration-300 ${isSelected ? 'rotate-180' : ''}`} />
                               </div>
@@ -1257,6 +1309,7 @@ const AuctionRoom = () => {
                                              });
                                              return spent === null ? '—' : `₹${formatCrores(spent, 2)} Cr`;
                                           })()}</span></span>
+                                          <span>Rating: <span className="text-slate-300 font-extrabold">{ratingInfo?.avgRating ? `${ratingInfo.avgRating}` : 'N/A'}</span></span>
                                           <span>Overseas: <span className="text-slate-300 font-bold">{countOverseas(teamDoc?.squad, IPL_PLAYERS)}/{toFiniteNumber(currentAuction?.overseasLimit, 8)}</span></span>
                                        </div>
 
@@ -1640,7 +1693,7 @@ const AuctionRoom = () => {
                                     {!spectateMode && displayAuctionState?.status === 'bidding' && (
                                        <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 px-1">
                                           <span className="text-[10px] font-pixel text-slate-400 uppercase tracking-widest mr-auto hidden xs:inline">Jump Bid:</span>
-                                          {[1, 2, 3].map((jump) => {
+                                          {[1, 1.5, 2].map((jump) => {
                                              const current = toFiniteNumber(displayAuctionState?.currentBid, 0);
                                              const targetAmount = r2(current === 0 ? toFiniteNumber(currentPlayer?.basePrice, 0) + jump : current + jump);
                                              const isAffordable = (team?.budgetRemaining || 0) >= targetAmount;

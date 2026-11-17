@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Users, Loader2, RefreshCw } from 'lucide-react';
+import { Users, Loader2, RefreshCw, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { IPL_PLAYERS } from '../data/players';
 import { TEAMS } from '../data/teams';
 import { getAuctionAiRating, generateAuctionAiRating } from '../lib/directoryApi';
+import { computeSquadDepartmentBalance } from '../lib/auctionDisplay';
 
 function generateTacticalScoutAnalysis(eligibleTeams, mode) {
   const scoredTeams = eligibleTeams.map((t) => {
@@ -82,6 +83,7 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [ratingMode, setRatingMode] = useState('normal'); // 'normal' (player data) | 'ai' (AI scout)
 
   const auctionId = propAuctionId || currentAuction?.id;
 
@@ -270,16 +272,21 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
 
       let totalRating = 0;
       const normalizedPlayers = squadArr.map(p => typeof p === 'string' ? p : (p?.id || p));
+      const playersWithInfo = [];
 
       normalizedPlayers.forEach(pId => {
         const playerInfo = IPL_PLAYERS.find(p => p.id === pId);
         if (playerInfo && playerInfo.rating) {
           totalRating += playerInfo.rating;
         }
+        if (playerInfo) {
+          playersWithInfo.push(playerInfo);
+        }
       });
 
       const teamInfo = TEAMS.find(t => t.id === teamId);
       const isDisqualified = normalizedPlayers.length < minPlayers;
+      const departmentBalance = computeSquadDepartmentBalance(playersWithInfo, isDisqualified);
       const aiTeam = aiAnalysis?.teams?.find(
         (t) => String(t.teamId || '').toUpperCase() === String(teamId || '').toUpperCase()
       );
@@ -290,9 +297,11 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
         teamId,
         teamName: teamInfo?.name || teamId,
         teamLogo: teamInfo?.logo || null,
+        totalRating,
         avgRating: normalizedPlayers.length > 0 ? Number((totalRating / normalizedPlayers.length).toFixed(1)) : 0,
         playerCount: normalizedPlayers.length,
         isDisqualified,
+        ...departmentBalance,
         aiScore: isDisqualified ? (aiAnalysis ? 0 : undefined) : aiTeam?.score,
         aiGrade: isDisqualified ? (aiAnalysis ? 'F' : undefined) : aiTeam?.grade,
         aiTitle: isDisqualified ? 'Disqualified' : aiTeam?.title,
@@ -301,18 +310,29 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
           : aiTeam?.verdict,
       };
     }).sort((a, b) => {
+      if (ratingMode === 'normal') {
+        if (a.isDisqualified !== b.isDisqualified) return a.isDisqualified ? 1 : -1;
+        if (b.balancedRating !== a.balancedRating) return b.balancedRating - a.balancedRating;
+        if (b.rawAvgRating !== a.rawAvgRating) return b.rawAvgRating - a.rawAvgRating;
+        if (b.totalRating !== a.totalRating) return b.totalRating - a.totalRating;
+        return a.teamName.localeCompare(b.teamName);
+      }
       if (a.isDisqualified !== b.isDisqualified) return a.isDisqualified ? 1 : -1;
       if (a.aiScore !== undefined && b.aiScore !== undefined) {
         return b.aiScore - a.aiScore;
       }
-      return b.avgRating - a.avgRating;
+      return b.balancedRating - a.balancedRating;
     });
-  }, [roomTeams, minPlayers, aiAnalysis]);
+  }, [roomTeams, minPlayers, aiAnalysis, ratingMode]);
 
   const winnerTeam = useMemo(() => {
     if (!aiAnalysis?.winner?.teamId) return null;
     return TEAMS.find(t => t.id === aiAnalysis.winner.teamId) || { name: aiAnalysis.winner.teamId };
   }, [aiAnalysis]);
+
+  const topNormalTeam = useMemo(() => {
+    return calculatedLeaderboard.find(t => !t.isDisqualified && t.balancedRating > 0) || calculatedLeaderboard[0] || null;
+  }, [calculatedLeaderboard]);
 
   if (roomTeams.length === 0) {
     return (
@@ -327,35 +347,106 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Section Header */}
-      <div className="flex items-center justify-between gap-3 px-1 sm:px-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 sm:px-0">
         <div>
           <h2 className="text-xl sm:text-2xl font-pixel uppercase tracking-tight text-white">
             Franchise Strength
           </h2>
           <p className="text-xs sm:text-sm font-sans text-slate-400 mt-0.5">
-            Full squad evaluation based on AI scout analysis
+            {ratingMode === 'normal'
+              ? 'Squad strength calculated from player dataset ratings'
+              : 'Full squad evaluation based on AI scout analysis'}
           </p>
         </div>
-        {isHost && aiAnalysis && (
-          <button
-            onClick={() => loadAiAnalysis(true)}
-            disabled={aiLoading || cooldown > 0}
-            className="px-3 sm:px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-pixel text-[9px] sm:text-[10px] uppercase tracking-wider transition-all flex items-center gap-2 shrink-0 disabled:opacity-40 active:scale-[0.98] touch-manipulation cursor-pointer"
-            title="Regenerate AI analysis with latest full-squad model"
-          >
-            <RefreshCw size={12} className={aiLoading ? 'animate-spin text-white' : 'text-slate-400'} />
-            <span className="hidden sm:inline">
-              {aiLoading ? 'Analyzing...' : cooldown > 0 ? `Wait ${cooldown}s` : 'Re-analyze AI'}
-            </span>
-            <span className="sm:hidden">
-              {aiLoading ? '...' : cooldown > 0 ? `${cooldown}s` : 'Refresh'}
-            </span>
-          </button>
-        )}
+
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Rating Mode Switcher */}
+          <div className="flex items-center gap-1 bg-white/5 border border-white/10 p-1 rounded-xl shrink-0">
+            <button
+              type="button"
+              onClick={() => setRatingMode('normal')}
+              className={`px-3 py-1.5 rounded-lg font-pixel text-[9px] sm:text-[10px] uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+                ratingMode === 'normal'
+                  ? 'bg-white text-black font-black shadow-md'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <span>Player Data</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setRatingMode('ai')}
+              className={`px-3 py-1.5 rounded-lg font-pixel text-[9px] sm:text-[10px] uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+                ratingMode === 'ai'
+                  ? 'bg-white text-black font-black shadow-md'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <Sparkles size={11} className={ratingMode === 'ai' ? 'text-black' : 'text-slate-400'} />
+              <span>AI Scout</span>
+            </button>
+          </div>
+
+          {ratingMode === 'ai' && isHost && aiAnalysis && (
+            <button
+              onClick={() => loadAiAnalysis(true)}
+              disabled={aiLoading || cooldown > 0}
+              className="px-3 sm:px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-pixel text-[9px] sm:text-[10px] uppercase tracking-wider transition-all flex items-center gap-2 shrink-0 disabled:opacity-40 active:scale-[0.98] touch-manipulation cursor-pointer"
+              title="Regenerate AI analysis with latest full-squad model"
+            >
+              <RefreshCw size={12} className={aiLoading ? 'animate-spin text-white' : 'text-slate-400'} />
+              <span className="hidden sm:inline">
+                {aiLoading ? 'Analyzing...' : cooldown > 0 ? `Wait ${cooldown}s` : 'Re-analyze AI'}
+              </span>
+              <span className="sm:hidden">
+                {aiLoading ? '...' : cooldown > 0 ? `${cooldown}s` : 'Refresh'}
+              </span>
+            </button>
+          )}
+        </div>
       </div>
 
+      {/* Player Data Leader Card */}
+      {ratingMode === 'normal' && topNormalTeam && topNormalTeam.balancedRating > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-2xl sm:rounded-[2rem] bg-[#0c0d10] border border-white/15 p-5 sm:p-7 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)] group"
+        >
+          {topNormalTeam.teamLogo && (
+            <div className="absolute -right-8 -bottom-8 w-44 sm:w-64 h-44 sm:h-64 opacity-[0.05] group-hover:opacity-[0.08] transition-opacity pointer-events-none grayscale">
+              <img src={topNormalTeam.teamLogo} alt="" className="w-full h-full object-contain" />
+            </div>
+          )}
+
+          <div className="relative z-10">
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-3 py-1 rounded-full bg-white/10 text-white border border-white/20 font-pixel text-[8px] sm:text-[9px] uppercase tracking-wider">
+                  Highest Rated Squad
+                </span>
+                <span className="font-pixel text-[8px] sm:text-[9px] text-slate-400 uppercase tracking-wider">
+                  Player Data & Balance Leader
+                </span>
+              </div>
+              <span className="font-pixel font-bold text-[9px] sm:text-[10px] text-black bg-white px-3 py-1 rounded-full uppercase tracking-wider shrink-0 shadow-lg shadow-white/10">
+                Rating {topNormalTeam.balancedRating} / 100
+              </span>
+            </div>
+
+            <h3 className="text-lg sm:text-2xl font-pixel uppercase tracking-tight text-white drop-shadow-[0_2px_12px_rgba(255,255,255,0.08)]">
+              {topNormalTeam.teamName}
+            </h3>
+
+            <p className="font-sans text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed font-normal">
+              Assembled the top squad rating ({topNormalTeam.balancedRating}/100 across {topNormalTeam.playerCount} players), rewarded for strong department balance across batting and bowling.
+            </p>
+          </div>
+        </motion.div>
+      )}
+
       {/* Host Generation Callout */}
-      {!aiLoading && !aiAnalysis && isHost && (
+      {ratingMode === 'ai' && !aiLoading && !aiAnalysis && isHost && (
         <motion.div
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -386,7 +477,7 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
       )}
 
       {/* Non-host Pending Notice */}
-      {!aiLoading && !aiAnalysis && !isHost && (
+      {ratingMode === 'ai' && !aiLoading && !aiAnalysis && !isHost && (
         <motion.div
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -394,7 +485,7 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
         >
           <div className="max-w-md mx-auto space-y-2.5">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[8px] sm:text-[9px] font-pixel uppercase tracking-widest text-slate-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse" />
               Awaiting Host Generation
             </div>
             <h3 className="text-base sm:text-lg font-pixel uppercase tracking-tight text-white">
@@ -408,7 +499,7 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
       )}
 
       {/* AI Scout Winner Card (Theme Level 1 Surface) */}
-      {aiAnalysis?.winner && (
+      {ratingMode === 'ai' && aiAnalysis?.winner && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -458,7 +549,7 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
       )}
 
       {/* AI Loading indicator */}
-      {aiLoading && (
+      {ratingMode === 'ai' && aiLoading && (
         <div className="flex items-center gap-3 p-4 rounded-2xl bg-[#0c0d10] border border-white/10 text-slate-400 font-pixel text-[8px] sm:text-[9px] uppercase tracking-wider">
           <Loader2 size={13} className="animate-spin text-white shrink-0" />
           <span>AI Scout is analyzing all squad players and team balance...</span>
@@ -515,14 +606,15 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
                         Disqualified
                       </span>
                     )}
-                    {team.aiGrade && (
+
+                    {ratingMode === 'ai' && team.aiGrade && (
                       <span className="font-pixel text-[7px] sm:text-[8px] uppercase tracking-wider bg-white/5 text-slate-300 border border-white/10 px-2 py-0.5 rounded shrink-0">
                         Grade {team.aiGrade}
                       </span>
                     )}
                   </div>
 
-                  {team.aiVerdict && (
+                  {ratingMode === 'ai' && team.aiVerdict && (
                     <p className="font-sans text-[11px] sm:text-xs text-slate-300 font-normal mt-1 leading-relaxed">
                       {team.aiTitle && (
                         <span className="font-pixel uppercase text-white text-[9px] sm:text-[10px] tracking-wide mr-1.5">
@@ -535,16 +627,18 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
                 </div>
               </div>
 
-              {/* Score / AI Rating Column */}
+              {/* Score / Rating Column */}
               <div className="flex flex-col items-end justify-center relative z-10 shrink-0 pl-2 sm:pl-5">
                 <span className={`block font-pixel text-[7px] sm:text-[8px] uppercase tracking-widest mb-0.5 ${team.isDisqualified ? 'text-red-400' : 'text-slate-400'}`}>
-                  AI Rating
+                  {ratingMode === 'normal' ? 'Squad Rating' : 'AI Rating'}
                 </span>
                 <div className="flex items-baseline gap-0.5">
                   <span className={`text-xl sm:text-3xl font-black leading-none ${team.isDisqualified ? 'text-red-600/50' : 'text-white'}`}>
-                    {team.aiScore !== undefined ? team.aiScore : '—'}
+                    {ratingMode === 'normal'
+                      ? (team.balancedRating > 0 ? team.balancedRating : '—')
+                      : (team.aiScore !== undefined ? team.aiScore : '—')}
                   </span>
-                  {team.aiScore !== undefined && (
+                  {(ratingMode === 'normal' ? team.balancedRating > 0 : team.aiScore !== undefined) && (
                     <span className="text-[9px] sm:text-[10px] text-slate-500 font-mono font-bold">/100</span>
                   )}
                 </div>

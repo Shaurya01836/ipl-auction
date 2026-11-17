@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import {
   clampTimer,
+  computeSquadDepartmentBalance,
   computeTeamSpent,
   countOverseas,
   formatCrores,
@@ -157,4 +158,112 @@ test('getPlayerAvatar generates offline-safe inline SVG data URI with player ini
   const nullVal = getPlayerAvatar(null);
   assert.ok(decodeURIComponent(nullVal).includes('PL'));
 });
+
+test('in-memory live team ratings calculates avgRating and sorts teams correctly', () => {
+  const samplePlayers = [
+    { id: 'p1', rating: 90 },
+    { id: 'p2', rating: 80 },
+    { id: 'p3', rating: 70 },
+  ];
+  const playerMap = new Map(samplePlayers.map(p => [p.id, p]));
+  const teams = [
+    { id: 'csk', name: 'CSK' },
+    { id: 'mi', name: 'MI' },
+    { id: 'rcb', name: 'RCB' },
+  ];
+  const roomTeams = [
+    { teamId: 'csk', squad: ['p1', 'p2'] }, // avg 85.0
+    { teamId: 'mi', squad: [{ id: 'p1' }, { id: 'p3' }] }, // avg 80.0
+    { teamId: 'rcb', squad: [] }, // avg null
+  ];
+
+  const ratingMap = {};
+  teams.forEach(team => {
+    const teamDoc = roomTeams.find(doc => doc.teamId === team.id);
+    const squad = teamDoc?.squad || [];
+    let totalRating = 0;
+    let ratedPlayersCount = 0;
+    squad.forEach(member => {
+      const pid = typeof member === 'string' ? member : member.id;
+      const pInfo = playerMap.get(pid);
+      if (pInfo?.rating) {
+        totalRating += pInfo.rating;
+        ratedPlayersCount += 1;
+      }
+    });
+    const avgRating = ratedPlayersCount > 0 ? (totalRating / ratedPlayersCount).toFixed(1) : null;
+    ratingMap[team.id] = { totalRating, avgRating, playerCount: squad.length };
+  });
+
+  const rankedTeams = [...teams].sort((a, b) => {
+    const rA = ratingMap[a.id]?.avgRating ? parseFloat(ratingMap[a.id].avgRating) : 0;
+    const rB = ratingMap[b.id]?.avgRating ? parseFloat(ratingMap[b.id].avgRating) : 0;
+    if (rB !== rA) return rB - rA;
+    const tA = ratingMap[a.id]?.totalRating || 0;
+    const tB = ratingMap[b.id]?.totalRating || 0;
+    if (tB !== tA) return tB - tA;
+    return a.name.localeCompare(b.name);
+  });
+
+  assert.equal(ratingMap['csk'].avgRating, '85.0');
+  assert.equal(ratingMap['mi'].avgRating, '80.0');
+  assert.equal(ratingMap['rcb'].avgRating, null);
+  assert.equal(rankedTeams[0].id, 'csk');
+  assert.equal(rankedTeams[1].id, 'mi');
+  assert.equal(rankedTeams[2].id, 'rcb');
+});
+
+test('computeSquadDepartmentBalance correctly evaluates role averages and team balance', () => {
+  const balancedSquad = [
+    { role: 'Batsman', rating: 90 },
+    { role: 'Batsman', rating: 86 },
+    { role: 'Batsman', rating: 84 },
+    { role: 'Wicket-Keeper', rating: 92 },
+    { role: 'All-Rounder', rating: 88 },
+    { role: 'All-Rounder', rating: 85 },
+    { role: 'Bowler', rating: 89 },
+    { role: 'Bowler', rating: 86 },
+    { role: 'Bowler', rating: 85 },
+    { role: 'Bowler', rating: 82 },
+    { role: 'Bowler', rating: 80 },
+  ];
+
+  const lopsidedSquad = [
+    { role: 'Batsman', rating: 95 },
+    { role: 'Batsman', rating: 92 },
+    { role: 'Batsman', rating: 90 },
+    { role: 'Batsman', rating: 88 },
+    { role: 'Batsman', rating: 85 },
+    { role: 'Batsman', rating: 84 },
+    { role: 'Batsman', rating: 82 },
+    { role: 'Batsman', rating: 80 },
+    { role: 'Batsman', rating: 78 },
+    { role: 'Batsman', rating: 76 },
+    { role: 'Bowler', rating: 70 }, // zero keepers, zero all-rounders, only 1 bowler
+  ];
+
+  const resBalanced = computeSquadDepartmentBalance(balancedSquad, false);
+  const resLopsided = computeSquadDepartmentBalance(lopsidedSquad, false);
+  const resDisqualified = computeSquadDepartmentBalance(balancedSquad, true);
+
+  // Department averages
+  assert.equal(resBalanced.batAvg, 86.7);
+  assert.equal(resBalanced.bowlAvg, 84.4);
+  assert.equal(resBalanced.arAvg, 86.5);
+  assert.equal(resBalanced.wkAvg, 92);
+  assert.equal(resBalanced.batCount, 3);
+  assert.equal(resBalanced.bowlCount, 5);
+  assert.equal(resBalanced.arCount, 2);
+  assert.equal(resBalanced.wkCount, 1);
+
+  // Balanced squad has higher balanced rating than lopsided squad
+  assert.ok(resBalanced.balancedRating > resLopsided.balancedRating);
+  assert.ok(resBalanced.balancedRating >= 88);
+  assert.ok(resLopsided.balancedRating < 75);
+
+  // Disqualified handling
+  assert.equal(resDisqualified.balancedRating, 0);
+  assert.equal(resDisqualified.balanceVerdict, 'Disqualified');
+});
+
 

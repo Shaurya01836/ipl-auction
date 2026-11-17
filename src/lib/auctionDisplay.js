@@ -167,3 +167,113 @@ export const getPlayerAvatar = (name = 'Player') => {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 };
 
+/**
+ * Compute team balance adjusted rating (0-99) for a squad based on player data.
+ * Penalizes one-dimensional / batting-heavy squads lacking bowling options or keepers,
+ * rewarding balanced, well-rounded sides so a balanced team wins.
+ */
+export const computeSquadDepartmentBalance = (playersWithInfo = [], isDisqualified = false) => {
+  if (isDisqualified || playersWithInfo.length === 0) {
+    return {
+      rawAvgRating: 0,
+      balancedRating: 0,
+      balanceScore: 0,
+      balanceAdjustment: 0,
+      balanceVerdict: isDisqualified ? 'Disqualified' : 'Empty',
+    };
+  }
+
+  const ratedPlayers = playersWithInfo.filter((p) => typeof p.rating === 'number' && p.rating > 0);
+  const rawAvgRating = ratedPlayers.length > 0
+    ? Number((ratedPlayers.reduce((sum, p) => sum + p.rating, 0) / ratedPlayers.length).toFixed(1))
+    : 70;
+
+  const bats = playersWithInfo.filter((p) => p.role === 'Batsman');
+  const bowls = playersWithInfo.filter((p) => p.role === 'Bowler');
+  const ars = playersWithInfo.filter((p) => p.role === 'All-Rounder');
+  const wks = playersWithInfo.filter((p) => p.role === 'Wicket-Keeper');
+
+  const calcAvg = (list) => {
+    const rated = list.filter((p) => typeof p.rating === 'number' && p.rating > 0);
+    return rated.length > 0
+      ? Number((rated.reduce((sum, p) => sum + p.rating, 0) / rated.length).toFixed(1))
+      : null;
+  };
+
+  const batAvg = calcAvg(bats);
+  const bowlAvg = calcAvg(bowls);
+  const arAvg = calcAvg(ars);
+  const wkAvg = calcAvg(wks);
+
+  const bowlingOptions = bowls.length + ars.length;
+  const battingOptions = bats.length + wks.length + ars.length;
+  const keeperCount = wks.length;
+
+  let balanceAdjustment = 0;
+
+  // 1. Wicketkeeper requirement (a viable cricket XI must have a keeper)
+  if (keeperCount === 0) {
+    balanceAdjustment -= 4.0;
+  } else {
+    balanceAdjustment += 0.5;
+  }
+
+  // 2. Bowling attack depth (need at least 4-5 bowling options)
+  if (bowlingOptions === 0) {
+    balanceAdjustment -= 12.0;
+  } else if (bowlingOptions === 1) {
+    balanceAdjustment -= 8.0;
+  } else if (bowlingOptions === 2) {
+    balanceAdjustment -= 5.0;
+  } else if (bowlingOptions === 3) {
+    balanceAdjustment -= 2.0;
+  } else if (bowlingOptions >= 5) {
+    balanceAdjustment += 2.0;
+  } else if (bowlingOptions >= 4) {
+    balanceAdjustment += 1.0;
+  }
+
+  // 3. Batting depth
+  if (battingOptions < 4) {
+    balanceAdjustment -= 6.0;
+  } else if (battingOptions >= 6) {
+    balanceAdjustment += 1.0;
+  }
+
+  // 4. All-Rounder flexibility
+  if (ars.length >= 2) {
+    balanceAdjustment += 1.5;
+  } else if (ars.length === 1) {
+    balanceAdjustment += 0.5;
+  }
+
+  // 5. Batting vs Bowling department parity
+  const batUnitAvg = calcAvg([...bats, ...wks]) ?? rawAvgRating;
+  const bowlUnitAvg = bowlAvg ?? (arAvg ? arAvg * 0.9 : 60);
+  const parityGap = Math.abs(batUnitAvg - bowlUnitAvg);
+  if (parityGap > 8) {
+    balanceAdjustment -= Number(((parityGap - 8) * 0.35).toFixed(1));
+  }
+
+  const calculatedScore = Number((rawAvgRating + balanceAdjustment).toFixed(1));
+  const balancedRating = Math.min(99, Math.max(45, calculatedScore));
+
+  return {
+    rawAvgRating,
+    balancedRating,
+    balanceScore: balancedRating,
+    balanceAdjustment: Number(balanceAdjustment.toFixed(1)),
+    balanceVerdict: balanceAdjustment >= 0 ? 'Well-Balanced' : 'Imbalanced',
+    batAvg,
+    bowlAvg,
+    arAvg,
+    wkAvg,
+    batCount: bats.length,
+    bowlCount: bowls.length,
+    arCount: ars.length,
+    wkCount: wks.length,
+  };
+};
+
+export const computeBalancedSquadRating = computeSquadDepartmentBalance;
+

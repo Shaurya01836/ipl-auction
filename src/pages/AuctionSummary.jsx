@@ -450,7 +450,7 @@ const AuctionSummary = () => {
             {[
               { id: 'squads', label: 'Squads', fullLabel: 'Team Squads', icon: Users },
               { id: 'leaderboard', label: 'Top 5', fullLabel: 'Top Expensive', icon: Trophy },
-              { id: 'fantasy', label: 'AI Ratings', fullLabel: 'AI Squad Ratings', icon: Sparkles },
+              { id: 'fantasy', label: 'Ratings', fullLabel: 'Squad Ratings', icon: Sparkles },
             ].map(tab => (
               <button
                 key={tab.id}
