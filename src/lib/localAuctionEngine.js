@@ -1,6 +1,6 @@
 import { IPL_PLAYERS } from '../data/players.js';
 import { TEAMS } from '../data/teams.js';
-import { toFiniteNumber, countOverseas, isOverseasPlayer } from './auctionDisplay.js';
+import { toFiniteNumber, countOverseas, isOverseasPlayer, r2 } from './auctionDisplay.js';
 import { getNextBidAmount, generatePlayerOrder } from './auctionRules.js';
 import { evaluateBotBid } from './botEngine.js';
 import { simulateBotLot, simulateRemainingAuction } from './botSimulation.js';
@@ -212,7 +212,13 @@ export function localAuctionReducer(state, action) {
       if (live.highBidderId === bidderId) return state;
 
       // Calculate next bid
-      const nextBid = getNextBidAmount(player, live.currentBid);
+      const minNextBid = getNextBidAmount(player, live.currentBid);
+      const requestedBid = typeof action.targetBid === 'number' && Number.isFinite(action.targetBid)
+        ? toFiniteNumber(action.targetBid, 0)
+        : null;
+      if (requestedBid != null && requestedBid < minNextBid) return state;
+
+      const nextBid = requestedBid != null ? r2(requestedBid) : minNextBid;
 
       // Validate budget
       const currentSquad = bidderTeam.squad || [];

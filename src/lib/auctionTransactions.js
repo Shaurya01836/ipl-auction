@@ -16,6 +16,7 @@ export function transactBid(currentData, {
   timerMs,
   budget,
   basePrice,
+  targetBid,
 }) {
   if (!currentData) return currentData;
   if (currentData.status !== 'bidding') return;
@@ -25,9 +26,16 @@ export function transactBid(currentData, {
   if (currentData.timerEndsAt && now >= currentData.timerEndsAt) return;
 
   const currentBid = toFiniteNumber(currentData.currentBid, 0);
-  const nextBid = currentBid === 0
+  const minNextBid = currentBid === 0
     ? toFiniteNumber(basePrice, 0)
     : getNextBidAmount({ basePrice }, currentBid);
+
+  const requestedBid = typeof targetBid === 'number' && Number.isFinite(targetBid)
+    ? toFiniteNumber(targetBid, 0)
+    : null;
+  if (requestedBid != null && requestedBid < minNextBid) return;
+
+  const nextBid = requestedBid != null ? r2(requestedBid) : minNextBid;
 
   if (nextBid > toFiniteNumber(budget, 0)) return;
 

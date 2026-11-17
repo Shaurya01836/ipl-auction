@@ -433,7 +433,7 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
                   </div>
 
                   {team.aiVerdict && (
-                    <p className="font-sans text-[11px] sm:text-xs text-slate-300 font-normal mt-1 leading-relaxed line-clamp-2 sm:line-clamp-none">
+                    <p className="font-sans text-[11px] sm:text-xs text-slate-300 font-normal mt-1 leading-relaxed">
                       {team.aiTitle && (
                         <span className="font-pixel uppercase text-white text-[9px] sm:text-[10px] tracking-wide mr-1.5">
                           {team.aiTitle}:

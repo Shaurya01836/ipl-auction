@@ -496,3 +496,41 @@ test('local engine: zero Firebase RTDB and zero Supabase Realtime channel calls 
   exitLocalMode();
   assert.equal(isLocalMode(), false);
 });
+
+test('localAuctionReducer: PLACE_BID handles quick jump bids (targetBid)', () => {
+  const human = { uid: 'human_jump', displayName: 'Manager', team: 'CSK' };
+  let state = localAuctionReducer(null, {
+    type: 'INIT_AUCTION',
+    roomId: 'SOLO-JUMP',
+    humanUser: human,
+    auctionType: 'mega',
+    budget: 120,
+    seed: 42,
+  });
+
+  const basePrice = state.currentAuction.currentBid === 0
+    ? IPL_PLAYERS.find((p) => p.id === state.currentAuction.playerId).basePrice
+    : state.currentAuction.currentBid;
+
+  // Jump by +2 Cr over base
+  const jumpTarget = basePrice + 2.0;
+  state = localAuctionReducer(state, {
+    type: 'PLACE_BID',
+    bidderId: 'human_jump',
+    targetBid: jumpTarget,
+    now: 2000,
+  });
+
+  assert.equal(state.currentAuction.currentBid, jumpTarget);
+  assert.equal(state.currentAuction.highBidderId, 'human_jump');
+
+  // Stale jump below currentBid must be rejected
+  const beforeStale = state.currentAuction.currentBid;
+  state = localAuctionReducer(state, {
+    type: 'PLACE_BID',
+    bidderId: 'human_jump',
+    targetBid: jumpTarget - 1.0,
+    now: 3000,
+  });
+  assert.equal(state.currentAuction.currentBid, beforeStale);
+});

@@ -50,6 +50,7 @@ import {
    formatCrores,
    getPlayerAvatar,
    isOverseasPlayer,
+   r2,
    toFiniteNumber,
 } from '../lib/auctionDisplay';
 
@@ -219,53 +220,6 @@ const AuctionRoom = () => {
 
    const configuredBidTimer = toFiniteNumber(currentAuction?.settings?.bidTimer, 10);
    const isTimerPaused = displayAuctionState?.status === 'paused';
-
-   // Real-time team ratings calculated entirely in browser memory (0 DB / infra cost)
-   const liveTeamRatings = useMemo(() => {
-      const playerMap = new Map(IPL_PLAYERS.map(p => [p.id, p]));
-      const ratingMap = {};
-
-      TEAMS.forEach(team => {
-         const teamDoc = roomTeams.find(doc => doc.teamId === team.id);
-         const squad = teamDoc?.squad || [];
-
-         let totalRating = 0;
-         let ratedPlayersCount = 0;
-
-         squad.forEach(member => {
-            const pid = typeof member === 'string' ? member : member.id;
-            const pInfo = playerMap.get(pid);
-            if (pInfo?.rating) {
-               totalRating += pInfo.rating;
-               ratedPlayersCount += 1;
-            }
-         });
-
-         const avgRating = ratedPlayersCount > 0 ? (totalRating / ratedPlayersCount).toFixed(1) : null;
-
-         ratingMap[team.id] = {
-            totalRating,
-            avgRating,
-            playerCount: squad.length
-         };
-      });
-
-      // Sorted ranking descending by avgRating, then totalRating, then team name
-      const rankedTeams = [...TEAMS].sort((a, b) => {
-         const rA = ratingMap[a.id]?.avgRating ? parseFloat(ratingMap[a.id].avgRating) : 0;
-         const rB = ratingMap[b.id]?.avgRating ? parseFloat(ratingMap[b.id].avgRating) : 0;
-         if (rB !== rA) return rB - rA;
-
-         const tA = ratingMap[a.id]?.totalRating || 0;
-         const tB = ratingMap[b.id]?.totalRating || 0;
-         if (tB !== tA) return tB - tA;
-
-         return a.name.localeCompare(b.name);
-      });
-
-      return { ratingMap, rankedTeams };
-   }, [roomTeams, IPL_PLAYERS]);
-
 
    // Audio unlocker for mobile devices
    useEffect(() => {
@@ -869,12 +823,16 @@ const AuctionRoom = () => {
 
 
 
-   const handleBid = async () => {
+   const handleBid = async (targetAmount = null) => {
       if (isBiddingInFlight) return;
       if (displayAuctionState?.highBidderId === user?.uid) return;
 
+      const bidToPlace = typeof targetAmount === 'number' && Number.isFinite(targetAmount)
+         ? targetAmount
+         : nextBidAmount;
+
       // Budget Guard
-      if ((team?.budgetRemaining || 0) < nextBidAmount) {
+      if ((team?.budgetRemaining || 0) < bidToPlace) {
          setError('Insufficient Budget');
          playBeep(220, 0.3);
          setTimeout(() => setError(''), 3000);
@@ -910,7 +868,7 @@ const AuctionRoom = () => {
 
       setOptimisticState({
          ...displayAuctionState,
-         currentBid: nextBidAmount,
+         currentBid: bidToPlace,
          highBidderId: user?.uid,
          highBidderName: user?.displayName || 'Manager',
          highBidderTeamId: team?.teamId,
@@ -918,7 +876,7 @@ const AuctionRoom = () => {
       });
 
       try {
-         await placeBid(nextBidAmount);
+         await placeBid(bidToPlace);
       } catch (err) {
          setOptimisticState(null);
          setError(err?.message || 'Bid failed');
@@ -1235,21 +1193,19 @@ const AuctionRoom = () => {
                </div>
 
                <div className="flex-1 overflow-y-auto p-4 compact:p-3 pb-28 sm:pb-8 md:pb-4 custom-scrollbar touch-pan-y min-h-0">
-                  {(liveTeamRatings?.rankedTeams || TEAMS).map((t, idx) => {
+                  {TEAMS.map((t) => {
                      const teamDoc = roomTeams.find(doc => doc.teamId === t.id);
                      const manager = currentAuction?.players?.find(p => p.id === teamDoc?.userId);
                      const isMyTeam = manager?.id === user?.uid;
                      const isSelected = selectedTeamId === (manager?.id || t.id);
-                     const ratingInfo = liveTeamRatings?.ratingMap[t.id];
 
                      return (
-                        <div key={idx} className="mb-2 last:mb-0">
+                        <div key={t.id} className="mb-2 last:mb-0">
                            <button
                               onClick={() => setSelectedTeamId(isSelected ? null : (manager?.id || t.id))}
                               className={`w-full text-left py-2.5 compact:py-2 px-3 rounded-xl border transition-all flex items-center justify-between group cursor-pointer ${isSelected ? 'bg-[#0e1015] border-white/20 shadow-[0_4px_24px_rgba(0,0,0,0.5)]' : 'bg-[#0e1015]/90 border-white/5 hover:bg-white/[0.05] hover:border-white/10'}`}
                            >
                               <div className="flex items-center gap-2.5">
-                                 <span className="w-4 text-[10px] compact:text-[9px] font-black text-gray-500 text-center shrink-0">{idx + 1}</span>
                                  <div className="w-8 h-8 compact:w-7 compact:h-7 rounded-lg bg-white/5 p-1 flex items-center justify-center shrink-0">
                                     <img src={t.logo} alt={`${t.name} Logo`} className="w-full h-full object-contain" />
                                  </div>
@@ -1301,7 +1257,6 @@ const AuctionRoom = () => {
                                              });
                                              return spent === null ? '—' : `₹${formatCrores(spent, 2)} Cr`;
                                           })()}</span></span>
-                                          <span>Rating: <span className="text-slate-300 font-extrabold">{ratingInfo?.avgRating ? `${ratingInfo.avgRating}` : 'N/A'}</span></span>
                                           <span>Overseas: <span className="text-slate-300 font-bold">{countOverseas(teamDoc?.squad, IPL_PLAYERS)}/{toFiniteNumber(currentAuction?.overseasLimit, 8)}</span></span>
                                        </div>
 
@@ -1681,6 +1636,33 @@ const AuctionRoom = () => {
                                        );
                                     })()}
 
+                                    {/* Quick Jump Bid Buttons */}
+                                    {!spectateMode && displayAuctionState?.status === 'bidding' && (
+                                       <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 px-1">
+                                          <span className="text-[10px] font-pixel text-slate-400 uppercase tracking-widest mr-auto hidden xs:inline">Jump Bid:</span>
+                                          {[1, 2, 3].map((jump) => {
+                                             const current = toFiniteNumber(displayAuctionState?.currentBid, 0);
+                                             const targetAmount = r2(current === 0 ? toFiniteNumber(currentPlayer?.basePrice, 0) + jump : current + jump);
+                                             const isAffordable = (team?.budgetRemaining || 0) >= targetAmount;
+                                             const isLeading = displayAuctionState?.highBidderId === user?.uid;
+                                             const disabled = !team || isLeading || !isAffordable || isBiddingInFlight;
+
+                                             return (
+                                                <button
+                                                   key={jump}
+                                                   type="button"
+                                                   onClick={() => handleBid(targetAmount)}
+                                                   disabled={disabled}
+                                                   className="flex-1 sm:flex-initial px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-xs font-mono font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:border-emerald-500/60 disabled:opacity-30 disabled:border-white/5 disabled:text-slate-500 disabled:pointer-events-none transition-all active:scale-95 cursor-pointer text-center"
+                                                   title={disabled ? (isLeading ? 'Leading bidder' : 'Insufficient budget') : `Jump bid to ₹${formatCrores(targetAmount)} Cr`}
+                                                >
+                                                   +{jump} Cr <span className="opacity-70 text-[10px] hidden sm:inline">(₹{formatCrores(targetAmount)})</span>
+                                                </button>
+                                             );
+                                          })}
+                                       </div>
+                                    )}
+
                                     <div className="flex gap-2 sm:gap-3 md:gap-4">
                                        {/* Pass / Next Lot Button (Every Human Manager during bidding; Host during celebration) */}
                                        {!spectateMode && (displayAuctionState?.status === 'bidding' || isAdmin) && (
@@ -1723,7 +1705,7 @@ const AuctionRoom = () => {
                                        )}
 
                                        <button
-                                          onClick={handleBid}
+                                          onClick={() => handleBid()}
                                           disabled={spectateMode || !team || displayAuctionState?.status !== 'bidding' || displayAuctionState?.highBidderId === user?.uid}
                                           className={`flex-1 h-12 sm:h-14 xl:h-18 font-black text-sm sm:text-base xl:text-xl rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale cursor-pointer ${spectateMode
                                              ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'

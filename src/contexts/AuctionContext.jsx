@@ -2268,9 +2268,8 @@ export const AuctionProvider = ({ children }) => {
     });
   }, [user, currentAuction?.server]);
 
-  // The bid amount is recomputed from live room state; callers may pass a
-  // hint, but it is intentionally ignored.
-  const placeBid = useCallback(async () => {
+  // Callers may pass a targetBidAmount (e.g. Quick Jump Bids: +1 Cr, +2 Cr, +5 Cr).
+  const placeBid = useCallback(async (targetBidAmount = null) => {
     if (!currentAuction) throw new Error("Auction not found!");
     if (!user) throw new Error("Please log in to bid!");
     if (!team) throw new Error("You must select a team in the lobby to participate!");
@@ -2316,15 +2315,24 @@ export const AuctionProvider = ({ children }) => {
       authoritativeTeam.budgetRemaining,
       toFiniteNumber(team.budgetRemaining, 0),
     );
-    const nextBidSnapshot = getNextBidAmount(player, currentAuction.currentAuction?.currentBid);
-    if (authoritativeBudget < nextBidSnapshot) {
+    const minNextBid = getNextBidAmount(player, currentAuction.currentAuction?.currentBid);
+    const targetBid = typeof targetBidAmount === 'number' && Number.isFinite(targetBidAmount)
+      ? toFiniteNumber(targetBidAmount, 0)
+      : null;
+    const effectiveBid = targetBid != null ? targetBid : minNextBid;
+
+    if (effectiveBid < minNextBid) {
+      throw new Error('Bid must be at least the next minimum increment.');
+    }
+    if (authoritativeBudget < effectiveBid) {
       throw new Error('Insufficient budget to place this bid.');
     }
 
     if (isLocalRoom(currentAuction.id, currentAuction.server)) {
       updateLocalSoloState({
         type: 'PLACE_BID',
-        amount: nextBidSnapshot,
+        amount: effectiveBid,
+        targetBid: targetBid != null ? targetBid : undefined,
         bidderId: user.uid,
         bidderName: user.displayName || 'Manager',
         bidderTeam: authoritativeTeam.teamId || team.teamId,
@@ -2344,6 +2352,7 @@ export const AuctionProvider = ({ children }) => {
         timerMs: (currentAuction.settings?.bidTimer || 10) * 1000,
         budget: authoritativeBudget,
         basePrice: player.basePrice,
+        targetBid: targetBid != null ? targetBid : undefined,
       }));
 
       if (!txResult.committed) {

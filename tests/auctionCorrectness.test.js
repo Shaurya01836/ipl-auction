@@ -815,3 +815,57 @@ test('multiplayer pass consensus: high bidder consent is required before lot can
   const allAgreeWithHighBidder = requiredHumans.every((h) => passesAfterBothAgree[h.id]);
   assert.equal(allAgreeWithHighBidder, true, 'Consensus reached only when all humans including high bidder consent');
 });
+
+test('quick jump bids: transactBid accepts valid targetBid, rejects sub-minimum and over-budget jumps', () => {
+  const lot = {
+    status: 'bidding',
+    playerId: 'p1',
+    currentBid: 2.0,
+    highBidderId: 'u1',
+    timerEndsAt: 10000,
+  };
+
+  // Valid jump to 5.0 Cr
+  const jumpBid = transactBid(lot, {
+    userId: 'u2',
+    userName: 'User 2',
+    teamId: 'MI',
+    playerId: 'p1',
+    now: 5000,
+    timerMs: 10000,
+    budget: 100,
+    basePrice: 2.0,
+    targetBid: 5.0,
+  });
+  assert.ok(jumpBid, 'Valid jump bid should succeed');
+  assert.equal(jumpBid.currentBid, 5.0);
+  assert.equal(jumpBid.highBidderId, 'u2');
+
+  // Stale jump below standard next bid (which is 2.20)
+  const staleJump = transactBid(lot, {
+    userId: 'u2',
+    userName: 'User 2',
+    teamId: 'MI',
+    playerId: 'p1',
+    now: 5000,
+    timerMs: 10000,
+    budget: 100,
+    basePrice: 2.0,
+    targetBid: 2.10, // below 2.20
+  });
+  assert.equal(staleJump, undefined, 'Jump bid below minimum increment must abort');
+
+  // Jump exceeding available budget
+  const overBudgetJump = transactBid(lot, {
+    userId: 'u2',
+    userName: 'User 2',
+    teamId: 'MI',
+    playerId: 'p1',
+    now: 5000,
+    timerMs: 10000,
+    budget: 6.0,
+    basePrice: 2.0,
+    targetBid: 10.0,
+  });
+  assert.equal(overBudgetJump, undefined, 'Jump bid exceeding budget must abort');
+});
