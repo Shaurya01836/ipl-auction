@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Minus, X } from 'lucide-react';
 
 const DEFAULT_CLIENT_ID = 'ca-pub-2952599241278941';
 const DEFAULT_LANDING_SLOT_1 = '6078587405';
 const DEFAULT_LANDING_SLOT_2 = '2911895830';
 const DEFAULT_LANDING_SLOT_3 = '2523068937';
 export const DEFAULT_AUCTION_ROOM_SLOT = '6494103537';
+export const DEFAULT_AUCTION_ROOM_MOBILE_SLOT = '8939145929';
 
 const ensureAdSenseScript = (clientId) => {
   if (typeof document === 'undefined') return;
@@ -63,98 +63,73 @@ export const SingleAdUnit = ({ slot, clientId, bare = false }) => {
 };
 
 export const AuctionRoomAd = ({
-  roomId,
   slot = import.meta.env.VITE_ADSENSE_AUCTION_ROOM_SLOT || DEFAULT_AUCTION_ROOM_SLOT,
   className = ''
 }) => {
   const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
-  const storageKey = roomId ? `dismissed_ad_${roomId}` : 'dismissed_ad_auction_room';
 
-  const [isDismissed, setIsDismissed] = useState(() => {
-    try {
-      return typeof window !== 'undefined' && sessionStorage.getItem(storageKey) === '1';
-    } catch {
-      return false;
-    }
-  });
-
-  const [isMinimized, setIsMinimized] = useState(false);
-
-  const handleDismiss = () => {
-    setIsDismissed(true);
-    try {
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem(storageKey, '1');
-      }
-    } catch {}
-  };
-
-  if (isDismissed || !slot || !clientId) {
+  if (!slot || !clientId) {
     return null;
-  }
-
-  if (isMinimized) {
-    return (
-      <div className={`w-full my-2 flex items-center justify-between px-3 py-1.5 rounded-xl bg-[#0c0d10]/90 border border-white/10 text-gray-400 text-xs shadow-sm transition-all ${className}`}>
-        <span className="flex items-center gap-1.5 text-[11px] font-medium text-gray-300">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-          Ad minimized (tap to view)
-        </span>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setIsMinimized(false)}
-            className="text-[10px] font-semibold uppercase tracking-wider text-gray-300 hover:text-white px-2 py-0.5 rounded bg-white/5 border border-white/10 transition-colors"
-          >
-            Show
-          </button>
-          <button
-            type="button"
-            onClick={handleDismiss}
-            className="text-gray-400 hover:text-white p-1 rounded hover:bg-white/10 transition-colors"
-            title="Close ad"
-            aria-label="Close ad"
-          >
-            <X size={13} />
-          </button>
-        </div>
-      </div>
-    );
   }
 
   return (
     <div className={`w-full rounded-2xl border border-white/10 bg-[#0c0d10]/90 backdrop-blur-md overflow-hidden p-2.5 transition-all shadow-md ${className}`}>
-      {/* Header bar with controls */}
+      {/* Header bar */}
       <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/5 px-1">
         <span className="text-[9px] font-bold uppercase tracking-wider text-gray-500">
           Sponsored
         </span>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setIsMinimized(true)}
-            className="flex items-center gap-1 text-[10px] font-medium text-gray-400 hover:text-white px-2 py-0.5 rounded bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
-            title="Minimize ad"
-            aria-label="Minimize ad"
-          >
-            <Minus size={11} />
-            <span>Minimize</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleDismiss}
-            className="text-gray-400 hover:text-white p-1 rounded hover:bg-white/10 transition-colors"
-            title="Close ad"
-            aria-label="Close ad"
-          >
-            <X size={13} />
-          </button>
-        </div>
       </div>
 
       {/* Ad slot */}
       <div className="w-full flex items-center justify-center">
         <SingleAdUnit slot={slot} clientId={clientId} bare />
+      </div>
+    </div>
+  );
+};
+
+export const AuctionMobileBannerAd = ({
+  slot = import.meta.env.VITE_ADSENSE_AUCTION_ROOM_MOBILE_SLOT || DEFAULT_AUCTION_ROOM_MOBILE_SLOT,
+  className = ''
+}) => {
+  const adRef = useRef(null);
+  const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
+
+  useEffect(() => {
+    if (!slot || !clientId) return;
+
+    ensureAdSenseScript(clientId);
+
+    const timer = setTimeout(() => {
+      if (!adRef.current) return;
+      if (adRef.current.getAttribute('data-adsbygoogle-status')) return;
+      if (adRef.current.children.length > 0) return;
+
+      try {
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      } catch (err) {
+        if (import.meta.env.DEV) {
+          console.warn('[AdSlot] AdSense push error:', err);
+        }
+      }
+    }, 120);
+
+    return () => clearTimeout(timer);
+  }, [slot, clientId]);
+
+  if (!slot || !clientId) return null;
+
+  return (
+    <div className={`w-full flex justify-center items-center sm:hidden overflow-hidden ${className}`}>
+      <div className="w-[320px] h-[50px] min-h-[50px] flex items-center justify-center overflow-hidden">
+        <ins
+          ref={adRef}
+          className="adsbygoogle"
+          style={{ display: 'inline-block', width: '320px', height: '50px' }}
+          data-ad-client={clientId}
+          data-ad-slot={slot}
+        />
       </div>
     </div>
   );

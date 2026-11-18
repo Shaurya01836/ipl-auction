@@ -38,7 +38,7 @@ import PageLoader from '../components/PageLoader';
 import PageBackground from '../components/PageBackground';
 import ConfirmDialog from '../components/ConfirmDialog';
 import AuctionCountdown from '../components/AuctionCountdown';
-import AdSlot, { AuctionRoomAd, DEFAULT_AUCTION_ROOM_SLOT } from '../components/AdSlot';
+import AdSlot, { AuctionRoomAd, AuctionMobileBannerAd, DEFAULT_AUCTION_ROOM_SLOT } from '../components/AdSlot';
 import useRoomServer from '../hooks/useRoomServer';
 import { SERVER_LOCAL, withServerParam } from '../lib/auctionServers';
 import { isLocalRoom } from '../lib/localAuctionEngine';
@@ -1374,6 +1374,9 @@ const AuctionRoom = () => {
                {/* Center Scrollable Main Body */}
                <main className="flex-1 min-h-0 overflow-y-auto p-4 md:p-8 compact:p-4 pb-28 sm:pb-12 md:pb-8 flex flex-col items-center custom-scrollbar touch-pan-y">
                   <div className="w-full max-w-4xl flex flex-col gap-4 md:gap-6">
+                     {/* Mobile Ad Slot (above main player or bidding card) */}
+                     <AuctionMobileBannerAd />
+
                      <AnimatePresence mode="wait">
                         {(displayAuctionState?.status === 'sold' || displayAuctionState?.status === 'unsold') ? (() => {
                             const isSold = displayAuctionState.status === 'sold';
@@ -1781,10 +1784,9 @@ const AuctionRoom = () => {
                         )}
                      </AnimatePresence>
 
-                     {/* Arena Ad Slot (strictly visible on mobile screens only; minimizable & dismissible so gameplay is never blocked) */}
+                     {/* Arena Ad Slot (strictly visible on mobile screens only) */}
                      <div className="w-full block md:hidden">
                         <AuctionRoomAd
-                           roomId={id}
                            slot={import.meta.env.VITE_ADSENSE_AUCTION_ROOM_SLOT || DEFAULT_AUCTION_ROOM_SLOT}
                            className="w-full mt-2 mb-6"
                         />
