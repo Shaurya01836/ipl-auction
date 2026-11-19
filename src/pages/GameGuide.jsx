@@ -146,6 +146,15 @@ const GameGuide = () => {
       description: 'The authentic full IPL Mega Auction experience. Bid across all player pools (Marquee, Capped Indian, Overseas, Uncapped) to build a deep 25-man squad.',
     },
     {
+      id: 'mini',
+      title: 'IPL 2027 Mini Auction',
+      subtitle: 'Official Retentions & Releases',
+      budget: '₹130.0 Cr Cap (Real Starting Purses)',
+      squad: '18–25 players',
+      overseas: '8 maximum',
+      description: 'Realistic mini auction simulation based on official IPL 2027 retentions and releases. Teams start with retained cores and authentic available purses, bidding on released and unassigned players to complete their squads.',
+    },
+    {
       id: 'sprint11',
       title: '11-Player Classic',
       subtitle: 'Fast-Paced Competitive',

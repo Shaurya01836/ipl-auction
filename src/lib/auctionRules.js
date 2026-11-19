@@ -1,4 +1,5 @@
 import { IPL_PLAYERS } from '../data/players.js';
+import { getMiniAuctionPoolIndices } from '../data/retentions.js';
 import { countOverseas, isOverseasPlayer, r2, toFiniteNumber } from './auctionDisplay.js';
 
 /**
@@ -16,7 +17,7 @@ export const shuffleArray = (array) => {
 };
 
 /** Build the shuffled lot order for an auction type, grouped by player set. */
-export function generatePlayerOrder(auctionType = 'mega') {
+export function generatePlayerOrder(auctionType = 'mega', options = {}) {
   if (auctionType === 'legends') {
     const byRole = {};
     IPL_PLAYERS.forEach((p, i) => {
@@ -27,6 +28,22 @@ export function generatePlayerOrder(auctionType = 'mega') {
     const order = [];
     ['Batsman', 'All-Rounder', 'Wicket-Keeper', 'Bowler'].forEach((role) => {
       if (byRole[role]) order.push(...shuffleArray(byRole[role]));
+    });
+    return order;
+  }
+
+  if (auctionType === 'mini') {
+    const userReleased = options?.userReleasedPlayerIds || [];
+    const poolIndices = getMiniAuctionPoolIndices(userReleased);
+    const sets = [...new Set(poolIndices.map((i) => IPL_PLAYERS[i].set))];
+    const marqueeSets = sets.filter((s) => s && s.toLowerCase().includes('marquee'));
+    const regularSets = sets.filter((s) => s && !s.toLowerCase().includes('marquee'));
+    const sortedSets = [...marqueeSets, ...regularSets];
+
+    const order = [];
+    sortedSets.forEach((setName) => {
+      const idxs = poolIndices.filter((i) => IPL_PLAYERS[i].set === setName);
+      order.push(...shuffleArray(idxs));
     });
     return order;
   }

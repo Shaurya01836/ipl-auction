@@ -43,7 +43,7 @@ import useRoomServer from '../hooks/useRoomServer';
 import { SERVER_LOCAL, withServerParam } from '../lib/auctionServers';
 import { isLocalRoom } from '../lib/localAuctionEngine';
 import useDocumentTitle from '../hooks/useDocumentTitle';
-import { getNextBidAmount } from '../lib/auctionRules';
+import { getNextBidAmount, generatePlayerOrder } from '../lib/auctionRules';
 import {
    computeTeamSpent,
    countOverseas,
@@ -595,7 +595,9 @@ const AuctionRoom = () => {
          });
       });
 
-      const playerOrder = currentAuction?.playerOrder || Array.from({ length: IPL_PLAYERS.length }, (_, i) => i);
+      const playerOrder = (Array.isArray(currentAuction?.playerOrder) && currentAuction.playerOrder.length > 0)
+         ? currentAuction.playerOrder
+         : generatePlayerOrder(currentAuction?.auctionType || 'mega');
       const currentPlayerId = displayAuctionState?.playerId;
       const currentPlayerIndexInOrder = playerOrder.indexOf(IPL_PLAYERS.findIndex(p => p.id === currentPlayerId));
 
@@ -1319,8 +1321,9 @@ const AuctionRoom = () => {
                                                 const squadWithDisplayData = teamDoc.squad.map(s => {
                                                    const pid = typeof s === 'string' ? s : s.id;
                                                    const bidVal = typeof s === 'string' ? null : s.bid;
+                                                   const isRetained = typeof s === 'object' ? Boolean(s.isRetained) : false;
                                                    const pInfo = IPL_PLAYERS.find(pl => pl.id === pid);
-                                                   return { ...pInfo, bidVal };
+                                                   return { ...pInfo, bidVal, isRetained };
                                                 });
 
                                                 const playersInRole = squadWithDisplayData.filter(p => p?.role === role);
@@ -1338,14 +1341,19 @@ const AuctionRoom = () => {
                                                          {playersInRole.map((p, sidx) => (
                                                             <div key={sidx} className="py-1 flex items-center justify-between group hover:bg-white/[0.01] rounded-lg px-1 transition-all">
                                                                <div className="flex items-center gap-2">
-                                                                  <img src={p?.image} alt={p?.name || 'Player'} className="w-5 h-5 object-contain rounded bg-white/5" />
+                                                                  <img src={p?.image || getPlayerAvatar(p?.name)} alt={p?.name || 'Player'} className="w-5 h-5 object-contain rounded bg-white/5" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getPlayerAvatar(p?.name); }} />
                                                                   <div className="overflow-hidden">
                                                                      <div className="flex items-center gap-1">
                                                                         <h5 className="text-[10px] compact:text-[9px] font-semibold text-gray-200 truncate max-w-[80px]">{p?.name}</h5>
                                                                      </div>
                                                                   </div>
                                                                </div>
-                                                               <span className="text-[9px] compact:text-[8px] font-bold text-slate-300">
+                                                               <span className="text-[9px] compact:text-[8px] font-bold text-slate-300 flex items-center gap-1">
+                                                                  {p?.isRetained && (
+                                                                     <span className="font-pixel text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10">
+                                                                        Retained
+                                                                     </span>
+                                                                  )}
                                                                   {p?.bidVal == null ? '—' : `₹${formatCrores(p.bidVal)} Cr`}
                                                                </span>
                                                             </div>
@@ -2033,7 +2041,7 @@ const AuctionRoom = () => {
                                           <div key={p.id} className="bg-white/5 border border-white/5 p-2.5 sm:p-3 rounded-2xl hover:bg-white/10 transition-all group flex flex-col justify-between">
                                              <div>
                                                 <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-white/10 rounded-xl sm:rounded-2xl overflow-hidden mb-2 sm:mb-3 border border-white/10 group-hover:scale-105 transition-transform mx-auto">
-                                                   <img src={p.image} className="w-full h-full object-contain" alt={p.name} />
+                                                   <img src={p.image || getPlayerAvatar(p.name)} className="w-full h-full object-contain" alt={p.name} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getPlayerAvatar(p.name); }} />
                                                 </div>
                                                 <div className="text-center">
                                                    <h5 className="text-[11px] sm:text-xs font-black truncate mb-0.5 leading-tight">{p.name}</h5>
@@ -2059,7 +2067,7 @@ const AuctionRoom = () => {
                                  <div key={p.id} className="bg-white/5 border border-white/5 p-2.5 sm:p-3 rounded-2xl hover:bg-white/10 transition-all group flex flex-col justify-between">
                                     <div>
                                        <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-white/10 rounded-xl sm:rounded-2xl overflow-hidden mb-2 sm:mb-3 border border-white/10 group-hover:scale-105 transition-transform mx-auto">
-                                          <img src={p.image} className="w-full h-full object-contain" alt={p.name} />
+                                          <img src={p.image || getPlayerAvatar(p.name)} className="w-full h-full object-contain" alt={p.name} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getPlayerAvatar(p.name); }} />
                                        </div>
                                        <div className="text-center">
                                           <h5 className="text-[11px] sm:text-xs font-black truncate mb-0.5 leading-tight">{p.name}</h5>

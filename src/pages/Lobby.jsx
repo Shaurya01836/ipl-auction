@@ -653,6 +653,7 @@ const Lobby = () => {
                     {currentAuction?.auctionType === 'sprint5' ? '5-Player Sprint' :
                       currentAuction?.auctionType === 'sprint11' ? '11-Player Classic' :
                       currentAuction?.auctionType === 'legends' ? 'All-Time Legends XI' :
+                      currentAuction?.auctionType === 'mini' ? 'TATA IPL 2027 Mini' :
                         'Mega Auction'}
                   </span>
                 </div>

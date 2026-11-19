@@ -1,3 +1,5 @@
+import { getPlayerAvatar } from '../lib/auctionDisplay.js';
+
 export const IPL_PLAYERS = [
   {
     "id": "p_621",
@@ -15,7 +17,11 @@ export const IPL_PLAYERS = [
       "avg": 23.75,
       "bb": "5/10"
     },
-    "rating": 82
+    "rating": 82,
+    "team": "MI",
+    "retentionPrice": 18,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_622",
@@ -33,7 +39,11 @@ export const IPL_PLAYERS = [
       "sr": 148.59,
       "hs": "103*"
     },
-    "rating": 81
+    "rating": 81,
+    "team": "MI",
+    "retentionPrice": 16.35,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_101",
@@ -51,7 +61,11 @@ export const IPL_PLAYERS = [
       "avg": 28.03,
       "bb": "5/32"
     },
-    "rating": 64
+    "rating": 64,
+    "team": "MI",
+    "retentionPrice": 18,
+    "isRetained": true,
+    "isTraded": true
   },
   {
     "id": "p_102",
@@ -69,7 +83,11 @@ export const IPL_PLAYERS = [
       "runs": 2089,
       "sr": 133.74
     },
-    "rating": 75
+    "rating": 75,
+    "team": "DC",
+    "retentionPrice": 16.5,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_103",
@@ -87,7 +105,11 @@ export const IPL_PLAYERS = [
       "avg": 26.16,
       "bb": "5/19"
     },
-    "rating": 78
+    "rating": 78,
+    "team": "RCB",
+    "retentionPrice": 10.75,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_104",
@@ -105,7 +127,11 @@ export const IPL_PLAYERS = [
       "wickets": 82,
       "econ": 9.36
     },
-    "rating": 80
+    "rating": 80,
+    "team": "PBKS",
+    "retentionPrice": 18,
+    "isRetained": true,
+    "isTraded": true
   },
   {
     "id": "p_105",
@@ -123,7 +149,11 @@ export const IPL_PLAYERS = [
       "sr": 166.72,
       "hs": "105*"
     },
-    "rating": 88
+    "rating": 88,
+    "team": "SRH",
+    "retentionPrice": 23,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_106",
@@ -141,7 +171,11 @@ export const IPL_PLAYERS = [
       "sr": 143.54,
       "hs": "106*"
     },
-    "rating": 77
+    "rating": 77,
+    "team": "SRH",
+    "retentionPrice": 11.25,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_107",
@@ -159,7 +193,11 @@ export const IPL_PLAYERS = [
       "avg": 25.73,
       "bb": "3/15"
     },
-    "rating": 72
+    "rating": 72,
+    "team": "RR",
+    "retentionPrice": 12.5,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_108",
@@ -177,7 +215,11 @@ export const IPL_PLAYERS = [
       "sr": 149.73,
       "hs": "124*"
     },
-    "rating": 88
+    "rating": 88,
+    "team": "GT",
+    "retentionPrice": 15.75,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_109",
@@ -195,7 +237,11 @@ export const IPL_PLAYERS = [
       "avg": 23.47,
       "bb": "4/12"
     },
-    "rating": 72
+    "rating": 72,
+    "team": "RCB",
+    "retentionPrice": 12.5,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_110",
@@ -213,7 +259,11 @@ export const IPL_PLAYERS = [
       "avg": 22.69,
       "bb": "4/21"
     },
-    "rating": 76
+    "rating": 76,
+    "team": "GT",
+    "retentionPrice": 10.75,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_111",
@@ -231,7 +281,11 @@ export const IPL_PLAYERS = [
       "sr": 139.15,
       "hs": "152*"
     },
-    "rating": 87
+    "rating": 87,
+    "team": "DC",
+    "retentionPrice": 14,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_112",
@@ -249,7 +303,11 @@ export const IPL_PLAYERS = [
       "avg": 28.21,
       "bb": "4/14"
     },
-    "rating": 75
+    "rating": 75,
+    "team": "LSG",
+    "retentionPrice": 13.25,
+    "isRetained": true,
+    "isTraded": true
   },
   {
     "id": "p_114",
@@ -267,7 +325,11 @@ export const IPL_PLAYERS = [
       "runs": 192,
       "sr": 110.34
     },
-    "rating": 48
+    "rating": 48,
+    "team": "PBKS",
+    "retentionPrice": 7,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_116",
@@ -285,7 +347,11 @@ export const IPL_PLAYERS = [
       "wickets": 37,
       "econ": 8.52
     },
-    "rating": 76
+    "rating": 76,
+    "team": "LSG",
+    "retentionPrice": 3.4,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_117",
@@ -295,6 +361,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 2,
     "set": "Marquee Set 1",
+    "excludeFromMini": true,
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/38/Mitchell_Starc_2023.jpg",
     "stats": {
       "matches": 58,
@@ -321,7 +388,11 @@ export const IPL_PLAYERS = [
       "avg": 29.02,
       "bb": "4/11"
     },
-    "rating": 68
+    "rating": 68,
+    "team": "RR",
+    "retentionPrice": 8,
+    "isRetained": true,
+    "isTraded": true
   },
   {
     "id": "p_119",
@@ -339,7 +410,11 @@ export const IPL_PLAYERS = [
       "avg": 30.55,
       "bb": "4/17"
     },
-    "rating": 65
+    "rating": 65,
+    "team": "GT",
+    "retentionPrice": 12.25,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_120",
@@ -348,7 +423,7 @@ export const IPL_PLAYERS = [
     "type": "Indian",
     "country": "IND",
     "basePrice": 2,
-    "set": "Marquee Set 1",
+    "set": "Legends",
     "image": "https://upload.wikimedia.org/wikipedia/commons/d/d5/MS_Dhoni_%28Prabhav_%2723_-_RiGI_2023%29.jpg",
     "stats": {
       "matches": 277,
@@ -357,7 +432,7 @@ export const IPL_PLAYERS = [
       "sr": 137.45,
       "hs": "84*"
     },
-    "rating": 76
+    "rating": 96
   },
   {
     "id": "p_121",
@@ -375,7 +450,11 @@ export const IPL_PLAYERS = [
       "sr": 164.09,
       "hs": "87*"
     },
-    "rating": 81
+    "rating": 81,
+    "team": "LSG",
+    "retentionPrice": 21,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_122",
@@ -393,7 +472,11 @@ export const IPL_PLAYERS = [
       "avg": 24.51,
       "bb": "4/18"
     },
-    "rating": 70
+    "rating": 70,
+    "team": "CSK",
+    "retentionPrice": 10,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_123",
@@ -411,7 +494,11 @@ export const IPL_PLAYERS = [
       "avg": 30.8,
       "bb": "4/34"
     },
-    "rating": 64
+    "rating": 64,
+    "team": "SRH",
+    "retentionPrice": 18,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_124",
@@ -429,7 +516,11 @@ export const IPL_PLAYERS = [
       "sr": 174.48,
       "hs": "89*"
     },
-    "rating": 83
+    "rating": 83,
+    "team": "RCB",
+    "retentionPrice": 11.5,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_125",
@@ -447,7 +538,11 @@ export const IPL_PLAYERS = [
       "avg": 23.92,
       "bb": "4/24"
     },
-    "rating": 82
+    "rating": 82,
+    "team": "GT",
+    "retentionPrice": 18,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_126",
@@ -465,7 +560,11 @@ export const IPL_PLAYERS = [
       "runs": 3526,
       "sr": 130.64
     },
-    "rating": 73
+    "rating": 73,
+    "team": "RR",
+    "retentionPrice": 14,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_127",
@@ -483,7 +582,11 @@ export const IPL_PLAYERS = [
       "sr": 145.97,
       "hs": "83*"
     },
-    "rating": 70
+    "rating": 70,
+    "team": "KKR",
+    "retentionPrice": 13,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_128",
@@ -501,7 +604,11 @@ export const IPL_PLAYERS = [
       "sr": 146.79,
       "hs": "128*"
     },
-    "rating": 81
+    "rating": 81,
+    "team": "DC",
+    "retentionPrice": 15,
+    "isRetained": true,
+    "isTraded": true
   },
   {
     "id": "p_129",
@@ -519,7 +626,11 @@ export const IPL_PLAYERS = [
       "sr": 132.92,
       "hs": "109*"
     },
-    "rating": 75
+    "rating": 75,
+    "team": "MI",
+    "retentionPrice": 16.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_130",
@@ -537,7 +648,11 @@ export const IPL_PLAYERS = [
       "sr": 135.64,
       "hs": "108*"
     },
-    "rating": 80
+    "rating": 80,
+    "team": "CSK",
+    "retentionPrice": 18,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_132",
@@ -555,7 +670,11 @@ export const IPL_PLAYERS = [
       "sr": 141.13,
       "hs": "119*"
     },
-    "rating": 79
+    "rating": 79,
+    "team": "CSK",
+    "retentionPrice": 18,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_134",
@@ -573,7 +692,11 @@ export const IPL_PLAYERS = [
       "wickets": 6,
       "econ": 10.79
     },
-    "rating": 55
+    "rating": 55,
+    "team": "CSK",
+    "retentionPrice": 12,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_135",
@@ -591,7 +714,11 @@ export const IPL_PLAYERS = [
       "sr": 136.73,
       "hs": "101*"
     },
-    "rating": 80
+    "rating": 80,
+    "team": "PBKS",
+    "retentionPrice": 26.75,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_136",
@@ -609,7 +736,11 @@ export const IPL_PLAYERS = [
       "sr": 142.09,
       "hs": "129*"
     },
-    "rating": 86
+    "rating": 86,
+    "team": "GT",
+    "retentionPrice": 16.5,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_137",
@@ -627,7 +758,11 @@ export const IPL_PLAYERS = [
       "runs": 1820,
       "sr": 165.3
     },
-    "rating": 88
+    "rating": 88,
+    "team": "KKR",
+    "retentionPrice": 12,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_138",
@@ -645,7 +780,11 @@ export const IPL_PLAYERS = [
       "sr": 177.08,
       "hs": "70*"
     },
-    "rating": 75
+    "rating": 75,
+    "team": "RCB",
+    "retentionPrice": 3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_139",
@@ -655,6 +794,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 2,
     "set": "Marquee Set 1",
+    "excludeFromMini": true,
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/05/Travis_Head_bowling_at_Perth_Stadium%2C_First_Test_Australia_versus_West_Indies%2C_2_December_2022_03_%28cropped%29.jpg",
     "stats": {
       "matches": 53,
@@ -699,7 +839,11 @@ export const IPL_PLAYERS = [
       "avg": 24.73,
       "bb": "5/20"
     },
-    "rating": 76
+    "rating": 76,
+    "team": "KKR",
+    "retentionPrice": 12,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_142",
@@ -717,7 +861,11 @@ export const IPL_PLAYERS = [
       "sr": 134.8,
       "hs": "113*"
     },
-    "rating": 86
+    "rating": 86,
+    "team": "RCB",
+    "retentionPrice": 21,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_144",
@@ -735,7 +883,11 @@ export const IPL_PLAYERS = [
       "sr": 152.8,
       "hs": "124*"
     },
-    "rating": 82
+    "rating": 82,
+    "team": "RR",
+    "retentionPrice": 18,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_145",
@@ -753,7 +905,11 @@ export const IPL_PLAYERS = [
       "avg": 23.25,
       "bb": "5/40"
     },
-    "rating": 79
+    "rating": 79,
+    "team": "PBKS",
+    "retentionPrice": 18,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_100",
@@ -771,7 +927,11 @@ export const IPL_PLAYERS = [
       "sr": 135.52,
       "hs": "68*"
     },
-    "rating": 68
+    "rating": 68,
+    "team": "LSG",
+    "retentionPrice": 2,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_113",
@@ -807,7 +967,11 @@ export const IPL_PLAYERS = [
       "wickets": 46,
       "econ": 9.93
     },
-    "rating": 62
+    "rating": 62,
+    "team": "PBKS",
+    "retentionPrice": 11,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_131",
@@ -825,7 +989,11 @@ export const IPL_PLAYERS = [
       "runs": 997,
       "sr": 136.39
     },
-    "rating": 66
+    "rating": 66,
+    "team": "LSG",
+    "retentionPrice": 2.4,
+    "isRetained": true,
+    "isTraded": true
   },
   {
     "id": "p_133",
@@ -861,7 +1029,11 @@ export const IPL_PLAYERS = [
       "wickets": 10,
       "econ": 9.86
     },
-    "rating": 56
+    "rating": 56,
+    "team": "MI",
+    "retentionPrice": 5.25,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_271",
@@ -879,7 +1051,11 @@ export const IPL_PLAYERS = [
       "wickets": 23,
       "econ": 9.44
     },
-    "rating": 65
+    "rating": 65,
+    "team": "KKR",
+    "retentionPrice": 25.2,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_272",
@@ -897,7 +1073,11 @@ export const IPL_PLAYERS = [
       "sr": 139.5,
       "hs": "101*"
     },
-    "rating": 75
+    "rating": 75,
+    "team": "DC",
+    "retentionPrice": 2,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_279",
@@ -915,7 +1095,11 @@ export const IPL_PLAYERS = [
       "wickets": 13,
       "econ": 9.02
     },
-    "rating": 63
+    "rating": 63,
+    "team": "CSK",
+    "retentionPrice": 6,
+    "isRetained": true,
+    "isTraded": true
   },
   {
     "id": "p_282",
@@ -951,7 +1135,11 @@ export const IPL_PLAYERS = [
       "sr": 134.94,
       "hs": "140*"
     },
-    "rating": 76
+    "rating": 76,
+    "team": "MI",
+    "retentionPrice": 1,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_146",
@@ -969,7 +1157,11 @@ export const IPL_PLAYERS = [
       "wickets": 11,
       "econ": 9.04
     },
-    "rating": 77
+    "rating": 77,
+    "team": "SRH",
+    "retentionPrice": 14,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_150",
@@ -987,7 +1179,11 @@ export const IPL_PLAYERS = [
       "sr": 154.19,
       "hs": "81*"
     },
-    "rating": 71
+    "rating": 71,
+    "team": "RR",
+    "retentionPrice": 14,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_158",
@@ -1005,7 +1201,11 @@ export const IPL_PLAYERS = [
       "sr": 164.49,
       "hs": "112*"
     },
-    "rating": 83
+    "rating": 83,
+    "team": "RCB",
+    "retentionPrice": 11,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_159",
@@ -1023,7 +1223,11 @@ export const IPL_PLAYERS = [
       "wickets": 9,
       "econ": 9.69
     },
-    "rating": 56
+    "rating": 56,
+    "team": "RR",
+    "retentionPrice": 14,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_162",
@@ -1041,7 +1245,11 @@ export const IPL_PLAYERS = [
       "sr": 149.17,
       "hs": "108*"
     },
-    "rating": 85
+    "rating": 85,
+    "team": "GT",
+    "retentionPrice": 8.5,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_166",
@@ -1059,7 +1267,11 @@ export const IPL_PLAYERS = [
       "sr": 144.7,
       "hs": "101*"
     },
-    "rating": 78
+    "rating": 78,
+    "team": "MI",
+    "retentionPrice": 8,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_167",
@@ -1077,7 +1289,11 @@ export const IPL_PLAYERS = [
       "sr": 151.23,
       "hs": "71*"
     },
-    "rating": 74
+    "rating": 74,
+    "team": "DC",
+    "retentionPrice": 10,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_296",
@@ -1113,7 +1329,11 @@ export const IPL_PLAYERS = [
       "avg": 30.05,
       "bb": "4/41"
     },
-    "rating": 65
+    "rating": 65,
+    "team": "RR",
+    "retentionPrice": 7.2,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_172",
@@ -1131,7 +1351,11 @@ export const IPL_PLAYERS = [
       "sr": 146.02,
       "hs": "57"
     },
-    "rating": 57
+    "rating": 57,
+    "team": "CSK",
+    "retentionPrice": 2.2,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_216",
@@ -1149,7 +1373,11 @@ export const IPL_PLAYERS = [
       "wickets": 0,
       "econ": 0
     },
-    "rating": 52
+    "rating": 52,
+    "team": "DC",
+    "retentionPrice": 3.8,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_254",
@@ -1167,7 +1395,11 @@ export const IPL_PLAYERS = [
       "wickets": 5,
       "econ": 9.33
     },
-    "rating": 56
+    "rating": 56,
+    "team": "PBKS",
+    "retentionPrice": 5.5,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_264",
@@ -1185,7 +1417,11 @@ export const IPL_PLAYERS = [
       "sr": 228.95,
       "hs": "103"
     },
-    "rating": 77
+    "rating": 77,
+    "team": "RR",
+    "retentionPrice": 1.1,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_193",
@@ -1203,7 +1439,11 @@ export const IPL_PLAYERS = [
       "sr": 152.48,
       "hs": "85*"
     },
-    "rating": 61
+    "rating": 61,
+    "team": "RCB",
+    "retentionPrice": 11,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_196",
@@ -1221,7 +1461,11 @@ export const IPL_PLAYERS = [
       "wickets": 13,
       "econ": 10.65
     },
-    "rating": 52
+    "rating": 52,
+    "team": "SRH",
+    "retentionPrice": 6,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_240",
@@ -1239,7 +1483,11 @@ export const IPL_PLAYERS = [
       "sr": 163.97,
       "hs": "62*"
     },
-    "rating": 68
+    "rating": 68,
+    "team": "MI",
+    "retentionPrice": 5.25,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_281",
@@ -1257,7 +1505,11 @@ export const IPL_PLAYERS = [
       "wickets": 3,
       "econ": 10.59
     },
-    "rating": 54
+    "rating": 54,
+    "team": "RCB",
+    "retentionPrice": 7,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_285",
@@ -1275,7 +1527,11 @@ export const IPL_PLAYERS = [
       "sr": 214.11,
       "hs": "100*"
     },
-    "rating": 54
+    "rating": 54,
+    "team": "KKR",
+    "retentionPrice": 2,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_147",
@@ -1311,7 +1567,11 @@ export const IPL_PLAYERS = [
       "runs": 151,
       "sr": 149.5
     },
-    "rating": 45
+    "rating": 45,
+    "team": "PBKS",
+    "retentionPrice": 2.4,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_149",
@@ -1347,7 +1607,11 @@ export const IPL_PLAYERS = [
       "sr": 121.1,
       "hs": "25*"
     },
-    "rating": 26
+    "rating": 26,
+    "team": "GT",
+    "retentionPrice": 2,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_152",
@@ -1365,7 +1629,11 @@ export const IPL_PLAYERS = [
       "avg": 24.68,
       "bb": "5/27"
     },
-    "rating": 70
+    "rating": 70,
+    "team": "GT",
+    "retentionPrice": 4,
+    "isRetained": true,
+    "isTraded": true
   },
   {
     "id": "p_153",
@@ -1383,7 +1651,11 @@ export const IPL_PLAYERS = [
       "avg": 27.19,
       "bb": "3/21"
     },
-    "rating": 66
+    "rating": 66,
+    "team": "SRH",
+    "retentionPrice": 4.8,
+    "isRetained": true,
+    "isTraded": true
   },
   {
     "id": "p_154",
@@ -1401,7 +1673,11 @@ export const IPL_PLAYERS = [
       "runs": 1982,
       "sr": 133.83
     },
-    "rating": 72
+    "rating": 72,
+    "team": "RCB",
+    "retentionPrice": 5.75,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_155",
@@ -1419,7 +1695,11 @@ export const IPL_PLAYERS = [
       "avg": 40.78,
       "bb": "3/14"
     },
-    "rating": 28
+    "rating": 28,
+    "team": "LSG",
+    "retentionPrice": 11,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_156",
@@ -1437,7 +1717,11 @@ export const IPL_PLAYERS = [
       "runs": 136,
       "sr": 110.57
     },
-    "rating": 54
+    "rating": 54,
+    "team": "MI",
+    "retentionPrice": 2,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_157",
@@ -1455,7 +1739,11 @@ export const IPL_PLAYERS = [
       "avg": 28.87,
       "bb": "4/28"
     },
-    "rating": 64
+    "rating": 64,
+    "team": "GT",
+    "retentionPrice": 9.5,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_160",
@@ -1473,7 +1761,11 @@ export const IPL_PLAYERS = [
       "runs": 268,
       "sr": 175.16
     },
-    "rating": 44
+    "rating": 44,
+    "team": "RCB",
+    "retentionPrice": 1.5,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_161",
@@ -1491,7 +1783,11 @@ export const IPL_PLAYERS = [
       "sr": 142.31,
       "hs": "67*"
     },
-    "rating": 53
+    "rating": 53,
+    "team": "KKR",
+    "retentionPrice": 1.5,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_164",
@@ -1509,7 +1805,11 @@ export const IPL_PLAYERS = [
       "sr": 142.86,
       "hs": "71*"
     },
-    "rating": 54
+    "rating": 54,
+    "team": "MI",
+    "retentionPrice": 2.6,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_165",
@@ -1527,7 +1827,11 @@ export const IPL_PLAYERS = [
       "avg": 32.58,
       "bb": "4/19"
     },
-    "rating": 58
+    "rating": 58,
+    "team": "SRH",
+    "retentionPrice": 5,
+    "isRetained": true,
+    "isTraded": true
   },
   {
     "id": "p_168",
@@ -1545,7 +1849,11 @@ export const IPL_PLAYERS = [
       "runs": 888,
       "sr": 135.37
     },
-    "rating": 62
+    "rating": 62,
+    "team": "GT",
+    "retentionPrice": 3.2,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_292",
@@ -1581,7 +1889,11 @@ export const IPL_PLAYERS = [
       "avg": 26.44,
       "bb": "4/17"
     },
-    "rating": 37
+    "rating": 37,
+    "team": "CSK",
+    "retentionPrice": 2,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_301",
@@ -1617,7 +1929,11 @@ export const IPL_PLAYERS = [
       "avg": 29.28,
       "bb": "4/27"
     },
-    "rating": 68
+    "rating": 68,
+    "team": "CSK",
+    "retentionPrice": 5.2,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_174",
@@ -1627,6 +1943,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 0.75,
     "set": "Set 2",
+    "excludeFromMini": true,
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2026/869.png",
     "stats": {
       "matches": 9,
@@ -1653,7 +1970,11 @@ export const IPL_PLAYERS = [
       "avg": 34.64,
       "bb": "4/33"
     },
-    "rating": 49
+    "rating": 49,
+    "team": "DC",
+    "retentionPrice": 8,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_183",
@@ -1689,7 +2010,11 @@ export const IPL_PLAYERS = [
       "wickets": 32,
       "econ": 7.91
     },
-    "rating": 59
+    "rating": 59,
+    "team": "GT",
+    "retentionPrice": 4,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_186",
@@ -1707,7 +2032,11 @@ export const IPL_PLAYERS = [
       "sr": 168.21,
       "hs": "123*"
     },
-    "rating": 75
+    "rating": 75,
+    "team": "MI",
+    "retentionPrice": 1,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_220",
@@ -1761,7 +2090,11 @@ export const IPL_PLAYERS = [
       "sr": 192.99,
       "hs": "103"
     },
-    "rating": 77
+    "rating": 77,
+    "team": "PBKS",
+    "retentionPrice": 3.8,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_188",
@@ -1770,7 +2103,7 @@ export const IPL_PLAYERS = [
     "type": "Indian",
     "country": "IND",
     "basePrice": 0.5,
-    "set": "Set 2",
+    "set": "Legends",
     "image": "https://upload.wikimedia.org/wikipedia/commons/9/96/Ajinkya_Rahane_2016_%28cropped%29.jpg",
     "stats": {
       "matches": 212,
@@ -1779,7 +2112,7 @@ export const IPL_PLAYERS = [
       "sr": 125.6,
       "hs": "105*"
     },
-    "rating": 72
+    "rating": 82
   },
   {
     "id": "p_189",
@@ -1797,7 +2130,11 @@ export const IPL_PLAYERS = [
       "sr": 133.14,
       "hs": "101*"
     },
-    "rating": 67
+    "rating": 67,
+    "team": "RCB",
+    "retentionPrice": 2,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_190",
@@ -1815,7 +2152,11 @@ export const IPL_PLAYERS = [
       "avg": 25.72,
       "bb": "3/24"
     },
-    "rating": 60
+    "rating": 60,
+    "team": "KKR",
+    "retentionPrice": 4,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_198",
@@ -1833,7 +2174,11 @@ export const IPL_PLAYERS = [
       "avg": 28.44,
       "bb": "5/18"
     },
-    "rating": 72
+    "rating": 72,
+    "team": "RR",
+    "retentionPrice": 4,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_199",
@@ -1851,7 +2196,11 @@ export const IPL_PLAYERS = [
       "wickets": 27,
       "econ": 9.79
     },
-    "rating": 47
+    "rating": 47,
+    "team": "LSG",
+    "retentionPrice": 2.4,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_203",
@@ -1869,7 +2218,11 @@ export const IPL_PLAYERS = [
       "avg": 33.9,
       "bb": "3/20"
     },
-    "rating": 51
+    "rating": 51,
+    "team": "RCB",
+    "retentionPrice": 5,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_219",
@@ -1887,7 +2240,11 @@ export const IPL_PLAYERS = [
       "sr": 183.75,
       "hs": "94"
     },
-    "rating": 58
+    "rating": 58,
+    "team": "CSK",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_253",
@@ -1905,7 +2262,11 @@ export const IPL_PLAYERS = [
       "wickets": 0,
       "econ": 0
     },
-    "rating": 43
+    "rating": 43,
+    "team": "DC",
+    "retentionPrice": 0.95,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_275",
@@ -1923,7 +2284,11 @@ export const IPL_PLAYERS = [
       "sr": 147.47,
       "hs": "99"
     },
-    "rating": 69
+    "rating": 69,
+    "team": "DC",
+    "retentionPrice": 0.75,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_276",
@@ -1941,7 +2306,11 @@ export const IPL_PLAYERS = [
       "sr": 137.38,
       "hs": "67*"
     },
-    "rating": 52
+    "rating": 52,
+    "team": "CSK",
+    "retentionPrice": 0.75,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_280",
@@ -1977,7 +2346,11 @@ export const IPL_PLAYERS = [
       "runs": 349,
       "sr": 132.7
     },
-    "rating": 60
+    "rating": 60,
+    "team": "MI",
+    "retentionPrice": 2,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_291",
@@ -2013,7 +2386,11 @@ export const IPL_PLAYERS = [
       "avg": 27.86,
       "bb": "2/21"
     },
-    "rating": 43
+    "rating": 43,
+    "team": "RR",
+    "retentionPrice": 3.5,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_218",
@@ -2031,7 +2408,11 @@ export const IPL_PLAYERS = [
       "sr": 140.91,
       "hs": "74*"
     },
-    "rating": 61
+    "rating": 61,
+    "team": "LSG",
+    "retentionPrice": 4,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_243",
@@ -2049,7 +2430,11 @@ export const IPL_PLAYERS = [
       "sr": 156.85,
       "hs": "103*"
     },
-    "rating": 78
+    "rating": 78,
+    "team": "PBKS",
+    "retentionPrice": 4,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_195",
@@ -2067,7 +2452,11 @@ export const IPL_PLAYERS = [
       "sr": 121.83,
       "hs": "114*"
     },
-    "rating": 66
+    "rating": 66,
+    "team": "KKR",
+    "retentionPrice": 0.75,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_197",
@@ -2085,25 +2474,11 @@ export const IPL_PLAYERS = [
       "avg": 21.12,
       "bb": "4/33"
     },
-    "rating": 56
-  },
-  {
-    "id": "p_200",
-    "name": "Shahrukh Khan",
-    "role": "Batsman",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.5,
-    "set": "Set 3",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/6/6e/Shah_Rukh_Khan_graces_the_launch_of_the_new_Santro.jpg",
-    "stats": {
-      "matches": 58,
-      "runs": 746,
-      "avg": 22.61,
-      "sr": 137.38,
-      "hs": "67*"
-    },
-    "rating": 52
+    "rating": 56,
+    "team": "GT",
+    "retentionPrice": 2,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_201",
@@ -2175,7 +2550,11 @@ export const IPL_PLAYERS = [
       "runs": 249,
       "sr": 120.87
     },
-    "rating": 55
+    "rating": 55,
+    "team": "PBKS",
+    "retentionPrice": 1.5,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_237",
@@ -2193,7 +2572,11 @@ export const IPL_PLAYERS = [
       "avg": 24.13,
       "bb": "5/23"
     },
-    "rating": 64
+    "rating": 64,
+    "team": "LSG",
+    "retentionPrice": 4,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_250",
@@ -2211,7 +2594,11 @@ export const IPL_PLAYERS = [
       "wickets": 7,
       "econ": 10.07
     },
-    "rating": 42
+    "rating": 42,
+    "team": "KKR",
+    "retentionPrice": 4,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_268",
@@ -2229,7 +2616,11 @@ export const IPL_PLAYERS = [
       "avg": 30.56,
       "bb": "5/30"
     },
-    "rating": 46
+    "rating": 46,
+    "team": "PBKS",
+    "retentionPrice": 1.6,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_295",
@@ -2247,7 +2638,11 @@ export const IPL_PLAYERS = [
       "avg": 29.22,
       "bb": "3/22"
     },
-    "rating": 31
+    "rating": 31,
+    "team": "RCB",
+    "retentionPrice": 2,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_209",
@@ -2265,7 +2660,11 @@ export const IPL_PLAYERS = [
       "sr": 145.56,
       "hs": "82*"
     },
-    "rating": 71
+    "rating": 71,
+    "team": "KKR",
+    "retentionPrice": 3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_235",
@@ -2301,7 +2700,11 @@ export const IPL_PLAYERS = [
       "avg": 44.07,
       "bb": "3/17"
     },
-    "rating": 49
+    "rating": 49,
+    "team": "RCB",
+    "retentionPrice": 2.6,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_260",
@@ -2337,7 +2740,11 @@ export const IPL_PLAYERS = [
       "sr": 205.21,
       "hs": "65"
     },
-    "rating": 41
+    "rating": 41,
+    "team": "CSK",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_297",
@@ -2391,7 +2798,11 @@ export const IPL_PLAYERS = [
       "avg": 0,
       "bb": "-"
     },
-    "rating": 2
+    "rating": 2,
+    "team": "SRH",
+    "retentionPrice": 1,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_171",
@@ -2409,7 +2820,11 @@ export const IPL_PLAYERS = [
       "runs": 97,
       "sr": 153.97
     },
-    "rating": 45
+    "rating": 45,
+    "team": "MI",
+    "retentionPrice": 0.75,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_173",
@@ -2445,7 +2860,11 @@ export const IPL_PLAYERS = [
       "runs": 151,
       "sr": 162.37
     },
-    "rating": 47
+    "rating": 47,
+    "team": "CSK",
+    "retentionPrice": 1.5,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_176",
@@ -2535,7 +2954,11 @@ export const IPL_PLAYERS = [
       "avg": 28.74,
       "bb": "4/30"
     },
-    "rating": 47
+    "rating": 47,
+    "team": "SRH",
+    "retentionPrice": 2,
+    "isRetained": true,
+    "isTraded": true
   },
   {
     "id": "p_184",
@@ -2553,7 +2976,11 @@ export const IPL_PLAYERS = [
       "avg": 31.44,
       "bb": "3/28"
     },
-    "rating": 32
+    "rating": 32,
+    "team": "RCB",
+    "retentionPrice": 1.6,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_187",
@@ -2571,7 +2998,11 @@ export const IPL_PLAYERS = [
       "avg": 69.14,
       "bb": "2/9"
     },
-    "rating": 25
+    "rating": 25,
+    "team": "PBKS",
+    "retentionPrice": 0.8,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_191",
@@ -2607,7 +3038,11 @@ export const IPL_PLAYERS = [
       "runs": 40,
       "sr": 111.11
     },
-    "rating": 38
+    "rating": 38,
+    "team": "GT",
+    "retentionPrice": 0.75,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_194",
@@ -2643,7 +3078,11 @@ export const IPL_PLAYERS = [
       "wickets": 2,
       "econ": 13.16
     },
-    "rating": 33
+    "rating": 33,
+    "team": "LSG",
+    "retentionPrice": 4.2,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_205",
@@ -2661,7 +3100,11 @@ export const IPL_PLAYERS = [
       "avg": 40.67,
       "bb": "2/30"
     },
-    "rating": 18
+    "rating": 18,
+    "team": "RCB",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_207",
@@ -2697,7 +3140,11 @@ export const IPL_PLAYERS = [
       "avg": 31.23,
       "bb": "3/26"
     },
-    "rating": 35
+    "rating": 35,
+    "team": "LSG",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_210",
@@ -2715,7 +3162,11 @@ export const IPL_PLAYERS = [
       "sr": 160.71,
       "hs": "74*"
     },
-    "rating": 50
+    "rating": 50,
+    "team": "SRH",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_211",
@@ -2733,7 +3184,11 @@ export const IPL_PLAYERS = [
       "avg": 26.32,
       "bb": "3/13"
     },
-    "rating": 49
+    "rating": 49,
+    "team": "CSK",
+    "retentionPrice": 3.4,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_212",
@@ -2751,7 +3206,11 @@ export const IPL_PLAYERS = [
       "sr": 119.1,
       "hs": "66*"
     },
-    "rating": 37
+    "rating": 37,
+    "team": "GT",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_213",
@@ -2769,7 +3228,11 @@ export const IPL_PLAYERS = [
       "runs": 78,
       "sr": 121.88
     },
-    "rating": 40
+    "rating": 40,
+    "team": "KKR",
+    "retentionPrice": 0.4,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_214",
@@ -2787,7 +3250,11 @@ export const IPL_PLAYERS = [
       "runs": 18,
       "sr": 128.57
     },
-    "rating": 24
+    "rating": 24,
+    "team": "LSG",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_215",
@@ -2805,7 +3272,11 @@ export const IPL_PLAYERS = [
       "wickets": 0,
       "econ": 0
     },
-    "rating": 11
+    "rating": 11,
+    "team": "LSG",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_217",
@@ -2823,7 +3294,11 @@ export const IPL_PLAYERS = [
       "avg": 19.65,
       "bb": "4/24"
     },
-    "rating": 39
+    "rating": 39,
+    "team": "MI",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_221",
@@ -2841,7 +3316,11 @@ export const IPL_PLAYERS = [
       "wickets": 1,
       "econ": 13.67
     },
-    "rating": 29
+    "rating": 29,
+    "team": "RR",
+    "retentionPrice": 1,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_222",
@@ -2859,7 +3338,11 @@ export const IPL_PLAYERS = [
       "avg": 22.58,
       "bb": "4/32"
     },
-    "rating": 63
+    "rating": 63,
+    "team": "SRH",
+    "retentionPrice": 1.2,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_223",
@@ -2877,7 +3360,11 @@ export const IPL_PLAYERS = [
       "avg": 58.25,
       "bb": "1/7"
     },
-    "rating": 23
+    "rating": 23,
+    "team": "CSK",
+    "retentionPrice": 2.2,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_224",
@@ -2931,7 +3418,11 @@ export const IPL_PLAYERS = [
       "avg": 25.08,
       "bb": "3/12"
     },
-    "rating": 35
+    "rating": 35,
+    "team": "SRH",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_228",
@@ -2967,7 +3458,11 @@ export const IPL_PLAYERS = [
       "sr": 100,
       "hs": "18"
     },
-    "rating": 12
+    "rating": 12,
+    "team": "GT",
+    "retentionPrice": 0.65,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_230",
@@ -3021,7 +3516,11 @@ export const IPL_PLAYERS = [
       "avg": 31.44,
       "bb": "2/35"
     },
-    "rating": 33
+    "rating": 33,
+    "team": "RR",
+    "retentionPrice": 0.75,
+    "isRetained": true,
+    "isTraded": true
   },
   {
     "id": "p_233",
@@ -3039,7 +3538,11 @@ export const IPL_PLAYERS = [
       "sr": 175,
       "hs": "18*"
     },
-    "rating": 24
+    "rating": 24,
+    "team": "DC",
+    "retentionPrice": 0.4,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_234",
@@ -3057,7 +3560,11 @@ export const IPL_PLAYERS = [
       "avg": 47,
       "bb": "1/19"
     },
-    "rating": 15
+    "rating": 15,
+    "team": "GT",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_236",
@@ -3075,7 +3582,11 @@ export const IPL_PLAYERS = [
       "avg": 38.5,
       "bb": "3/22"
     },
-    "rating": 35
+    "rating": 35,
+    "team": "GT",
+    "retentionPrice": 1.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_238",
@@ -3093,7 +3604,11 @@ export const IPL_PLAYERS = [
       "avg": 30.84,
       "bb": "4/46"
     },
-    "rating": 46
+    "rating": 46,
+    "team": "CSK",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_239",
@@ -3111,7 +3626,11 @@ export const IPL_PLAYERS = [
       "runs": 0,
       "sr": 0
     },
-    "rating": 7
+    "rating": 7,
+    "team": "PBKS",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_242",
@@ -3129,7 +3648,11 @@ export const IPL_PLAYERS = [
       "wickets": 0,
       "econ": 0
     },
-    "rating": 21
+    "rating": 21,
+    "team": "GT",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_244",
@@ -3147,7 +3670,11 @@ export const IPL_PLAYERS = [
       "avg": 36,
       "bb": "3/32"
     },
-    "rating": 44
+    "rating": 44,
+    "team": "LSG",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_246",
@@ -3183,7 +3710,11 @@ export const IPL_PLAYERS = [
       "avg": 130,
       "bb": "1/36"
     },
-    "rating": 18
+    "rating": 18,
+    "team": "MI",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_248",
@@ -3201,7 +3732,11 @@ export const IPL_PLAYERS = [
       "runs": 35,
       "sr": 109.38
     },
-    "rating": 13
+    "rating": 13,
+    "team": "MI",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_249",
@@ -3219,7 +3754,11 @@ export const IPL_PLAYERS = [
       "runs": 0,
       "sr": 0
     },
-    "rating": 15
+    "rating": 15,
+    "team": "CSK",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_251",
@@ -3237,7 +3776,11 @@ export const IPL_PLAYERS = [
       "avg": 28.07,
       "bb": "4/24"
     },
-    "rating": 46
+    "rating": 46,
+    "team": "RCB",
+    "retentionPrice": 6,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_252",
@@ -3273,7 +3816,11 @@ export const IPL_PLAYERS = [
       "avg": 25.94,
       "bb": "4/16"
     },
-    "rating": 65
+    "rating": 65,
+    "team": "CSK",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_256",
@@ -3291,7 +3838,11 @@ export const IPL_PLAYERS = [
       "sr": 153.85,
       "hs": "34*"
     },
-    "rating": 43
+    "rating": 43,
+    "team": "RR",
+    "retentionPrice": 0.8,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_257",
@@ -3327,7 +3878,11 @@ export const IPL_PLAYERS = [
       "wickets": 0,
       "econ": 13.33
     },
-    "rating": 23
+    "rating": 23,
+    "team": "PBKS",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_261",
@@ -3345,7 +3900,11 @@ export const IPL_PLAYERS = [
       "sr": 0,
       "hs": "0"
     },
-    "rating": 7
+    "rating": 7,
+    "team": "DC",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_263",
@@ -3363,7 +3922,11 @@ export const IPL_PLAYERS = [
       "avg": 29.91,
       "bb": "3/27"
     },
-    "rating": 54
+    "rating": 54,
+    "team": "KKR",
+    "retentionPrice": 1.8,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_265",
@@ -3381,7 +3944,11 @@ export const IPL_PLAYERS = [
       "runs": 157,
       "sr": 176.4
     },
-    "rating": 46
+    "rating": 46,
+    "team": "DC",
+    "retentionPrice": 0.5,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_266",
@@ -3399,7 +3966,11 @@ export const IPL_PLAYERS = [
       "sr": 109.23,
       "hs": "30*"
     },
-    "rating": 18
+    "rating": 18,
+    "team": "PBKS",
+    "retentionPrice": 0.95,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_267",
@@ -3417,7 +3988,11 @@ export const IPL_PLAYERS = [
       "avg": 34.85,
       "bb": "3/20"
     },
-    "rating": 43
+    "rating": 43,
+    "team": "PBKS",
+    "retentionPrice": 1.8,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_269",
@@ -3453,7 +4028,11 @@ export const IPL_PLAYERS = [
       "avg": 55.5,
       "bb": "3/42"
     },
-    "rating": 24
+    "rating": 24,
+    "team": "DC",
+    "retentionPrice": 0.4,
+    "isRetained": true,
+    "isTraded": true
   },
   {
     "id": "p_284",
@@ -3669,7 +4248,11 @@ export const IPL_PLAYERS = [
       "runs": 53,
       "sr": 115.22
     },
-    "rating": 30
+    "rating": 30,
+    "team": "SRH",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_320",
@@ -3705,7 +4288,11 @@ export const IPL_PLAYERS = [
       "sr": 136.57,
       "hs": "71*"
     },
-    "rating": 45
+    "rating": 45,
+    "team": "CSK",
+    "retentionPrice": 14.2,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_322",
@@ -3723,7 +4310,11 @@ export const IPL_PLAYERS = [
       "sr": 141.67,
       "hs": "54*"
     },
-    "rating": 37
+    "rating": 37,
+    "team": "LSG",
+    "retentionPrice": 2.6,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_324",
@@ -3776,7 +4367,11 @@ export const IPL_PLAYERS = [
       "avg": 38,
       "bb": "2/32"
     },
-    "rating": 25
+    "rating": 25,
+    "team": "GT",
+    "retentionPrice": 0.9,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_329",
@@ -3794,7 +4389,11 @@ export const IPL_PLAYERS = [
       "avg": 36.7,
       "bb": "3/22"
     },
-    "rating": 47
+    "rating": 47,
+    "team": "KKR",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_330",
@@ -3847,7 +4446,11 @@ export const IPL_PLAYERS = [
       "avg": 33.5,
       "bb": "2/21"
     },
-    "rating": 16
+    "rating": 16,
+    "team": "RR",
+    "retentionPrice": 0.9,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_334",
@@ -3899,7 +4502,11 @@ export const IPL_PLAYERS = [
       "avg": 19,
       "bb": "2/20"
     },
-    "rating": 26
+    "rating": 26,
+    "team": "KKR",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_338",
@@ -3989,7 +4596,11 @@ export const IPL_PLAYERS = [
       "runs": 0,
       "sr": 0
     },
-    "rating": 8
+    "rating": 8,
+    "team": "PBKS",
+    "retentionPrice": 4.4,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_351",
@@ -4025,7 +4636,11 @@ export const IPL_PLAYERS = [
       "runs": 0,
       "sr": 0
     },
-    "rating": 2
+    "rating": 2,
+    "team": "RR",
+    "retentionPrice": 2,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_353",
@@ -4043,7 +4658,11 @@ export const IPL_PLAYERS = [
       "runs": 324,
       "sr": 123.19
     },
-    "rating": 65
+    "rating": 65,
+    "team": "GT",
+    "retentionPrice": 7,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_354",
@@ -4096,7 +4715,11 @@ export const IPL_PLAYERS = [
       "avg": 0,
       "sr": 0
     },
-    "rating": 3
+    "rating": 3,
+    "team": "RCB",
+    "retentionPrice": 0.75,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_360",
@@ -4114,7 +4737,11 @@ export const IPL_PLAYERS = [
       "sr": 173.25,
       "hs": "85*"
     },
-    "rating": 66
+    "rating": 66,
+    "team": "LSG",
+    "retentionPrice": 8.6,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_364",
@@ -4132,7 +4759,11 @@ export const IPL_PLAYERS = [
       "sr": 109.76,
       "hs": "21"
     },
-    "rating": 16
+    "rating": 16,
+    "team": "KKR",
+    "retentionPrice": 1.5,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_365",
@@ -4150,7 +4781,11 @@ export const IPL_PLAYERS = [
       "sr": 90,
       "hs": "10"
     },
-    "rating": 9
+    "rating": 9,
+    "team": "GT",
+    "retentionPrice": 2,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_366",
@@ -4204,7 +4839,11 @@ export const IPL_PLAYERS = [
       "avg": 31.62,
       "bb": "3/41"
     },
-    "rating": 37
+    "rating": 37,
+    "team": "DC",
+    "retentionPrice": 2,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_370",
@@ -4222,7 +4861,11 @@ export const IPL_PLAYERS = [
       "avg": 20.69,
       "bb": "4/10"
     },
-    "rating": 69
+    "rating": 69,
+    "team": "DC",
+    "retentionPrice": 2,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_371",
@@ -4366,7 +5009,11 @@ export const IPL_PLAYERS = [
       "runs": 0,
       "sr": 0
     },
-    "rating": 2
+    "rating": 2,
+    "team": "RCB",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_398",
@@ -4420,7 +5067,11 @@ export const IPL_PLAYERS = [
       "sr": 159.18,
       "hs": "35*"
     },
-    "rating": 39
+    "rating": 39,
+    "team": "SRH",
+    "retentionPrice": 1.5,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_403",
@@ -4524,7 +5175,11 @@ export const IPL_PLAYERS = [
       "avg": 26.47,
       "bb": "4/24"
     },
-    "rating": 41
+    "rating": 41,
+    "team": "SRH",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_413",
@@ -4647,7 +5302,11 @@ export const IPL_PLAYERS = [
       "econ": 0,
       "avg": 0
     },
-    "rating": 4
+    "rating": 4,
+    "team": "KKR",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_908",
@@ -4754,7 +5413,11 @@ export const IPL_PLAYERS = [
       "wickets": 0,
       "econ": 0
     },
-    "rating": 41
+    "rating": 41,
+    "team": "PBKS",
+    "retentionPrice": 3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_914",
@@ -4790,7 +5453,11 @@ export const IPL_PLAYERS = [
       "runs": 2,
       "sr": 50
     },
-    "rating": 22
+    "rating": 22,
+    "team": "RR",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_916",
@@ -4824,7 +5491,11 @@ export const IPL_PLAYERS = [
       "econ": 0,
       "avg": 0
     },
-    "rating": 4
+    "rating": 4,
+    "team": "RCB",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_918",
@@ -4860,7 +5531,11 @@ export const IPL_PLAYERS = [
       "avg": 21.79,
       "bb": "4/34"
     },
-    "rating": 34
+    "rating": 34,
+    "team": "SRH",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   },
   {
     "id": "p_920",
@@ -4896,7 +5571,11 @@ export const IPL_PLAYERS = [
       "runs": 0,
       "sr": 0
     },
-    "rating": 2
+    "rating": 2,
+    "team": "CSK",
+    "retentionPrice": 3,
+    "isRetained": true,
+    "isTraded": true
   },
   {
     "id": "p_1001",
@@ -5726,7 +6405,6 @@ export const IPL_PLAYERS = [
     },
     "rating": 77
   },
-
   {
     "id": "p_1048",
     "name": "Andrew Tye",
@@ -6465,7 +7143,6 @@ export const IPL_PLAYERS = [
     },
     "rating": 68
   },
-
   {
     "id": "p_1090",
     "name": "Owais Shah",
@@ -7258,7 +7935,6 @@ export const IPL_PLAYERS = [
     },
     "rating": 57
   },
-
   {
     "id": "p_1136",
     "name": "Shreevats Goswami",
@@ -7694,5 +8370,450 @@ export const IPL_PLAYERS = [
       "hs": "34"
     },
     "rating": 75
+  },
+  {
+    "id": "p_1161",
+    "name": "Macneil Noronha",
+    "role": "All-Rounder",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "UAL1",
+    "rating": 62,
+    "stats": {
+      "matches": 10,
+      "runs": 180,
+      "wickets": 8,
+      "econ": 8.1,
+      "avg": 22.5
+    }
+  },
+  {
+    "id": "p_1162",
+    "name": "Connor Esterhuizen",
+    "role": "Wicket-Keeper",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 0.75,
+    "set": "UWK1",
+    "rating": 65,
+    "stats": {
+      "matches": 15,
+      "runs": 320,
+      "avg": 26.6,
+      "sr": 135.2,
+      "hs": "68*"
+    }
+  },
+  {
+    "id": "p_1163",
+    "name": "Luke Wood",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 0.75,
+    "set": "FA1",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/2_16_Luke_Wood_sequence_%28cropped%29.jpg/330px-2_16_Luke_Wood_sequence_%28cropped%29.jpg",
+    "rating": 70,
+    "stats": {
+      "matches": 28,
+      "wickets": 32,
+      "econ": 8.6,
+      "avg": 27.1,
+      "bb": "3/20"
+    }
+  },
+  {
+    "id": "p_1164",
+    "name": "Daksh Kamra",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "UBA1",
+    "rating": 60,
+    "stats": {
+      "matches": 8,
+      "runs": 150,
+      "avg": 25,
+      "sr": 128,
+      "hs": "48"
+    }
+  },
+  {
+    "id": "p_1165",
+    "name": "Atharva Ankolekar",
+    "role": "All-Rounder",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "UAL1",
+    "rating": 64,
+    "stats": {
+      "matches": 22,
+      "runs": 240,
+      "wickets": 25,
+      "econ": 7.2,
+      "avg": 23.4
+    }
+  },
+  {
+    "id": "p_1166",
+    "name": "Krish Bhagat",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "UFA1",
+    "rating": 60,
+    "stats": {
+      "matches": 6,
+      "wickets": 7,
+      "econ": 8.8,
+      "avg": 29,
+      "bb": "2/24"
+    }
+  },
+  {
+    "id": "p_1167",
+    "name": "Ruchit Ahir",
+    "role": "Wicket-Keeper",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "UWK1",
+    "rating": 61,
+    "stats": {
+      "matches": 12,
+      "runs": 210,
+      "avg": 23.3,
+      "sr": 130.5,
+      "hs": "54"
+    }
+  },
+  {
+    "id": "p_1168",
+    "name": "Vishal Nishad",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "UFA1",
+    "rating": 60,
+    "stats": {
+      "matches": 5,
+      "wickets": 6,
+      "econ": 8.5,
+      "avg": 28,
+      "bb": "2/18"
+    }
+  },
+  {
+    "id": "p_1169",
+    "name": "Emanjot Chahal",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "USP1",
+    "rating": 60,
+    "stats": {
+      "matches": 7,
+      "wickets": 8,
+      "econ": 7.6,
+      "avg": 25.5,
+      "bb": "3/28"
+    }
+  },
+  {
+    "id": "p_1170",
+    "name": "Amit Kumar",
+    "role": "All-Rounder",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "UAL1",
+    "rating": 60,
+    "stats": {
+      "matches": 9,
+      "runs": 120,
+      "wickets": 6,
+      "econ": 8.2,
+      "avg": 26
+    }
+  },
+  {
+    "id": "p_1171",
+    "name": "Dilshan Madushanka",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 0.75,
+    "set": "FA1",
+    "rating": 72,
+    "stats": {
+      "matches": 20,
+      "wickets": 28,
+      "econ": 8.4,
+      "avg": 24.2,
+      "bb": "4/35"
+    }
+  },
+  {
+    "id": "p_1172",
+    "name": "R.S.Ambrish",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "UFA1",
+    "rating": 60,
+    "stats": {
+      "matches": 6,
+      "wickets": 7,
+      "econ": 8.9,
+      "avg": 30.1,
+      "bb": "2/22"
+    }
+  },
+  {
+    "id": "p_1173",
+    "name": "Auqib Dar",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "UFA1",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Auqib_Nabi_bowling_in_a_Ranji_Trophy_2024-25_match_against_Meghalaya_in_Shillong.jpg/330px-Auqib_Nabi_bowling_in_a_Ranji_Trophy_2024-25_match_against_Meghalaya_in_Shillong.jpg",
+    "rating": 66,
+    "stats": {
+      "matches": 14,
+      "wickets": 18,
+      "econ": 7.8,
+      "avg": 22,
+      "bb": "4/21"
+    },
+    "team": "DC",
+    "retentionPrice": 8.4,
+    "isRetained": true,
+    "isTraded": false
+  },
+  {
+    "id": "p_1174",
+    "name": "Gurnoor Singh Brar",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "UFA1",
+    "rating": 64,
+    "stats": {
+      "matches": 10,
+      "wickets": 12,
+      "econ": 8.3,
+      "avg": 25.5,
+      "bb": "3/29"
+    },
+    "team": "GT",
+    "retentionPrice": 1.3,
+    "isRetained": true,
+    "isTraded": false
+  },
+  {
+    "id": "p_1175",
+    "name": "Sarthak Ranjan",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "UBA1",
+    "rating": 61,
+    "stats": {
+      "matches": 11,
+      "runs": 240,
+      "avg": 24,
+      "sr": 126.5,
+      "hs": "51"
+    },
+    "team": "KKR",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
+  },
+  {
+    "id": "p_1176",
+    "name": "Akshat Raghuwanshi",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "UBA1",
+    "rating": 64,
+    "stats": {
+      "matches": 16,
+      "runs": 380,
+      "avg": 27.1,
+      "sr": 133,
+      "hs": "64"
+    },
+    "team": "LSG",
+    "retentionPrice": 2.2,
+    "isRetained": true,
+    "isTraded": false
+  },
+  {
+    "id": "p_1177",
+    "name": "Digvesh Rathi",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "USP1",
+    "rating": 63,
+    "stats": {
+      "matches": 12,
+      "wickets": 15,
+      "econ": 7.4,
+      "avg": 24,
+      "bb": "3/25"
+    },
+    "team": "LSG",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
+  },
+  {
+    "id": "p_1178",
+    "name": "Harnoor Pannu",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "UBA1",
+    "rating": 62,
+    "stats": {
+      "matches": 10,
+      "runs": 220,
+      "avg": 24.4,
+      "sr": 125,
+      "hs": "56"
+    },
+    "team": "PBKS",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
+  },
+  {
+    "id": "p_1179",
+    "name": "Aman Rao Perala",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "UBA1",
+    "rating": 60,
+    "stats": {
+      "matches": 8,
+      "runs": 160,
+      "avg": 22.8,
+      "sr": 124,
+      "hs": "45"
+    },
+    "team": "RR",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
+  },
+  {
+    "id": "p_1180",
+    "name": "Lhuan-dre Pretorius",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "OS",
+    "basePrice": 0.3,
+    "set": "UBA1",
+    "rating": 65,
+    "stats": {
+      "matches": 15,
+      "runs": 340,
+      "avg": 28.3,
+      "sr": 138.5,
+      "hs": "71"
+    },
+    "team": "RR",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
+  },
+  {
+    "id": "p_1181",
+    "name": "Yash Raj Punja",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "UFA1",
+    "rating": 60,
+    "stats": {
+      "matches": 6,
+      "wickets": 6,
+      "econ": 8.7,
+      "avg": 31,
+      "bb": "2/26"
+    },
+    "team": "RR",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
+  },
+  {
+    "id": "p_1182",
+    "name": "Krains Fuletra",
+    "role": "Bowler",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "USP1",
+    "rating": 60,
+    "stats": {
+      "matches": 5,
+      "wickets": 5,
+      "econ": 8,
+      "avg": 28,
+      "bb": "2/20"
+    },
+    "team": "SRH",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
+  },
+  {
+    "id": "p_1183",
+    "name": "Smaran Ravichandran",
+    "role": "Batsman",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.3,
+    "set": "UBA1",
+    "rating": 62,
+    "stats": {
+      "matches": 11,
+      "runs": 260,
+      "avg": 26,
+      "sr": 129,
+      "hs": "58"
+    },
+    "team": "SRH",
+    "retentionPrice": 0.3,
+    "isRetained": true,
+    "isTraded": false
   }
 ];
+
+// Fallback: assign initial SVG avatar to any player without an image
+for (const p of IPL_PLAYERS) {
+  if (!p.image) {
+    p.image = getPlayerAvatar(p.name);
+  }
+}
+

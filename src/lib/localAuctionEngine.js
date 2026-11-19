@@ -1,5 +1,6 @@
 import { IPL_PLAYERS } from '../data/players.js';
 import { TEAMS } from '../data/teams.js';
+import { calculateCustomTeamState } from '../data/retentions.js';
 import { toFiniteNumber, countOverseas, isOverseasPlayer, r2 } from './auctionDisplay.js';
 import { getNextBidAmount, generatePlayerOrder } from './auctionRules.js';
 import { evaluateBotBid } from './botEngine.js';
@@ -79,13 +80,18 @@ export function localAuctionReducer(state, action) {
       const isSprint5 = auctionType === 'sprint5';
       const isSprint11 = auctionType === 'sprint11';
       const isLegends = auctionType === 'legends';
+      const isMini = auctionType === 'mini';
 
-      const budget = isSprint5 ? 60.0 : isSprint11 ? 90.0 : isLegends ? 100.0 : 120.0;
+      const budget = isSprint5 ? 60.0 : isSprint11 ? 90.0 : isLegends ? 100.0 : isMini ? 130.0 : 120.0;
       const squadLimit = isSprint5 ? 5 : (isSprint11 || isLegends) ? 11 : 25;
       const overseasLimit = isSprint5 ? 2 : (isSprint11 || isLegends) ? 4 : 8;
 
       const humanTeamId = humanUser.team;
       const humanTeamObj = TEAMS.find((t) => t.id === humanTeamId) || TEAMS[0];
+
+      const humanState = isMini
+        ? calculateCustomTeamState(humanTeamId, action.customRetainedIds || action.customRetentions?.[humanTeamId])
+        : null;
 
       // 1 human player + 9 AI bot franchises
       const players = [
@@ -96,8 +102,8 @@ export function localAuctionReducer(state, action) {
           teamName: humanTeamObj.name,
           isHost: true,
           isBot: false,
-          spent: 0,
-          squadCount: 0,
+          spent: humanState ? humanState.totalSpent : 0,
+          squadCount: humanState ? humanState.retainedSquad.length : 0,
         },
       ];
 
@@ -108,15 +114,17 @@ export function localAuctionReducer(state, action) {
           userId: humanUser.uid,
           teamId: humanTeamId,
           teamName: humanTeamObj.name,
-          budgetRemaining: budget,
-          spent: 0,
-          squad: [],
+          budgetRemaining: humanState ? humanState.remainingPurse : budget,
+          spent: humanState ? humanState.totalSpent : 0,
+          squad: humanState ? humanState.retainedSquad : [],
         },
       ];
 
       TEAMS.forEach((t) => {
         if (t.id === humanTeamId) return;
         const botId = `bot_${t.id}`;
+        const botState = isMini ? calculateCustomTeamState(t.id) : null;
+
         players.push({
           id: botId,
           name: t.botName || `${t.name} Bot`,
@@ -124,8 +132,8 @@ export function localAuctionReducer(state, action) {
           teamName: t.name,
           isHost: false,
           isBot: true,
-          spent: 0,
-          squadCount: 0,
+          spent: botState ? botState.totalSpent : 0,
+          squadCount: botState ? botState.retainedSquad.length : 0,
         });
 
         roomTeams.push({
@@ -134,14 +142,15 @@ export function localAuctionReducer(state, action) {
           userId: botId,
           teamId: t.id,
           teamName: t.name,
-          budgetRemaining: budget,
-          spent: 0,
-          squad: [],
+          budgetRemaining: botState ? botState.remainingPurse : budget,
+          spent: botState ? botState.totalSpent : 0,
+          squad: botState ? botState.retainedSquad : [],
         });
       });
 
       // Same lot order as cloud: grouped by player set, marquee first.
-      const playerOrder = generatePlayerOrder(auctionType);
+      const userReleased = humanState ? humanState.releasedPlayers.map(p => p.id) : [];
+      const playerOrder = generatePlayerOrder(auctionType, { userReleasedPlayerIds: userReleased });
 
       const firstPlayer = IPL_PLAYERS[playerOrder[0]] || IPL_PLAYERS[0];
       const now = action.now || Date.now();

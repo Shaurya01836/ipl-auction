@@ -53,7 +53,9 @@ import {
   Clock,
   Plus,
   Cloud,
+  Shield,
 } from "lucide-react";
+import { calculateCustomTeamState } from "../data/retentions";
 import Navbar from "../components/Navbar";
 import ConfirmDialog from "../components/ConfirmDialog";
 import AuctionActivityFeed from "../components/AuctionActivityFeed";
@@ -153,6 +155,75 @@ const isSessionLocal = (session) =>
     String(session?.roomId || "").startsWith("SOLO-")
   );
 
+const AUCTION_MODE_CONFIG = [
+  {
+    id: "mega",
+    title: "Mega",
+    mobileTitle: "Mega Auction",
+    tag: "FULL SQUAD",
+    icon: Trophy,
+    format: "25 Players",
+    budget: "₹120 Cr Budget",
+    badgeLabel: "Full Roster Auction",
+    summaryTitle: () => "Full Franchise Mega Auction • ₹120.00 Cr Budget",
+    summarySubtitle: () =>
+      "25 Squad Limit • Max 8 Overseas • Full Modern Player Pool",
+  },
+  {
+    id: "sprint11",
+    title: "Classic",
+    mobileTitle: "11-Player Classic",
+    tag: "PLAYING XI",
+    icon: Star,
+    format: "11 Players",
+    budget: "₹90 Cr Budget",
+    badgeLabel: "Playing XI Format",
+    summaryTitle: () => "11-Player Match XI Auction • ₹90.00 Cr Budget",
+    summarySubtitle: () =>
+      "11 Playing XI Limit • Max 4 Overseas • Standard Match Strategy",
+  },
+  {
+    id: "sprint5",
+    title: "Sprint",
+    mobileTitle: "5-Player Sprint",
+    tag: "BLITZ",
+    icon: Zap,
+    format: "5 Players",
+    budget: "₹60 Cr Budget",
+    badgeLabel: "Blitz Shootout",
+    summaryTitle: () => "5-Player Blitz Shootout • ₹60.00 Cr Budget",
+    summarySubtitle: () =>
+      "5 Squad Limit • Max 2 Overseas • Quick 10-Minute High Stakes",
+  },
+  {
+    id: "legends",
+    title: "Legends",
+    mobileTitle: "All-Time Legends",
+    tag: "RETRO",
+    icon: Crown,
+    format: "11 Players",
+    budget: "₹100 Cr Budget",
+    badgeLabel: "Hall of Fame Pool",
+    summaryTitle: () => "All-Time Legends Auction • ₹100.00 Cr Budget",
+    summarySubtitle: () =>
+      "11 Squad Limit • Iconic Hall of Famers • Classic IPL & International Greats",
+  },
+  {
+    id: "mini",
+    title: "IPL 2027 Mini",
+    mobileTitle: "IPL 2027 Mini Auction",
+    tag: "OFFICIAL 2027",
+    icon: Shield,
+    format: "106 Open Pool",
+    budget: "₹130 Cr Cap",
+    isFullWidth: true,
+    badgeLabel: "Official Retentions & Open Pool",
+    summaryTitle: (team, purse) => `${team} 2027 Starting Purse: ₹${purse} Cr`,
+    summarySubtitle: (retainedCount) =>
+      `${retainedCount} Retained • ${25 - retainedCount} Open Slots • Max 8 Overseas • ₹130 Cr Cap`,
+  },
+];
+
 const LandingPage = () => {
   useDocumentTitle(
     "CrickAuction - Multiplayer T20 Auction Simulator | Fan-Made Cricket Game",
@@ -162,6 +233,9 @@ const LandingPage = () => {
   const [selectedTeam, setSelectedTeam] = useState("MI");
   const [activeTab, setActiveTab] = useState("new");
   const [auctionType, setAuctionType] = useState("mega"); 
+  const miniTeamState = useMemo(() => {
+    return calculateCustomTeamState(selectedTeam);
+  }, [selectedTeam]); 
   const [playSolo, setPlaySolo] = useState(false);
   const [isPublicRoom, setIsPublicRoom] = useState(true);
   const [roomCode, setRoomCode] = useState("");
@@ -1018,166 +1092,153 @@ const LandingPage = () => {
                     </h2>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setAuctionType("mega")}
-                      className={`flex-1 p-2 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-200 text-left relative overflow-hidden group/mode cursor-pointer ${
-                        auctionType === "mega"
-                          ? "bg-white/[0.08] border border-white/20 scale-[1.02] shadow-[0_4px_24px_rgba(0,0,0,0.5)]"
-                          : "bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-white/10"
-                      }`}
-                    >
-                      {auctionType === "mega" && (
-                        <div className="absolute top-2 right-2 sm:top-3.5 sm:right-3.5 text-white">
-                          <Check
-                            size={10}
-                            className="sm:w-3 sm:h-3"
-                            strokeWidth={3}
-                          />
-                        </div>
-                      )}
-                      <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-1.5">
-                        <Trophy
-                          size={12}
-                          className={
-                            auctionType === "mega"
-                              ? "text-white sm:w-3.5 sm:h-3.5"
-                              : "text-gray-400 sm:w-3.5 sm:h-3.5"
-                          }
-                        />
-                        <span
-                          className={`text-[8px] sm:text-[10px] font-black uppercase tracking-tight ${auctionType === "mega" ? "text-white" : "text-gray-400"}`}
-                        >
-                          Mega
-                        </span>
-                      </div>
-                      <div className="space-y-0.5 text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wide">
-                        <div>25 Players</div>
-                        <div>₹120 Cr Budget</div>
-                      </div>
-                    </button>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+                    {AUCTION_MODE_CONFIG.map((m) => {
+                      const isSelected = auctionType === m.id;
+                      const IconComponent = m.icon;
+                      const isFullWidth = m.isFullWidth;
 
-                    <button
-                      type="button"
-                      onClick={() => setAuctionType("sprint11")}
-                      className={`flex-1 p-2 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-200 text-left relative overflow-hidden group/mode cursor-pointer ${
-                        auctionType === "sprint11"
-                          ? "bg-white/[0.08] border border-white/20 scale-[1.02] shadow-[0_4px_24px_rgba(0,0,0,0.5)]"
-                          : "bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-white/10"
-                      }`}
-                    >
-                      {auctionType === "sprint11" && (
-                        <div className="absolute top-2 right-2 sm:top-3.5 sm:right-3.5 text-white">
-                          <Check
-                            size={10}
-                            className="sm:w-3 sm:h-3"
-                            strokeWidth={3}
-                          />
-                        </div>
-                      )}
-                      <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-1.5">
-                        <Star
-                          size={12}
-                          className={
-                            auctionType === "sprint11"
-                              ? "text-white sm:w-3.5 sm:h-3.5"
-                              : "text-gray-400 sm:w-3.5 sm:h-3.5"
-                          }
-                        />
-                        <span
-                          className={`text-[8px] sm:text-[10px] font-black uppercase tracking-tight ${auctionType === "sprint11" ? "text-white" : "text-gray-400"}`}
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => setAuctionType(m.id)}
+                          className={`relative overflow-hidden group/mode rounded-xl sm:rounded-2xl transition-all duration-200 text-left cursor-pointer active:scale-[0.98] ${
+                            isFullWidth
+                              ? "col-span-2 sm:col-span-4 p-3 sm:p-3.5"
+                              : "col-span-1 p-2.5 sm:p-3"
+                          } ${
+                            isSelected
+                              ? "bg-white/[0.08] border border-white/20 scale-[1.01] sm:scale-[1.02] shadow-[0_4px_24px_rgba(0,0,0,0.5)]"
+                              : "bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-white/10"
+                          }`}
                         >
-                          Classic
-                        </span>
-                      </div>
-                      <div className="space-y-0.5 text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wide">
-                        <div>11 Players</div>
-                        <div>₹90 Cr Budget</div>
-                      </div>
-                    </button>
+                          {isSelected && !isFullWidth && (
+                            <div className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 text-white">
+                              <Check size={10} className="sm:w-3 sm:h-3" strokeWidth={3} />
+                            </div>
+                          )}
 
-                    <button
-                      type="button"
-                      onClick={() => setAuctionType("sprint5")}
-                      className={`flex-1 p-2 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-200 text-left relative overflow-hidden group/mode cursor-pointer ${
-                        auctionType === "sprint5"
-                          ? "bg-white/[0.08] border border-white/20 scale-[1.02] shadow-[0_4px_24px_rgba(0,0,0,0.5)]"
-                          : "bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-white/10"
-                      }`}
-                    >
-                      {auctionType === "sprint5" && (
-                        <div className="absolute top-2 right-2 sm:top-3.5 sm:right-3.5 text-white">
-                          <Check
-                            size={10}
-                            className="sm:w-3 sm:h-3"
-                            strokeWidth={3}
-                          />
-                        </div>
-                      )}
-                      <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-1.5">
-                        <Zap
-                          size={12}
-                          className={
-                            auctionType === "sprint5"
-                              ? "text-white sm:w-3.5 sm:h-3.5"
-                              : "text-gray-400 sm:w-3.5 sm:h-3.5"
-                          }
-                          fill={
-                            auctionType === "sprint5" ? "currentColor" : "none"
-                          }
-                        />
-                        <span
-                          className={`text-[8px] sm:text-[10px] font-black uppercase tracking-tight ${auctionType === "sprint5" ? "text-white" : "text-gray-400"}`}
-                        >
-                          Sprint
-                        </span>
-                      </div>
-                      <div className="space-y-0.5 text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wide">
-                        <div>5 Players</div>
-                        <div>₹60 Cr Budget</div>
-                      </div>
-                    </button>
+                          {isFullWidth ? (
+                            /* Full-width 5th Mode: IPL 2027 Mini across all columns */
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+                                <div
+                                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                                    isSelected
+                                      ? "bg-white/10 text-white"
+                                      : "bg-white/5 text-gray-400 group-hover/mode:text-white"
+                                  }`}
+                                >
+                                  <IconComponent size={16} className="sm:w-5 sm:h-5" />
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span
+                                      className={`text-xs sm:text-sm font-black uppercase tracking-tight ${
+                                        isSelected ? "text-white" : "text-gray-200"
+                                      }`}
+                                    >
+                                      {m.mobileTitle}
+                                    </span>
+                                    <span className="font-pixel text-[7px] sm:text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10 shrink-0">
+                                      {m.tag}
+                                    </span>
+                                  </div>
+                                  <p className="text-[9px] sm:text-[10px] text-slate-400 font-sans mt-0.5 truncate max-w-xs sm:max-w-md">
+                                    Official 2027 retentions & open uncontracted player bidding pool
+                                  </p>
+                                </div>
+                              </div>
 
-                    <button
-                      type="button"
-                      onClick={() => setAuctionType("legends")}
-                      className={`flex-1 p-2 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-200 text-left relative overflow-hidden group/mode cursor-pointer ${
-                        auctionType === "legends"
-                          ? "bg-white/[0.08] border border-white/20 scale-[1.02] shadow-[0_4px_24px_rgba(0,0,0,0.5)]"
-                          : "bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-white/10"
-                      }`}
-                    >
-                      {auctionType === "legends" && (
-                        <div className="absolute top-2 right-2 sm:top-3.5 sm:right-3.5 text-white">
-                          <Check
-                            size={10}
-                            className="sm:w-3 sm:h-3"
-                            strokeWidth={3}
-                          />
-                        </div>
-                      )}
-                      <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-1.5">
-                        <Crown
-                          size={12}
-                          className={
-                            auctionType === "legends"
-                              ? "text-white sm:w-3.5 sm:h-3.5"
-                              : "text-gray-400 sm:w-3.5 sm:h-3.5"
-                          }
-                        />
-                        <span
-                          className={`text-[8px] sm:text-[10px] font-black uppercase tracking-tight ${auctionType === "legends" ? "text-white" : "text-gray-400"}`}
-                        >
-                          Legends
-                        </span>
-                      </div>
-                      <div className="space-y-0.5 text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wide">
-                        <div>11 Players</div>
-                        <div>₹100 Cr Budget</div>
-                      </div>
-                    </button>
+                              <div className="flex items-center gap-3 shrink-0">
+                                <div className="text-right">
+                                  <span className="text-[10px] sm:text-xs font-black text-white font-sans block">
+                                    {m.budget}
+                                  </span>
+                                  <span className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-wide block">
+                                    {m.format}
+                                  </span>
+                                </div>
+                                {isSelected && (
+                                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white shrink-0">
+                                    <Check size={11} className="sm:w-3 sm:h-3" strokeWidth={3} />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            /* First 4 Modes: Mega, Classic, Sprint, Legends in a 4-col (laptop) / 2x2 (mobile) grid */
+                            <div className="flex flex-col justify-between h-full">
+                              <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5">
+                                <div
+                                  className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                                    isSelected
+                                      ? "bg-white/10 text-white"
+                                      : "bg-white/5 text-gray-400 group-hover/mode:text-white"
+                                  }`}
+                                >
+                                  <IconComponent
+                                    size={12}
+                                    className="sm:w-3.5 sm:h-3.5"
+                                    fill={m.id === "sprint5" && isSelected ? "currentColor" : "none"}
+                                  />
+                                </div>
+                                <span
+                                  className={`text-[10px] sm:text-[11px] xl:text-xs font-black uppercase tracking-tight truncate ${
+                                    isSelected ? "text-white" : "text-gray-300"
+                                  }`}
+                                >
+                                  {m.title}
+                                </span>
+                              </div>
+
+                              <div className="space-y-0.5 text-[8px] sm:text-[8px] xl:text-[9px] font-bold text-gray-400 uppercase tracking-wide">
+                                <div>{m.format}</div>
+                                <div>{m.budget}</div>
+                              </div>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
+
+                  {(() => {
+                    const activeMode =
+                      AUCTION_MODE_CONFIG.find((m) => m.id === auctionType) || AUCTION_MODE_CONFIG[0];
+                    const summaryTitle =
+                      auctionType === "mini"
+                        ? activeMode.summaryTitle(selectedTeam, formatCrores(miniTeamState.remainingPurse))
+                        : activeMode.summaryTitle();
+                    const summarySubtitle =
+                      auctionType === "mini"
+                        ? activeMode.summarySubtitle(miniTeamState.retainedSquad.length)
+                        : activeMode.summarySubtitle();
+
+                    return (
+                      <div className="mt-2.5 sm:mt-3 p-3 sm:p-3.5 bg-white/[0.02] border border-white/10 rounded-xl sm:rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs sm:text-sm font-black text-white font-sans">
+                              {summaryTitle}
+                            </span>
+                            {auctionType === "mini" && (
+                              <span className="font-pixel text-[8px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/5 text-slate-300 border border-white/10">
+                                {miniTeamState.retainedSquad.length} Retained
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[9px] sm:text-[10px] text-slate-400 mt-1 font-sans">
+                            {summarySubtitle}
+                          </p>
+                        </div>
+                        <div className="font-pixel text-[8px] sm:text-[9px] uppercase tracking-wider px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 shrink-0 self-start sm:self-auto">
+                          {activeMode.badgeLabel}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Solo vs AI bots Toggle */}
@@ -1375,6 +1436,7 @@ const LandingPage = () => {
                       {[
                         { id: "all", label: "All" },
                         { id: "mega", label: "Mega" },
+                        { id: "mini", label: "Mini" },
                         { id: "sprint11", label: "11-Classic" },
                         { id: "sprint5", label: "5-Sprint" },
                         { id: "legends", label: "Legends" },
@@ -1441,6 +1503,8 @@ const LandingPage = () => {
                                 <span className="text-gray-400 truncate">
                                   {room.type === "legends"
                                     ? "Legends"
+                                    : room.type === "mini"
+                                    ? "IPL 2027 Mini"
                                     : room.type === "sprint5"
                                     ? "5-Sprint"
                                     : room.type === "sprint11"
@@ -1798,9 +1862,10 @@ const LandingPage = () => {
                                                 >
                                                   <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 pr-2">
                                                     <img
-                                                      src={p?.image}
+                                                      src={p?.image || getPlayerAvatar(p?.name)}
                                                       alt={p?.name}
                                                       className="w-5 h-5 sm:w-7 sm:h-7 object-contain rounded-md bg-white/5 shrink-0"
+                                                      onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getPlayerAvatar(p?.name); }}
                                                     />
                                                     <div className="min-w-0 flex-1">
                                                       <h4 className="text-[9px] sm:text-[11px] font-black leading-tight truncate">
@@ -1944,6 +2009,8 @@ const LandingPage = () => {
           </div>
         </div>
       </PanelSurface>
+
+
 
       <ConfirmDialog
         isOpen={!!sessionToDelete}

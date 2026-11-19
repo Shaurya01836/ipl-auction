@@ -97,7 +97,7 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
 
   const minPlayers = useMemo(() => {
     const type = currentAuction?.auctionType || 'mega';
-    if (type === 'mega') return 18;
+    if (type === 'mega' || type === 'mini') return 18;
     if (type === 'sprint11' || type === 'legends') return 11;
     if (type === 'sprint5') return 5;
     return currentAuction?.settings?.minPlayers || 18;
@@ -145,6 +145,8 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
           ? '11-Classic (11 players per team, no bench. Requires balanced playing XI: solid top order, reliable keeper, and at least 5 bowling options.)'
           : auctionType === 'sprint5'
           ? '5-Sprint (5 players per team. High-octane sprint: Requires explosive hitters, 1 keeper, and lethal strike/death bowlers. High individual impact matters most.)'
+          : auctionType === 'mini'
+          ? 'IPL Mini Auction (18-25 players per team. Full IPL squad: Teams start with retained cores and bid on released players to complete their 25-man squad.)'
           : 'Mega Auction (18-25 players per team. Full IPL squad: Requires starting XI excellence plus dependable bench depth and variety.)';
 
       const allTeamsData = roomTeams.map((team) => {

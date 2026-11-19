@@ -20,6 +20,7 @@ import {
   fetchTeamsForAuction,
 } from '../lib/directoryApi';
 import { IPL_PLAYERS } from '../data/players';
+import { calculateCustomTeamState } from '../data/retentions';
 import { evaluateBotBid } from '../lib/botEngine';
 import { isSoloBotRoom, simulateBotLot, simulateRemainingAuction } from '../lib/botSimulation';
 import { 
@@ -255,11 +256,14 @@ export const AuctionProvider = ({ children }) => {
     const isSprint5 = auctionType === 'sprint5';
     const isSprint11 = auctionType === 'sprint11';
     const isLegends = auctionType === 'legends';
+    const isMini = auctionType === 'mini';
     
-    const budget = isSprint5 ? 60.0 : isSprint11 ? 90.0 : isLegends ? 100.0 : 120.0;
+    const budget = isSprint5 ? 60.0 : isSprint11 ? 90.0 : isLegends ? 100.0 : isMini ? 130.0 : 120.0;
     const squadLimit = isSprint5 ? 5 : (isSprint11 || isLegends) ? 11 : 25;
     const overseasLimit = isSprint5 ? 2 : (isSprint11 || isLegends) ? 4 : 8;
     const settings = { bidTimer: 10, budget };
+
+    const playerOrder = generatePlayerOrder(auctionType);
 
     const roomData = {
       hostId: userId,
@@ -270,6 +274,7 @@ export const AuctionProvider = ({ children }) => {
       squadLimit,
       overseasLimit,
       server: actualServer,
+      playerOrder,
       players: [{
         id: userId,
         name: playerDetails.name,
@@ -313,14 +318,15 @@ export const AuctionProvider = ({ children }) => {
 
       if (playerDetails.team) {
         const rtdbTeamRef = ref(rtdb, `auctions/${roomId}/teams/${roomId}_${userId}`);
+        const teamState = isMini ? calculateCustomTeamState(playerDetails.team, playerDetails.customRetainedIds) : null;
         await set(rtdbTeamRef, {
           auctionId: roomId,
           userId: userId,
           teamId: playerDetails.team,
           teamName: teamDetails?.name || 'Unknown',
-          budgetRemaining: budget,
-          spent: 0,
-          squad: []
+          budgetRemaining: teamState ? teamState.remainingPurse : budget,
+          spent: teamState ? teamState.totalSpent : 0,
+          squad: teamState ? teamState.retainedSquad : []
         });
       }
     } catch (rtdbErr) {
@@ -733,7 +739,9 @@ export const AuctionProvider = ({ children }) => {
 
           const settings = roomData.settings;
           const currentPlayerId = targetPlayerId;
-          const order = playerOrder || Array.from({ length: IPL_PLAYERS.length }, (_, i) => i);
+          const order = (Array.isArray(playerOrder) && playerOrder.length > 0)
+            ? playerOrder
+            : generatePlayerOrder(roomData.auctionType || 'mega');
           const currentPlayerIndexInOrder = order.findIndex(idx => IPL_PLAYERS[idx] && IPL_PLAYERS[idx].id === currentPlayerId);
           const nextIndexInOrder = currentPlayerIndexInOrder !== -1 ? order[currentPlayerIndexInOrder + 1] : order[0];
 
@@ -874,7 +882,9 @@ export const AuctionProvider = ({ children }) => {
       if (live.status === 'sold' || live.status === 'unsold') {
         const roomSnap = await get(roomRef);
         const room = roomSnap.exists() ? roomSnap.val() : {};
-        const order = room.playerOrder || Array.from({ length: IPL_PLAYERS.length }, (_, i) => i);
+        const order = (Array.isArray(room.playerOrder) && room.playerOrder.length > 0)
+          ? room.playerOrder
+          : generatePlayerOrder(room.auctionType || 'mega');
         const currentPlayerId = live.playerId;
         const curIdx = order.findIndex((idx) => IPL_PLAYERS[idx] && IPL_PLAYERS[idx].id === currentPlayerId);
         const nextIdx = curIdx !== -1 ? order[curIdx + 1] : order[0];
@@ -1044,7 +1054,9 @@ export const AuctionProvider = ({ children }) => {
       }
 
       // Quick advance after 1.5s on sold or 1s on unsold
-      const order = room.playerOrder || Array.from({ length: IPL_PLAYERS.length }, (_, i) => i);
+      const order = (Array.isArray(room.playerOrder) && room.playerOrder.length > 0)
+        ? room.playerOrder
+        : generatePlayerOrder(room.auctionType || 'mega');
       const curIdx = order.findIndex((idx) => IPL_PLAYERS[idx] && IPL_PLAYERS[idx].id === player.id);
       const nextIdx = curIdx !== -1 ? order[curIdx + 1] : order[0];
 
@@ -1195,7 +1207,9 @@ export const AuctionProvider = ({ children }) => {
         return;
       }
 
-      const order = room.playerOrder || Array.from({ length: IPL_PLAYERS.length }, (_, i) => i);
+      const order = (Array.isArray(room.playerOrder) && room.playerOrder.length > 0)
+        ? room.playerOrder
+        : generatePlayerOrder(room.auctionType || 'mega');
       const currentPlayerId = live?.playerId;
       const currentIdx = order.findIndex((idx) => IPL_PLAYERS[idx] && IPL_PLAYERS[idx].id === currentPlayerId);
 
@@ -2600,14 +2614,16 @@ export const AuctionProvider = ({ children }) => {
     );
     if (!playersTx.committed) return;
 
+    const isMini = data?.auctionType === 'mini';
+    const botState = isMini ? calculateCustomTeamState(teamId) : null;
     const teamDataToSet = {
       auctionId: roomId,
       userId: botUserId,
       teamId,
       teamName: teamDetails.name,
-      budgetRemaining: toFiniteNumber(data.settings?.budget, 120.0),
-      spent: 0,
-      squad: []
+      budgetRemaining: botState ? botState.remainingPurse : toFiniteNumber(data.settings?.budget, 120.0),
+      spent: botState ? botState.totalSpent : 0,
+      squad: botState ? botState.retainedSquad : []
     };
     await runTransactionRtdb(
       ref(rtdb, `auctions/${roomId}/teams/${roomId}_${botUserId}`),
@@ -2655,6 +2671,8 @@ export const AuctionProvider = ({ children }) => {
       },
     );
 
+    const isMini = data?.auctionType === 'mini';
+
     // Create only absent team nodes so a concurrent live sale is never reset.
     const players = mapRoomPlayers(playersTx.snapshot.val(), (p) => p);
     await Promise.all(
@@ -2663,6 +2681,7 @@ export const AuctionProvider = ({ children }) => {
         .map((p) => {
           const teamDetails = TEAMS.find(t => t.id === p.team);
           if (!teamDetails) return null;
+          const botState = isMini ? calculateCustomTeamState(teamDetails.id) : null;
           return runTransactionRtdb(
             ref(rtdb, `auctions/${roomId}/teams/${roomId}_${p.id}`),
             (current) => current ?? {
@@ -2670,9 +2689,9 @@ export const AuctionProvider = ({ children }) => {
               userId: p.id,
               teamId: teamDetails.id,
               teamName: teamDetails.name,
-              budgetRemaining: budget,
-              spent: 0,
-              squad: [],
+              budgetRemaining: botState ? botState.remainingPurse : budget,
+              spent: botState ? botState.totalSpent : 0,
+              squad: botState ? botState.retainedSquad : [],
             },
           );
         })
