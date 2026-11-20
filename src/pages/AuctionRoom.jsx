@@ -110,8 +110,8 @@ const AuctionRoom = () => {
       if (!node) return;
 
       const syncHeight = () => {
-         const desktop = window.matchMedia('(min-width: 768px)').matches;
-         node.style.height = desktop && window.innerHeight ? `${window.innerHeight}px` : '';
+         const mobile = !window.matchMedia('(min-width: 768px)').matches;
+         node.style.height = mobile && window.innerHeight ? `${window.innerHeight}px` : '';
       };
 
       syncHeight();
@@ -1189,7 +1189,7 @@ const AuctionRoom = () => {
    }
 
    return (
-      <div ref={bindRoomShell} className="auction-room-shell max-md:fixed max-md:inset-0 md:relative md:h-screen-safe bg-[#000000] text-white font-sans flex flex-col items-center overflow-hidden selection:bg-white/20 selection:text-white">
+      <div ref={bindRoomShell} className="auction-room-shell fixed inset-0 bg-[#000000] text-white font-sans flex flex-col items-center overflow-hidden selection:bg-white/20 selection:text-white">
          <PageBackground showArt={false} />
 
          <header className="w-full h-14 compact:h-12 bg-[#0c0d10] backdrop-blur-md border-b border-white/10 flex flex-row items-center justify-between px-2.5 sm:px-4 md:px-6 z-50 gap-2 shrink-0">
@@ -1304,7 +1304,7 @@ const AuctionRoom = () => {
                   <span className="text-[10px] compact:text-[9px] font-pixel text-slate-400 uppercase tracking-widest leading-none">Auction Teams</span>
                </div>
 
-               <div className="flex-1 overflow-y-auto p-4 compact:p-3 pb-28 sm:pb-8 md:pb-4 custom-scrollbar touch-pan-y min-h-0">
+               <div className="flex-1 overflow-y-auto p-4 compact:p-3 pb-28 sm:pb-8 md:pb-12 custom-scrollbar touch-pan-y min-h-0">
                   {(liveTeamRatings?.rankedTeams || TEAMS).map((t, idx) => {
                      const teamDoc = roomTeams.find(doc => doc.teamId === t.id);
                      const manager = currentAuction?.players?.find(p => p.id === teamDoc?.userId);
@@ -1911,7 +1911,7 @@ const AuctionRoom = () => {
                            exit={{ opacity: 0, y: -10 }}
                            className="flex-1 flex flex-col min-h-0 overflow-hidden h-full"
                         >
-                           <div className="flex-1 overflow-y-auto p-3 sm:p-4 compact:p-3 custom-scrollbar relative touch-pan-y min-h-0 pb-28 sm:pb-8 md:pb-4">
+                           <div className="flex-1 overflow-y-auto p-3 sm:p-4 compact:p-3 custom-scrollbar relative touch-pan-y min-h-0 pb-28 sm:pb-8 md:pb-12">
                               {/* Timeline line */}
                               <div className="absolute left-6 sm:left-10 top-6 bottom-6 w-[1px] bg-white/5 pointer-events-none" />
 
