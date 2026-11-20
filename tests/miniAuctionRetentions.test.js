@@ -215,3 +215,24 @@ test('player images: every player has a valid image (Wikipedia URL if available,
   assert.ok(decodeURIComponent(venu.image).includes('>VR<'), 'Venugopal Rao avatar must contain initials VR');
 });
 
+test('cloud multiplayer retentions: calculateCustomTeamState initializes non-host players and heals team state', () => {
+  const teams = ['CSK', 'DC', 'GT', 'KKR', 'LSG', 'MI', 'PBKS', 'RR', 'RCB', 'SRH'];
+
+  teams.forEach((teamId) => {
+    const customState = calculateCustomTeamState(teamId);
+    const official = IPL_2027_RETENTIONS[teamId];
+
+    assert.equal(customState.remainingPurse, official.remainingPurse, `Remaining purse for ${teamId} must match official`);
+    assert.equal(customState.totalSpent, official.totalSpent, `Total spent for ${teamId} must match official`);
+    assert.equal(customState.retainedSquad.length, official.players.length, `Retained squad length for ${teamId} must match official`);
+
+    // Verify all players in retained squad have bid, team, and isRetained set
+    customState.retainedSquad.forEach((rp) => {
+      assert.equal(rp.team, teamId);
+      assert.equal(rp.bid, rp.price);
+      assert.equal(rp.isRetained, true);
+    });
+  });
+});
+
+

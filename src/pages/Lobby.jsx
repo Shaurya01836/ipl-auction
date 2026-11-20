@@ -19,11 +19,13 @@ import {
   X,
   Eye,
   AlertTriangle,
-  Clock
+  Clock,
+  Wallet
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { TEAMS } from '../data/teams';
+import { IPL_2027_RETENTIONS } from '../data/retentions';
 import { countAuctionTeams, MIN_TEAMS_TO_START } from '../lib/auctionRules';
 import { formatCrores, toFiniteNumber } from '../lib/auctionDisplay';
 import TextChat from '../components/TextChat';
@@ -76,6 +78,7 @@ const Lobby = () => {
   const [banError, setBanError] = useState(null);
   const [actionError, setActionError] = useState(null);
   const [showBotInfo, setShowBotInfo] = useState(false);
+  const [inspectingRetentionsTeam, setInspectingRetentionsTeam] = useState(null);
 
   const [spectateMode, setSpectateMode] = useState(() => {
     const params = new URLSearchParams(window.location.search);
@@ -527,6 +530,7 @@ const Lobby = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5 sm:gap-4">
             {TEAMS.map((team) => {
               const isTaken = teamAssignments[team.id];
+              const miniMeta = currentAuction?.auctionType === 'mini' ? IPL_2027_RETENTIONS[team.id] : null;
               return (
                 <button
                   key={team.id}
@@ -540,9 +544,15 @@ const Lobby = () => {
                   <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/5 border border-white/5 rounded-2xl p-2 flex items-center justify-center">
                     {isSelectingTeam === team.id ? <Loader2 className="animate-spin text-slate-200" /> : <img src={team.logo} alt={`${team.name || team.id} Logo`} className="w-full h-full object-contain" />}
                   </div>
-                  <div className="text-center">
+                  <div className="text-center w-full">
                     <p className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-white">{team.id}</p>
                     <p className="text-[8px] font-bold uppercase tracking-widest text-slate-400 mt-0.5">{isTaken ? (isTaken.split(' ')[0]) : 'Available'}</p>
+                    {miniMeta && (
+                      <div className="mt-2 pt-1.5 border-t border-white/5 flex flex-col items-center gap-0.5">
+                        <span className="text-[9px] font-mono font-bold text-emerald-400">₹{formatCrores(miniMeta.remainingPurse, 1)} Cr</span>
+                        <span className="text-[7.5px] font-bold uppercase tracking-wider text-slate-400">{miniMeta.players?.length || 0} Retained</span>
+                      </div>
+                    )}
                   </div>
                 </button>
               );
@@ -658,9 +668,15 @@ const Lobby = () => {
                   </span>
                 </div>
                 <div className="p-3 bg-white/[0.02] rounded-xl border border-white/5">
-                  <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">Initial Budget</span>
+                  <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">
+                    {currentAuction?.auctionType === 'mini' ? 'Purse Cap' : 'Initial Budget'}
+                  </span>
                   <span className="text-[11px] font-black text-slate-100 uppercase tracking-tight">
-                    ₹{formatCrores(toFiniteNumber(currentAuction?.settings?.budget, 120), 1)} Cr
+                    {currentAuction?.auctionType === 'mini' && currentUserPlayer?.team && IPL_2027_RETENTIONS[currentUserPlayer.team]
+                      ? `₹${formatCrores(IPL_2027_RETENTIONS[currentUserPlayer.team].remainingPurse, 1)} Cr`
+                      : currentAuction?.auctionType === 'mini'
+                        ? '₹8.75 - 47.45 Cr'
+                        : `₹${formatCrores(toFiniteNumber(currentAuction?.settings?.budget, 120), 1)} Cr`}
                   </span>
                 </div>
                 <div className="p-3 bg-white/[0.02] rounded-xl border border-white/5">
@@ -696,6 +712,7 @@ const Lobby = () => {
                 {TEAMS.map((team) => {
                   const isTaken = teamAssignments[team.id];
                   const isMine = currentUserPlayer?.team === team.id;
+                  const miniMeta = currentAuction?.auctionType === 'mini' ? IPL_2027_RETENTIONS[team.id] : null;
 
                   return (
                     <button
@@ -722,10 +739,46 @@ const Lobby = () => {
                       <span className={`text-[8px] font-black uppercase text-center tracking-tighter truncate w-full ${isMine ? 'text-white' : 'text-slate-500'}`}>
                         {isTaken ? isTaken.split(' ')[0] : team.id}
                       </span>
+                      {miniMeta && (
+                        <span className="text-[7.5px] font-mono font-bold text-emerald-400 leading-tight mt-0.5">
+                          ₹{formatCrores(miniMeta.remainingPurse, 1)}Cr
+                        </span>
+                      )}
                     </button>
                   );
                 })}
               </div>
+
+              {currentAuction?.auctionType === 'mini' && currentUserPlayer?.team && IPL_2027_RETENTIONS[currentUserPlayer.team] && (
+                <div className="p-3.5 bg-white/[0.02] rounded-xl border border-white/10 mt-3.5">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.15em] text-white flex items-center gap-1.5">
+                      <Wallet size={12} className="text-emerald-400" /> My Retained Core
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() => setInspectingRetentionsTeam(currentUserPlayer.team)}
+                      className="text-[9px] font-bold text-emerald-400 hover:text-emerald-300 underline uppercase tracking-wider cursor-pointer"
+                    >
+                      View Squad ({IPL_2027_RETENTIONS[currentUserPlayer.team].players?.length || 0})
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-center pt-1">
+                    <div className="bg-black/30 p-2 rounded-lg border border-white/5">
+                      <span className="text-[7.5px] font-black text-slate-500 uppercase tracking-widest block">Purse Left</span>
+                      <span className="text-[11px] font-mono font-bold text-emerald-400">₹{formatCrores(IPL_2027_RETENTIONS[currentUserPlayer.team].remainingPurse, 1)} Cr</span>
+                    </div>
+                    <div className="bg-black/30 p-2 rounded-lg border border-white/5">
+                      <span className="text-[7.5px] font-black text-slate-500 uppercase tracking-widest block">Retained</span>
+                      <span className="text-[11px] font-mono font-bold text-white">{IPL_2027_RETENTIONS[currentUserPlayer.team].players?.length || 0}</span>
+                    </div>
+                    <div className="bg-black/30 p-2 rounded-lg border border-white/5">
+                      <span className="text-[7.5px] font-black text-slate-500 uppercase tracking-widest block">Open Slots</span>
+                      <span className="text-[11px] font-mono font-bold text-amber-400">{Math.max(0, 25 - (IPL_2027_RETENTIONS[currentUserPlayer.team].players?.length || 0))}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Divider */}
@@ -1034,6 +1087,117 @@ const Lobby = () => {
                   className="px-5 py-2.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 hover:text-red-200 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg active:scale-95"
                 >
                   Close & Exit
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Retained Squad Inspection Dialog */}
+      <AnimatePresence>
+        {inspectingRetentionsTeam && IPL_2027_RETENTIONS[inspectingRetentionsTeam] && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="w-full max-w-2xl bg-[#0c0d10] border border-white/10 p-5 sm:p-6 rounded-[1.75rem] shadow-2xl relative overflow-hidden text-left flex flex-col max-h-[85vh]"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between pb-4 border-b border-white/10 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 p-1.5 flex items-center justify-center">
+                    <img
+                      src={TEAMS.find(t => t.id === inspectingRetentionsTeam)?.logo}
+                      alt={inspectingRetentionsTeam}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-pixel uppercase tracking-wide text-white">
+                      {TEAMS.find(t => t.id === inspectingRetentionsTeam)?.name || inspectingRetentionsTeam}
+                    </h3>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                      TATA IPL 2027 Official Retentions
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setInspectingRetentionsTeam(null)}
+                  className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+                  title="Close"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Stats overview */}
+              <div className="grid grid-cols-3 gap-2 py-3.5 border-b border-white/5 shrink-0">
+                <div className="bg-white/[0.02] p-2.5 rounded-xl border border-white/5 text-center">
+                  <span className="text-[7.5px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Remaining Purse</span>
+                  <span className="text-xs sm:text-sm font-mono font-bold text-emerald-400">
+                    ₹{formatCrores(IPL_2027_RETENTIONS[inspectingRetentionsTeam].remainingPurse, 2)} Cr
+                  </span>
+                </div>
+                <div className="bg-white/[0.02] p-2.5 rounded-xl border border-white/5 text-center">
+                  <span className="text-[7.5px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Committed Spent</span>
+                  <span className="text-xs sm:text-sm font-mono font-bold text-slate-300">
+                    ₹{formatCrores(IPL_2027_RETENTIONS[inspectingRetentionsTeam].totalSpent, 2)} Cr
+                  </span>
+                </div>
+                <div className="bg-white/[0.02] p-2.5 rounded-xl border border-white/5 text-center">
+                  <span className="text-[7.5px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Retained Players</span>
+                  <span className="text-xs sm:text-sm font-mono font-bold text-white">
+                    {IPL_2027_RETENTIONS[inspectingRetentionsTeam].players?.length || 0} / 25
+                  </span>
+                </div>
+              </div>
+
+              {/* Roster List */}
+              <div className="overflow-y-auto pr-1 py-3 space-y-2 flex-1">
+                {IPL_2027_RETENTIONS[inspectingRetentionsTeam].players?.map((player) => (
+                  <div
+                    key={player.id}
+                    className="flex items-center justify-between p-2.5 sm:p-3 bg-white/[0.02] border border-white/5 rounded-xl hover:border-white/10 transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="truncate">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-xs font-bold text-white tracking-tight">{player.name}</span>
+                          {player.isOverseas && (
+                            <span className="text-[8px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/30 px-1 py-0.2 rounded uppercase">
+                              Overseas
+                            </span>
+                          )}
+                          {player.isTraded && (
+                            <span className="text-[8px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-1 py-0.2 rounded uppercase">
+                              Traded
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[9px] font-medium text-slate-400 uppercase tracking-wider block mt-0.5">
+                          {player.role}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0 pl-2">
+                      <span className="text-xs sm:text-sm font-mono font-bold text-emerald-400">
+                        ₹{formatCrores(player.price, 2)} Cr
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Footer */}
+              <div className="pt-3 border-t border-white/10 flex items-center justify-end shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setInspectingRetentionsTeam(null)}
+                  className="px-5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer active:scale-95"
+                >
+                  Close Roster
                 </button>
               </div>
             </motion.div>

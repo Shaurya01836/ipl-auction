@@ -564,6 +564,32 @@ export const AuctionProvider = ({ children }) => {
         await updateRtdb(rtdbRoomRef, { isSoloBotRoom: true });
       }
 
+      // Ensure all teams have authentic retained squads if in mini auction
+      if (roomData?.auctionType === 'mini' && Array.isArray(roomData.players)) {
+        await Promise.all(
+          roomData.players
+            .filter((p) => p.team)
+            .map(async (p) => {
+              const teamRef = ref(rtdb, `auctions/${roomId}/teams/${roomId}_${p.id}`);
+              const snap = await get(teamRef);
+              const val = snap.val();
+              if (!snap.exists() || !val?.squad || val.squad.length === 0) {
+                const teamDetails = TEAMS.find((t) => t.id === p.team);
+                const miniState = calculateCustomTeamState(p.team);
+                await updateRtdb(teamRef, {
+                  auctionId: roomId,
+                  userId: p.id,
+                  teamId: p.team,
+                  teamName: teamDetails?.name || p.team,
+                  budgetRemaining: miniState ? miniState.remainingPurse : 130.0,
+                  spent: miniState ? miniState.totalSpent : 0,
+                  squad: miniState ? miniState.retainedSquad : []
+                });
+              }
+            })
+        );
+      }
+
       const firstPlayer = IPL_PLAYERS[playerOrder[0]];
       if (!firstPlayer) throw new Error('No players available for this auction.');
 
@@ -1482,6 +1508,8 @@ export const AuctionProvider = ({ children }) => {
 
     // Create/Update team in RTDB if team is provided
     if (playerDetails.team) {
+      const isMini = data.auctionType === 'mini';
+      const miniState = isMini ? calculateCustomTeamState(playerDetails.team) : null;
       const rtdbTeamSnap = await get(ref(rtdb, `auctions/${roomId}/teams/${roomId}_${userId}`));
       if (!rtdbTeamSnap.exists()) {
         const teamDataToSet = {
@@ -1489,18 +1517,24 @@ export const AuctionProvider = ({ children }) => {
           userId: userId,
           teamId: playerDetails.team,
           teamName: teamDetails?.name || 'Unknown',
-          budgetRemaining: toFiniteNumber(data.settings?.budget, 120.0),
-          spent: 0,
-          squad: []
+          budgetRemaining: miniState ? miniState.remainingPurse : toFiniteNumber(data.settings?.budget, 120.0),
+          spent: miniState ? miniState.totalSpent : 0,
+          squad: miniState ? miniState.retainedSquad : []
         };
         await updateRtdb(ref(rtdb, `auctions/${roomId}/teams/${roomId}_${userId}`), teamDataToSet);
       } else {
         const tData = rtdbTeamSnap.val();
-        if (tData.teamId !== playerDetails.team) {
-          await updateRtdb(ref(rtdb, `auctions/${roomId}/teams/${roomId}_${userId}`), {
+        if (tData.teamId !== playerDetails.team || (isMini && (!tData.squad || tData.squad.length === 0))) {
+          const updates = {
             teamId: playerDetails.team,
             teamName: teamDetails?.name || 'Unknown'
-          });
+          };
+          if (isMini && miniState) {
+            updates.budgetRemaining = miniState.remainingPurse;
+            updates.spent = miniState.totalSpent;
+            updates.squad = miniState.retainedSquad;
+          }
+          await updateRtdb(ref(rtdb, `auctions/${roomId}/teams/${roomId}_${userId}`), updates);
         }
       }
     }
@@ -2399,21 +2433,29 @@ export const AuctionProvider = ({ children }) => {
     );
 
     // Update RTDB team node (0 Firestore cost in lobby!)
+    const isMini = data?.auctionType === 'mini';
+    const miniState = isMini ? calculateCustomTeamState(newTeamId) : null;
     const rtdbTeamSnap = await get(ref(rtdb, `auctions/${roomId}/teams/${roomId}_${userId}`));
     if (rtdbTeamSnap.exists()) {
-      await updateRtdb(ref(rtdb, `auctions/${roomId}/teams/${roomId}_${userId}`), {
+      const teamUpdates = {
         teamId: newTeamId,
         teamName: teamDetails?.name || 'Unknown'
-      });
+      };
+      if (isMini && miniState) {
+        teamUpdates.budgetRemaining = miniState.remainingPurse;
+        teamUpdates.spent = miniState.totalSpent;
+        teamUpdates.squad = miniState.retainedSquad;
+      }
+      await updateRtdb(ref(rtdb, `auctions/${roomId}/teams/${roomId}_${userId}`), teamUpdates);
     } else {
       const teamDataToSet = {
         auctionId: roomId,
         userId: userId,
         teamId: newTeamId,
         teamName: teamDetails?.name || 'Unknown',
-        budgetRemaining: toFiniteNumber(data.settings?.budget, 120.0),
-        spent: 0,
-        squad: []
+        budgetRemaining: miniState ? miniState.remainingPurse : toFiniteNumber(data?.settings?.budget, 120.0),
+        spent: miniState ? miniState.totalSpent : 0,
+        squad: miniState ? miniState.retainedSquad : []
       };
       await updateRtdb(ref(rtdb, `auctions/${roomId}/teams/${roomId}_${userId}`), teamDataToSet);
     }
