@@ -508,6 +508,70 @@ const AuctionRoom = () => {
       }
    };
 
+   // Suppress full-screen AdSense Vignette interstitials during bidding while preserving top/bottom anchor ads
+   useEffect(() => {
+      if (typeof document === 'undefined') return;
+
+      const purgeVignetteOverlays = () => {
+         const selectors = [
+            'ins.adsbygoogle-abroad',
+            'iframe[src*="vignette"]',
+            'iframe[id*="vignette"]',
+            'div[id^="google_ads_iframe"][id*="vignette"]',
+            'div[data-vignette-loaded]'
+         ];
+
+         selectors.forEach((sel) => {
+            document.querySelectorAll(sel).forEach((el) => {
+               const isAnchor = el.closest('.adsbygoogle-anchor') || el.id?.includes('anchor') || el.className?.includes?.('anchor');
+               if (!isAnchor) {
+                  const rootOverlay = el.closest('.adsbygoogle-abroad') || el.closest('div[style*="2147483647"]') || el;
+                  rootOverlay.remove();
+               }
+            });
+         });
+      };
+
+      purgeVignetteOverlays();
+
+      const handleRoomClick = (e) => {
+         const target = e.target.closest('a, button, input');
+         if (target) {
+            target.setAttribute('data-google-vignette', 'false');
+         }
+      };
+      document.addEventListener('click', handleRoomClick, true);
+
+      const observer = new MutationObserver((mutations) => {
+         for (const mutation of mutations) {
+            for (const node of mutation.addedNodes) {
+               if (node.nodeType === 1) {
+                  const isAnchor = node.classList?.contains('adsbygoogle-anchor') ||
+                     node.id?.includes('anchor') ||
+                     node.querySelector?.('.adsbygoogle-anchor, [id*="anchor"]');
+
+                  if (!isAnchor) {
+                     if (
+                        node.classList?.contains('adsbygoogle-abroad') ||
+                        node.getAttribute?.('data-vignette-loaded') != null ||
+                        node.querySelector?.('iframe[src*="vignette"], iframe[id*="vignette"]')
+                     ) {
+                        node.remove();
+                     }
+                  }
+               }
+            }
+         }
+      });
+
+      observer.observe(document.body, { childList: true, subtree: true });
+
+      return () => {
+         document.removeEventListener('click', handleRoomClick, true);
+         observer.disconnect();
+      };
+   }, []);
+
    // TTS Live Auctioneer Sync Hook
    useEffect(() => {
       if (currentAuction?.status !== 'active' || !displayAuctionState) return;

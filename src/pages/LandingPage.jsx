@@ -839,6 +839,7 @@ const LandingPage = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
+                    data-google-vignette="false"
                     className="w-full h-14 relative overflow-hidden group/submit rounded-xl bg-white hover:bg-slate-200 text-black shadow-[0_10px_30px_rgba(255,255,255,0.08)] cursor-pointer transition-all active:scale-[0.98]"
                   >
                     <div className="relative flex items-center justify-center gap-3 font-black uppercase tracking-[0.2em] text-sm">
@@ -1316,6 +1317,7 @@ const LandingPage = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting || (cooldownRemaining > 0 && !playSolo)}
+                    data-google-vignette="false"
                     className="w-full h-10 sm:h-12 relative overflow-hidden group/submit rounded-xl bg-white hover:bg-slate-200 text-black shadow-[0_10px_30px_rgba(255,255,255,0.08)] disabled:opacity-50 cursor-pointer transition-all active:scale-[0.98]"
                   >
                     <div className="relative flex items-center justify-center gap-2 font-black uppercase tracking-[0.16em] sm:tracking-[0.2em] text-[10px] sm:text-xs">
@@ -1943,6 +1945,7 @@ const LandingPage = () => {
                                             ),
                                           )
                                         }
+                                        data-google-vignette="false"
                                         className="w-full mt-1.5 sm:mt-2 py-2 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-slate-200 text-[8px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center justify-center gap-2"
                                       >
                                         <Zap size={12} /> Resume Auction
@@ -1977,6 +1980,7 @@ const LandingPage = () => {
                                             ),
                                           )
                                         }
+                                        data-google-vignette="false"
                                         className="w-full mt-1.5 sm:mt-2 py-2 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-slate-200 text-[8px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center justify-center gap-2"
                                       >
                                         <Zap size={12} /> Resume / Join Auction
