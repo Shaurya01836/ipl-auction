@@ -157,13 +157,26 @@ const isSessionLocal = (session) =>
 
 const AUCTION_MODE_CONFIG = [
   {
+    id: "mini",
+    title: "Mini 2027",
+    mobileTitle: "IPL 2027 Mini",
+    tag: "OFFICIAL",
+    icon: Shield,
+    format: "106 Pool",
+    budget: "₹130 Cr Cap",
+    badgeLabel: "Official Retentions & Open Pool",
+    summaryTitle: (team, purse) => `${team} 2027 Starting Purse: ₹${purse} Cr`,
+    summarySubtitle: (retainedCount) =>
+      `${retainedCount} Retained • ${25 - retainedCount} Open Slots • Max 8 Overseas • ₹130 Cr Cap`,
+  },
+  {
     id: "mega",
     title: "Mega",
     mobileTitle: "Mega Auction",
     tag: "FULL SQUAD",
     icon: Trophy,
     format: "25 Players",
-    budget: "₹120 Cr Budget",
+    budget: "₹120 Cr",
     badgeLabel: "Full Roster Auction",
     summaryTitle: () => "Full Franchise Mega Auction • ₹120.00 Cr Budget",
     summarySubtitle: () =>
@@ -176,7 +189,7 @@ const AUCTION_MODE_CONFIG = [
     tag: "PLAYING XI",
     icon: Star,
     format: "11 Players",
-    budget: "₹90 Cr Budget",
+    budget: "₹90 Cr",
     badgeLabel: "Playing XI Format",
     summaryTitle: () => "11-Player Match XI Auction • ₹90.00 Cr Budget",
     summarySubtitle: () =>
@@ -189,7 +202,7 @@ const AUCTION_MODE_CONFIG = [
     tag: "BLITZ",
     icon: Zap,
     format: "5 Players",
-    budget: "₹60 Cr Budget",
+    budget: "₹60 Cr",
     badgeLabel: "Blitz Shootout",
     summaryTitle: () => "5-Player Blitz Shootout • ₹60.00 Cr Budget",
     summarySubtitle: () =>
@@ -202,25 +215,11 @@ const AUCTION_MODE_CONFIG = [
     tag: "RETRO",
     icon: Crown,
     format: "11 Players",
-    budget: "₹100 Cr Budget",
+    budget: "₹100 Cr",
     badgeLabel: "Hall of Fame Pool",
     summaryTitle: () => "All-Time Legends Auction • ₹100.00 Cr Budget",
     summarySubtitle: () =>
       "11 Squad Limit • Iconic Hall of Famers • Classic IPL & International Greats",
-  },
-  {
-    id: "mini",
-    title: "IPL 2027 Mini",
-    mobileTitle: "IPL 2027 Mini Auction",
-    tag: "OFFICIAL 2027",
-    icon: Shield,
-    format: "106 Open Pool",
-    budget: "₹130 Cr Cap",
-    isFullWidth: true,
-    badgeLabel: "Official Retentions & Open Pool",
-    summaryTitle: (team, purse) => `${team} 2027 Starting Purse: ₹${purse} Cr`,
-    summarySubtitle: (retainedCount) =>
-      `${retainedCount} Retained • ${25 - retainedCount} Open Slots • Max 8 Overseas • ₹130 Cr Cap`,
   },
 ];
 
@@ -1031,312 +1030,222 @@ const LandingPage = () => {
               <form
                 key="create-tab"
                 onSubmit={playSolo ? handleStartSoloAuction : handleFormSubmit}
-                className="space-y-4 sm:space-y-6"
+                className="space-y-3.5 sm:space-y-4"
               >
+                {/* 1. Franchise Selector: 2 Rows of 5 on all screen sizes */}
                 <div>
-                  <div className="mb-2.5 sm:mb-4 ml-1">
-                    <h2 className="text-[11px] sm:text-[13px] font-black uppercase text-gray-400 tracking-wider">
-                      Franchise
+                  <div className="flex items-center justify-between mb-1.5 ml-0.5">
+                    <h2 className="text-[10px] sm:text-[11px] font-black uppercase text-gray-400 tracking-wider">
+                      Select Franchise
                     </h2>
-                    <p className="text-[9px] sm:text-[11px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">
-                      {playSolo
-                        ? "Choose the team you'll manage against 9 AI franchises."
-                        : "Choose the team you'll manage."}
-                    </p>
+                    <span className="text-[9px] font-mono text-gray-500 uppercase">
+                      {TEAMS.find((t) => t.id === selectedTeam)?.name || selectedTeam}
+                    </span>
                   </div>
 
-                  <div className="grid grid-cols-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
-                    {TEAMS.map((t) => (
-                      <button
-                        key={t.id}
-                        type="button"
-                        onClick={() => setSelectedTeam(t.id)}
-                        aria-label={`Select ${t.name}`}
-                        className={`relative group/team flex flex-col items-center justify-center p-1.5 sm:p-3 rounded-xl sm:rounded-2xl transition-all duration-200 cursor-pointer ${
-                          selectedTeam === t.id
-                            ? "bg-white/[0.08] border border-white/20 scale-[1.02] shadow-[0_4px_24px_rgba(0,0,0,0.5)]"
-                            : "bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-white/10"
-                        }`}
-                      >
-                        {selectedTeam === t.id && (
-                          <div className="absolute top-1.5 right-1.5 sm:top-2.5 sm:right-2.5 text-white">
-                            <Check
-                              size={10}
-                              className="sm:w-3 sm:h-3"
-                              strokeWidth={3}
+                  <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
+                    {TEAMS.map((t) => {
+                      const isSelected = selectedTeam === t.id;
+                      return (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => setSelectedTeam(t.id)}
+                          aria-label={`Select ${t.name}`}
+                          className={`relative group/team flex flex-col items-center justify-center py-1.5 px-1 sm:py-2.5 rounded-xl transition-all duration-200 cursor-pointer ${
+                            isSelected
+                              ? "bg-white/[0.12] border border-white/25 scale-[1.02] shadow-[0_4px_16px_rgba(0,0,0,0.5)]"
+                              : "bg-white/[0.02] border border-white/5 hover:bg-white/[0.06] hover:border-white/10"
+                          }`}
+                        >
+                          {isSelected && (
+                            <div className="absolute top-1 right-1 text-white z-10">
+                              <Check size={9} strokeWidth={3} />
+                            </div>
+                          )}
+                          <div
+                            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/5 p-1 flex items-center justify-center mb-1 transition-transform ${
+                              isSelected ? "scale-105" : "group-hover/team:scale-105"
+                            }`}
+                          >
+                            <img
+                              src={t.logo}
+                              alt={`${t.name} Logo`}
+                              className="w-full h-full object-contain"
                             />
                           </div>
-                        )}
-                        <div
-                          className={`w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-2xl bg-white/5 p-1 sm:p-1.5 flex items-center justify-center mb-1 sm:mb-2 transition-transform duration-200 ${selectedTeam === t.id ? "scale-105" : "group-hover/team:scale-105"}`}
-                        >
-                          <img
-                            src={t.logo}
-                            alt={`${t.name} Logo`}
-                            className="w-full h-full object-contain filter"
-                          />
-                        </div>
-                        <span
-                          className={`text-[7px] sm:text-[8px] font-black uppercase text-center tracking-tighter truncate w-full ${selectedTeam === t.id ? "text-white" : "text-gray-400"}`}
-                        >
-                          {t.shortName || t.name.split(" ")[0]}
-                        </span>
-                      </button>
-                    ))}
+                          <span
+                            className={`text-[8px] sm:text-[9px] font-black uppercase tracking-tighter truncate w-full text-center ${
+                              isSelected ? "text-white" : "text-gray-400"
+                            }`}
+                          >
+                            {t.id}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
+                {/* 2. Auction Modes: Balanced 5-Column Grid (1 Row on Desktop) */}
                 <div>
-                  <div className="mb-2.5 sm:mb-4 ml-1">
-                    <h2 className="text-[11px] sm:text-[13px] font-black uppercase text-gray-400 tracking-wider">
-                      Mode
+                  <div className="flex items-center justify-between mb-1.5 ml-0.5">
+                    <h2 className="text-[10px] sm:text-[11px] font-black uppercase text-gray-400 tracking-wider">
+                      Auction Mode
                     </h2>
+                    {auctionType === "mini" && (
+                      <span className="text-[8.5px] sm:text-[9px] font-mono text-emerald-400 font-bold truncate">
+                        {selectedTeam}: ₹{formatCrores(miniTeamState.remainingPurse)} Cr Left • {miniTeamState.retainedSquad.length} Retained
+                      </span>
+                    )}
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 sm:gap-2">
                     {AUCTION_MODE_CONFIG.map((m) => {
                       const isSelected = auctionType === m.id;
                       const IconComponent = m.icon;
-                      const isFullWidth = m.isFullWidth;
 
                       return (
                         <button
                           key={m.id}
                           type="button"
                           onClick={() => setAuctionType(m.id)}
-                          className={`relative overflow-hidden group/mode rounded-xl sm:rounded-2xl transition-all duration-200 text-left cursor-pointer active:scale-[0.98] ${
-                            isFullWidth
-                              ? "col-span-2 sm:col-span-4 p-3 sm:p-3.5"
-                              : "col-span-1 p-2.5 sm:p-3"
-                          } ${
+                          className={`relative overflow-hidden group/mode rounded-xl p-2 sm:p-2.5 transition-all duration-200 text-left cursor-pointer active:scale-[0.98] ${
                             isSelected
-                              ? "bg-white/[0.08] border border-white/20 scale-[1.01] sm:scale-[1.02] shadow-[0_4px_24px_rgba(0,0,0,0.5)]"
-                              : "bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-white/10"
+                              ? "bg-white/[0.12] border border-white/25 scale-[1.02] shadow-[0_4px_16px_rgba(0,0,0,0.5)]"
+                              : "bg-white/[0.02] border border-white/5 hover:bg-white/[0.06] hover:border-white/10"
                           }`}
                         >
-                          {isSelected && !isFullWidth && (
-                            <div className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 text-white">
-                              <Check size={10} className="sm:w-3 sm:h-3" strokeWidth={3} />
+                          {isSelected && (
+                            <div className="absolute top-1.5 right-1.5 text-white z-10">
+                              <Check size={9} strokeWidth={3} />
                             </div>
                           )}
 
-                          {isFullWidth ? (
-                            /* Full-width 5th Mode: IPL 2027 Mini across all columns */
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
-                                <div
-                                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                                    isSelected
-                                      ? "bg-white/10 text-white"
-                                      : "bg-white/5 text-gray-400 group-hover/mode:text-white"
-                                  }`}
-                                >
-                                  <IconComponent size={16} className="sm:w-5 sm:h-5" />
-                                </div>
-                                <div className="min-w-0">
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <span
-                                      className={`text-xs sm:text-sm font-black uppercase tracking-tight ${
-                                        isSelected ? "text-white" : "text-gray-200"
-                                      }`}
-                                    >
-                                      {m.mobileTitle}
-                                    </span>
-                                    <span className="font-pixel text-[7px] sm:text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10 shrink-0">
-                                      {m.tag}
-                                    </span>
-                                  </div>
-                                  <p className="text-[9px] sm:text-[10px] text-slate-400 font-sans mt-0.5 truncate max-w-xs sm:max-w-md">
-                                    Official 2027 retentions & open uncontracted player bidding pool
-                                  </p>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center gap-3 shrink-0">
-                                <div className="text-right">
-                                  <span className="text-[10px] sm:text-xs font-black text-white font-sans block">
-                                    {m.budget}
-                                  </span>
-                                  <span className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-wide block">
-                                    {m.format}
-                                  </span>
-                                </div>
-                                {isSelected && (
-                                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white shrink-0">
-                                    <Check size={11} className="sm:w-3 sm:h-3" strokeWidth={3} />
-                                  </div>
-                                )}
-                              </div>
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <div
+                              className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 transition-colors ${
+                                isSelected
+                                  ? "bg-white/15 text-white"
+                                  : "bg-white/5 text-gray-400 group-hover/mode:text-white"
+                              }`}
+                            >
+                              <IconComponent
+                                size={11}
+                                fill={m.id === "sprint5" && isSelected ? "currentColor" : "none"}
+                              />
                             </div>
-                          ) : (
-                            /* First 4 Modes: Mega, Classic, Sprint, Legends in a 4-col (laptop) / 2x2 (mobile) grid */
-                            <div className="flex flex-col justify-between h-full">
-                              <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5">
-                                <div
-                                  className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                                    isSelected
-                                      ? "bg-white/10 text-white"
-                                      : "bg-white/5 text-gray-400 group-hover/mode:text-white"
-                                  }`}
-                                >
-                                  <IconComponent
-                                    size={12}
-                                    className="sm:w-3.5 sm:h-3.5"
-                                    fill={m.id === "sprint5" && isSelected ? "currentColor" : "none"}
-                                  />
-                                </div>
-                                <span
-                                  className={`text-[10px] sm:text-[11px] xl:text-xs font-black uppercase tracking-tight truncate ${
-                                    isSelected ? "text-white" : "text-gray-300"
-                                  }`}
-                                >
-                                  {m.title}
-                                </span>
-                              </div>
+                            <span
+                              className={`text-[9.5px] sm:text-[10px] xl:text-[11px] font-black uppercase tracking-tight truncate ${
+                                isSelected ? "text-white" : "text-gray-300"
+                              }`}
+                            >
+                              {m.title}
+                            </span>
+                          </div>
 
-                              <div className="space-y-0.5 text-[8px] sm:text-[8px] xl:text-[9px] font-bold text-gray-400 uppercase tracking-wide">
-                                <div>{m.format}</div>
-                                <div>{m.budget}</div>
-                              </div>
-                            </div>
-                          )}
+                          <div className="flex items-center justify-between text-[7.5px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-tight">
+                            <span>{m.format}</span>
+                            <span className={isSelected ? "text-slate-200" : "text-gray-500"}>
+                              {m.budget}
+                            </span>
+                          </div>
                         </button>
                       );
                     })}
                   </div>
-
-                  {(() => {
-                    const activeMode =
-                      AUCTION_MODE_CONFIG.find((m) => m.id === auctionType) || AUCTION_MODE_CONFIG[0];
-                    const summaryTitle =
-                      auctionType === "mini"
-                        ? activeMode.summaryTitle(selectedTeam, formatCrores(miniTeamState.remainingPurse))
-                        : activeMode.summaryTitle();
-                    const summarySubtitle =
-                      auctionType === "mini"
-                        ? activeMode.summarySubtitle(miniTeamState.retainedSquad.length)
-                        : activeMode.summarySubtitle();
-
-                    return (
-                      <div className="mt-2.5 sm:mt-3 p-3 sm:p-3.5 bg-white/[0.02] border border-white/10 rounded-xl sm:rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs sm:text-sm font-black text-white font-sans">
-                              {summaryTitle}
-                            </span>
-                            {auctionType === "mini" && (
-                              <span className="font-pixel text-[8px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/5 text-slate-300 border border-white/10">
-                                {miniTeamState.retainedSquad.length} Retained
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-[9px] sm:text-[10px] text-slate-400 mt-1 font-sans">
-                            {summarySubtitle}
-                          </p>
-                        </div>
-                        <div className="font-pixel text-[8px] sm:text-[9px] uppercase tracking-wider px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 shrink-0 self-start sm:self-auto">
-                          {activeMode.badgeLabel}
-                        </div>
-                      </div>
-                    );
-                  })()}
                 </div>
 
-                {/* Solo vs AI bots Toggle */}
-                <div className="p-3 sm:p-4 bg-white/[0.02] border border-white/5 rounded-xl sm:rounded-2xl flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <h2 className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider flex items-center gap-1.5">
-                      Solo vs AI Bots
-                    </h2>
-                    <p className="text-[8px] sm:text-[9px] text-gray-400 font-medium">
-                      {playSolo
-                        ? "Runs 100% on your device - no server, no room code"
-                        : "Play instantly against 9 AI franchises, no server needed"}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setPlaySolo(!playSolo)}
-                    aria-label="Toggle solo vs AI bots"
-                    className={`w-10 h-5 sm:w-12 sm:h-6 rounded-full transition-colors p-1 flex items-center cursor-pointer shrink-0 ${
-                      playSolo
-                        ? "bg-emerald-400 justify-end"
-                        : "bg-white/10 justify-start"
-                    }`}
-                  >
-                    <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-slate-900 shadow-md" />
-                  </button>
-                </div>
-
-                {/* Public Lobby Directory Toggle (Cloud Rooms only) */}
-                {!playSolo && (
-                  <div className="p-3 sm:p-4 bg-white/[0.02] border border-white/5 rounded-xl sm:rounded-2xl flex items-center justify-between gap-3">
+                {/* 3. Room Settings: Compact 2-Column Strip */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
+                  {/* Solo vs AI Bots */}
+                  <div className="p-2.5 sm:p-3 bg-white/[0.02] border border-white/5 rounded-xl flex items-center justify-between gap-2.5">
                     <div className="min-w-0">
-                      <h2 className="text-[10px] sm:text-[11px] font-black uppercase text-white tracking-wider flex items-center gap-1.5">
-                        <Globe size={12} className="text-slate-400" />
-                        Public Lobby
-                      </h2>
-                      <p className="text-[8px] sm:text-[9px] text-gray-400 font-medium">
-                        {isPublicRoom
-                          ? "Visible in Public Lobbies so other players can discover and join"
-                          : "Private room - only players with your room code can join"}
+                      <h3 className="text-[10px] font-black uppercase text-white tracking-wider flex items-center gap-1.5">
+                        <Bot size={13} className="text-slate-400" />
+                        Solo vs AI Bots
+                      </h3>
+                      <p className="text-[8px] sm:text-[8.5px] text-gray-400 truncate">
+                        {playSolo ? "Runs 100% on device • No room code" : "Play vs 9 AI franchises offline"}
                       </p>
                     </div>
                     <button
                       type="button"
-                      onClick={() => setIsPublicRoom(!isPublicRoom)}
-                      aria-label="Toggle public lobby"
-                      className={`w-10 h-5 sm:w-12 sm:h-6 rounded-full transition-colors p-1 flex items-center cursor-pointer shrink-0 ${
-                        isPublicRoom
-                          ? "bg-emerald-400 justify-end"
-                          : "bg-white/10 justify-start"
+                      onClick={() => setPlaySolo(!playSolo)}
+                      aria-label="Toggle solo vs AI bots"
+                      className={`w-9 h-5 rounded-full transition-colors p-0.5 flex items-center cursor-pointer shrink-0 ${
+                        playSolo ? "bg-emerald-400 justify-end" : "bg-white/10 justify-start"
                       }`}
                     >
-                      <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-slate-900 shadow-md" />
+                      <div className="w-3.5 h-3.5 rounded-full bg-slate-900 shadow-md" />
                     </button>
                   </div>
-                )}
 
-                {playSolo && (
-                  <div className="p-3 sm:p-4 bg-emerald-500/[0.04] border border-emerald-500/20 rounded-xl sm:rounded-2xl flex items-start gap-3">
-                   
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-[10px] sm:text-[11px] font-black uppercase text-emerald-400 tracking-wider">
-                          Zero RTDB Load
+                  {/* Public Lobby or Local Offline Mode */}
+                  {!playSolo ? (
+                    <div className="p-2.5 sm:p-3 bg-white/[0.02] border border-white/5 rounded-xl flex items-center justify-between gap-2.5">
+                      <div className="min-w-0">
+                        <h3 className="text-[10px] font-black uppercase text-white tracking-wider flex items-center gap-1.5">
+                          <Globe size={13} className="text-slate-400" />
+                          Public Lobby
                         </h3>
+                        <p className="text-[8px] sm:text-[8.5px] text-gray-400 truncate">
+                          {isPublicRoom ? "Visible in directory for all players" : "Private room (code only)"}
+                        </p>
                       </div>
-                      <p className="text-[8px] sm:text-[9px] text-gray-400 font-medium mt-0.5 leading-relaxed">
-                        10s bidding timer with pause/resume and fast-forward. Runs 100% on your device and saves locally in browser storage.
-                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setIsPublicRoom(!isPublicRoom)}
+                        aria-label="Toggle public lobby"
+                        className={`w-9 h-5 rounded-full transition-colors p-0.5 flex items-center cursor-pointer shrink-0 ${
+                          isPublicRoom ? "bg-emerald-400 justify-end" : "bg-white/10 justify-start"
+                        }`}
+                      >
+                        <div className="w-3.5 h-3.5 rounded-full bg-slate-900 shadow-md" />
+                      </button>
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <div className="p-2.5 sm:p-3 bg-emerald-500/[0.04] border border-emerald-500/20 rounded-xl flex items-center justify-between gap-2.5">
+                      <div className="min-w-0">
+                        <h3 className="text-[10px] font-black uppercase text-emerald-400 tracking-wider flex items-center gap-1.5">
+                          <Zap size={13} />
+                          Local Solo
+                        </h3>
+                        <p className="text-[8px] sm:text-[8.5px] text-gray-400 truncate">
+                          Fast-forward & pause • Zero server load
+                        </p>
+                      </div>
+                      <span className="font-pixel text-[7.5px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 shrink-0">
+                        Offline
+                      </span>
+                    </div>
+                  )}
+                </div>
 
-                <div className="pt-1 sm:pt-2">
+                {/* 4. Action Button */}
+                <div className="pt-0.5 sm:pt-1">
                   <button
                     type="submit"
                     disabled={isSubmitting || (cooldownRemaining > 0 && !playSolo)}
                     data-google-vignette="false"
-                    className="w-full h-10 sm:h-12 relative overflow-hidden group/submit rounded-xl bg-white hover:bg-slate-200 text-black shadow-[0_10px_30px_rgba(255,255,255,0.08)] disabled:opacity-50 cursor-pointer transition-all active:scale-[0.98]"
+                    className="w-full h-10 sm:h-11 relative overflow-hidden group/submit rounded-xl bg-white hover:bg-slate-200 text-black shadow-[0_10px_30px_rgba(255,255,255,0.08)] disabled:opacity-50 cursor-pointer transition-all active:scale-[0.98]"
                   >
                     <div className="relative flex items-center justify-center gap-2 font-black uppercase tracking-[0.16em] sm:tracking-[0.2em] text-[10px] sm:text-xs">
                       {isSubmitting ? (
-                        <Loader2 size={18} className="animate-spin" />
+                        <Loader2 size={16} className="animate-spin" />
                       ) : cooldownRemaining > 0 && !playSolo ? (
                         <span>Wait {cooldownRemaining}s to Create</span>
                       ) : (
                         <>
                           <span>{playSolo ? "Start Solo Auction" : "Start Auction"}</span>
                           <ChevronRight
-                            size={16}
+                            size={15}
                             className="group-hover/submit:translate-x-1 transition-transform"
                           />
                         </>
                       )}
                     </div>
                   </button>
-                
                 </div>
               </form>
             )}

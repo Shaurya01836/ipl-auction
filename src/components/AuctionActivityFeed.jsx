@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { IPL_PLAYERS } from '../data/players';
 import { TEAMS } from '../data/teams';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SingleAdUnit } from './AdSlot';
+
+const DEFAULT_CLIENT_ID = 'ca-pub-2952599241278941';
+const DEFAULT_ACTIVITY_FEED_SLOT = '2911895830';
 
 
 const getShortName = (name) => {
@@ -51,6 +55,13 @@ export default function AuctionActivityFeed({ activeCount = 0, stats = null }) {
     stats?.activeCount !== undefined && stats?.activeCount !== null
       ? stats.activeCount
       : (activeCount !== undefined && activeCount !== null ? activeCount : 0);
+
+  const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
+  const adSlot =
+    import.meta.env.VITE_ADSENSE_ACTIVITY_FEED_SLOT ||
+    import.meta.env.VITE_ADSENSE_SIDEBAR_ACTIVITY_SLOT ||
+    import.meta.env.VITE_ADSENSE_LANDING_SLOT_2 ||
+    DEFAULT_ACTIVITY_FEED_SLOT;
 
   // Initialize with 8 historical notifications to fill the height
   useEffect(() => {
@@ -118,7 +129,7 @@ export default function AuctionActivityFeed({ activeCount = 0, stats = null }) {
       </div>
 
       {/* Compact Single-line Signings List */}
-      <div className="h-[111px] md:h-[330px] overflow-hidden relative flex flex-col gap-1.5">
+      <div className="h-[110px] md:h-[155px] overflow-hidden relative flex flex-col gap-1.5">
         <AnimatePresence initial={false}>
           {notifications.map((notif) => (
             <motion.div
@@ -164,6 +175,19 @@ export default function AuctionActivityFeed({ activeCount = 0, stats = null }) {
             </motion.div>
           ))}
         </AnimatePresence>
+      </div>
+
+      {/* Divider between Signings and Sponsored Ad */}
+      <div className="w-full h-px bg-white/10 my-2.5 sm:my-3" />
+
+      {/* Bottom Half: Sponsored Display Ad */}
+      <div className="flex flex-col flex-1 min-h-0 pt-0.5">
+        <div className="flex items-center justify-between mb-1.5 px-0.5">
+          <span className="text-[9px] font-pixel uppercase tracking-widest text-gray-500">
+            Sponsored Link
+          </span>
+        </div>
+        <SingleAdUnit slot={adSlot} clientId={clientId} />
       </div>
     </>
   );

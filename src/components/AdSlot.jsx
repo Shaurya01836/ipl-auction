@@ -7,6 +7,7 @@ const DEFAULT_LANDING_SLOT_3 = '2523068937';
 export const DEFAULT_LANDING_MULTIPLEX_SLOT = '2357584801';
 export const DEFAULT_AUCTION_ROOM_SLOT = '6494103537';
 export const DEFAULT_AUCTION_ROOM_MOBILE_SLOT = '8939145929';
+export const DEFAULT_SIDEBAR_ACTIVITY_SLOT = '2911895830';
 
 const ensureAdSenseScript = (clientId) => {
   if (typeof document === 'undefined') return;
@@ -131,6 +132,28 @@ export const AuctionMobileBannerAd = ({
           data-ad-client={clientId}
           data-ad-slot={slot}
         />
+      </div>
+    </div>
+  );
+};
+
+export const AuctionSidebarActivityAd = ({
+  slot = import.meta.env.VITE_ADSENSE_SIDEBAR_ACTIVITY_SLOT || import.meta.env.VITE_ADSENSE_LANDING_SLOT_2 || DEFAULT_SIDEBAR_ACTIVITY_SLOT,
+  className = ''
+}) => {
+  const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
+
+  if (!slot || !clientId) return null;
+
+  return (
+    <div className={`w-full shrink-0 border-t border-white/10 bg-[#0c0d10]/95 backdrop-blur-md p-2.5 sm:p-3 overflow-hidden flex flex-col items-center ${className}`}>
+      <div className="w-full flex items-center justify-between pb-1.5 mb-1.5 border-b border-white/5 px-0.5">
+        <span className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-500">
+          Sponsored Link
+        </span>
+      </div>
+      <div className="w-full flex items-center justify-center min-h-[250px] max-h-[280px] overflow-hidden">
+        <SingleAdUnit slot={slot} clientId={clientId} bare />
       </div>
     </div>
   );
