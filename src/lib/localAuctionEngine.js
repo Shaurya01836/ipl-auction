@@ -618,7 +618,7 @@ export function localAuctionReducer(state, action) {
         randomFn: rng,
       });
 
-      // Advance with simulated winner or unsold
+      // Advance with simulated winner or unsold into celebration phase
       const interimState = {
         ...state,
         currentAuction: {
@@ -630,7 +630,13 @@ export function localAuctionReducer(state, action) {
         },
       };
 
-      return localAuctionReducer(interimState, { type: 'RESOLVE_LOT', now });
+      const isSold = Boolean(simRes.winnerId && simRes.finalBid > 0);
+      return localAuctionReducer(interimState, {
+        type: 'RESOLVE_LOT',
+        now,
+        celebrate: true,
+        celebrationMs: isSold ? 2000 : 1200,
+      });
     }
 
     case 'FAST_FORWARD': {

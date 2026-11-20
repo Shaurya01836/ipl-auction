@@ -534,3 +534,38 @@ test('localAuctionReducer: PLACE_BID handles quick jump bids (targetBid)', () =>
   });
   assert.equal(state.currentAuction.currentBid, beforeStale);
 });
+
+// ─── Test 25: SKIP_LOT enters celebration phase with brisk timing and enables ADVANCE_LOT ───
+test('localAuctionReducer: SKIP_LOT enters celebration state with celebrationEndsAt and advances cleanly', () => {
+  const human = { uid: 'human_pass', displayName: 'Manager', team: 'CSK' };
+  let state = localAuctionReducer(null, {
+    type: 'INIT_AUCTION',
+    roomId: 'SOLO-PASS',
+    humanUser: human,
+    auctionType: 'mega',
+    budget: 120,
+    seed: 1234,
+  });
+
+  const firstPlayerId = state.currentAuction.playerId;
+  assert.equal(state.currentAuction.status, 'bidding');
+
+  const now = 5000;
+  state = localAuctionReducer(state, {
+    type: 'SKIP_LOT',
+    now,
+  });
+
+  // Must enter celebration phase ('sold' or 'unsold'), NOT immediately jump to next lot
+  assert.ok(state.currentAuction.status === 'sold' || state.currentAuction.status === 'unsold');
+  assert.equal(state.currentAuction.playerId, firstPlayerId);
+  assert.ok(state.currentAuction.celebrationEndsAt > now);
+
+  // Advancing lot transitions to the next player
+  state = localAuctionReducer(state, {
+    type: 'ADVANCE_LOT',
+    now: now + 3000,
+  });
+  assert.equal(state.currentAuction.status, 'bidding');
+  assert.notEqual(state.currentAuction.playerId, firstPlayerId);
+});

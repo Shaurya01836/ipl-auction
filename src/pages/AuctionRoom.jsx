@@ -54,6 +54,13 @@ import {
    toFiniteNumber,
 } from '../lib/auctionDisplay';
 
+const ROLE_THEMES = {
+   'Batsman': { border: 'border-amber-500/30', badge: 'text-amber-300 bg-amber-500/10 border-amber-500/20' },
+   'Bowler': { border: 'border-emerald-500/30', badge: 'text-emerald-300 bg-emerald-500/10 border-emerald-500/20' },
+   'All-Rounder': { border: 'border-purple-500/30', badge: 'text-purple-300 bg-purple-500/10 border-purple-500/20' },
+   'Wicket-Keeper': { border: 'border-sky-500/30', badge: 'text-sky-300 bg-sky-500/10 border-sky-500/20' },
+};
+
 const AuctionRoom = () => {
    const { id } = useParams();
    useDocumentTitle(`Auction Room #${id || ''} | CrickAuction`, 'Live multiplayer IPL Auction bidding arena.', true);
@@ -1562,296 +1569,310 @@ const AuctionRoom = () => {
                               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                               className="w-full flex-col gap-4 md:gap-6 flex will-change-transform"
                            >
-                              <div className="bg-[#0c0d10] border border-white/10 rounded-[2rem] overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.6)] relative min-h-[400px] lg:min-h-0">
-            {/* Top-of-card progress bar across the flat top edge */}
-            <AuctionCountdown
-               variant="bar"
-               displayAuctionState={displayAuctionState}
-               configuredBidTimer={configuredBidTimer}
-               getSyncedTime={getSyncedTime}
-            />
-            <div className="p-0 sm:p-6 lg:p-5 xl:p-10 flex flex-col lg:flex-row items-center sm:gap-6 lg:gap-5 xl:gap-10">
-               {/* 1. Hero image: edge-to-edge on mobile, framed box on desktop/tablet */}
-               <div className="relative w-full aspect-[4/3] max-h-[42vh] min-h-[300px] sm:aspect-auto sm:max-h-none sm:min-h-0 sm:w-36 sm:h-36 lg:w-36 lg:h-48 xl:w-60 xl:h-80 bg-[#0c0d10] sm:rounded-2xl lg:sm:rounded-[2rem] overflow-hidden sm:border sm:border-white/10 z-10 sm:shadow-[0_12px_40px_rgba(0,0,0,0.4)] group sm:hover:scale-[1.02] transition-transform duration-500 shrink-0">
-                  <img
-                     src={currentPlayer.image}
-                     alt={currentPlayer.name}
-                     decoding="async"
-                     className="w-full h-full object-cover object-top"
-                     onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = getPlayerAvatar(currentPlayer?.name);
-                     }}
-                  />
-                  {/* Mobile Gradient Overlay: fades bottom of hero into card without touching player face */}
-                  <div className="sm:hidden absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#0c0d10] via-[#0c0d10]/80 to-transparent pointer-events-none" />
-
-                  {/* Mobile Overlay: Player name & role/type tags (bottom over gradient) */}
-                  <div className="sm:hidden absolute bottom-2.5 left-3 right-3 z-20 text-left pointer-events-none">
-                     <h2
-                        className="text-xl xs:text-2xl font-pixel tracking-tight text-white leading-tight truncate drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]"
-                        title={currentPlayer.name}
-                     >
-                        {currentPlayer.name}
-                     </h2>
-                     <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                        <span className="bg-white/10 backdrop-blur-md border border-white/15 text-slate-200 text-[7.5px] font-pixel px-2 py-0.5 rounded-full uppercase tracking-wider">
-                           {currentPlayer.role}
-                        </span>
-                        <span className="text-slate-500 text-[10px]">•</span>
-                        <span className="bg-white/10 backdrop-blur-md border border-white/15 text-slate-200 text-[7.5px] font-pixel px-2 py-0.5 rounded-full uppercase tracking-wider">
-                           {currentPlayer.type}
-                        </span>
-                     </div>
-                  </div>
-               </div>
-
-               {/* 2. Details Column */}
-               <div className="flex-1 min-w-0 flex flex-col gap-2.5 sm:gap-4 xl:gap-6 w-full text-center lg:text-left px-3 pt-1 pb-2 sm:p-0">
-                  {/* Desktop / Tablet name and badges (hidden on mobile) */}
-                  <div className="hidden sm:block">
-                     <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 mb-2 xl:mb-4">
-                        <span className="bg-white/5 border border-white/10 text-slate-300 text-[8px] md:text-[9px] font-pixel px-2.5 py-1 rounded-full uppercase tracking-widest">{currentPlayer.role}</span>
-                        <span className="bg-white/5 border border-white/10 text-slate-300 text-[8px] md:text-[9px] font-pixel px-2.5 py-1 rounded-full uppercase tracking-widest">{currentPlayer.type}</span>
-                        <span className="bg-white/5 border border-white/10 text-slate-300 text-[8px] md:text-[9px] font-pixel px-2.5 py-1 rounded-full uppercase tracking-wider">
-                           Base: ₹{currentPlayer?.basePrice == null ? '—' : `${formatCrores(currentPlayer.basePrice)} Cr`}
-                        </span>
-                     </div>
-                     <h2 className="text-2xl sm:text-3xl xl:text-5xl font-pixel tracking-tight text-white leading-tight truncate drop-shadow-[0_2px_12px_rgba(255,255,255,0.08)]" title={currentPlayer.name}>{currentPlayer.name}</h2>
-                  </div>
-
-                  {/* Dynamic Role-aware stats */}
-                  {(() => {
-                     const s = currentPlayer.stats || {};
-                     const entries = Object.entries(s).slice(0, 4); // display up to 4 stats
-                     const colsCount = Math.max(2, Math.min(entries.length, 4));
-                     const colClass = {
-                        2: 'grid-cols-2',
-                        3: 'xl:grid-cols-3',
-                        4: 'xl:grid-cols-4',
-                        5: 'xl:grid-cols-5'
-                     }[colsCount] || 'xl:grid-cols-4';
-                     
-                     const labelMap = {
-                        matches: 'Matches', runs: 'Runs', wickets: 'Wickets',
-                        econ: 'Economy', sr: 'SR', avg: 'Avg',
-                        hs: 'HS', bb: 'BBI'
-                     };
-
-                     return (
-                        <>
-                           {/* 3. Mobile Stats: 1 row of 4 columns, no boxed border */}
-                           <div className="grid grid-cols-4 gap-1 py-1.5 border-b border-white/5 sm:hidden">
-                              {entries.map(([key, value]) => {
-                                 const label = labelMap[key] || key;
+                              {(() => {
+                                 const roleTheme = ROLE_THEMES[currentPlayer?.role] || ROLE_THEMES['Batsman'];
                                  return (
-                                    <div key={key} className="text-center">
-                                       <span className="block text-[7.5px] font-pixel text-slate-400 uppercase tracking-widest mb-0.5">{label}</span>
-                                       <span className="text-xs xs:text-sm font-bold text-slate-200">{value}</span>
-                                    </div>
-                                 );
-                              })}
-                           </div>
+                                    <div className="bg-[#0c0d10] border border-white/10 rounded-[2rem] sm:rounded-3xl overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.6)] relative min-h-[400px] sm:min-h-0">
+                                       {/* Top-of-card progress bar across the flat top edge */}
+                                       <AuctionCountdown
+                                          variant="bar"
+                                          displayAuctionState={displayAuctionState}
+                                          configuredBidTimer={configuredBidTimer}
+                                          getSyncedTime={getSyncedTime}
+                                       />
 
-                           {/* Desktop / Tablet Stats: existing boxed grid */}
-                           <div className={`hidden sm:grid grid-cols-2 ${colClass} gap-2 xl:gap-3 bg-[#0e1015]/90 p-2.5 lg:p-3 xl:p-4 rounded-2xl border border-white/10 backdrop-blur-md`}>
-                              {entries.map(([key, value], index) => {
-                                 const desktopLabelMap = {
-                                    matches: 'Matches', runs: 'Runs', wickets: 'Wickets',
-                                    econ: 'Economy', sr: 'Strike Rate', avg: 'Average',
-                                    hs: 'Highest Score', bb: 'Best Bowling'
-                                 };
-                                 const label = desktopLabelMap[key] || key;
-                                 
-                                 return (
-                                    <div key={key} className={`text-center ${index > 0 ? 'border-white/5' : ''} ${index % 2 !== 0 ? 'border-l' : ''} ${index > 0 ? 'xl:border-l' : ''}`}>
-                                       <span className="block text-[8px] compact:text-[7px] font-pixel text-slate-400 uppercase tracking-widest mb-1 break-words leading-tight">{label}</span>
-                                       <span className="text-base sm:text-lg xl:text-xl font-bold text-slate-200">{value}</span>
-                                    </div>
-                                 );
-                              })}
-                           </div>
-                        </>
-                     );
-                  })()}
+                                       <div className="p-0 sm:p-4 md:p-5 lg:p-6 flex flex-col sm:flex-row items-center sm:items-stretch gap-4 md:gap-5 lg:gap-6 relative z-10">
+                                          {/* 1. Hero image: edge-to-edge on mobile, framed broadcast cut on desktop/tablet */}
+                                          <div className="relative w-full aspect-[4/3] max-h-[42vh] min-h-[300px] sm:aspect-auto sm:max-h-none sm:min-h-0 sm:w-44 md:w-48 lg:w-56 sm:h-[260px] md:h-[275px] lg:h-[285px] bg-[#0c0d10] sm:rounded-2xl overflow-hidden sm:border sm:border-white/10 z-10 sm:shadow-[0_12px_40px_rgba(0,0,0,0.4)] group shrink-0">
+                                             <img
+                                                src={currentPlayer.image}
+                                                alt={currentPlayer.name}
+                                                decoding="async"
+                                                className="w-full h-full object-cover object-top sm:group-hover:scale-105 transition-transform duration-500"
+                                                onError={(e) => {
+                                                   e.currentTarget.onerror = null;
+                                                   e.currentTarget.src = getPlayerAvatar(currentPlayer?.name);
+                                                }}
+                                             />
+                                             {/* Subtle inner bottom-shadow on desktop for studio portrait depth */}
+                                             <div className="hidden sm:block absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
 
-                  {/* 4. Current Bid & Timer Row */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 mt-1 sm:mt-2 xl:mt-4">
-                     <div className="text-left min-w-0 flex-1">
-                        <span className="text-[8px] sm:text-[9px] xl:text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-0.5 sm:mb-1">Current Bid</span>
-                        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                           <span className="text-xl xs:text-2xl sm:text-lg sm:text-xl xl:text-3xl font-extrabold text-white leading-none whitespace-nowrap">
-                              {displayAuctionState?.currentBid == null ? '—' : `₹${formatCrores(displayAuctionState.currentBid)} Cr`}
-                           </span>
-                           {displayAuctionState?.highBidderTeamId ? (() => {
-                              const bidderTeam = TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId);
-                              const shortName = bidderTeam?.id || displayAuctionState.highBidderTeamId;
-                              const fullName = bidderTeam?.name || shortName;
-                              const rawBidderName = displayAuctionState?.highBidderName || shortName;
-                              const bidderName = rawBidderName.length > 22 ? `${rawBidderName.slice(0, 22)}...` : rawBidderName;
+                                             {/* Mobile Gradient Overlay: fades bottom of hero into card without touching player face */}
+                                             <div className="sm:hidden absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#0c0d10] via-[#0c0d10]/80 to-transparent pointer-events-none" />
 
-                              return (
-                                 <div
-                                    className="flex items-center gap-1.5 sm:gap-2 bg-white/5 border border-white/10 px-2 sm:px-2.5 py-1 rounded-xl max-w-[160px] xs:max-w-[200px] sm:max-w-[240px] md:max-w-[280px]"
-                                    title={`${rawBidderName} (${fullName})`}
-                                 >
-                                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-white/5 border border-white/10 p-0.5 flex items-center justify-center shrink-0">
-                                       <img src={bidderTeam?.logo} alt="High Bidder Team Logo" className="w-full h-full object-contain" />
-                                    </div>
-                                    <div className="flex flex-col min-w-0 text-left">
-                                       <span className="text-[7.5px] sm:text-[8px] font-pixel text-slate-400 uppercase tracking-widest truncate leading-tight">
-                                          {shortName}
-                                       </span>
-                                       <span className="text-[8.5px] sm:text-[9.5px] md:text-[10px] font-black text-white uppercase tracking-wider truncate leading-tight">
-                                          {bidderName}
-                                       </span>
-                                    </div>
-                                 </div>
-                              );
-                           })() : (
-                              <span className="text-[8px] sm:text-[9px] font-bold text-gray-500 uppercase tracking-widest bg-white/[0.02] border border-white/5 px-2 py-1 rounded-lg">
-                                 No Bids
-                              </span>
-                           )}
-                        </div>
-                     </div>
-
-                     {/* Timer ring: inline with the bid row on all sizes */}
-                     <div className="shrink-0">
-                        <AuctionCountdown
-                           variant="badge"
-                           displayAuctionState={displayAuctionState}
-                           configuredBidTimer={configuredBidTimer}
-                           isAdmin={isAdmin}
-                           roomId={id}
-                           endPlayerAuction={endPlayerAuction}
-                           getSyncedTime={getSyncedTime}
-                           playBeep={playBeep}
-                        />
-                     </div>
-                  </div>
-               </div>
-            </div>
-            {/* 5. Squad / OS / Purse & 6. Sticky Action bar */}
-            <div className="bg-[#0a0b0e]/95 backdrop-blur-md border-t border-white/10 p-2.5 sm:p-4 xl:p-6 flex flex-col gap-2.5 sm:gap-3 sticky bottom-0 z-20 pb-[max(0.625rem,env(safe-area-inset-bottom))]">
-                                    {/* Franchise Quick Stats Bar right above Bid button (Mobile view only) */}
-                                    {team && (() => {
-                                       const osCount = countOverseas(team.squad, IPL_PLAYERS);
-                                       const totalBudget = toFiniteNumber(currentAuction?.settings?.budget, 120);
-
-                                       return (
-                                          <div className="flex md:hidden items-center justify-between bg-[#0e1015] border border-white/10 px-2.5 sm:px-4 py-2 rounded-xl text-[9px] sm:text-xs font-bold text-gray-300">
-                                             <div className="flex items-center gap-1" title="Squad Count">
-                                                <span className="text-gray-500 uppercase font-black text-[8px] sm:text-[10px]">Squad:</span>
-                                                <span className="text-slate-200 font-extrabold">{team.squad?.length || 0}/{toFiniteNumber(currentAuction?.squadLimit, 25)}</span>
-                                             </div>
-                                             <div className="w-px h-3 bg-white/10" />
-                                             <div className="flex items-center gap-1" title="Overseas Players">
-                                                <span className="text-gray-500 uppercase font-black text-[8px] sm:text-[10px]">OS:</span>
-                                                <span className="text-slate-200 font-extrabold">{osCount}/{toFiniteNumber(currentAuction?.overseasLimit, 8)}</span>
-                                             </div>
-                                             <div className="w-px h-3 bg-white/10" />
-                                             <div className="flex items-center gap-1" title="Purse Left out of Total Budget">
-                                                <span className="text-gray-500 uppercase font-black text-[8px] sm:text-[10px]">Purse:</span>
-                                                <span className="text-slate-200 font-extrabold">₹{formatCrores(team.budgetRemaining ?? totalBudget)}/{formatCrores(totalBudget, 0)}Cr</span>
-                                             </div>
-                                             <div className="w-px h-3 bg-white/10 hidden xs:block" />
-                                             <div className="items-center gap-1 hidden xs:flex" title="Total Spent">
-                                                <span className="text-gray-500 uppercase font-black text-[8px] sm:text-[10px]">Spent:</span>
-                                                <span className="text-slate-200 font-extrabold">₹{formatCrores(team.spent, 1)}Cr</span>
+                                             {/* Mobile Overlay: Player name & role/type tags (bottom over gradient) */}
+                                             <div className="sm:hidden absolute bottom-2.5 left-3 right-3 z-20 text-left pointer-events-none">
+                                                <h2
+                                                   className="text-xl xs:text-2xl font-pixel tracking-tight text-white leading-tight truncate drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]"
+                                                   title={currentPlayer.name}
+                                                >
+                                                   {currentPlayer.name}
+                                                </h2>
+                                                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                                   <span className="bg-white/10 backdrop-blur-md border border-white/15 text-slate-200 text-[7.5px] font-pixel px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                                      {currentPlayer.role}
+                                                   </span>
+                                                   <span className="text-slate-500 text-[10px]">•</span>
+                                                   <span className="bg-white/10 backdrop-blur-md border border-white/15 text-slate-200 text-[7.5px] font-pixel px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                                      {currentPlayer.type}
+                                                   </span>
+                                                </div>
                                              </div>
                                           </div>
-                                       );
-                                    })()}
 
-                                    {/* Quick Jump Bid Buttons */}
-                                    {!spectateMode && displayAuctionState?.status === 'bidding' && (
-                                       <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 px-1">
-                                          <span className="text-[10px] font-pixel text-slate-400 uppercase tracking-widest mr-auto hidden xs:inline">Jump Bid:</span>
-                                          {[1, 1.5, 2].map((jump) => {
-                                             const current = toFiniteNumber(displayAuctionState?.currentBid, 0);
-                                             const targetAmount = r2(current === 0 ? toFiniteNumber(currentPlayer?.basePrice, 0) + jump : current + jump);
-                                             const isAffordable = (team?.budgetRemaining || 0) >= targetAmount;
-                                             const isLeading = displayAuctionState?.highBidderId === user?.uid;
-                                             const disabled = !team || isLeading || !isAffordable || isBiddingInFlight;
+                                          {/* 2. Details Column */}
+                                          <div className="flex-1 min-w-0 flex flex-col justify-between sm:justify-between w-full text-center sm:text-left px-3 pt-1 pb-2 sm:p-0">
+                                             {/* Top Section: Badges & Name */}
+                                             <div>
+                                                {/* Desktop / Tablet name and badges (hidden on mobile) */}
+                                                <div className="hidden sm:block">
+                                                   <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                                                      <span className={`text-[8px] sm:text-[9px] font-pixel px-2.5 py-0.5 sm:py-1 rounded-full uppercase tracking-widest border ${roleTheme.badge}`}>
+                                                         {currentPlayer.role}
+                                                      </span>
+                                                      <span className="bg-white/5 border border-white/10 text-slate-300 text-[8px] sm:text-[9px] font-pixel px-2.5 py-0.5 sm:py-1 rounded-full uppercase tracking-widest">
+                                                         {currentPlayer.type}
+                                                      </span>
+                                                   </div>
+                                                   <h2 
+                                                      className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-pixel tracking-tight text-white leading-tight truncate drop-shadow-[0_2px_12px_rgba(255,255,255,0.08)]" 
+                                                      title={currentPlayer.name}
+                                                   >
+                                                      {currentPlayer.name}
+                                                   </h2>
+                                                </div>
+                                             </div>
+
+                                             {/* Middle Section: Dynamic Role-aware stats */}
+                                             {(() => {
+                                                const s = currentPlayer.stats || {};
+                                                const entries = Object.entries(s).slice(0, 4); // display up to 4 stats
+                                                
+                                                const labelMap = {
+                                                   matches: 'Matches', runs: 'Runs', wickets: 'Wickets',
+                                                   econ: 'Economy', sr: 'SR', avg: 'Avg',
+                                                   hs: 'HS', bb: 'BBI'
+                                                };
+
+                                                return (
+                                                   <>
+                                                      {/* 3. Mobile Stats: 1 row of 4 columns, no boxed border */}
+                                                      <div className="grid grid-cols-4 gap-1 py-1.5 border-b border-white/5 sm:hidden">
+                                                         {entries.map(([key, value]) => {
+                                                            const label = labelMap[key] || key;
+                                                            return (
+                                                               <div key={key} className="text-center">
+                                                                  <span className="block text-[7.5px] font-pixel text-slate-400 uppercase tracking-widest mb-0.5">{label}</span>
+                                                                  <span className="text-xs xs:text-sm font-bold text-slate-200">{value}</span>
+                                                               </div>
+                                                            );
+                                                         })}
+                                                      </div>
+
+                                                      {/* Desktop / Tablet Stats: Sleek integrated broadcast bar */}
+                                                      <div className="hidden sm:grid grid-cols-4 gap-1.5 md:gap-2 bg-white/[0.02] p-2 sm:p-2.5 md:p-3 rounded-xl sm:rounded-2xl border border-white/10 backdrop-blur-md my-2 sm:my-2.5">
+                                                         {entries.map(([key, value], index) => {
+                                                            const desktopLabelMap = {
+                                                               matches: 'Matches', runs: 'Runs', wickets: 'Wickets',
+                                                               econ: 'Economy', sr: 'SR', avg: 'Average',
+                                                               hs: 'Highest', bb: 'Best'
+                                                            };
+                                                            const label = desktopLabelMap[key] || key;
+                                                            
+                                                            return (
+                                                               <div key={key} className={`text-center ${index > 0 ? 'border-l border-white/5' : ''}`}>
+                                                                  <span className="block text-[7.5px] sm:text-[8px] md:text-[8.5px] font-pixel text-slate-400 uppercase tracking-widest mb-0.5 truncate">{label}</span>
+                                                                  <span className="text-sm sm:text-base md:text-lg font-bold text-white tracking-wide">{value}</span>
+                                                               </div>
+                                                            );
+                                                         })}
+                                                      </div>
+                                                   </>
+                                                );
+                                             })()}
+
+                                             {/* 4. Current Bid & Timer Row */}
+                                             <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 mt-1 sm:mt-2 xl:mt-4 sm:pt-2 sm:border-t sm:border-white/5">
+                                                <div className="text-left min-w-0 flex-1">
+                                                   <span className="text-[8px] sm:text-[9px] xl:text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-0.5 sm:mb-1">
+                                                      Current Bid
+                                                   </span>
+                                                   <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                                                      <span className="text-xl xs:text-2xl sm:text-lg sm:text-xl xl:text-3xl font-extrabold text-white leading-none whitespace-nowrap">
+                                                         {displayAuctionState?.currentBid == null ? '—' : `₹${formatCrores(displayAuctionState.currentBid)} Cr`}
+                                                      </span>
+                                                      {displayAuctionState?.highBidderTeamId ? (() => {
+                                                         const bidderTeam = TEAMS.find(t => t.id === displayAuctionState.highBidderTeamId);
+                                                         const shortName = bidderTeam?.id || displayAuctionState.highBidderTeamId;
+                                                         const fullName = bidderTeam?.name || shortName;
+                                                         const rawBidderName = displayAuctionState?.highBidderName || shortName;
+                                                         const bidderName = rawBidderName.length > 22 ? `${rawBidderName.slice(0, 22)}...` : rawBidderName;
+
+                                                         return (
+                                                            <div
+                                                               className="flex items-center gap-1.5 sm:gap-2 bg-white/5 border border-white/10 px-2 sm:px-2.5 py-1 rounded-xl max-w-[160px] xs:max-w-[200px] sm:max-w-[240px] md:max-w-[280px]"
+                                                               title={`${rawBidderName} (${fullName})`}
+                                                            >
+                                                               <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-white/5 border border-white/10 p-0.5 flex items-center justify-center shrink-0">
+                                                                  <img src={bidderTeam?.logo} alt="High Bidder Team Logo" className="w-full h-full object-contain" />
+                                                               </div>
+                                                               <div className="flex flex-col min-w-0 text-left">
+                                                                  <span className="text-[7.5px] sm:text-[8px] font-pixel text-slate-400 uppercase tracking-widest truncate leading-tight">
+                                                                     {shortName}
+                                                                  </span>
+                                                                  <span className="text-[8.5px] sm:text-[9.5px] md:text-[10px] font-black text-white uppercase tracking-wider truncate leading-tight">
+                                                                     {bidderName}
+                                                                  </span>
+                                                               </div>
+                                                            </div>
+                                                         );
+                                                      })() : (
+                                                         <span className="text-[8px] sm:text-[9px] font-bold text-gray-500 uppercase tracking-widest bg-white/[0.02] border border-white/5 px-2 py-1 rounded-lg">
+                                                            No Bids
+                                                         </span>
+                                                      )}
+                                                   </div>
+                                                </div>
+
+                                                {/* Timer ring: inline with the bid row */}
+                                                <div className="shrink-0">
+                                                   <AuctionCountdown
+                                                      variant="badge"
+                                                      displayAuctionState={displayAuctionState}
+                                                      configuredBidTimer={configuredBidTimer}
+                                                      isAdmin={isAdmin}
+                                                      roomId={id}
+                                                      endPlayerAuction={endPlayerAuction}
+                                                      getSyncedTime={getSyncedTime}
+                                                      playBeep={playBeep}
+                                                   />
+                                                </div>
+                                             </div>
+                                          </div>
+                                       </div>
+
+                                       {/* 5. Squad / OS / Purse & 6. Sticky Action bar - INSIDE the card */}
+                                       <div className="bg-[#0a0b0e]/95 backdrop-blur-md border-t border-white/10 p-2.5 sm:p-3 md:p-3.5 flex flex-col gap-2.5 sm:gap-2 md:gap-2.5 sticky bottom-0 z-20 pb-[max(0.625rem,env(safe-area-inset-bottom))]">
+                                          {/* Franchise Quick Stats Bar right above Bid button (Mobile view only) */}
+                                          {team && (() => {
+                                             const osCount = countOverseas(team.squad, IPL_PLAYERS);
+                                             const totalBudget = toFiniteNumber(currentAuction?.settings?.budget, 120);
 
                                              return (
-                                                <button
-                                                   key={jump}
-                                                   type="button"
-                                                   onClick={() => handleBid(targetAmount)}
-                                                   disabled={disabled}
-                                                   className="flex-1 sm:flex-initial px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-xs font-mono font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:border-emerald-500/60 disabled:opacity-30 disabled:border-white/5 disabled:text-slate-500 disabled:pointer-events-none transition-all active:scale-95 cursor-pointer text-center"
-                                                   title={disabled ? (isLeading ? 'Leading bidder' : 'Insufficient budget') : `Jump bid to ₹${formatCrores(targetAmount)} Cr`}
-                                                >
-                                                   +{jump} Cr <span className="opacity-70 text-[10px] hidden sm:inline">(₹{formatCrores(targetAmount)})</span>
-                                                </button>
+                                                <div className="flex md:hidden items-center justify-between bg-[#0e1015] border border-white/10 px-2.5 sm:px-4 py-2 rounded-xl text-[9px] sm:text-xs font-bold text-gray-300">
+                                                   <div className="flex items-center gap-1" title="Squad Count">
+                                                      <span className="text-gray-500 uppercase font-black text-[8px] sm:text-[10px]">Squad:</span>
+                                                      <span className="text-slate-200 font-extrabold">{team.squad?.length || 0}/{toFiniteNumber(currentAuction?.squadLimit, 25)}</span>
+                                                   </div>
+                                                   <div className="w-px h-3 bg-white/10" />
+                                                   <div className="flex items-center gap-1" title="Overseas Players">
+                                                      <span className="text-gray-500 uppercase font-black text-[8px] sm:text-[10px]">OS:</span>
+                                                      <span className="text-slate-200 font-extrabold">{osCount}/{toFiniteNumber(currentAuction?.overseasLimit, 8)}</span>
+                                                   </div>
+                                                   <div className="w-px h-3 bg-white/10" />
+                                                   <div className="flex items-center gap-1" title="Purse Left out of Total Budget">
+                                                      <span className="text-gray-500 uppercase font-black text-[8px] sm:text-[10px]">Purse:</span>
+                                                      <span className="text-slate-200 font-extrabold">₹{formatCrores(team.budgetRemaining ?? totalBudget)}/{formatCrores(totalBudget, 0)}Cr</span>
+                                                   </div>
+                                                   <div className="w-px h-3 bg-white/10 hidden xs:block" />
+                                                   <div className="items-center gap-1 hidden xs:flex" title="Total Spent">
+                                                      <span className="text-gray-500 uppercase font-black text-[8px] sm:text-[10px]">Spent:</span>
+                                                      <span className="text-slate-200 font-extrabold">₹{formatCrores(team.spent, 1)}Cr</span>
+                                                   </div>
+                                                </div>
                                              );
-                                          })}
-                                       </div>
-                                    )}
+                                          })()}
 
-                                    <div className="flex gap-2 sm:gap-3 md:gap-4">
-                                       {/* Pass / Next Lot Button (Every Human Manager during bidding; Host during celebration) */}
-                                       {!spectateMode && (displayAuctionState?.status === 'bidding' || isAdmin) && (
-                                          <button
-                                             type="button"
-                                             onClick={handleSoloSkip}
-                                             disabled={isSkippingLot || (displayAuctionState?.status !== 'bidding' && displayAuctionState?.status !== 'sold' && displayAuctionState?.status !== 'unsold')}
-                                             className={`px-3 sm:px-4 h-12 sm:h-14 xl:h-18 border rounded-2xl flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed font-pixel text-[10px] sm:text-xs tracking-wider cursor-pointer shrink-0 ${
-                                                hasUserPassed && displayAuctionState?.status === 'bidding'
-                                                   ? 'bg-amber-500/20 border-amber-500/40 text-amber-300 hover:bg-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.2)]'
-                                                   : 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-white/20 text-slate-300 hover:text-white'
-                                             }`}
-                                             title={
-                                                displayAuctionState?.status === 'sold' || displayAuctionState?.status === 'unsold'
-                                                   ? 'Advance to next lot immediately'
-                                                   : totalRequired > 1
-                                                   ? hasUserPassed
-                                                      ? `You agreed to pass (${passedCount}/${totalRequired} agreed). Click to undo.`
-                                                      : `Vote to pass this player (${passedCount}/${totalRequired} agreed)`
-                                                   : 'Pass / unsold current player'
-                                             }
-                                          >
-                                             {isSkippingLot ? (
-                                                <Loader2 size={16} className="animate-spin text-slate-400" />
-                                             ) : (
-                                                <>
-                                                   <SkipForward size={14} />
-                                                   <span>
-                                                      {displayAuctionState?.status === 'sold' || displayAuctionState?.status === 'unsold'
-                                                         ? 'NEXT'
+                                          {/* Quick Jump Bid Buttons */}
+                                          {!spectateMode && displayAuctionState?.status === 'bidding' && (
+                                             <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 px-1">
+                                                <span className="text-[10px] font-pixel text-slate-400 uppercase tracking-widest mr-auto hidden xs:inline">Jump Bid:</span>
+                                                {[1, 1.5, 2].map((jump) => {
+                                                   const current = toFiniteNumber(displayAuctionState?.currentBid, 0);
+                                                   const targetAmount = r2(current === 0 ? toFiniteNumber(currentPlayer?.basePrice, 0) + jump : current + jump);
+                                                   const isAffordable = (team?.budgetRemaining || 0) >= targetAmount;
+                                                   const isLeading = displayAuctionState?.highBidderId === user?.uid;
+                                                   const disabled = !team || isLeading || !isAffordable || isBiddingInFlight;
+
+                                                   return (
+                                                      <button
+                                                         key={jump}
+                                                         type="button"
+                                                         onClick={() => handleBid(targetAmount)}
+                                                         disabled={disabled}
+                                                         className="flex-1 sm:flex-initial px-2.5 sm:px-3 py-1 sm:py-1 rounded-xl text-xs font-mono font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:border-emerald-500/60 disabled:opacity-30 disabled:border-white/5 disabled:text-slate-500 disabled:pointer-events-none transition-all active:scale-95 cursor-pointer text-center"
+                                                         title={disabled ? (isLeading ? 'Leading bidder' : 'Insufficient budget') : `Jump bid to ₹${formatCrores(targetAmount)} Cr`}
+                                                      >
+                                                         +{jump} Cr <span className="opacity-70 text-[10px] hidden sm:inline">(₹{formatCrores(targetAmount)})</span>
+                                                      </button>
+                                                   );
+                                                })}
+                                             </div>
+                                          )}
+
+                                          <div className="flex gap-2 sm:gap-3 md:gap-3">
+                                             {/* Pass / Next Lot Button (Every Human Manager during bidding; Host during celebration) */}
+                                             {!spectateMode && (displayAuctionState?.status === 'bidding' || isAdmin) && (
+                                                <button
+                                                   type="button"
+                                                   onClick={handleSoloSkip}
+                                                   disabled={isSkippingLot || (displayAuctionState?.status !== 'bidding' && displayAuctionState?.status !== 'sold' && displayAuctionState?.status !== 'unsold')}
+                                                   className={`px-3 sm:px-4 md:px-3.5 h-12 md:h-11 lg:h-12 border rounded-xl md:rounded-2xl flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed font-pixel text-[10px] sm:text-xs tracking-wider cursor-pointer shrink-0 ${
+                                                      hasUserPassed && displayAuctionState?.status === 'bidding'
+                                                         ? 'bg-amber-500/20 border-amber-500/40 text-amber-300 hover:bg-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.2)]'
+                                                         : 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-white/20 text-slate-300 hover:text-white'
+                                                   }`}
+                                                   title={
+                                                      displayAuctionState?.status === 'sold' || displayAuctionState?.status === 'unsold'
+                                                         ? 'Advance to next lot immediately'
                                                          : totalRequired > 1
                                                          ? hasUserPassed
-                                                            ? `PASSED (${passedCount}/${totalRequired})`
-                                                            : `PASS (${passedCount}/${totalRequired})`
-                                                         : 'PASS'}
-                                                   </span>
-                                                </>
+                                                            ? `You agreed to pass (${passedCount}/${totalRequired} agreed). Click to undo.`
+                                                            : `Vote to pass this player (${passedCount}/${totalRequired} agreed)`
+                                                         : 'Pass / unsold current player'
+                                                   }
+                                                >
+                                                   {isSkippingLot ? (
+                                                      <Loader2 size={16} className="animate-spin text-slate-400" />
+                                                   ) : (
+                                                      <>
+                                                         <SkipForward size={14} />
+                                                         <span>
+                                                            {displayAuctionState?.status === 'sold' || displayAuctionState?.status === 'unsold'
+                                                               ? 'NEXT'
+                                                               : totalRequired > 1
+                                                               ? hasUserPassed
+                                                                  ? `PASSED (${passedCount}/${totalRequired})`
+                                                                  : `PASS (${passedCount}/${totalRequired})`
+                                                               : 'PASS'}
+                                                         </span>
+                                                      </>
+                                                   )}
+                                                </button>
                                              )}
-                                          </button>
-                                       )}
 
-                                       <button
-                                          onClick={() => handleBid()}
-                                          disabled={spectateMode || !team || displayAuctionState?.status !== 'bidding' || displayAuctionState?.highBidderId === user?.uid}
-                                          className={`flex-1 h-12 sm:h-14 xl:h-18 font-black text-sm sm:text-base xl:text-xl rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale cursor-pointer ${spectateMode
-                                             ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                                             : displayAuctionState?.highBidderId === user?.uid
-                                                ? 'bg-white/5 text-green-500 border border-green-500/20 shadow-inner'
-                                                : 'bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-wider shadow-[0_10px_30px_rgba(16,185,129,0.2)]'
-                                             }`}
-                                       >
-                                          {spectateMode ? (
-                                             <span className="flex items-center gap-2 text-xs xl:text-sm font-black uppercase tracking-widest text-blue-400">
-                                                <Eye size={18} /> Spectator View (Read Only)
-                                             </span>
-                                          ) : displayAuctionState?.status === 'paused' ? 'PAUSED' : displayAuctionState?.highBidderId === user?.uid ? "LEADING BIDDER" : `PLACE BID: ₹${formatCrores(nextBidAmount)} Cr`}
-                                       </button>
-                                       <button onClick={() => setShowPlayersOverlay(true)} className="w-12 h-12 sm:w-14 sm:h-14 xl:w-18 xl:h-18 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-all"><List size={20} /></button>
+                                             <button
+                                                onClick={() => handleBid()}
+                                                disabled={spectateMode || !team || displayAuctionState?.status !== 'bidding' || displayAuctionState?.highBidderId === user?.uid}
+                                                className={`flex-1 h-12 md:h-11 lg:h-12 font-black text-sm md:text-sm lg:text-base rounded-xl md:rounded-2xl flex items-center justify-center gap-2 sm:gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale cursor-pointer ${spectateMode
+                                                   ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                                   : displayAuctionState?.highBidderId === user?.uid
+                                                      ? 'bg-white/5 text-green-500 border border-green-500/20 shadow-inner'
+                                                      : 'bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-wider shadow-[0_10px_30px_rgba(16,185,129,0.2)]'
+                                                   }`}
+                                             >
+                                                {spectateMode ? (
+                                                   <span className="flex items-center gap-2 text-xs xl:text-sm font-black uppercase tracking-widest text-blue-400">
+                                                      <Eye size={16} /> Spectator View (Read Only)
+                                                   </span>
+                                                ) : displayAuctionState?.status === 'paused' ? 'PAUSED' : displayAuctionState?.highBidderId === user?.uid ? "LEADING BIDDER" : `PLACE BID: ₹${formatCrores(nextBidAmount)} Cr`}
+                                             </button>
+                                             <button onClick={() => setShowPlayersOverlay(true)} className="w-12 h-12 md:w-11 md:h-11 lg:w-12 lg:h-12 bg-white/5 border border-white/10 rounded-xl md:rounded-2xl flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-all shrink-0"><List size={18} /></button>
+                                          </div>
+                                       </div>
                                     </div>
-                                 </div>
-                              </div>
+                                 );
+                              })()}
                            </motion.div>
                         )}
                      </AnimatePresence>
