@@ -28,6 +28,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import SquadRating from '../components/SquadRating';
 import PageLoader from '../components/PageLoader';
+import { MultiplexAdSlot } from '../components/AdSlot';
 import useRoomServer from '../hooks/useRoomServer';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import { isLocalRoom, loadLocalSoloRoom } from '../lib/localAuctionEngine';
@@ -858,7 +859,8 @@ const AuctionSummary = () => {
           )}
         </AnimatePresence>
 
-    
+        {/* Post-Auction Multiplex Ad Section */}
+        <MultiplexAdSlot className="mt-10 sm:mt-14 mb-6" />
 
       </div>
     </div>

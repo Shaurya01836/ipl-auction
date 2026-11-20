@@ -4,6 +4,7 @@ const DEFAULT_CLIENT_ID = 'ca-pub-2952599241278941';
 const DEFAULT_LANDING_SLOT_1 = '6078587405';
 const DEFAULT_LANDING_SLOT_2 = '2911895830';
 const DEFAULT_LANDING_SLOT_3 = '2523068937';
+export const DEFAULT_LANDING_MULTIPLEX_SLOT = '2357584801';
 export const DEFAULT_AUCTION_ROOM_SLOT = '6494103537';
 export const DEFAULT_AUCTION_ROOM_MOBILE_SLOT = '8939145929';
 
@@ -132,6 +133,60 @@ export const AuctionMobileBannerAd = ({
         />
       </div>
     </div>
+  );
+};
+
+export const MultiplexAdSlot = ({
+  slot = import.meta.env.VITE_ADSENSE_LANDING_MULTIPLEX_SLOT || DEFAULT_LANDING_MULTIPLEX_SLOT,
+  className = '',
+  label = 'Sponsored Links'
+}) => {
+  const adRef = useRef(null);
+  const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
+
+  useEffect(() => {
+    if (!slot || !clientId) return;
+
+    ensureAdSenseScript(clientId);
+
+    const timer = setTimeout(() => {
+      if (!adRef.current) return;
+      if (adRef.current.getAttribute('data-adsbygoogle-status')) return;
+      if (adRef.current.children.length > 0) return;
+
+      try {
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      } catch (err) {
+        if (import.meta.env.DEV) {
+          console.warn('[MultiplexAdSlot] AdSense push error:', err);
+        }
+      }
+    }, 120);
+
+    return () => clearTimeout(timer);
+  }, [slot, clientId]);
+
+  if (!slot || !clientId) return null;
+
+  return (
+    <section className={`relative z-10 w-full max-w-6xl mx-auto ${className}`} aria-label={label}>
+      <div className="mb-3 flex items-center justify-center gap-3">
+        <div className="h-px w-10 bg-white/10" />
+        <span className="text-[8px] font-black uppercase tracking-[0.35em] text-gray-500">{label}</span>
+        <div className="h-px w-10 bg-white/10" />
+      </div>
+
+      <div className="w-full text-center overflow-hidden rounded-2xl border border-white/5 bg-white/[0.015] p-2.5 sm:p-4 min-h-[140px] flex items-center justify-center">
+        <ins
+          ref={adRef}
+          className="adsbygoogle"
+          style={{ display: 'block', width: '100%' }}
+          data-ad-format="autorelaxed"
+          data-ad-client={clientId}
+          data-ad-slot={slot}
+        />
+      </div>
+    </section>
   );
 };
 

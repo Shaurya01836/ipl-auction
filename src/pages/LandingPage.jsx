@@ -60,7 +60,7 @@ import Navbar from "../components/Navbar";
 import ConfirmDialog from "../components/ConfirmDialog";
 import AuctionActivityFeed from "../components/AuctionActivityFeed";
 import Footer from "../components/Footer";
-import AdSlot from "../components/AdSlot";
+import AdSlot, { MultiplexAdSlot } from "../components/AdSlot";
 import CommunitySection from "../components/community/CommunitySection";
 import CommunityBanner from "../components/community/CommunityBanner";
 import ServerSwitcher from "../components/ServerSwitcher";
@@ -873,7 +873,7 @@ const LandingPage = () => {
           </div>
         </PanelSurface>
 
-        <AdSlot className="mt-8 mb-4 px-2.5 sm:px-4" />
+        <MultiplexAdSlot className="mt-8 mb-4 px-2.5 sm:px-4" />
 
         <CommunitySection />
 
@@ -2023,7 +2023,7 @@ const LandingPage = () => {
         onCancel={() => setSessionToDelete(null)}
       />
 
-      <AdSlot className="mt-8 mb-4 px-2.5 sm:px-4" />
+      <MultiplexAdSlot className="mt-8 mb-4 px-2.5 sm:px-4" />
 
       <CommunitySection />
 

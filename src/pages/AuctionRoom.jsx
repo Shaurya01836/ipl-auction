@@ -1792,8 +1792,8 @@ const AuctionRoom = () => {
                         )}
                      </AnimatePresence>
 
-                     {/* Arena Ad Slot (strictly visible on mobile screens only) */}
-                     <div className="w-full block md:hidden">
+                     {/* Arena Ad Slot */}
+                     <div className="w-full block">
                         <AuctionRoomAd
                            slot={import.meta.env.VITE_ADSENSE_AUCTION_ROOM_SLOT || DEFAULT_AUCTION_ROOM_SLOT}
                            className="w-full mt-2 mb-6"
