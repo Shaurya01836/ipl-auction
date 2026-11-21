@@ -28,7 +28,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import SquadRating from '../components/SquadRating';
 import PageLoader from '../components/PageLoader';
-import { AuctionSummaryAd, AuctionSummaryInFeedAd, MultiplexAdSlot } from '../components/AdSlot';
+import { AuctionSummaryAd, AuctionSummaryInFeedAd } from '../components/AdSlot';
 import useRoomServer from '../hooks/useRoomServer';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import { isLocalRoom, loadLocalSoloRoom } from '../lib/localAuctionEngine';

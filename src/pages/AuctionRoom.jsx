@@ -38,7 +38,7 @@ import PageLoader from '../components/PageLoader';
 import PageBackground from '../components/PageBackground';
 import ConfirmDialog from '../components/ConfirmDialog';
 import AuctionCountdown from '../components/AuctionCountdown';
-import AdSlot, { AuctionRoomAd, AuctionMobileBannerAd, DEFAULT_AUCTION_ROOM_SLOT } from '../components/AdSlot';
+import AdSlot, { AuctionRoomAd, AuctionMobileBannerAd, AuctionTeamsInFeedAd, DEFAULT_AUCTION_ROOM_SLOT } from '../components/AdSlot';
 import useRoomServer from '../hooks/useRoomServer';
 import { SERVER_LOCAL, withServerParam } from '../lib/auctionServers';
 import { isLocalRoom } from '../lib/localAuctionEngine';
@@ -1320,8 +1320,9 @@ const AuctionRoom = () => {
                      const ratingInfo = liveTeamRatings?.ratingMap[t.id];
 
                      return (
-                        <div key={t.id} className="mb-2 last:mb-0">
-                           <button
+                        <React.Fragment key={t.id}>
+                           <div className="mb-2 last:mb-0">
+                              <button
                               onClick={() => setSelectedTeamId(isSelected ? null : (manager?.id || t.id))}
                               className={`w-full text-left py-2.5 compact:py-2 px-3 rounded-xl border transition-all flex items-center justify-between group cursor-pointer ${isSelected ? 'bg-[#0e1015] border-white/20 shadow-[0_4px_24px_rgba(0,0,0,0.5)]' : 'bg-[#0e1015]/90 border-white/5 hover:bg-white/[0.05] hover:border-white/10'}`}
                            >
@@ -1444,8 +1445,14 @@ const AuctionRoom = () => {
                               )}
                            </AnimatePresence>
                         </div>
-                     );
-                  })}
+
+                        {/* In-Feed Display Ad between Team 5 and Team 6 (idx === 4) */}
+                        {idx === 4 && (
+                           <AuctionTeamsInFeedAd key="teams-infeed-ad" />
+                        )}
+                     </React.Fragment>
+                  );
+               })}
                </div>
             </aside>
 
@@ -1787,7 +1794,7 @@ const AuctionRoom = () => {
                                           {!spectateMode && displayAuctionState?.status === 'bidding' && (
                                              <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 px-1">
                                                 <span className="text-[10px] font-pixel text-slate-400 uppercase tracking-widest mr-auto hidden xs:inline">Jump Bid:</span>
-                                                {[1, 1.5, 2].map((jump) => {
+                                                {[0.5, 0.75, 1].map((jump) => {
                                                    const current = toFiniteNumber(displayAuctionState?.currentBid, 0);
                                                    const targetAmount = r2(current === 0 ? toFiniteNumber(currentPlayer?.basePrice, 0) + jump : current + jump);
                                                    const isAffordable = (team?.budgetRemaining || 0) >= targetAmount;

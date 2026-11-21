@@ -4,7 +4,7 @@ const DEFAULT_CLIENT_ID = 'ca-pub-2952599241278941';
 const DEFAULT_LANDING_SLOT_1 = '6078587405';
 const DEFAULT_LANDING_SLOT_2 = '2911895830';
 const DEFAULT_LANDING_SLOT_3 = '2523068937';
-export const DEFAULT_LANDING_MULTIPLEX_SLOT = '2357584801';
+export const DEFAULT_LANDING_MULTIPLEX_SLOT = '6078587405';
 export const DEFAULT_AUCTION_ROOM_SLOT = '6494103537';
 export const DEFAULT_AUCTION_ROOM_MOBILE_SLOT = '8939145929';
 export const DEFAULT_SIDEBAR_ACTIVITY_SLOT = '2911895830';
@@ -21,13 +21,23 @@ const ensureAdSenseScript = (clientId) => {
   }
 };
 
-export const SingleAdUnit = ({ slot, clientId, bare = false }) => {
+export const SingleAdUnit = ({
+  slot,
+  clientId,
+  bare = false,
+  autoRefresh = false,
+  refreshIntervalSec = 60
+}) => {
+  const containerRef = useRef(null);
   const adRef = useRef(null);
   const [isUnfilled, setIsUnfilled] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const el = adRef.current;
     if (!el) return;
+
+    setIsUnfilled(false);
 
     const checkStatus = () => {
       if (el.getAttribute('data-ad-status') === 'unfilled') {
@@ -40,7 +50,7 @@ export const SingleAdUnit = ({ slot, clientId, bare = false }) => {
     const observer = new MutationObserver(() => checkStatus());
     observer.observe(el, { attributes: true, attributeFilter: ['data-ad-status'] });
     return () => observer.disconnect();
-  }, [slot, clientId]);
+  }, [slot, clientId, refreshKey]);
 
   useEffect(() => {
     if (!slot || !clientId) return;
@@ -49,9 +59,11 @@ export const SingleAdUnit = ({ slot, clientId, bare = false }) => {
 
     // Delay push slightly so DOM layout completes and offsetWidth is non-zero
     const timer = setTimeout(() => {
-      if (!adRef.current) return;
-      if (adRef.current.getAttribute('data-adsbygoogle-status')) return;
-      if (adRef.current.children.length > 0) return;
+      const el = adRef.current;
+      if (!el) return;
+      if (el.getAttribute('data-adsbygoogle-status')) return;
+      if (el.children.length > 0) return;
+      if (el.offsetWidth === 0) return;
 
       try {
         (window.adsbygoogle = window.adsbygoogle || []).push({});
@@ -63,13 +75,35 @@ export const SingleAdUnit = ({ slot, clientId, bare = false }) => {
     }, 120);
 
     return () => clearTimeout(timer);
-  }, [slot, clientId]);
+  }, [slot, clientId, refreshKey]);
+
+  // Smart in-view auto-refresh timer (Google policy compliant: visible tab & in-viewport only)
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    const intervalMs = Math.max(30, refreshIntervalSec) * 1000;
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const isInViewport = rect.top < window.innerHeight && rect.bottom > 0 && rect.width > 0;
+        if (!isInViewport) return;
+      }
+      setRefreshKey((k) => k + 1);
+    }, intervalMs);
+
+    return () => clearInterval(interval);
+  }, [autoRefresh, refreshIntervalSec]);
 
   if (!slot || !clientId || isUnfilled) return null;
 
   return (
-    <div className={bare ? "w-full text-center overflow-hidden" : "w-full text-center overflow-hidden rounded-xl border border-white/5 bg-white/[0.015] p-2 min-h-[140px] flex items-center justify-center"}>
+    <div
+      ref={containerRef}
+      className={bare ? "w-full text-center overflow-hidden" : "w-full text-center overflow-hidden rounded-xl border border-white/5 bg-white/[0.015] p-2 min-h-[140px] flex items-center justify-center"}
+    >
       <ins
+        key={`${slot}-${refreshKey}`}
         ref={adRef}
         className="adsbygoogle"
         style={{ display: 'block', width: '100%' }}
@@ -84,7 +118,9 @@ export const SingleAdUnit = ({ slot, clientId, bare = false }) => {
 
 export const AuctionRoomAd = ({
   slot = import.meta.env.VITE_ADSENSE_AUCTION_ROOM_SLOT || DEFAULT_AUCTION_ROOM_SLOT,
-  className = ''
+  className = '',
+  autoRefresh = true,
+  refreshIntervalSec = 60
 }) => {
   const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
 
@@ -101,9 +137,15 @@ export const AuctionRoomAd = ({
         </span>
       </div>
 
-      {/* Ad slot */}
+      {/* Ad slot with smart auto-refresh */}
       <div className="w-full flex items-center justify-center">
-        <SingleAdUnit slot={slot} clientId={clientId} bare />
+        <SingleAdUnit
+          slot={slot}
+          clientId={clientId}
+          bare
+          autoRefresh={autoRefresh}
+          refreshIntervalSec={refreshIntervalSec}
+        />
       </div>
     </div>
   );
@@ -111,9 +153,13 @@ export const AuctionRoomAd = ({
 
 export const AuctionMobileBannerAd = ({
   slot = import.meta.env.VITE_ADSENSE_AUCTION_ROOM_MOBILE_SLOT || DEFAULT_AUCTION_ROOM_MOBILE_SLOT,
-  className = ''
+  className = '',
+  autoRefresh = true,
+  refreshIntervalSec = 60
 }) => {
+  const containerRef = useRef(null);
   const adRef = useRef(null);
+  const [refreshKey, setRefreshKey] = useState(0);
   const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
 
   useEffect(() => {
@@ -122,28 +168,45 @@ export const AuctionMobileBannerAd = ({
     ensureAdSenseScript(clientId);
 
     const timer = setTimeout(() => {
-      if (!adRef.current) return;
-      if (adRef.current.getAttribute('data-adsbygoogle-status')) return;
-      if (adRef.current.children.length > 0) return;
+      const el = adRef.current;
+      if (!el) return;
+      if (el.getAttribute('data-adsbygoogle-status')) return;
+      if (el.children.length > 0) return;
+      if (el.offsetWidth === 0) return;
 
       try {
         (window.adsbygoogle = window.adsbygoogle || []).push({});
       } catch (err) {
         if (import.meta.env.DEV) {
-          console.warn('[AdSlot] AdSense push error:', err);
+          console.warn('[AuctionMobileBannerAd] AdSense push error:', err);
         }
       }
     }, 120);
 
     return () => clearTimeout(timer);
-  }, [slot, clientId]);
+  }, [slot, clientId, refreshKey]);
+
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const intervalMs = Math.max(30, refreshIntervalSec) * 1000;
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        if (rect.top >= window.innerHeight || rect.bottom <= 0 || rect.width === 0) return;
+      }
+      setRefreshKey((k) => k + 1);
+    }, intervalMs);
+    return () => clearInterval(interval);
+  }, [autoRefresh, refreshIntervalSec]);
 
   if (!slot || !clientId) return null;
 
   return (
-    <div className={`w-full flex justify-center items-center sm:hidden overflow-hidden ${className}`}>
+    <div ref={containerRef} className={`w-full flex justify-center items-center sm:hidden overflow-hidden ${className}`}>
       <div className="w-[320px] h-[50px] min-h-[50px] flex items-center justify-center overflow-hidden">
         <ins
+          key={`${slot}-${refreshKey}`}
           ref={adRef}
           className="adsbygoogle"
           style={{ display: 'inline-block', width: '320px', height: '50px' }}
@@ -157,7 +220,9 @@ export const AuctionMobileBannerAd = ({
 
 export const AuctionSidebarActivityAd = ({
   slot = import.meta.env.VITE_ADSENSE_SIDEBAR_ACTIVITY_SLOT || import.meta.env.VITE_ADSENSE_LANDING_SLOT_2 || DEFAULT_SIDEBAR_ACTIVITY_SLOT,
-  className = ''
+  className = '',
+  autoRefresh = true,
+  refreshIntervalSec = 60
 }) => {
   const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
 
@@ -171,16 +236,145 @@ export const AuctionSidebarActivityAd = ({
         </span>
       </div>
       <div className="w-full flex items-center justify-center min-h-[250px] max-h-[280px] overflow-hidden">
-        <SingleAdUnit slot={slot} clientId={clientId} bare />
+        <SingleAdUnit
+          slot={slot}
+          clientId={clientId}
+          bare
+          autoRefresh={autoRefresh}
+          refreshIntervalSec={refreshIntervalSec}
+        />
       </div>
     </div>
   );
 };
 
-export const MultiplexAdSlot = ({
-  slot = import.meta.env.VITE_ADSENSE_LANDING_MULTIPLEX_SLOT || DEFAULT_LANDING_MULTIPLEX_SLOT,
+export const AuctionTeamsInFeedAd = ({
+  slot = import.meta.env.VITE_ADSENSE_SIDEBAR_ACTIVITY_SLOT || import.meta.env.VITE_ADSENSE_LANDING_SLOT_2 || DEFAULT_SIDEBAR_ACTIVITY_SLOT,
   className = '',
-  label = 'Sponsored Links'
+  autoRefresh = true,
+  refreshIntervalSec = 60
+}) => {
+  const containerRef = useRef(null);
+  const adRef = useRef(null);
+  const [isUnfilled, setIsUnfilled] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const pushedRef = useRef(false);
+  const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
+
+  useEffect(() => {
+    const el = adRef.current;
+    if (!el) return;
+
+    setIsUnfilled(false);
+    pushedRef.current = false;
+
+    const checkStatus = () => {
+      if (el.getAttribute('data-ad-status') === 'unfilled') {
+        setIsUnfilled(true);
+      }
+    };
+
+    checkStatus();
+
+    const observer = new MutationObserver(() => checkStatus());
+    observer.observe(el, { attributes: true, attributeFilter: ['data-ad-status'] });
+    return () => observer.disconnect();
+  }, [slot, clientId, refreshKey]);
+
+  useEffect(() => {
+    if (!slot || !clientId) return;
+
+    ensureAdSenseScript(clientId);
+
+    const tryPush = () => {
+      if (pushedRef.current) return;
+      const el = adRef.current;
+      if (!el) return;
+      if (el.getAttribute('data-adsbygoogle-status')) {
+        pushedRef.current = true;
+        return;
+      }
+      if (el.children.length > 0) {
+        pushedRef.current = true;
+        return;
+      }
+      // Never push when container is hidden (availableWidth === 0, e.g. inactive mobile tab)
+      if (el.offsetWidth === 0) return;
+
+      try {
+        pushedRef.current = true;
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      } catch (err) {
+        pushedRef.current = false;
+        if (import.meta.env.DEV) {
+          console.warn('[AuctionTeamsInFeedAd] AdSense push error:', err);
+        }
+      }
+    };
+
+    const timer = setTimeout(tryPush, 150);
+
+    let io;
+    if (typeof IntersectionObserver !== 'undefined' && adRef.current) {
+      io = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && entry.boundingClientRect.width > 0) {
+            tryPush();
+          }
+        }
+      });
+      io.observe(adRef.current);
+    }
+
+    return () => {
+      clearTimeout(timer);
+      if (io) io.disconnect();
+    };
+  }, [slot, clientId, refreshKey]);
+
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const intervalMs = Math.max(30, refreshIntervalSec) * 1000;
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        if (rect.top >= window.innerHeight || rect.bottom <= 0 || rect.width === 0) return;
+      }
+      setRefreshKey((k) => k + 1);
+    }, intervalMs);
+    return () => clearInterval(interval);
+  }, [autoRefresh, refreshIntervalSec]);
+
+  if (!slot || !clientId || isUnfilled) return null;
+
+  return (
+    <div ref={containerRef} className={`my-2 p-2 rounded-xl border border-white/10 bg-[#0e1015]/90 overflow-hidden ${className}`}>
+      <div className="flex items-center justify-between pb-1 mb-1 border-b border-white/5 px-1">
+        <span className="text-[7.5px] font-black uppercase tracking-[0.25em] text-gray-500">
+          Sponsored
+        </span>
+      </div>
+      <div className="w-full flex items-center justify-center min-h-[90px] overflow-hidden">
+        <ins
+          key={`${slot}-${refreshKey}`}
+          ref={adRef}
+          className="adsbygoogle"
+          style={{ display: 'block', width: '100%' }}
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+          data-ad-client={clientId}
+          data-ad-slot={slot}
+        />
+      </div>
+    </div>
+  );
+};
+
+export const LandingDisplayBannerAd = ({
+  slot = import.meta.env.VITE_ADSENSE_LANDING_SLOT_1 || DEFAULT_LANDING_SLOT_1,
+  className = '',
+  label = 'Sponsored'
 }) => {
   const adRef = useRef(null);
   const [isUnfilled, setIsUnfilled] = useState(false);
@@ -212,12 +406,13 @@ export const MultiplexAdSlot = ({
       if (!adRef.current) return;
       if (adRef.current.getAttribute('data-adsbygoogle-status')) return;
       if (adRef.current.children.length > 0) return;
+      if (adRef.current.offsetWidth === 0) return;
 
       try {
         (window.adsbygoogle = window.adsbygoogle || []).push({});
       } catch (err) {
         if (import.meta.env.DEV) {
-          console.warn('[MultiplexAdSlot] AdSense push error:', err);
+          console.warn('[LandingDisplayBannerAd] AdSense push error:', err);
         }
       }
     }, 120);
@@ -249,6 +444,8 @@ export const MultiplexAdSlot = ({
     </section>
   );
 };
+
+export const MultiplexAdSlot = LandingDisplayBannerAd;
 
 export const AuctionSummaryAd = ({
   slot = import.meta.env.VITE_ADSENSE_AUCTION_SUMMARY_SLOT || import.meta.env.VITE_ADSENSE_LANDING_MULTIPLEX_SLOT || DEFAULT_LANDING_MULTIPLEX_SLOT,
@@ -293,6 +490,7 @@ export const AuctionSummaryInFeedAd = ({
       if (!adRef.current) return;
       if (adRef.current.getAttribute('data-adsbygoogle-status')) return;
       if (adRef.current.children.length > 0) return;
+      if (adRef.current.offsetWidth === 0) return;
 
       try {
         (window.adsbygoogle = window.adsbygoogle || []).push({});
