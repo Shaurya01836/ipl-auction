@@ -258,6 +258,78 @@ export const AuctionSummaryAd = ({
   return <MultiplexAdSlot slot={slot} className={className} label={label} />;
 };
 
+export const AuctionSummaryInFeedAd = ({
+  slot = import.meta.env.VITE_ADSENSE_LANDING_SLOT_2 || DEFAULT_LANDING_SLOT_2,
+  className = '',
+  label = 'Sponsored'
+}) => {
+  const adRef = useRef(null);
+  const [isUnfilled, setIsUnfilled] = useState(false);
+  const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
+
+  useEffect(() => {
+    const el = adRef.current;
+    if (!el) return;
+
+    const checkStatus = () => {
+      if (el.getAttribute('data-ad-status') === 'unfilled') {
+        setIsUnfilled(true);
+      }
+    };
+
+    checkStatus();
+
+    const observer = new MutationObserver(() => checkStatus());
+    observer.observe(el, { attributes: true, attributeFilter: ['data-ad-status'] });
+    return () => observer.disconnect();
+  }, [slot, clientId]);
+
+  useEffect(() => {
+    if (!slot || !clientId) return;
+
+    ensureAdSenseScript(clientId);
+
+    const timer = setTimeout(() => {
+      if (!adRef.current) return;
+      if (adRef.current.getAttribute('data-adsbygoogle-status')) return;
+      if (adRef.current.children.length > 0) return;
+
+      try {
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      } catch (err) {
+        if (import.meta.env.DEV) {
+          console.warn('[AuctionSummaryInFeedAd] AdSense push error:', err);
+        }
+      }
+    }, 120);
+
+    return () => clearTimeout(timer);
+  }, [slot, clientId]);
+
+  if (!slot || !clientId || isUnfilled) return null;
+
+  return (
+    <div className={`w-full max-w-5xl mx-auto my-3 sm:my-4 ${className}`}>
+      <div className="mb-2 flex items-center justify-center gap-2">
+        <div className="h-px w-8 bg-white/10" />
+        <span className="text-[7.5px] sm:text-[8px] font-black uppercase tracking-[0.3em] text-gray-500">{label}</span>
+        <div className="h-px w-8 bg-white/10" />
+      </div>
+      <div className="w-full text-center overflow-hidden rounded-2xl border border-white/5 bg-white/[0.015] p-2.5 sm:p-4 min-h-[120px] flex items-center justify-center">
+        <ins
+          ref={adRef}
+          className="adsbygoogle"
+          style={{ display: 'block', width: '100%' }}
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+          data-ad-client={clientId}
+          data-ad-slot={slot}
+        />
+      </div>
+    </div>
+  );
+};
+
 const AdSlot = ({
   slot,
   slot1 = import.meta.env.VITE_ADSENSE_LANDING_SLOT_1 || import.meta.env.VITE_ADSENSE_LANDING_FOOTER_SLOT || DEFAULT_LANDING_SLOT_1,

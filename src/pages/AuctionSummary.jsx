@@ -28,7 +28,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import SquadRating from '../components/SquadRating';
 import PageLoader from '../components/PageLoader';
-import { AuctionSummaryAd, MultiplexAdSlot } from '../components/AdSlot';
+import { AuctionSummaryAd, AuctionSummaryInFeedAd, MultiplexAdSlot } from '../components/AdSlot';
 import useRoomServer from '../hooks/useRoomServer';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import { isLocalRoom, loadLocalSoloRoom } from '../lib/localAuctionEngine';
@@ -563,55 +563,57 @@ const AuctionSummary = () => {
               exit={{ opacity: 0, y: -30 }}
               className="max-w-5xl mx-auto space-y-3 sm:space-y-4"
             >
-              {TEAMS.map((t) => {
-                const teamDoc = activeTeams.find(doc => (doc.teamId || doc.team_id) === t.id);
-                const manager = activeAuction?.players?.find(p => p.team === t.id);
-                const isExpanded = expandedTeam === t.id;
-                
-                const rawSquad = teamDoc?.squad;
-                const squadArr = Array.isArray(rawSquad) ? rawSquad : (rawSquad ? Object.values(rawSquad) : []);
-                const squad = squadArr.map(s => {
-                  const pid = typeof s === 'string' ? s : s.id;
-                  const bid = typeof s === 'string' ? null : (s.bid ?? null);
-                  const playerInfo = IPL_PLAYERS.find(p => p.id === pid);
-                  return { ...(playerInfo || {}), id: pid, name: playerInfo?.name || pid, bid };
-                }).filter(p => p && p.id);
+              {(() => {
+                const teamsWithSquads = TEAMS.map((t) => {
+                  const teamDoc = activeTeams.find(doc => (doc.teamId || doc.team_id) === t.id);
+                  const manager = activeAuction?.players?.find(p => p.team === t.id);
+                  const rawSquad = teamDoc?.squad;
+                  const squadArr = Array.isArray(rawSquad) ? rawSquad : (rawSquad ? Object.values(rawSquad) : []);
+                  const squad = squadArr.map(s => {
+                    const pid = typeof s === 'string' ? s : s.id;
+                    const bid = typeof s === 'string' ? null : (s.bid ?? null);
+                    const playerInfo = IPL_PLAYERS.find(p => p.id === pid);
+                    return { ...(playerInfo || {}), id: pid, name: playerInfo?.name || pid, bid };
+                  }).filter(p => p && p.id);
+                  return { t, teamDoc, manager, squad };
+                }).filter(item => item.squad.length > 0);
 
-                if (squad.length === 0) return null;
+                return teamsWithSquads.map(({ t, teamDoc, manager, squad }, idx) => {
+                  const isExpanded = expandedTeam === t.id;
+                  const osCount = countOverseas(teamDoc?.squad, IPL_PLAYERS);
+                  const totalBudget = toFiniteNumber(activeAuction?.settings?.budget, 120);
+                  const totalSpent = computeTeamSpent({
+                    budget: totalBudget,
+                    budgetRemaining: teamDoc?.budgetRemaining,
+                    spent: teamDoc?.spent,
+                  });
 
-                const osCount = countOverseas(teamDoc?.squad, IPL_PLAYERS);
-                const totalBudget = toFiniteNumber(activeAuction?.settings?.budget, 120);
-                const totalSpent = computeTeamSpent({
-                  budget: totalBudget,
-                  budgetRemaining: teamDoc?.budgetRemaining,
-                  spent: teamDoc?.spent,
-                });
+                  return (
+                    <React.Fragment key={t.id}>
+                      <div className="group flex flex-col gap-2">
+                        {/* Team Accordion Toggle */}
+                        <button
+                          onClick={() => setExpandedTeam(isExpanded ? null : t.id)}
+                          className={`w-full flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-4 sm:p-5 rounded-2xl sm:rounded-[1.75rem] bg-[#0c0d10] border transition-colors duration-200 relative overflow-hidden group active:scale-[0.98] touch-manipulation gap-4 ${
+                            isExpanded ? 'border-white/20 bg-white/[0.04] shadow-2xl' : 'border-white/5 hover:border-white/10 hover:bg-white/[0.02]'
+                          }`}
+                        >
+                          {/* Subtle Background Watermark Logo */}
+                          <div className="absolute -right-8 -bottom-8 w-40 sm:w-64 h-40 sm:h-64 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity pointer-events-none grayscale">
+                             <img src={t.logo} alt="" decoding="async" loading="lazy" className="w-full h-full object-contain" />
+                          </div>
 
-                return (
-                  <div key={t.id} className="group flex flex-col gap-2">
-                    {/* Team Accordion Toggle */}
-                    <button
-                      onClick={() => setExpandedTeam(isExpanded ? null : t.id)}
-                      className={`w-full flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-4 sm:p-5 rounded-2xl sm:rounded-[1.75rem] bg-[#0c0d10] border transition-colors duration-200 relative overflow-hidden group active:scale-[0.98] touch-manipulation gap-4 ${
-                        isExpanded ? 'border-white/20 bg-white/[0.04] shadow-2xl' : 'border-white/5 hover:border-white/10 hover:bg-white/[0.02]'
-                      }`}
-                    >
-                      {/* Subtle Background Watermark Logo */}
-                      <div className="absolute -right-8 -bottom-8 w-40 sm:w-64 h-40 sm:h-64 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity pointer-events-none grayscale">
-                         <img src={t.logo} alt="" decoding="async" loading="lazy" className="w-full h-full object-contain" />
-                      </div>
+                          <div className="flex items-center gap-3 sm:gap-4 relative z-10">
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 p-1.5 sm:p-2 flex items-center justify-center shadow-lg shrink-0">
+                               <img src={t.logo} alt="" decoding="async" loading="lazy" className="w-full h-full object-contain" />
+                            </div>
+                            <div className="text-left min-w-0">
+                              <h3 className="text-base sm:text-xl font-pixel uppercase tracking-tight text-white group-hover:text-slate-200 transition-colors truncate">{t.name}</h3>
+                              <p className="text-[8px] sm:text-[9px] font-pixel text-slate-400 uppercase tracking-wider leading-none mt-1 truncate">Managed by {manager?.name || 'N/A'}</p>
+                            </div>
+                          </div>
 
-                      <div className="flex items-center gap-3 sm:gap-4 relative z-10">
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 p-1.5 sm:p-2 flex items-center justify-center shadow-lg shrink-0">
-                           <img src={t.logo} alt="" decoding="async" loading="lazy" className="w-full h-full object-contain" />
-                        </div>
-                        <div className="text-left min-w-0">
-                          <h3 className="text-base sm:text-xl font-pixel uppercase tracking-tight text-white group-hover:text-slate-200 transition-colors truncate">{t.name}</h3>
-                          <p className="text-[8px] sm:text-[9px] font-pixel text-slate-400 uppercase tracking-wider leading-none mt-1 truncate">Managed by {manager?.name || 'N/A'}</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-6 relative z-10 border-t sm:border-t-0 pt-3 sm:pt-0 border-white/5">
+                          <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-6 relative z-10 border-t sm:border-t-0 pt-3 sm:pt-0 border-white/5">
                         {/* Summary Stats */}
                         <div className="flex items-center gap-3 sm:gap-5 md:gap-7 text-left sm:text-right sm:border-r border-white/10 sm:pr-4 md:pr-7">
                           <div className="shrink-0">
@@ -853,9 +855,25 @@ const AuctionSummary = () => {
                       </div>
                     </div>
                   </div>
-                                );
-              })}
-            </motion.section>
+
+                  {/* Option B: In-Feed Display Ads after Team 3 (idx === 2) and Team 7 (idx === 6) */}
+                  {idx === 2 && (
+                    <AuctionSummaryInFeedAd
+                      slot={import.meta.env.VITE_ADSENSE_LANDING_SLOT_1 || '6078587405'}
+                      key="infeed-ad-team-3"
+                    />
+                  )}
+                  {idx === 6 && (
+                    <AuctionSummaryInFeedAd
+                      slot={import.meta.env.VITE_ADSENSE_LANDING_SLOT_2 || '2911895830'}
+                      key="infeed-ad-team-7"
+                    />
+                  )}
+                </React.Fragment>
+              );
+            });
+          })()}
+        </motion.section>
           )}
         </AnimatePresence>
 
