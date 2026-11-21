@@ -23,6 +23,24 @@ const ensureAdSenseScript = (clientId) => {
 
 export const SingleAdUnit = ({ slot, clientId, bare = false }) => {
   const adRef = useRef(null);
+  const [isUnfilled, setIsUnfilled] = useState(false);
+
+  useEffect(() => {
+    const el = adRef.current;
+    if (!el) return;
+
+    const checkStatus = () => {
+      if (el.getAttribute('data-ad-status') === 'unfilled') {
+        setIsUnfilled(true);
+      }
+    };
+
+    checkStatus();
+
+    const observer = new MutationObserver(() => checkStatus());
+    observer.observe(el, { attributes: true, attributeFilter: ['data-ad-status'] });
+    return () => observer.disconnect();
+  }, [slot, clientId]);
 
   useEffect(() => {
     if (!slot || !clientId) return;
@@ -47,7 +65,7 @@ export const SingleAdUnit = ({ slot, clientId, bare = false }) => {
     return () => clearTimeout(timer);
   }, [slot, clientId]);
 
-  if (!slot || !clientId) return null;
+  if (!slot || !clientId || isUnfilled) return null;
 
   return (
     <div className={bare ? "w-full text-center overflow-hidden" : "w-full text-center overflow-hidden rounded-xl border border-white/5 bg-white/[0.015] p-2 min-h-[140px] flex items-center justify-center"}>
@@ -165,7 +183,25 @@ export const MultiplexAdSlot = ({
   label = 'Sponsored Links'
 }) => {
   const adRef = useRef(null);
+  const [isUnfilled, setIsUnfilled] = useState(false);
   const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
+
+  useEffect(() => {
+    const el = adRef.current;
+    if (!el) return;
+
+    const checkStatus = () => {
+      if (el.getAttribute('data-ad-status') === 'unfilled') {
+        setIsUnfilled(true);
+      }
+    };
+
+    checkStatus();
+
+    const observer = new MutationObserver(() => checkStatus());
+    observer.observe(el, { attributes: true, attributeFilter: ['data-ad-status'] });
+    return () => observer.disconnect();
+  }, [slot, clientId]);
 
   useEffect(() => {
     if (!slot || !clientId) return;
@@ -189,7 +225,7 @@ export const MultiplexAdSlot = ({
     return () => clearTimeout(timer);
   }, [slot, clientId]);
 
-  if (!slot || !clientId) return null;
+  if (!slot || !clientId || isUnfilled) return null;
 
   return (
     <section className={`relative z-10 w-full max-w-6xl mx-auto ${className}`} aria-label={label}>
@@ -204,13 +240,22 @@ export const MultiplexAdSlot = ({
           ref={adRef}
           className="adsbygoogle"
           style={{ display: 'block', width: '100%' }}
-          data-ad-format="autorelaxed"
+          data-ad-format="auto"
+          data-full-width-responsive="true"
           data-ad-client={clientId}
           data-ad-slot={slot}
         />
       </div>
     </section>
   );
+};
+
+export const AuctionSummaryAd = ({
+  slot = import.meta.env.VITE_ADSENSE_AUCTION_SUMMARY_SLOT || import.meta.env.VITE_ADSENSE_LANDING_MULTIPLEX_SLOT || DEFAULT_LANDING_MULTIPLEX_SLOT,
+  className = '',
+  label = 'Sponsored Links'
+}) => {
+  return <MultiplexAdSlot slot={slot} className={className} label={label} />;
 };
 
 const AdSlot = ({
