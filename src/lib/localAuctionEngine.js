@@ -120,10 +120,12 @@ export function localAuctionReducer(state, action) {
         },
       ];
 
-      TEAMS.forEach((t) => {
+      const ARCHETYPES = ['star_hunter', 'moneyball', 'bowling_first', 'balanced'];
+      TEAMS.forEach((t, idx) => {
         if (t.id === humanTeamId) return;
         const botId = `bot_${t.id}`;
         const botState = isMini ? calculateCustomTeamState(t.id) : null;
+        const botArchetype = ARCHETYPES[(idx + (Math.abs(Number(seed)) || 0)) % ARCHETYPES.length];
 
         players.push({
           id: botId,
@@ -142,6 +144,7 @@ export function localAuctionReducer(state, action) {
           userId: botId,
           teamId: t.id,
           teamName: t.name,
+          archetype: botArchetype,
           budgetRemaining: botState ? botState.remainingPurse : budget,
           spent: botState ? botState.totalSpent : 0,
           squad: botState ? botState.retainedSquad : [],

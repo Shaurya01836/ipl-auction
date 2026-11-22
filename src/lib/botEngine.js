@@ -95,7 +95,14 @@ const TEAM_PREFERENCES = {
  * Computes a bot's max valuation for a player.
  * Returns a value in Cr that varies per team, per player, and per auction run.
  */
-function computeBotValuation({ player, botTeam, squadLimit, budgetRemaining, initialBudget, randomFn = Math.random }) {
+export function computeBotValuation({
+  player,
+  botTeam,
+  squadLimit = 25,
+  budgetRemaining,
+  initialBudget = 120,
+  randomFn = Math.random,
+}) {
   const basePrice = toFiniteNumber(player.basePrice, 0.30);
   const set = player.set || 'Set 4';
   const teamId = botTeam.teamId;
@@ -115,7 +122,48 @@ function computeBotValuation({ player, botTeam, squadLimit, budgetRemaining, ini
     }
   }
 
-  // 2. Team personality multiplier (role + set affinity)
+  // 2. Player rating scaling for modern players (baseline 78 = average starter)
+  const rating = Number(player.rating) || 75;
+  const ratingMult = set === 'Legends' ? 1.0 : Math.max(0.65, Math.pow(rating / 78, 1.85));
+
+  // 3. Franchise loyalty & icon affinity (boost if player belongs/belonged to this team)
+  const isLoyalFranchise = Boolean(
+    player.team && teamId && player.team.trim().toUpperCase() === teamId.trim().toUpperCase()
+  );
+  const loyaltyMult = isLoyalFranchise ? 1.25 : 1.0;
+
+  // 4. Dynamic role deficit & team need urgency
+  const squad = botTeam.squad || [];
+  const squadCount = squad.length;
+  let roleNeedMult = 1.0;
+
+  if (squadCount >= 2) {
+    let roleCount = 0;
+    for (const s of squad) {
+      const pid = typeof s === 'string' ? s : s?.id;
+      const sRole = typeof s === 'object' && s?.role ? s.role : null;
+      const pInfo = sRole ? null : IPL_PLAYERS.find((p) => p.id === pid);
+      const role = sRole || pInfo?.role;
+      if (role === player.role) {
+        roleCount++;
+      }
+    }
+
+    if (player.role === 'Wicket-Keeper' && roleCount === 0) {
+      roleNeedMult = squadCount >= 4 ? 1.40 : 1.20;
+    } else if (player.role === 'Bowler' && roleCount <= 1 && squadCount >= 5) {
+      roleNeedMult = 1.30;
+    } else if (player.role === 'Batsman' && roleCount <= 1 && squadCount >= 5) {
+      roleNeedMult = 1.20;
+    } else {
+      const roleCapacity = Math.max(3, Math.ceil(squadLimit * 0.35));
+      if (roleCount >= roleCapacity) {
+        roleNeedMult = 0.75; // cooling off saturated role to preserve budget
+      }
+    }
+  }
+
+  // 5. Team preferences & manager archetypes
   const prefs = TEAM_PREFERENCES[teamId] || {};
   let personalityMult = 1.0;
   if (prefs.roles && prefs.roles[player.role]) {
@@ -125,37 +173,53 @@ function computeBotValuation({ player, botTeam, squadLimit, budgetRemaining, ini
     personalityMult *= prefs.sets[set];
   }
 
-  // 3. Per-bot random willingness (simulates scouting reports / mood)
-  //    Each bot rolls a number per player that varies how keen they are this time
-  const willingnessFactor = tier.base + randomFn() * (tier.max - tier.base);
-
-  // 4. Budget pressure factor — bots spend slightly more aggressively
-  //    as the auction progresses (e.g., "must complete squad")
-  const budgetUsed = 1 - (budgetRemaining / (initialBudget || 120));
-  const urgencyBoost = 1.0 + budgetUsed * 0.25; // up to +25% late in auction
-
-  // 5. Squad completion pressure — boost if squad is almost full and slots remain
-  const slotsLeft = squadLimit - (botTeam.squad?.length || 0);
-  const squadUrgency = slotsLeft <= 3 ? 1.15 : 1.0;
-
-  // 6. Final max valuation
-  const effectiveBase = set === 'Legends' ? Math.max(basePrice, 1.0) : basePrice;
-  let maxVal = effectiveBase * willingnessFactor * personalityMult * urgencyBoost * squadUrgency;
-
-  // Personality cap overrides
-  if (prefs.personality === 'aggressive') {
-    maxVal = Math.min(maxVal, budgetRemaining * 0.40); // can spend up to 40% of remaining on one player
-  } else if (prefs.personality === 'conservative') {
-    maxVal = Math.min(maxVal, budgetRemaining * 0.25);
-  } else if (prefs.personality === 'value') {
-    maxVal = Math.min(maxVal, budgetRemaining * 0.30);
-  } else {
-    maxVal = Math.min(maxVal, budgetRemaining * 0.32);
+  let archetype = botTeam.archetype;
+  if (!archetype && botTeam.auctionId) {
+    const ARCHETYPES = ['star_hunter', 'moneyball', 'bowling_first', 'balanced'];
+    let hash = 0;
+    const str = String(botTeam.auctionId) + String(teamId || '');
+    for (let i = 0; i < str.length; i++) hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
+    archetype = ARCHETYPES[hash % ARCHETYPES.length];
+  }
+  if (!archetype) archetype = prefs.personality || 'balanced';
+  let archetypeMult = 1.0;
+  if (archetype === 'star_hunter' || archetype === 'aggressive') {
+    if (rating >= 88) archetypeMult = 1.20;
+    else if (rating < 76) archetypeMult = 0.85;
+  } else if (archetype === 'moneyball' || archetype === 'value') {
+    if (rating >= 78 && rating <= 86) archetypeMult = 1.15;
+    else if (rating >= 90) archetypeMult = 0.90;
+  } else if (archetype === 'bowling_first') {
+    if (player.role === 'Bowler') archetypeMult = 1.25;
+    else if (player.role === 'All-Rounder') archetypeMult = 1.10;
   }
 
-  // Hard floor: never value below base price
-  maxVal = Math.max(basePrice, maxVal);
+  // 6. Per-bot random willingness & auction stage pacing
+  const willingnessFactor = tier.base + randomFn() * (tier.max - tier.base);
+  const budgetUsed = 1 - (budgetRemaining / (initialBudget || 120));
+  const urgencyBoost = 1.0 + budgetUsed * 0.25;
 
+  // 7. Squad completion pressure
+  const slotsLeft = squadLimit - squadCount;
+  const squadUrgency = slotsLeft <= 3 ? 1.15 : 1.0;
+
+  // 8. Final max valuation calculation
+  const effectiveBase = set === 'Legends' ? Math.max(basePrice, 1.0) : basePrice;
+  let maxVal = effectiveBase * willingnessFactor * ratingMult * loyaltyMult * roleNeedMult * personalityMult * archetypeMult * urgencyBoost * squadUrgency;
+
+  // Spend cap safeguards
+  const maxCapPercent = (archetype === 'star_hunter' || prefs.personality === 'aggressive') ? 0.45
+    : (archetype === 'moneyball' || prefs.personality === 'conservative') ? 0.26
+    : 0.35;
+  maxVal = Math.min(maxVal, budgetRemaining * maxCapPercent);
+
+  // Reserve budget safety: minimum 0.30 Cr per remaining slot
+  if (slotsLeft > 1) {
+    const maxAffordable = Math.max(basePrice, budgetRemaining - (slotsLeft - 1) * 0.30);
+    maxVal = Math.min(maxVal, maxAffordable);
+  }
+
+  maxVal = Math.max(basePrice, maxVal);
   return parseFloat(maxVal.toFixed(2));
 }
 
@@ -204,8 +268,10 @@ export function evaluateBotBid({
   // 4. Role Balance Check — soft caps to avoid over-stacking one role
   const slotsRemaining = squadLimit - currentSquad.length;
   const currentRoleCount = currentSquad.reduce((acc, s) => {
-    const pInfo = IPL_PLAYERS.find(p => p.id === (typeof s === 'string' ? s : s.id));
-    return pInfo && pInfo.role === player.role ? acc + 1 : acc;
+    const sRole = typeof s === 'object' && s?.role ? s.role : null;
+    const pInfo = sRole ? null : IPL_PLAYERS.find(p => p.id === (typeof s === 'string' ? s : s.id));
+    const role = sRole || pInfo?.role;
+    return role === player.role ? acc + 1 : acc;
   }, 0);
   const maxPerRole = squadLimit <= 5 ? 3 : squadLimit <= 11 ? 5 : 9;
   if (currentRoleCount >= maxPerRole && slotsRemaining > 1) return null;
@@ -239,10 +305,18 @@ export function evaluateBotBid({
   // 9. Graduated willingness — as price climbs toward max, bot gets progressively
   //    less likely to bid (simulates hesitation / second thoughts mid-auction)
   const priceRatio = nextBid / maxValuation; // 0 = cheap, 1 = at max
-  const baseBidChance = priceRatio < 0.50 ? 0.95   // well below max → almost always bid
+  let baseBidChance = priceRatio < 0.50 ? 0.95   // well below max → almost always bid
     : priceRatio < 0.70 ? 0.82                      // mid-range → usually bid
     : priceRatio < 0.85 ? 0.65                      // getting pricey → sometimes drop
     : 0.40;                                          // near ceiling → coin-flip drop-off
+
+  // Franchise loyalty tenacity: team fights harder near ceiling for their own icon
+  const isLoyalFranchise = Boolean(
+    player.team && teamId && player.team.trim().toUpperCase() === teamId.trim().toUpperCase()
+  );
+  if (isLoyalFranchise && priceRatio >= 0.70) {
+    baseBidChance = Math.min(0.90, baseBidChance + 0.20);
+  }
 
   if (randomFn() > baseBidChance) return null;
 

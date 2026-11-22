@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { isSoloBotRoom, simulateBotLot, simulateRemainingAuction } from '../src/lib/botSimulation.js';
+import { computeBotValuation, evaluateBotBid } from '../src/lib/botEngine.js';
 import { IPL_PLAYERS } from '../src/data/players.js';
 
 test('isSoloBotRoom: accurately detects 1 human + bots', () => {
@@ -198,4 +199,73 @@ test('extra requirements: no team over purse/squad/overseas, each player resolve
   });
   assert.equal(result2.fastForwarded, true);
   assert.equal(result2.simulatedTeams.length, 10);
+});
+
+test('computeBotValuation: scales exponentially with player rating in modern sets', () => {
+  const elitePlayer = { id: 'p_elite', name: 'Elite Star', basePrice: 2.0, rating: 94, role: 'Batsman', set: 'Set 1' };
+  const avgPlayer = { id: 'p_avg', name: 'Average Player', basePrice: 2.0, rating: 74, role: 'Batsman', set: 'Set 1' };
+  const botTeam = { userId: 'bot_RCB', teamId: 'RCB', budgetRemaining: 120, squad: [] };
+
+  // Fixed randomFn (0.5) to isolate rating effect
+  const valElite = computeBotValuation({ player: elitePlayer, botTeam, budgetRemaining: 120, initialBudget: 120, squadLimit: 25, randomFn: () => 0.5 });
+  const valAvg = computeBotValuation({ player: avgPlayer, botTeam, budgetRemaining: 120, initialBudget: 120, squadLimit: 25, randomFn: () => 0.5 });
+
+  assert.ok(valElite > valAvg * 1.3, `Elite player (${valElite}) should be valued significantly higher than average player (${valAvg})`);
+});
+
+test('computeBotValuation: franchise loyalty gives home team higher valuation for real-life icon', () => {
+  const cskIcon = { id: 'p_dhoni', name: 'MS Dhoni', basePrice: 2.0, rating: 88, role: 'Wicket-Keeper', set: 'Set 1', team: 'CSK' };
+  const cskBot = { userId: 'bot_CSK', teamId: 'CSK', budgetRemaining: 120, squad: [] };
+  const pbksBot = { userId: 'bot_PBKS', teamId: 'PBKS', budgetRemaining: 120, squad: [] };
+
+  const valCSK = computeBotValuation({ player: cskIcon, botTeam: cskBot, budgetRemaining: 120, initialBudget: 120, squadLimit: 25, randomFn: () => 0.5 });
+  const valPBKS = computeBotValuation({ player: cskIcon, botTeam: pbksBot, budgetRemaining: 120, initialBudget: 120, squadLimit: 25, randomFn: () => 0.5 });
+
+  assert.ok(valCSK > valPBKS, `CSK bot valuation (${valCSK}) should be higher than PBKS (${valPBKS}) for CSK icon`);
+});
+
+test('computeBotValuation: dynamic role deficit increases valuation when lacking critical roles', () => {
+  const wkPlayer = { id: 'p_wk', name: 'Top Keeper', basePrice: 2.0, rating: 82, role: 'Wicket-Keeper', set: 'Set 2' };
+
+  // Bot A has 4 players, 0 WKs (deficit)
+  const botWithNoWK = {
+    userId: 'bot_MI',
+    teamId: 'MI',
+    budgetRemaining: 90,
+    squad: [
+      { id: 'p1', role: 'Batsman' },
+      { id: 'p2', role: 'Batsman' },
+      { id: 'p3', role: 'Bowler' },
+      { id: 'p4', role: 'Bowler' },
+    ],
+  };
+
+  // Bot B has 4 players, already has 2 WKs (saturated)
+  const botWith2WKs = {
+    userId: 'bot_MI',
+    teamId: 'MI',
+    budgetRemaining: 90,
+    squad: [
+      { id: 'p1', role: 'Batsman' },
+      { id: 'p2', role: 'Bowler' },
+      { id: 'p3', role: 'Wicket-Keeper' },
+      { id: 'p4', role: 'Wicket-Keeper' },
+    ],
+  };
+
+  const valDeficit = computeBotValuation({ player: wkPlayer, botTeam: botWithNoWK, budgetRemaining: 90, initialBudget: 120, squadLimit: 25, randomFn: () => 0.5 });
+  const valSaturated = computeBotValuation({ player: wkPlayer, botTeam: botWith2WKs, budgetRemaining: 90, initialBudget: 120, squadLimit: 25, randomFn: () => 0.5 });
+
+  assert.ok(valDeficit > valSaturated, `Bot with 0 WKs (${valDeficit}) must value WK higher than bot with 2 WKs (${valSaturated})`);
+});
+
+test('computeBotValuation: manager archetype modifies bidding strategy', () => {
+  const superstar = { id: 'p_super', name: 'Mega Star', basePrice: 2.0, rating: 92, role: 'Batsman', set: 'Set 1' };
+  const starHunterBot = { userId: 'bot_1', teamId: 'MI', archetype: 'star_hunter', budgetRemaining: 120, squad: [] };
+  const moneyballBot = { userId: 'bot_2', teamId: 'MI', archetype: 'moneyball', budgetRemaining: 120, squad: [] };
+
+  const valHunter = computeBotValuation({ player: superstar, botTeam: starHunterBot, budgetRemaining: 120, initialBudget: 120, squadLimit: 25, randomFn: () => 0.5 });
+  const valMoneyball = computeBotValuation({ player: superstar, botTeam: moneyballBot, budgetRemaining: 120, initialBudget: 120, squadLimit: 25, randomFn: () => 0.5 });
+
+  assert.ok(valHunter > valMoneyball, `Star hunter bot (${valHunter}) must value 92-rated star higher than moneyball bot (${valMoneyball})`);
 });
