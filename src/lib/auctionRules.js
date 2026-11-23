@@ -16,14 +16,20 @@ export const shuffleArray = (array) => {
   return a;
 };
 
-/** Build the shuffled lot order for an auction type (fully randomized for users, not grouped by set). */
+/** Build the shuffled lot order for an auction type (mini is fully randomized; mega/standard modes group by set). */
 export function generatePlayerOrder(auctionType = 'mega', options = {}) {
   if (auctionType === 'legends') {
-    const legendIndices = [];
+    const byRole = {};
     IPL_PLAYERS.forEach((p, i) => {
-      if (p.set === 'Legends') legendIndices.push(i);
+      if (p.set === 'Legends') {
+        (byRole[p.role] ||= []).push(i);
+      }
     });
-    return shuffleArray(legendIndices);
+    const order = [];
+    ['Batsman', 'All-Rounder', 'Wicket-Keeper', 'Bowler'].forEach((role) => {
+      if (byRole[role]) order.push(...shuffleArray(byRole[role]));
+    });
+    return order;
   }
 
   if (auctionType === 'mini') {
@@ -32,13 +38,19 @@ export function generatePlayerOrder(auctionType = 'mega', options = {}) {
     return shuffleArray(poolIndices);
   }
 
-  // All other modes (mega, sprint11, sprint5) use all modern players fully randomized
+  // All other modes (mega, sprint11, sprint5) use all modern players grouped by set (Marquee first)
   const modernPool = [];
   IPL_PLAYERS.forEach((p, i) => {
     if (p.set !== 'Legends') modernPool.push(i);
   });
 
-  return shuffleArray(modernPool);
+  const modernSets = [...new Set(modernPool.map((i) => IPL_PLAYERS[i].set))];
+  const order = [];
+  modernSets.forEach((setName) => {
+    const idxs = modernPool.filter((i) => IPL_PLAYERS[i].set === setName);
+    order.push(...shuffleArray(idxs));
+  });
+  return order;
 }
 
 export const normalizeSquad = (squad) => mapRoomPlayers(squad, (entry) => entry);

@@ -60,7 +60,6 @@ import Navbar from "../components/Navbar";
 import ConfirmDialog from "../components/ConfirmDialog";
 import AuctionActivityFeed from "../components/AuctionActivityFeed";
 import Footer from "../components/Footer";
-import { LandingDisplayBannerAd } from "../components/AdSlot";
 import CommunitySection from "../components/community/CommunitySection";
 import CommunityBanner from "../components/community/CommunityBanner";
 import ServerSwitcher from "../components/ServerSwitcher";
@@ -872,8 +871,6 @@ const LandingPage = () => {
             </div>
           </div>
         </PanelSurface>
-
-        <LandingDisplayBannerAd className="mt-8 mb-4 px-2.5 sm:px-4" />
 
         <CommunitySection />
 
@@ -1935,8 +1932,6 @@ const LandingPage = () => {
         onConfirm={handleDeleteHistory}
         onCancel={() => setSessionToDelete(null)}
       />
-
-      <LandingDisplayBannerAd className="mt-8 mb-4 px-2.5 sm:px-4" />
 
       <CommunitySection />
 

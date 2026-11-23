@@ -1446,8 +1446,8 @@ const AuctionRoom = () => {
                            </AnimatePresence>
                         </div>
 
-                        {/* In-Feed Display Ad between Team 5 and Team 6 (idx === 4) */}
-                        {idx === 4 && (
+                        {/* In-Feed Display Ad after Team 2 (idx === 1) */}
+                        {idx === 1 && (
                            <AuctionTeamsInFeedAd key="teams-infeed-ad" />
                         )}
                      </React.Fragment>
