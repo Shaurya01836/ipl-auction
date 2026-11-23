@@ -5,6 +5,7 @@ import {
   finalizedLotRecoveryDelay,
   generatePlayerOrder,
   getNextBidAmount,
+  getNextUnsoldPlayerIndex,
   getSquadConstraintError,
   getStartDisposition,
   mapRoomPlayers,
@@ -375,4 +376,63 @@ test('server-side disconnect auto-pause: preserved remaining time derived accura
   };
   assert.equal(pausedRemainingMs(manualPausedLive), 5500, 'explicit remainingMs takes precedence over pausedAt');
 });
+
+test('getNextUnsoldPlayerIndex: strictly skips sold players and never repeats already-owned lots', () => {
+  // Let indices 0, 1, 2, 3 represent real players in IPL_PLAYERS
+  const p0 = IPL_PLAYERS[0];
+  const p1 = IPL_PLAYERS[1];
+  const p2 = IPL_PLAYERS[2];
+  const p3 = IPL_PLAYERS[3];
+
+  const playerOrder = [0, 1, 2, 3];
+
+  // Teams have p0 and p1 already in their squads
+  const teams = [
+    { teamId: 'MI', squad: [{ id: p0.id, name: p0.name }] },
+    { teamId: 'CSK', squad: [{ id: p1.id, name: p1.name }] },
+  ];
+
+  // Advancing from p0 must skip p1 (since p1 is sold to CSK) and return index 2 (p2)
+  const nextIdx = getNextUnsoldPlayerIndex(playerOrder, p0.id, teams);
+  assert.equal(nextIdx, 2, 'must skip p1 and advance directly to p2');
+
+  // If p2 is also sold, advancing from p0 must advance directly to p3
+  teams.push({ teamId: 'RCB', squad: [{ id: p2.id }] });
+  const nextIdx2 = getNextUnsoldPlayerIndex(playerOrder, p0.id, teams);
+  assert.equal(nextIdx2, 3, 'must skip p1 and p2 and advance directly to p3');
+
+  // If all players are sold, it must return undefined (never loop back to p0!)
+  teams.push({ teamId: 'KKR', squad: [{ id: p3.id }] });
+  const nextIdx3 = getNextUnsoldPlayerIndex(playerOrder, p0.id, teams);
+  assert.equal(nextIdx3, undefined, 'must return undefined when all players in lot are sold');
+
+  // Handles RTDB object serialization { "0": 0, "1": 1, ... } without falling back or erroring
+  const rtdbOrderObject = { '0': 0, '1': 1, '2': 2, '3': 3 };
+  const partialTeams = [{ teamId: 'MI', squad: [{ id: p0.id }] }];
+  const rtdbNext = getNextUnsoldPlayerIndex(rtdbOrderObject, p0.id, partialTeams);
+  assert.equal(rtdbNext, 1, 'must handle RTDB object keyed playerOrder smoothly');
+});
+
+test('mini auction: player pool is randomized across sets and sequential queue matches next lot', () => {
+  const miniOrder = generatePlayerOrder('mini');
+  assert.ok(miniOrder.length > 50, 'mini order should have available released/unassigned players');
+
+  // Verify that sets are mixed rather than clustered in chunks
+  const sets = miniOrder.map(idx => IPL_PLAYERS[idx]?.set).filter(Boolean);
+  let transitions = 0;
+  for (let i = 1; i < Math.min(50, sets.length); i++) {
+    if (sets[i] !== sets[i - 1]) transitions++;
+  }
+  // In a shuffled list of different sets, transitions should be high (> 50% of pairs)
+  assert.ok(transitions > 20, 'sets must be randomized across lots rather than clustered by set');
+
+  // Verify upcoming queue resolution:
+  const currentLotPlayer = IPL_PLAYERS[miniOrder[0]];
+  const expectedNextPlayer = IPL_PLAYERS[miniOrder[1]];
+
+  const nextResolvedIdx = getNextUnsoldPlayerIndex(miniOrder, currentLotPlayer.id, []);
+  assert.equal(nextResolvedIdx, miniOrder[1]);
+  assert.equal(IPL_PLAYERS[nextResolvedIdx].id, expectedNextPlayer.id, 'next unsold lot in engine must match next player in queue');
+});
+
 

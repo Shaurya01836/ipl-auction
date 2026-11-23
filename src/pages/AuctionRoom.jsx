@@ -656,6 +656,8 @@ const AuctionRoom = () => {
    const isAdmin = isSoloVsBots || currentAuction?.hostId === user?.uid;
    const currentBid = displayAuctionState?.currentBid || 0;
    const nextBidAmount = getNextBidAmount(currentPlayer, currentBid);
+   const isMini = currentAuction?.auctionType === 'mini' || currentAuction?.type === 'mini';
+
    const playerCategories = useMemo(() => {
       const soldIds = new Set();
       const soldWithBids = {};
@@ -666,11 +668,21 @@ const AuctionRoom = () => {
          });
       });
 
-      const playerOrder = (Array.isArray(currentAuction?.playerOrder) && currentAuction.playerOrder.length > 0)
-         ? currentAuction.playerOrder
+      const rawOrder = currentAuction?.playerOrder;
+      const parsedOrder = Array.isArray(rawOrder)
+         ? rawOrder
+         : (rawOrder && typeof rawOrder === 'object')
+           ? Object.keys(rawOrder).sort((a, b) => Number(a) - Number(b)).map(k => rawOrder[k])
+           : [];
+      const playerOrder = parsedOrder.length > 0
+         ? parsedOrder
          : generatePlayerOrder(currentAuction?.auctionType || 'mega');
+
       const currentPlayerId = displayAuctionState?.playerId;
-      const currentPlayerIndexInOrder = playerOrder.indexOf(IPL_PLAYERS.findIndex(p => p.id === currentPlayerId));
+      const targetPlayerIdx = IPL_PLAYERS.findIndex(p => p.id === currentPlayerId);
+      const currentPlayerIndexInOrder = targetPlayerIdx !== -1
+         ? playerOrder.findIndex(idx => Number(idx) === targetPlayerIdx)
+         : -1;
 
       const upcoming = [];
       const sold = [];
@@ -681,7 +693,7 @@ const AuctionRoom = () => {
          if (!p) return;
          if (soldIds.has(p.id)) {
             sold.push({ ...p, ...soldWithBids[p.id] });
-         } else if (i < currentPlayerIndexInOrder) {
+         } else if (currentPlayerIndexInOrder !== -1 && i < currentPlayerIndexInOrder) {
             unsold.push(p);
          } else {
             upcoming.push(p);
@@ -689,7 +701,7 @@ const AuctionRoom = () => {
       });
 
       return { upcoming, sold, unsold };
-   }, [currentAuction?.playerOrder, displayAuctionState?.playerId, roomTeams]);
+   }, [currentAuction?.playerOrder, currentAuction?.auctionType, currentAuction?.type, displayAuctionState?.playerId, roomTeams]);
 
    const filteredPlayers = useMemo(() => {
       let players = [];
@@ -703,12 +715,13 @@ const AuctionRoom = () => {
       return players.filter(p =>
          p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
          p.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-         (p.set || '').toLowerCase().includes(searchQuery.toLowerCase())
+         (!isMini && (p.set || '').toLowerCase().includes(searchQuery.toLowerCase()))
       );
-   }, [activeOverlayTab, playerCategories, searchQuery]);
+   }, [activeOverlayTab, isMini, playerCategories, searchQuery]);
 
    const groupedUpcomingPlayers = useMemo(() => {
-      if (activeOverlayTab !== 'upcoming') return null;
+      // In mini auction mode, do not group by sets — preserve true flat randomized lot queue
+      if (activeOverlayTab !== 'upcoming' || isMini) return null;
       const groups = {};
       filteredPlayers.forEach(p => {
          const setName = p.set || 'General Pool';
@@ -716,7 +729,7 @@ const AuctionRoom = () => {
          groups[setName].push(p);
       });
       return groups;
-   }, [activeOverlayTab, filteredPlayers]);
+   }, [activeOverlayTab, filteredPlayers, isMini]);
 
    useEffect(() => {
       if (!serverReady || !id || !user?.uid) return;
@@ -2083,7 +2096,7 @@ const AuctionRoom = () => {
                   <div className="w-full max-w-7xl flex flex-col gap-6 h-full">
                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                           <div><h2 className="text-xl md:text-2xl font-pixel uppercase tracking-tight text-white drop-shadow-[0_2px_12px_rgba(255,255,255,0.08)]">Mega Auction Roster</h2><p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-none mt-1">Complete Player Inventory</p></div>
+                           <div><h2 className="text-xl md:text-2xl font-pixel uppercase tracking-tight text-white drop-shadow-[0_2px_12px_rgba(255,255,255,0.08)]">{isMini ? 'Mini Auction Roster' : 'Mega Auction Roster'}</h2><p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-none mt-1">{isMini ? 'Randomized Player Queue' : 'Complete Player Inventory'}</p></div>
                         </div>
                         <button onClick={() => setShowPlayersOverlay(false)} className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-all cursor-pointer"><X size={20} /></button>
                      </div>
@@ -2117,7 +2130,7 @@ const AuctionRoom = () => {
                                  {activeOverlayTab === 'upcoming' && "No upcoming players remaining in the inventory."}
                               </p>
                            </div>
-                        ) : activeOverlayTab === 'upcoming' ? (
+                        ) : (!isMini && activeOverlayTab === 'upcoming' && groupedUpcomingPlayers) ? (
                            <div className="space-y-8 sm:space-y-12">
                               {Object.entries(groupedUpcomingPlayers || {}).map(([setName, players]) => (
                                  <div key={setName} className="space-y-4 sm:space-y-6">

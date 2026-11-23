@@ -53,6 +53,59 @@ export function generatePlayerOrder(auctionType = 'mega', options = {}) {
   return order;
 }
 
+/**
+ * Safely resolves the next unowned, unsold player index from playerOrder.
+ * Guarantees that no player already present in any team squad can EVER be chosen again.
+ *
+ * @param {Array|Object} playerOrder - Shuffled array of player indices or RTDB object
+ * @param {string} currentPlayerId - The player ID of the currently finished lot
+ * @param {Iterable<string>|Array<object>|Set<string>} teamsOrSoldIds - Teams array or Set of sold player IDs
+ * @returns {number|undefined} The index in IPL_PLAYERS of the next unsold player, or undefined if auction is complete
+ */
+export function getNextUnsoldPlayerIndex(playerOrder, currentPlayerId, teamsOrSoldIds) {
+  const order = Array.isArray(playerOrder)
+    ? playerOrder
+    : playerOrder && typeof playerOrder === 'object'
+      ? Object.values(playerOrder)
+      : [];
+
+  if (order.length === 0) return undefined;
+
+  // Build the set of already owned/sold player IDs
+  const soldIds = teamsOrSoldIds instanceof Set
+    ? teamsOrSoldIds
+    : new Set();
+
+  if (!(teamsOrSoldIds instanceof Set)) {
+    const list = Array.isArray(teamsOrSoldIds)
+      ? teamsOrSoldIds
+      : teamsOrSoldIds && typeof teamsOrSoldIds === 'object'
+        ? Object.values(teamsOrSoldIds)
+        : [];
+    list.forEach((t) => {
+      (t.squad || []).forEach((p) => {
+        const pid = typeof p === 'string' ? p : p?.id;
+        if (pid) soldIds.add(pid);
+      });
+    });
+  }
+
+  // Find where the current player was in order
+  const curPos = order.findIndex((idx) => IPL_PLAYERS[idx] && IPL_PLAYERS[idx].id === currentPlayerId);
+  const startPos = curPos !== -1 ? curPos + 1 : 0;
+
+  // Search forward from current position for the first player not yet sold
+  for (let i = startPos; i < order.length; i++) {
+    const candidateIdx = order[i];
+    const candidate = IPL_PLAYERS[candidateIdx];
+    if (candidate && !soldIds.has(candidate.id)) {
+      return candidateIdx;
+    }
+  }
+
+  return undefined;
+}
+
 export const normalizeSquad = (squad) => mapRoomPlayers(squad, (entry) => entry);
 
 export const getSquadEntryId = (entry) =>

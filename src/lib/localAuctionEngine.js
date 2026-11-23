@@ -401,7 +401,25 @@ export function localAuctionReducer(state, action) {
         });
       }
 
-      const nextIndex = state.currentPlayerIndex + 1;
+      // Find the next player in playerOrder who is NOT already sold or retained in any squad
+      const soldIds = new Set();
+      (updatedRoomTeams || state.roomTeams || []).forEach((t) => {
+        (t.squad || []).forEach((p) => {
+          const pid = typeof p === 'string' ? p : p?.id;
+          if (pid) soldIds.add(pid);
+        });
+      });
+
+      let nextIndex = state.currentPlayerIndex + 1;
+      while (nextIndex < state.playerOrder.length) {
+        const candidateIdx = state.playerOrder[nextIndex];
+        const candidate = IPL_PLAYERS[candidateIdx];
+        if (candidate && !soldIds.has(candidate.id)) {
+          break;
+        }
+        nextIndex++;
+      }
+
       const allDone = nextIndex >= state.playerOrder.length;
 
       const resultMsg = isSold
@@ -473,7 +491,17 @@ export function localAuctionReducer(state, action) {
       }
 
       const nextPlayerId = state.playerOrder[nextIndex];
-      const nextPlayer = IPL_PLAYERS[nextPlayerId] || IPL_PLAYERS[0];
+      const nextPlayer = IPL_PLAYERS[nextPlayerId];
+      if (!nextPlayer) {
+        // Safe completion if no player exists
+        return {
+          ...state,
+          status: 'completed',
+          currentPlayerIndex: nextIndex,
+          currentAuction: { ...(state.currentAuction || {}), status: 'sold' },
+          currentLot: { ...(state.currentLot || {}), status: 'sold' },
+        };
+      }
       const timerSec = state.settings?.bidTimer || 10;
       const nextLot = {
         playerId: nextPlayer.id,
@@ -502,7 +530,25 @@ export function localAuctionReducer(state, action) {
     case 'ADVANCE_LOT': {
       if (!state || state.status !== 'active') return state;
       const { now = Date.now() } = action;
-      const nextIndex = state.currentPlayerIndex + 1;
+      // Find the next player in playerOrder who is NOT already sold or retained in any squad
+      const soldIds = new Set();
+      (state.roomTeams || []).forEach((t) => {
+        (t.squad || []).forEach((p) => {
+          const pid = typeof p === 'string' ? p : p?.id;
+          if (pid) soldIds.add(pid);
+        });
+      });
+
+      let nextIndex = state.currentPlayerIndex + 1;
+      while (nextIndex < state.playerOrder.length) {
+        const candidateIdx = state.playerOrder[nextIndex];
+        const candidate = IPL_PLAYERS[candidateIdx];
+        if (candidate && !soldIds.has(candidate.id)) {
+          break;
+        }
+        nextIndex++;
+      }
+
       const allDone = nextIndex >= state.playerOrder.length;
 
       if (allDone) {
@@ -529,7 +575,17 @@ export function localAuctionReducer(state, action) {
       }
 
       const nextPlayerId = state.playerOrder[nextIndex];
-      const nextPlayer = IPL_PLAYERS[nextPlayerId] || IPL_PLAYERS[0];
+      const nextPlayer = IPL_PLAYERS[nextPlayerId];
+      if (!nextPlayer) {
+        // Safe completion if no player exists
+        return {
+          ...state,
+          status: 'completed',
+          currentPlayerIndex: nextIndex,
+          currentAuction: { ...(state.currentAuction || {}), status: 'sold' },
+          currentLot: { ...(state.currentLot || {}), status: 'sold' },
+        };
+      }
       const timerSec = state.settings?.bidTimer || 10;
       const nextLot = {
         playerId: nextPlayer.id,

@@ -128,10 +128,19 @@ export function simulateRemainingAuction({
 
   const getTeam = (uid) => simulatedTeams.find((t) => t.userId === uid);
 
+  // Track all already-owned players across all squads to prevent double-drafting
+  const alreadyOwnedIds = new Set();
+  simulatedTeams.forEach((t) => {
+    (t.squad || []).forEach((p) => {
+      const pid = typeof p === 'string' ? p : p?.id;
+      if (pid) alreadyOwnedIds.add(pid);
+    });
+  });
+
   // 1. Resolve current live lot if active
   if (currentLive && currentLive.status === 'bidding' && currentLive.playerId) {
     const livePlayer = IPL_PLAYERS.find((p) => p.id === currentLive.playerId);
-    if (livePlayer) {
+    if (livePlayer && !alreadyOwnedIds.has(livePlayer.id)) {
       // If human is leading bidder, award to human!
       if (currentLive.highBidderId === humanUserId) {
         const hTeam = getTeam(humanUserId);
@@ -143,6 +152,7 @@ export function simulateRemainingAuction({
             bid: currentLive.currentBid,
             team: humanTeamId,
           });
+          alreadyOwnedIds.add(livePlayer.id);
           hTeam.spent = toFiniteNumber(hTeam.spent, 0) + currentLive.currentBid;
           hTeam.budgetRemaining = Math.max(0, toFiniteNumber(hTeam.budgetRemaining, initialBudget) - currentLive.currentBid);
         }
@@ -172,6 +182,7 @@ export function simulateRemainingAuction({
               bid: lotRes.finalBid,
               team: lotRes.winnerTeamId,
             });
+            alreadyOwnedIds.add(livePlayer.id);
             wTeam.spent = toFiniteNumber(wTeam.spent, 0) + lotRes.finalBid;
             wTeam.budgetRemaining = Math.max(0, toFiniteNumber(wTeam.budgetRemaining, initialBudget) - lotRes.finalBid);
           }
@@ -185,7 +196,7 @@ export function simulateRemainingAuction({
 
   for (const pIdx of remainingIndices) {
     const player = IPL_PLAYERS[pIdx];
-    if (!player) continue;
+    if (!player || alreadyOwnedIds.has(player.id)) continue;
 
     const botTeams = simulatedTeams.filter((t) => t.userId !== humanUserId);
     const lotRes = simulateBotLot({
@@ -211,6 +222,7 @@ export function simulateRemainingAuction({
           bid: lotRes.finalBid,
           team: lotRes.winnerTeamId,
         });
+        alreadyOwnedIds.add(player.id);
         wTeam.spent = toFiniteNumber(wTeam.spent, 0) + lotRes.finalBid;
         wTeam.budgetRemaining = Math.max(0, toFiniteNumber(wTeam.budgetRemaining, initialBudget) - lotRes.finalBid);
       }

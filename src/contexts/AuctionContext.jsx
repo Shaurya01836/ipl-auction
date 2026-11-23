@@ -59,6 +59,7 @@ import {
   finalizedLotRecoveryDelay,
   generatePlayerOrder,
   getNextBidAmount,
+  getNextUnsoldPlayerIndex,
   getSquadConstraintError,
   getStartDisposition,
   mapRoomPlayers,
@@ -765,11 +766,9 @@ export const AuctionProvider = ({ children }) => {
 
           const settings = roomData.settings;
           const currentPlayerId = targetPlayerId;
-          const order = (Array.isArray(playerOrder) && playerOrder.length > 0)
-            ? playerOrder
-            : generatePlayerOrder(roomData.auctionType || 'mega');
-          const currentPlayerIndexInOrder = order.findIndex(idx => IPL_PLAYERS[idx] && IPL_PLAYERS[idx].id === currentPlayerId);
-          const nextIndexInOrder = currentPlayerIndexInOrder !== -1 ? order[currentPlayerIndexInOrder + 1] : order[0];
+          const teamsSnap = await get(ref(rtdb, `auctions/${roomId}/teams`));
+          const teamsVal = teamsSnap.exists() ? Object.values(teamsSnap.val() || {}) : [];
+          const nextIndexInOrder = getNextUnsoldPlayerIndex(playerOrder, currentPlayerId, teamsVal);
 
           if (nextIndexInOrder !== undefined && IPL_PLAYERS[nextIndexInOrder]) {
             const nextPlayer = IPL_PLAYERS[nextIndexInOrder];
@@ -906,21 +905,25 @@ export const AuctionProvider = ({ children }) => {
 
       // If already resolved (sold/unsold), passing advances immediately to next lot
       if (live.status === 'sold' || live.status === 'unsold') {
-        const roomSnap = await get(roomRef);
+        const [roomSnap, teamsSnap] = await Promise.all([
+          get(roomRef),
+          get(ref(rtdbInstance, `auctions/${roomId}/teams`)),
+        ]);
         const room = roomSnap.exists() ? roomSnap.val() : {};
-        const order = (Array.isArray(room.playerOrder) && room.playerOrder.length > 0)
-          ? room.playerOrder
-          : generatePlayerOrder(room.auctionType || 'mega');
-        const currentPlayerId = live.playerId;
-        const curIdx = order.findIndex((idx) => IPL_PLAYERS[idx] && IPL_PLAYERS[idx].id === currentPlayerId);
-        const nextIdx = curIdx !== -1 ? order[curIdx + 1] : order[0];
+        let rawOrder = room.playerOrder;
+        if (!rawOrder) {
+          const orderSnap = await get(ref(rtdbInstance, `auctions/${roomId}/playerOrder`));
+          if (orderSnap.exists()) rawOrder = orderSnap.val();
+        }
+        const allTeams = teamsSnap.exists() ? Object.values(teamsSnap.val() || {}) : [];
+        const nextIdx = getNextUnsoldPlayerIndex(rawOrder, live.playerId, allTeams);
 
         if (nextIdx !== undefined && IPL_PLAYERS[nextIdx]) {
           const nextPlayer = IPL_PLAYERS[nextIdx];
           const now = getSyncedTime();
           await runTransactionRtdb(liveRef, (currentLive) =>
             transactAdvance(currentLive, {
-              currentPlayerId,
+              currentPlayerId: live.playerId,
               nextPlayerId: nextPlayer.id,
               timerEndsAt: now + (room.settings?.bidTimer || 10) * 1000,
             }),
@@ -1080,11 +1083,12 @@ export const AuctionProvider = ({ children }) => {
       }
 
       // Quick advance after 1.5s on sold or 1s on unsold
-      const order = (Array.isArray(room.playerOrder) && room.playerOrder.length > 0)
-        ? room.playerOrder
-        : generatePlayerOrder(room.auctionType || 'mega');
-      const curIdx = order.findIndex((idx) => IPL_PLAYERS[idx] && IPL_PLAYERS[idx].id === player.id);
-      const nextIdx = curIdx !== -1 ? order[curIdx + 1] : order[0];
+      let rawOrder = room.playerOrder;
+      if (!rawOrder) {
+        const orderSnap = await get(ref(rtdbInstance, `auctions/${roomId}/playerOrder`));
+        if (orderSnap.exists()) rawOrder = orderSnap.val();
+      }
+      const nextIdx = getNextUnsoldPlayerIndex(rawOrder, player.id, allTeams);
 
       setTimeout(async () => {
         try {
