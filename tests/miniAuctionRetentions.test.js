@@ -104,9 +104,85 @@ test('retained players in IPL_PLAYERS are tagged with correct team and retention
   assert.equal(retainedCount, 184, 'Exactly 184 players must be retained across 10 franchises');
 });
 
-test('generatePlayerOrder(mini): lot sequence contains all 106 unassigned modern players, zero retained, zero legends', () => {
+test('Digvesh Rathi (p_1177) is retained in LSG and duplicate p_220 is removed, never in mini auction', () => {
+  const p220 = IPL_PLAYERS.find(p => p.id === 'p_220');
+  assert.equal(p220, undefined, 'Unassigned duplicate p_220 must not exist in IPL_PLAYERS');
+
+  const lsgRathi = IPL_2027_RETENTIONS.LSG.players.find(p => p.id === 'p_1177');
+  assert.ok(lsgRathi, 'Digvesh Rathi (p_1177) must be retained in LSG');
+
+  const p1177 = IPL_PLAYERS.find(p => p.id === 'p_1177');
+  assert.ok(p1177, 'Digvesh Rathi (p_1177) must exist in IPL_PLAYERS');
+  assert.equal(p1177.team, 'LSG');
+  assert.equal(p1177.isRetained, true);
+
   const miniOrder = generatePlayerOrder('mini');
-  assert.equal(miniOrder.length, 106, 'Mini auction order must contain all 106 unassigned modern players');
+  const inMini = miniOrder.some(idx => IPL_PLAYERS[idx].id === 'p_1177' || (IPL_PLAYERS[idx].name && IPL_PLAYERS[idx].name.toLowerCase().includes('digvesh')));
+  assert.equal(inMini, false, 'Retained LSG player Digvesh Rathi must NOT appear in Mini Auction');
+});
+
+test('Lhuan-dre Pretorius is retained in RR (p_1180) and duplicate p_231 is removed, never in mini auction', () => {
+  const p231 = IPL_PLAYERS.find(p => p.id === 'p_231');
+  assert.equal(p231, undefined, 'Duplicate p_231 must be removed from IPL_PLAYERS');
+
+  const rrPretorius = IPL_2027_RETENTIONS.RR.players.find(p => p.id === 'p_1180');
+  assert.ok(rrPretorius, 'Lhuan-dre Pretorius (p_1180) must be retained in RR');
+
+  const miniOrder = generatePlayerOrder('mini');
+  const inMini = miniOrder.some(idx => IPL_PLAYERS[idx].id === 'p_1180' || IPL_PLAYERS[idx].name.toLowerCase().includes('pretorius'));
+  assert.equal(inMini, false, 'Retained RR player Lhuan-dre Pretorius must NOT appear in Mini Auction');
+});
+
+test('Yash Raj Punja is retained in RR (p_1181) and duplicate p_340 is removed, never in mini auction', () => {
+  const p340 = IPL_PLAYERS.find(p => p.id === 'p_340');
+  assert.equal(p340, undefined, 'Duplicate p_340 must be removed from IPL_PLAYERS');
+
+  const rrPunja = IPL_2027_RETENTIONS.RR.players.find(p => p.id === 'p_1181');
+  assert.ok(rrPunja, 'Yash Raj Punja (p_1181) must be retained in RR');
+
+  const p1181 = IPL_PLAYERS.find(p => p.id === 'p_1181');
+  assert.ok(p1181, 'Yash Raj Punja (p_1181) must exist in IPL_PLAYERS');
+  assert.equal(p1181.team, 'RR');
+  assert.equal(p1181.isRetained, true);
+
+  const miniOrder = generatePlayerOrder('mini');
+  const inMini = miniOrder.some(idx => IPL_PLAYERS[idx].id === 'p_1181' || IPL_PLAYERS[idx].name.toLowerCase().includes('punja'));
+  assert.equal(inMini, false, 'Retained RR player Yash Raj Punja must NOT appear in Mini Auction');
+});
+
+test('Gurnoor Singh Brar (p_1174) and Smaran Ravichandran (p_1183) duplicates are removed, retained in franchises', () => {
+  assert.equal(IPL_PLAYERS.find(p => p.id === 'p_224'), undefined, 'Duplicate p_224 must be removed');
+  assert.equal(IPL_PLAYERS.find(p => p.id === 'p_257'), undefined, 'Duplicate p_257 must be removed');
+
+  const miniOrder = generatePlayerOrder('mini');
+  const hasBrar = miniOrder.some(idx => IPL_PLAYERS[idx].id === 'p_1174' || IPL_PLAYERS[idx].name.toLowerCase().includes('gurnoor'));
+  const hasSmaran = miniOrder.some(idx => IPL_PLAYERS[idx].id === 'p_1183' || IPL_PLAYERS[idx].name.toLowerCase().includes('smaran'));
+  assert.equal(hasBrar, false, 'Retained GT player Gurnoor Brar must NOT appear in Mini Auction');
+  assert.equal(hasSmaran, false, 'Retained SRH player Smaran Ravichandran must NOT appear in Mini Auction');
+});
+
+test('Auqib Nabi (p_1173) is retained in DC and duplicate p_311 is removed, never in mini auction', () => {
+  const p311 = IPL_PLAYERS.find(p => p.id === 'p_311');
+  assert.equal(p311, undefined, 'Duplicate p_311 must be removed from IPL_PLAYERS');
+
+  const dcAuqib = IPL_2027_RETENTIONS.DC.players.find(p => p.id === 'p_1173');
+  assert.ok(dcAuqib, 'Auqib Nabi (p_1173) must be retained in DC');
+  assert.equal(dcAuqib.name, 'Auqib Nabi');
+
+  const p1173 = IPL_PLAYERS.find(p => p.id === 'p_1173');
+  assert.ok(p1173, 'Auqib Nabi (p_1173) must exist in IPL_PLAYERS');
+  assert.equal(p1173.name, 'Auqib Nabi');
+  assert.equal(p1173.team, 'DC');
+  assert.equal(p1173.isRetained, true);
+
+  const miniOrder = generatePlayerOrder('mini');
+  const inMini = miniOrder.some(idx => IPL_PLAYERS[idx].id === 'p_1173' || (IPL_PLAYERS[idx].name && IPL_PLAYERS[idx].name.toLowerCase().includes('auqib')));
+  assert.equal(inMini, false, 'Retained DC player Auqib Nabi must NOT appear in Mini Auction');
+});
+
+test('generatePlayerOrder(mini): lot sequence contains all 100 unassigned modern players, zero retained, zero legends', () => {
+  const miniOrder = generatePlayerOrder('mini');
+  assert.equal(miniOrder.length, 100, 'Mini auction order must contain all 100 unassigned modern players');
 
   // Collect all retained player IDs across all 10 franchises
   const retainedIds = new Set();
@@ -150,7 +226,7 @@ test('calculateCustomTeamState: dynamic purse refunds when user releases a playe
 
   // When generating mini lot order with user release, Rahul Chahar is included!
   const customOrder = generatePlayerOrder('mini', { userReleasedPlayerIds: [rahul.id] });
-  assert.equal(customOrder.length, 107, 'Order length should increase to 107 with the released player');
+  assert.equal(customOrder.length, 101, 'Order length should increase to 101 with the released player');
   const hasRahul = customOrder.some((idx) => IPL_PLAYERS[idx].id === rahul.id);
   assert.ok(hasRahul, 'Rahul Chahar must now be present in the auction pool');
 });
@@ -189,7 +265,7 @@ test('localAuctionEngine: INIT_AUCTION in mini mode initializes authentic squads
   assert.equal(gtTeam.squad.length, 22, 'GT starting squad must have 22 retained players');
 
   // Verify first live lot is from the unassigned open pool
-  assert.equal(state.playerOrder.length, 106, 'Auction order should have the 106 open pool players');
+  assert.equal(state.playerOrder.length, 100, 'Auction order should have the 100 open pool players');
   const firstPlayer = IPL_PLAYERS[state.playerOrder[0]];
   assert.ok(firstPlayer, 'First live lot must exist');
   assert.ok(!firstPlayer.team, 'First lot player must not have an assigned team');
@@ -197,7 +273,7 @@ test('localAuctionEngine: INIT_AUCTION in mini mode initializes authentic squads
 });
 
 test('player images: every player has a valid image (Wikipedia URL if available, initial SVG fallback otherwise)', () => {
-  assert.equal(IPL_PLAYERS.length, 451);
+  assert.equal(IPL_PLAYERS.length, 445);
   assert.equal(IPL_PLAYERS.some((p) => p.id === 'p_200'), false, 'Shahrukh Khan must not exist in IPL_PLAYERS');
   const withoutImage = IPL_PLAYERS.filter(p => !p.image || typeof p.image !== 'string' || p.image.trim() === '');
   assert.equal(withoutImage.length, 0, 'Zero players should have missing or empty image');
@@ -206,8 +282,9 @@ test('player images: every player has a valid image (Wikipedia URL if available,
   const lukeWood = IPL_PLAYERS.find(p => p.id === 'p_1163');
   assert.ok(lukeWood.image.includes('wikimedia.org'), 'Luke Wood should have Wikipedia image');
 
-  const auqibDar = IPL_PLAYERS.find(p => p.id === 'p_1173');
-  assert.ok(auqibDar.image.includes('wikimedia.org'), 'Auqib Dar should have Wikipedia image');
+  const auqibNabi = IPL_PLAYERS.find(p => p.id === 'p_1173');
+  assert.ok(auqibNabi.image.includes('wikimedia.org'), 'Auqib Nabi should have Wikipedia image');
+  assert.equal(auqibNabi.name, 'Auqib Nabi');
 
   // Players without external photos have offline-safe SVG data URI avatar
   const venu = IPL_PLAYERS.find(p => p.id === 'p_1144');

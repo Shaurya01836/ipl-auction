@@ -294,7 +294,7 @@ test('INIT_AUCTION: first bid is exactly the base price (lot opens at 0)', () =>
   assert.equal(state.currentAuction.currentBid, player.basePrice);
 });
 
-test('INIT_AUCTION: player order follows the shared set order, marquee first', () => {
+test('INIT_AUCTION: player order is fully randomized across all players, not grouped by set', () => {
   const state = localAuctionReducer(null, {
     type: 'INIT_AUCTION',
     roomId: 'SOLO-SETS',
@@ -303,12 +303,15 @@ test('INIT_AUCTION: player order follows the shared set order, marquee first', (
     seed: 9,
   });
 
+  const modernPlayers = IPL_PLAYERS.filter((p) => p.set !== 'Legends');
+  assert.equal(state.playerOrder.length, modernPlayers.length);
+  assert.equal(new Set(state.playerOrder).size, modernPlayers.length);
+
+  // Verify that players are not strictly grouped by set (contiguous sets count is much higher than unique sets)
   const setOrder = state.playerOrder.map((i) => IPL_PLAYERS[i].set);
   const contiguousSets = setOrder.filter((s, i) => i === 0 || setOrder[i - 1] !== s);
-  const expectedSets = [...new Set(IPL_PLAYERS.filter((p) => p.set !== 'Legends').map((p) => p.set))];
-
-  assert.deepEqual(contiguousSets, expectedSets);
-  assert.equal(setOrder[0], 'Marquee Set 1');
+  const uniqueSets = new Set(setOrder);
+  assert.ok(contiguousSets.length > uniqueSets.size, 'Player order must be intermixed and randomized across sets');
 });
 
 // ─── Test 5: Persistence with Schema Versioning & Safe Recovery ───

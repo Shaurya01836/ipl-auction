@@ -16,51 +16,29 @@ export const shuffleArray = (array) => {
   return a;
 };
 
-/** Build the shuffled lot order for an auction type, grouped by player set. */
+/** Build the shuffled lot order for an auction type (fully randomized for users, not grouped by set). */
 export function generatePlayerOrder(auctionType = 'mega', options = {}) {
   if (auctionType === 'legends') {
-    const byRole = {};
+    const legendIndices = [];
     IPL_PLAYERS.forEach((p, i) => {
-      if (p.set === 'Legends') {
-        (byRole[p.role] ||= []).push(i);
-      }
+      if (p.set === 'Legends') legendIndices.push(i);
     });
-    const order = [];
-    ['Batsman', 'All-Rounder', 'Wicket-Keeper', 'Bowler'].forEach((role) => {
-      if (byRole[role]) order.push(...shuffleArray(byRole[role]));
-    });
-    return order;
+    return shuffleArray(legendIndices);
   }
 
   if (auctionType === 'mini') {
     const userReleased = options?.userReleasedPlayerIds || [];
     const poolIndices = getMiniAuctionPoolIndices(userReleased);
-    const sets = [...new Set(poolIndices.map((i) => IPL_PLAYERS[i].set))];
-    const marqueeSets = sets.filter((s) => s && s.toLowerCase().includes('marquee'));
-    const regularSets = sets.filter((s) => s && !s.toLowerCase().includes('marquee'));
-    const sortedSets = [...marqueeSets, ...regularSets];
-
-    const order = [];
-    sortedSets.forEach((setName) => {
-      const idxs = poolIndices.filter((i) => IPL_PLAYERS[i].set === setName);
-      order.push(...shuffleArray(idxs));
-    });
-    return order;
+    return shuffleArray(poolIndices);
   }
 
-  // All other modes (mega, sprint11, sprint5) use all modern players with no truncation
+  // All other modes (mega, sprint11, sprint5) use all modern players fully randomized
   const modernPool = [];
   IPL_PLAYERS.forEach((p, i) => {
     if (p.set !== 'Legends') modernPool.push(i);
   });
 
-  const modernSets = [...new Set(modernPool.map((i) => IPL_PLAYERS[i].set))];
-  const order = [];
-  modernSets.forEach((setName) => {
-    const idxs = modernPool.filter((i) => IPL_PLAYERS[i].set === setName);
-    order.push(...shuffleArray(idxs));
-  });
-  return order;
+  return shuffleArray(modernPool);
 }
 
 export const normalizeSquad = (squad) => mapRoomPlayers(squad, (entry) => entry);

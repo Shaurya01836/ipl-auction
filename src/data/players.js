@@ -2039,24 +2039,6 @@ export const IPL_PLAYERS = [
     "isTraded": false
   },
   {
-    "id": "p_220",
-    "name": "Digvesh Singh Rathi",
-    "role": "Bowler",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "Set 2",
-    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/400300/400306.jpg",
-    "stats": {
-      "matches": 23,
-      "wickets": 19,
-      "econ": 9.08,
-      "avg": 43.47,
-      "bb": "2/30"
-    },
-    "rating": 43
-  },
-  {
     "id": "p_241",
     "name": "Nehal Wadhera",
     "role": "Batsman",
@@ -3367,24 +3349,6 @@ export const IPL_PLAYERS = [
     "isTraded": false
   },
   {
-    "id": "p_224",
-    "name": "Gurnoor Brar",
-    "role": "Bowler",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "Set 4",
-    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/418200/418219.jpg",
-    "stats": {
-      "matches": 1,
-      "wickets": 0,
-      "econ": 14,
-      "avg": 0,
-      "bb": "0/42"
-    },
-    "rating": 4
-  },
-  {
     "id": "p_225",
     "name": "Harnoor Singh",
     "role": "Batsman",
@@ -3481,24 +3445,6 @@ export const IPL_PLAYERS = [
       "bb": "1/23"
     },
     "rating": 15
-  },
-  {
-    "id": "p_231",
-    "name": "Lhuan-dré Pretorius",
-    "role": "All-Rounder",
-    "type": "Overseas",
-    "country": "OS",
-    "basePrice": 0.3,
-    "set": "Set 4",
-    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/2827.png",
-    "stats": {
-      "matches": 2,
-      "runs": 7,
-      "avg": 3.5,
-      "sr": 87.5,
-      "hs": "7"
-    },
-    "rating": 7
   },
   {
     "id": "p_232",
@@ -3845,24 +3791,6 @@ export const IPL_PLAYERS = [
     "isTraded": false
   },
   {
-    "id": "p_257",
-    "name": "Ravichandran Smaran",
-    "role": "Batsman",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "Set 4",
-    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/386300/386303.jpg",
-    "stats": {
-      "matches": 6,
-      "runs": 19,
-      "avg": 6.33,
-      "sr": 76,
-      "hs": "9*"
-    },
-    "rating": 12
-  },
-  {
     "id": "p_258",
     "name": "Suryansh Shedge",
     "role": "All-Rounder",
@@ -4159,24 +4087,6 @@ export const IPL_PLAYERS = [
       "hs": "13"
     },
     "rating": 10
-  },
-  {
-    "id": "p_311",
-    "name": "Auqib Nabi",
-    "role": "All-Rounder",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "UAL1",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Auqib_Nabi_bowling_in_a_Ranji_Trophy_2024-25_match_against_Meghalaya_in_Shillong.jpg/500px-Auqib_Nabi_bowling_in_a_Ranji_Trophy_2024-25_match_against_Meghalaya_in_Shillong.jpg",
-    "stats": {
-      "matches": 5,
-      "wickets": 0,
-      "econ": 11.46,
-      "runs": 14,
-      "sr": 350
-    },
-    "rating": 15
   },
   {
     "id": "p_314",
@@ -4525,24 +4435,6 @@ export const IPL_PLAYERS = [
       "bb": "3/32"
     },
     "rating": 29
-  },
-  {
-    "id": "p_340",
-    "name": "Yash Punja",
-    "role": "Bowler",
-    "type": "Indian",
-    "country": "IND",
-    "basePrice": 0.3,
-    "set": "USP1",
-    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1280,q_80/lsci/db/PICTURES/CMS/420600/420665.png",
-    "stats": {
-      "matches": 8,
-      "wickets": 9,
-      "econ": 9.3,
-      "avg": 31,
-      "bb": "2/35"
-    },
-    "rating": 33
   },
   {
     "id": "p_343",
@@ -8578,7 +8470,7 @@ export const IPL_PLAYERS = [
   },
   {
     "id": "p_1173",
-    "name": "Auqib Dar",
+    "name": "Auqib Nabi",
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
@@ -8606,6 +8498,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "UFA1",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/418200/418219.jpg",
     "rating": 64,
     "stats": {
       "matches": 10,
@@ -8669,6 +8562,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "USP1",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/400300/400306.jpg",
     "rating": 63,
     "stats": {
       "matches": 12,
@@ -8732,6 +8626,7 @@ export const IPL_PLAYERS = [
     "country": "OS",
     "basePrice": 0.3,
     "set": "UBA1",
+    "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/2827.png",
     "rating": 65,
     "stats": {
       "matches": 15,
@@ -8753,6 +8648,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "UFA1",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1280,q_80/lsci/db/PICTURES/CMS/420600/420665.png",
     "rating": 60,
     "stats": {
       "matches": 6,
@@ -8795,6 +8691,7 @@ export const IPL_PLAYERS = [
     "country": "IND",
     "basePrice": 0.3,
     "set": "UBA1",
+    "image": "https://img1.hscicdn.com/image/upload/f_auto,t_ds_w_1200,q_50/lsci/db/PICTURES/CMS/386300/386303.jpg",
     "rating": 62,
     "stats": {
       "matches": 11,

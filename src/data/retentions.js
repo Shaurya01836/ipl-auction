@@ -208,7 +208,7 @@ export const IPL_2027_RETENTIONS = {
       },
       {
         "id": "p_1173",
-        "name": "Auqib Dar",
+        "name": "Auqib Nabi",
         "role": "Bowler",
         "price": 8.4,
         "isOverseas": false,

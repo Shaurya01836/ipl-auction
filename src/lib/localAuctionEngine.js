@@ -151,7 +151,7 @@ export function localAuctionReducer(state, action) {
         });
       });
 
-      // Same lot order as cloud: grouped by player set, marquee first.
+      // Same lot order as cloud: fully randomized across players.
       const userReleased = humanState ? humanState.releasedPlayers.map(p => p.id) : [];
       const playerOrder = generatePlayerOrder(auctionType, { userReleasedPlayerIds: userReleased });
 
