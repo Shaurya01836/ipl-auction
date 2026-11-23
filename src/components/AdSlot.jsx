@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef } from 'react';
 const DEFAULT_CLIENT_ID = 'ca-pub-2952599241278941';
 const DEFAULT_LANDING_SLOT_1 = '6078587405';
 const DEFAULT_LANDING_SLOT_2 = '2911895830';
-const DEFAULT_LANDING_SLOT_3 = '2523068937';
 export const DEFAULT_LANDING_MULTIPLEX_SLOT = '6078587405';
 export const DEFAULT_AUCTION_ROOM_SLOT = '6494103537';
 export const DEFAULT_AUCTION_ROOM_MOBILE_SLOT = '8939145929';
@@ -159,8 +158,28 @@ export const AuctionMobileBannerAd = ({
 }) => {
   const containerRef = useRef(null);
   const adRef = useRef(null);
+  const [isUnfilled, setIsUnfilled] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
+
+  useEffect(() => {
+    const el = adRef.current;
+    if (!el) return;
+
+    setIsUnfilled(false);
+
+    const checkStatus = () => {
+      if (el.getAttribute('data-ad-status') === 'unfilled') {
+        setIsUnfilled(true);
+      }
+    };
+
+    checkStatus();
+
+    const observer = new MutationObserver(() => checkStatus());
+    observer.observe(el, { attributes: true, attributeFilter: ['data-ad-status'] });
+    return () => observer.disconnect();
+  }, [slot, clientId, refreshKey]);
 
   useEffect(() => {
     if (!slot || !clientId) return;
@@ -200,16 +219,18 @@ export const AuctionMobileBannerAd = ({
     return () => clearInterval(interval);
   }, [autoRefresh, refreshIntervalSec]);
 
-  if (!slot || !clientId) return null;
+  if (!slot || !clientId || isUnfilled) return null;
 
   return (
     <div ref={containerRef} className={`w-full flex justify-center items-center sm:hidden overflow-hidden ${className}`}>
-      <div className="w-[320px] h-[50px] min-h-[50px] flex items-center justify-center overflow-hidden">
+      <div className="w-full max-w-[360px] min-h-[50px] flex items-center justify-center overflow-hidden">
         <ins
           key={`${slot}-${refreshKey}`}
           ref={adRef}
           className="adsbygoogle"
-          style={{ display: 'inline-block', width: '320px', height: '50px' }}
+          style={{ display: 'block', width: '100%' }}
+          data-ad-format="horizontal"
+          data-full-width-responsive="true"
           data-ad-client={clientId}
           data-ad-slot={slot}
         />
@@ -376,8 +397,10 @@ export const LandingDisplayBannerAd = ({
   className = '',
   label = 'Sponsored'
 }) => {
+  const containerRef = useRef(null);
   const adRef = useRef(null);
   const [isUnfilled, setIsUnfilled] = useState(false);
+  const pushedRef = useRef(false);
   const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
 
   useEffect(() => {
@@ -402,28 +425,54 @@ export const LandingDisplayBannerAd = ({
 
     ensureAdSenseScript(clientId);
 
-    const timer = setTimeout(() => {
-      if (!adRef.current) return;
-      if (adRef.current.getAttribute('data-adsbygoogle-status')) return;
-      if (adRef.current.children.length > 0) return;
-      if (adRef.current.offsetWidth === 0) return;
+    const tryPush = () => {
+      if (pushedRef.current) return;
+      const el = adRef.current;
+      if (!el) return;
+      if (el.getAttribute('data-adsbygoogle-status') || el.children.length > 0) {
+        pushedRef.current = true;
+        return;
+      }
+      if (el.offsetWidth === 0) return;
 
       try {
+        pushedRef.current = true;
         (window.adsbygoogle = window.adsbygoogle || []).push({});
       } catch (err) {
+        pushedRef.current = false;
         if (import.meta.env.DEV) {
           console.warn('[LandingDisplayBannerAd] AdSense push error:', err);
         }
       }
-    }, 120);
+    };
 
-    return () => clearTimeout(timer);
+    let io;
+    if (typeof IntersectionObserver !== 'undefined' && containerRef.current) {
+      io = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting && entry.boundingClientRect.width > 0) {
+              tryPush();
+              if (io) io.disconnect();
+            }
+          }
+        },
+        { rootMargin: '250px 0px' }
+      );
+      io.observe(containerRef.current);
+    } else {
+      setTimeout(tryPush, 200);
+    }
+
+    return () => {
+      if (io) io.disconnect();
+    };
   }, [slot, clientId]);
 
   if (!slot || !clientId || isUnfilled) return null;
 
   return (
-    <section className={`relative z-10 w-full max-w-6xl mx-auto ${className}`} aria-label={label}>
+    <section ref={containerRef} className={`relative z-10 w-full max-w-6xl mx-auto ${className}`} aria-label={label}>
       <div className="mb-3 flex items-center justify-center gap-3">
         <div className="h-px w-10 bg-white/10" />
         <span className="text-[8px] font-black uppercase tracking-[0.35em] text-gray-500">{label}</span>
@@ -460,8 +509,10 @@ export const AuctionSummaryInFeedAd = ({
   className = '',
   label = 'Sponsored'
 }) => {
+  const containerRef = useRef(null);
   const adRef = useRef(null);
   const [isUnfilled, setIsUnfilled] = useState(false);
+  const pushedRef = useRef(false);
   const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
 
   useEffect(() => {
@@ -486,28 +537,54 @@ export const AuctionSummaryInFeedAd = ({
 
     ensureAdSenseScript(clientId);
 
-    const timer = setTimeout(() => {
-      if (!adRef.current) return;
-      if (adRef.current.getAttribute('data-adsbygoogle-status')) return;
-      if (adRef.current.children.length > 0) return;
-      if (adRef.current.offsetWidth === 0) return;
+    const tryPush = () => {
+      if (pushedRef.current) return;
+      const el = adRef.current;
+      if (!el) return;
+      if (el.getAttribute('data-adsbygoogle-status') || el.children.length > 0) {
+        pushedRef.current = true;
+        return;
+      }
+      if (el.offsetWidth === 0) return;
 
       try {
+        pushedRef.current = true;
         (window.adsbygoogle = window.adsbygoogle || []).push({});
       } catch (err) {
+        pushedRef.current = false;
         if (import.meta.env.DEV) {
           console.warn('[AuctionSummaryInFeedAd] AdSense push error:', err);
         }
       }
-    }, 120);
+    };
 
-    return () => clearTimeout(timer);
+    let io;
+    if (typeof IntersectionObserver !== 'undefined' && containerRef.current) {
+      io = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting && entry.boundingClientRect.width > 0) {
+              tryPush();
+              if (io) io.disconnect();
+            }
+          }
+        },
+        { rootMargin: '250px 0px' }
+      );
+      io.observe(containerRef.current);
+    } else {
+      setTimeout(tryPush, 200);
+    }
+
+    return () => {
+      if (io) io.disconnect();
+    };
   }, [slot, clientId]);
 
   if (!slot || !clientId || isUnfilled) return null;
 
   return (
-    <div className={`w-full max-w-5xl mx-auto my-3 sm:my-4 ${className}`}>
+    <div ref={containerRef} className={`w-full max-w-5xl mx-auto my-3 sm:my-4 ${className}`}>
       <div className="mb-2 flex items-center justify-center gap-2">
         <div className="h-px w-8 bg-white/10" />
         <span className="text-[7.5px] sm:text-[8px] font-black uppercase tracking-[0.3em] text-gray-500">{label}</span>
@@ -532,7 +609,6 @@ const AdSlot = ({
   slot,
   slot1 = import.meta.env.VITE_ADSENSE_LANDING_SLOT_1 || import.meta.env.VITE_ADSENSE_LANDING_FOOTER_SLOT || DEFAULT_LANDING_SLOT_1,
   slot2 = import.meta.env.VITE_ADSENSE_LANDING_SLOT_2 || DEFAULT_LANDING_SLOT_2,
-  slot3 = import.meta.env.VITE_ADSENSE_LANDING_SLOT_3 || DEFAULT_LANDING_SLOT_3,
   className = '',
   label = 'Advertisement'
 }) => {
@@ -542,7 +618,7 @@ const AdSlot = ({
   const activeSlots = (
     slot
       ? [slot]
-      : [slot1, slot2, slot3]
+      : [slot1, slot2]
   ).filter((s) => Boolean(s && clientId));
 
   if (activeSlots.length === 0) {

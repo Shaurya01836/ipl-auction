@@ -60,7 +60,7 @@ import Navbar from "../components/Navbar";
 import ConfirmDialog from "../components/ConfirmDialog";
 import AuctionActivityFeed from "../components/AuctionActivityFeed";
 import Footer from "../components/Footer";
-import AdSlot, { LandingDisplayBannerAd } from "../components/AdSlot";
+import { LandingDisplayBannerAd } from "../components/AdSlot";
 import CommunitySection from "../components/community/CommunitySection";
 import CommunityBanner from "../components/community/CommunityBanner";
 import ServerSwitcher from "../components/ServerSwitcher";

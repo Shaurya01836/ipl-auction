@@ -38,7 +38,7 @@ import PageLoader from '../components/PageLoader';
 import PageBackground from '../components/PageBackground';
 import ConfirmDialog from '../components/ConfirmDialog';
 import AuctionCountdown from '../components/AuctionCountdown';
-import AdSlot, { AuctionRoomAd, AuctionMobileBannerAd, AuctionTeamsInFeedAd, DEFAULT_AUCTION_ROOM_SLOT } from '../components/AdSlot';
+import { AuctionRoomAd, AuctionMobileBannerAd, AuctionTeamsInFeedAd, DEFAULT_AUCTION_ROOM_SLOT } from '../components/AdSlot';
 import useRoomServer from '../hooks/useRoomServer';
 import { SERVER_LOCAL, withServerParam } from '../lib/auctionServers';
 import { isLocalRoom } from '../lib/localAuctionEngine';
