@@ -26,6 +26,9 @@ ON auctions (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_auctions_status 
 ON auctions (status);
 
+CREATE INDEX IF NOT EXISTS idx_auctions_status_created
+ON auctions (status, created_at);
+
 CREATE TABLE IF NOT EXISTS teams (
   id TEXT PRIMARY KEY,
   auction_id TEXT NOT NULL,

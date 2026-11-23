@@ -93,6 +93,54 @@ function checkRateLimit(ip, category = 'read') {
   return { allowed: true };
 }
 
+/**
+ * Epoch timestamp of midnight IST (00:00:00 of current day in Indian Standard Time, UTC+5:30).
+ */
+function getStartOfTodayIST() {
+  const now = new Date();
+  const istOffsetMs = 5.5 * 60 * 60 * 1000;
+  const istTime = new Date(now.getTime() + istOffsetMs);
+  istTime.setUTCHours(0, 0, 0, 0);
+  return istTime.getTime() - istOffsetMs;
+}
+
+/**
+ * Reconciles platform stats at midnight.
+ * HYPER-OPTIMIZED FOR CLOUDFLARE D1 FREE TIER:
+ * - Exactly 1 single-row write (updates only platform_stats 'global' row).
+ * - Index-only count read (queries only today's created rooms, scanning ~0-20 rows).
+ * - Never modifies historical auction rows to avoid burning write quota.
+ */
+async function reconcileDailyStats(env) {
+  const startOfTodayIST = getStartOfTodayIST();
+  const now = Date.now();
+
+  try {
+    // 1. Read count of active rooms created today using the (status, created_at) index
+    const countRow = await env.DB.prepare(
+      `SELECT COUNT(*) as active_today 
+       FROM auctions 
+       WHERE status IN ('waiting', 'active', 'paused') AND created_at >= ?`
+    ).bind(startOfTodayIST).first();
+
+    const activeCount = countRow?.active_today ?? 0;
+
+    // 2. Exactly 1 row write to update platform_stats
+    await env.DB.prepare(
+      `INSERT INTO platform_stats (id, total_count, active_count, updated_at)
+       VALUES ('global', 0, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET
+         active_count = excluded.active_count,
+         updated_at = excluded.updated_at`
+    ).bind(activeCount, now).run();
+
+    return activeCount;
+  } catch (err) {
+    console.error('[reconcileDailyStats-error]', err);
+    return 0;
+  }
+}
+
 export default {
   async fetch(request, env, ctx) {
     const origin = request.headers.get('Origin') || request.headers.get('Referer') || '';
@@ -190,6 +238,7 @@ export default {
 
         // Active waiting rooms created in the last 20 minutes with online admin/host
         const twentyMinutesAgo = Date.now() - 20 * 60 * 1000;
+        const startOfTodayIST = getStartOfTodayIST();
         const [roomsRes, statsRow] = await Promise.all([
           env.DB.prepare(
             `SELECT id, server, auction_type, squad_limit, overseas_limit, settings, players, host_online, created_at 
@@ -198,9 +247,14 @@ export default {
              ORDER BY created_at DESC LIMIT 20`
           ).bind(twentyMinutesAgo).all(),
           env.DB.prepare(
-            `SELECT active_count FROM platform_stats WHERE id = 'global' LIMIT 1`
+            `SELECT active_count, updated_at FROM platform_stats WHERE id = 'global' LIMIT 1`
           ).first().catch(() => null),
         ]);
+
+        let liveActiveCount = statsRow?.active_count ?? 0;
+        if (!statsRow?.updated_at || statsRow.updated_at < startOfTodayIST) {
+          liveActiveCount = await reconcileDailyStats(env);
+        }
 
         const formatted = (roomsRes.results || []).map((r) => {
           const players = parseJsonField(r.players, []);
@@ -218,14 +272,14 @@ export default {
           };
         });
 
-        const response = json({ data: formatted, activeCount: statsRow?.active_count ?? 0 }, 200, {
+        const response = json({ data: formatted, activeCount: liveActiveCount }, 200, {
           'Cache-Control': 'public, max-age=10, s-maxage=15, stale-while-revalidate=30',
         });
         ctx.waitUntil(cache.put(cacheKey, response.clone()));
         return response;
       }
 
-      // --- 1.1 Fast Platform Stats (Single-Row Read, Edge-Cached 60s) ---
+      // --- 1.1 Fast Platform Stats (Single-Row Read, Edge-Cached 30s) ---
       if (request.method === 'GET' && path === '/api/stats') {
         const cache = caches.default;
         const cacheUrl = new URL(url.origin + '/api/stats');
@@ -233,16 +287,22 @@ export default {
         let cached = await cache.match(cacheKey);
         if (cached) return cached;
 
+        const startOfTodayIST = getStartOfTodayIST();
         const row = await env.DB.prepare(
-          `SELECT active_count FROM platform_stats WHERE id = 'global' LIMIT 1`
+          `SELECT active_count, updated_at FROM platform_stats WHERE id = 'global' LIMIT 1`
         ).first();
 
+        let activeCount = row?.active_count || 0;
+        if (!row?.updated_at || row.updated_at < startOfTodayIST) {
+          activeCount = await reconcileDailyStats(env);
+        }
+
         const data = {
-          activeCount: row?.active_count || 0,
+          activeCount: Math.max(0, activeCount),
         };
 
         const response = json(data, 200, {
-          'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=120',
+          'Cache-Control': 'public, max-age=30, s-maxage=30, stale-while-revalidate=60',
         });
         ctx.waitUntil(cache.put(cacheKey, response.clone()));
         return response;
@@ -718,10 +778,21 @@ Respond ONLY with valid JSON in this exact structure without markdown:
         });
       }
 
+      // --- 10.1 Admin Reconcile Stats (Manual or Automation Trigger) ---
+      if ((request.method === 'POST' || request.method === 'GET') && path === '/api/admin/reconcile-stats') {
+        const count = await reconcileDailyStats(env);
+        return json({ success: true, activeCount: count, message: 'Stats reconciled to midnight IST window' });
+      }
+
       return json({ error: 'Endpoint not found' }, 404);
     } catch (err) {
       console.error('[worker-error]', err);
       return json({ error: err.message || 'Internal error' }, 500);
     }
+  },
+
+  // --- Cloudflare Cron Scheduled Trigger (Every Midnight at 00:00 IST / 18:30 UTC) ---
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(reconcileDailyStats(env));
   },
 };

@@ -13,4 +13,8 @@ binding = "DB"
 database_name = "crickauction-db"
 database_id = "4ca10b3a-3ca8-46dd-937d-bc9a13b39ac1"
 
+# Automated Midnight Reset (18:30 UTC = 00:00:00 IST every day)
+[triggers]
+crons = ["30 18 * * *"]
+
 
