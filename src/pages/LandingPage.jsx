@@ -65,6 +65,7 @@ import CommunityBanner from "../components/community/CommunityBanner";
 import ServerSwitcher from "../components/ServerSwitcher";
 import PageBackground from "../components/PageBackground";
 import PanelSurface from "../components/PanelSurface";
+import { AuctionMobileBannerAd } from "../components/AdSlot";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import {
   computeTeamSpent,
@@ -1082,6 +1083,11 @@ const LandingPage = () => {
                       );
                     })}
                   </div>
+                </div>
+
+                {/* Mobile Ad Banner: Shown before modes section on mobile for maximum visibility */}
+                <div className="sm:hidden w-full my-1">
+                  <AuctionMobileBannerAd />
                 </div>
 
                 {/* 2. Auction Modes: Balanced 5-Column Grid (1 Row on Desktop) */}

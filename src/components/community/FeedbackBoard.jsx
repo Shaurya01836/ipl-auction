@@ -23,7 +23,7 @@ const columnStyles = {
 
 export default function FeedbackBoard() {
   const [expandedId, setExpandedId] = useState(null);
-  const [activeMobileTab, setActiveMobileTab] = useState('heard');
+  const [activeMobileTab, setActiveMobileTab] = useState('shipped');
 
   const toggleExpand = (id) => {
     setExpandedId((prev) => (prev === id ? null : id));

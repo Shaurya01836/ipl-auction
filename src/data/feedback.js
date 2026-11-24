@@ -4,9 +4,9 @@
  */
 
 export const FEEDBACK_COLUMNS = [
-  { id: 'heard', label: 'HEARD', description: 'Raw complaints & suggestions' },
-  { id: 'working', label: 'WORKING ON', description: 'Actively in progress' },
   { id: 'shipped', label: 'SHIPPED', description: 'Done & live in production' },
+  { id: 'working', label: 'WORKING ON', description: 'Actively in progress' },
+  { id: 'heard', label: 'HEARD', description: 'Raw complaints & suggestions' },
 ];
 
 export const FEEDBACK_ITEMS = [

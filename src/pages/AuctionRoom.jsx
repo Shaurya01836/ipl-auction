@@ -38,7 +38,7 @@ import PageLoader from '../components/PageLoader';
 import PageBackground from '../components/PageBackground';
 import ConfirmDialog from '../components/ConfirmDialog';
 import AuctionCountdown from '../components/AuctionCountdown';
-import { AuctionRoomAd, AuctionMobileBannerAd, AuctionTeamsInFeedAd, DEFAULT_AUCTION_ROOM_SLOT } from '../components/AdSlot';
+import { AuctionRoomAd, AuctionMobileBannerAd, AuctionTeamsInFeedAd, AuctionSidebarActivityAd, DEFAULT_AUCTION_ROOM_SLOT } from '../components/AdSlot';
 import useRoomServer from '../hooks/useRoomServer';
 import { SERVER_LOCAL, withServerParam } from '../lib/auctionServers';
 import { isLocalRoom } from '../lib/localAuctionEngine';
@@ -1952,6 +1952,9 @@ const AuctionRoom = () => {
                            exit={{ opacity: 0, y: -10 }}
                            className="flex-1 flex flex-col min-h-0 overflow-hidden h-full"
                         >
+                           {/* Always at the top of Live Activity for full visibility on laptop screen (hidden on mobile) */}
+                           <AuctionSidebarActivityAd className="hidden md:flex" />
+
                            <div className="flex-1 overflow-y-auto p-3 sm:p-4 compact:p-3 custom-scrollbar relative touch-pan-y min-h-0 pb-28 sm:pb-8 md:pb-12">
                               {/* Timeline line */}
                               <div className="absolute left-6 sm:left-10 top-6 bottom-6 w-[1px] bg-white/5 pointer-events-none" />

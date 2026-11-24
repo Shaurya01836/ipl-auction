@@ -245,24 +245,119 @@ export const AuctionSidebarActivityAd = ({
   autoRefresh = true,
   refreshIntervalSec = 60
 }) => {
+  const containerRef = useRef(null);
+  const adRef = useRef(null);
+  const [isUnfilled, setIsUnfilled] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const pushedRef = useRef(false);
   const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
 
-  if (!slot || !clientId) return null;
+  useEffect(() => {
+    const el = adRef.current;
+    if (!el) return;
+
+    setIsUnfilled(false);
+    pushedRef.current = false;
+
+    const checkStatus = () => {
+      if (el.getAttribute('data-ad-status') === 'unfilled') {
+        setIsUnfilled(true);
+      }
+    };
+
+    checkStatus();
+
+    const observer = new MutationObserver(() => checkStatus());
+    observer.observe(el, { attributes: true, attributeFilter: ['data-ad-status'] });
+    return () => observer.disconnect();
+  }, [slot, clientId, refreshKey]);
+
+  useEffect(() => {
+    if (!slot || !clientId) return;
+
+    ensureAdSenseScript(clientId);
+
+    const tryPush = () => {
+      if (pushedRef.current) return;
+      const el = adRef.current;
+      if (!el) return;
+      if (el.getAttribute('data-adsbygoogle-status')) {
+        pushedRef.current = true;
+        return;
+      }
+      if (el.children.length > 0) {
+        pushedRef.current = true;
+        return;
+      }
+      if (el.offsetWidth === 0) return;
+
+      try {
+        pushedRef.current = true;
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      } catch (err) {
+        pushedRef.current = false;
+        if (import.meta.env.DEV) {
+          console.warn('[AuctionSidebarActivityAd] AdSense push error:', err);
+        }
+      }
+    };
+
+    const timer = setTimeout(tryPush, 150);
+
+    let io;
+    if (typeof IntersectionObserver !== 'undefined' && adRef.current) {
+      io = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && entry.boundingClientRect.width > 0) {
+            tryPush();
+          }
+        }
+      });
+      io.observe(adRef.current);
+    }
+
+    return () => {
+      clearTimeout(timer);
+      if (io) io.disconnect();
+    };
+  }, [slot, clientId, refreshKey]);
+
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const intervalMs = Math.max(30, refreshIntervalSec) * 1000;
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        if (rect.top >= window.innerHeight || rect.bottom <= 0 || rect.width === 0) return;
+      }
+      setRefreshKey((k) => k + 1);
+    }, intervalMs);
+    return () => clearInterval(interval);
+  }, [autoRefresh, refreshIntervalSec]);
+
+  if (!slot || !clientId || isUnfilled) return null;
 
   return (
-    <div className={`w-full shrink-0 border-t border-white/10 bg-[#0c0d10]/95 backdrop-blur-md p-2.5 sm:p-3 overflow-hidden flex flex-col items-center ${className}`}>
-      <div className="w-full flex items-center justify-between pb-1.5 mb-1.5 border-b border-white/5 px-0.5">
+    <div
+      ref={containerRef}
+      className={`hidden md:flex w-full shrink-0 border-b border-white/10 bg-[#0c0d10]/95 backdrop-blur-md p-2 sm:p-2.5 overflow-hidden flex-col items-center ${className}`}
+    >
+      <div className="w-full flex items-center justify-between pb-1 mb-1 border-b border-white/5 px-0.5">
         <span className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-500">
           Sponsored Link
         </span>
       </div>
-      <div className="w-full flex items-center justify-center min-h-[250px] max-h-[280px] overflow-hidden">
-        <SingleAdUnit
-          slot={slot}
-          clientId={clientId}
-          bare
-          autoRefresh={autoRefresh}
-          refreshIntervalSec={refreshIntervalSec}
+      <div className="w-full flex items-center justify-center min-h-[110px] max-h-[170px] overflow-hidden">
+        <ins
+          key={`${slot}-${refreshKey}`}
+          ref={adRef}
+          className="adsbygoogle"
+          style={{ display: 'block', width: '100%' }}
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+          data-ad-client={clientId}
+          data-ad-slot={slot}
         />
       </div>
     </div>

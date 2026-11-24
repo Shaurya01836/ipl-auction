@@ -177,11 +177,11 @@ export default function AuctionActivityFeed({ activeCount = 0, stats = null }) {
         </AnimatePresence>
       </div>
 
-      {/* Divider between Signings and Sponsored Ad */}
-      <div className="w-full h-px bg-white/10 my-2.5 sm:my-3" />
+      {/* Divider between Signings and Sponsored Ad (Desktop/Laptop only) */}
+      <div className="hidden sm:block w-full h-px bg-white/10 my-2.5 sm:my-3" />
 
-      {/* Bottom Half: Sponsored Display Ad */}
-      <div className="flex flex-col flex-1 min-h-0 pt-0.5">
+      {/* Bottom Half: Sponsored Display Ad (Desktop/Laptop only) */}
+      <div className="hidden sm:flex flex-col flex-1 min-h-0 pt-0.5">
         <div className="flex items-center justify-between mb-1.5 px-0.5">
           <span className="text-[9px] font-pixel uppercase tracking-widest text-gray-500">
             Sponsored Link
