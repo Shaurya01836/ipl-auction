@@ -562,7 +562,6 @@ const Lobby = () => {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mt-10 sm:mt-12">
             <button
               onClick={() => setSpectateMode(true)}
-              data-google-vignette="false"
               className="px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center gap-2 active:scale-95"
             >
               <Eye size={15} /> Spectate Room Only
@@ -631,7 +630,6 @@ const Lobby = () => {
             <button
               onClick={handleStartAuction}
               disabled={isStarting || !canStartAuction}
-              data-google-vignette="false"
               title={!canStartAuction ? `Add at least ${MIN_TEAMS_TO_START} teams to start` : undefined}
               className="shrink-0 px-3.5 sm:px-5 md:px-8 py-2 sm:py-2.5 md:py-3 bg-white hover:bg-slate-200 text-black rounded-xl sm:rounded-2xl font-black text-[9px] sm:text-[10px] md:text-xs uppercase tracking-wider md:tracking-widest shadow-[0_10px_30px_rgba(255,255,255,0.08)] disabled:opacity-50 transition-all active:scale-95 cursor-pointer whitespace-nowrap"
             >

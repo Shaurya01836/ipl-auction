@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuction } from '../contexts/AuctionContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useQuota } from '../contexts/QuotaContext';
@@ -64,6 +64,14 @@ const AuctionSummary = () => {
   const [summaryReloadKey, setSummaryReloadKey] = useState(0);
 
   const teamCardRefs = React.useRef({});
+
+  // Notify Google AdSense Auto-Ads (anchor ads, vignette triggers, in-page ads) for SPA summary view
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (_) {}
+  }, []);
 
   const handleShareSquadImage = async (team, squad, manager) => {
     const cardEl = posterRefs.current[team.id] || teamCardRefs.current[team.id];
@@ -386,13 +394,12 @@ const AuctionSummary = () => {
             ? 'This solo auction lives on the device where it started. No saved data was found in this browser for this room.'
             : summaryError}
         </p>
-        <button
-          type="button"
-          onClick={() => navigate('/')}
-          className="px-6 py-2.5 rounded-xl bg-white hover:bg-slate-200 text-black font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg"
+        <Link
+          to="/"
+          className="px-6 py-2.5 rounded-xl bg-white hover:bg-slate-200 text-black font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg inline-flex items-center gap-2"
         >
-          Back to Home
-        </button>
+          <Home size={14} /> Back to Home
+        </Link>
       </div>
     );
   }
@@ -429,12 +436,12 @@ const AuctionSummary = () => {
               </div>
             </div>
 
-            <button 
-              onClick={() => navigate('/')}
-              className="px-4 sm:px-6 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-xl hover:bg-white hover:text-black text-slate-300 font-black uppercase text-[10px] sm:text-xs tracking-wider transition-all flex items-center gap-1.5 sm:gap-2 active:scale-95 touch-manipulation shrink-0 ml-auto"
+            <Link 
+              to="/"
+              className="px-4 sm:px-6 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-xl hover:bg-white hover:text-black text-slate-300 font-black uppercase text-[10px] sm:text-xs tracking-wider transition-all flex items-center gap-1.5 sm:gap-2 active:scale-95 touch-manipulation shrink-0 ml-auto cursor-pointer"
             >
               <Home size={14} className="sm:w-4 sm:h-4" /> Menu
-            </button>
+            </Link>
           </div>
 
           {/* Title */}
@@ -879,6 +886,19 @@ const AuctionSummary = () => {
 
         {/* Post-Auction Summary Display Ad Section */}
         <AuctionSummaryAd className="mt-10 sm:mt-14 mb-6" />
+
+        {/* Bottom CTA to return home (semantic anchor tag triggers Google Auto-Ad Vignette interstitial) */}
+        <div className="mt-8 mb-12 flex flex-col items-center justify-center gap-3">
+          <Link
+            to="/"
+            className="px-8 py-3.5 rounded-xl bg-white hover:bg-slate-200 text-black font-black text-xs uppercase tracking-widest transition-all shadow-xl hover:shadow-2xl flex items-center justify-center gap-2.5 active:scale-95 cursor-pointer touch-manipulation"
+          >
+            <Home size={16} /> Return to Home
+          </Link>
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-500">
+            Start a new auction or join another room
+          </span>
+        </div>
 
       </div>
     </div>
