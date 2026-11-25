@@ -7,6 +7,7 @@ export const DEFAULT_LANDING_MULTIPLEX_SLOT = '6078587405';
 export const DEFAULT_AUCTION_ROOM_SLOT = '6494103537';
 export const DEFAULT_AUCTION_ROOM_MOBILE_SLOT = '8939145929';
 export const DEFAULT_SIDEBAR_ACTIVITY_SLOT = '2911895830';
+export const DEFAULT_TEAMS_AD_SLOT = '1476385035';
 
 const ensureAdSenseScript = (clientId) => {
   if (typeof document === 'undefined') return;
@@ -75,7 +76,11 @@ const useAdSenseSlot = ({
         pushedRef.current = true;
         return;
       }
-      if (el.offsetWidth === 0) return;
+      if (el.offsetWidth < 100) return;
+      const rect = el.getBoundingClientRect();
+      if (rect.width < 100) return;
+      const computed = window.getComputedStyle(el);
+      if (computed.display === 'none' || computed.visibility === 'hidden') return;
 
       try {
         pushedRef.current = true;
@@ -227,13 +232,13 @@ export const AuctionMobileBannerAd = ({
   if (!slot || !clientId || isUnfilled) return null;
 
   return (
-    <div ref={containerRef} className={`w-full flex justify-center items-center sm:hidden overflow-hidden ${className}`}>
-      <div className="w-full max-w-[360px] min-h-[50px] flex items-center justify-center overflow-hidden">
+    <div ref={containerRef} className={`w-full block sm:hidden overflow-hidden text-center ${className}`}>
+      <div className="w-full max-w-[360px] mx-auto min-h-[50px] block overflow-hidden">
         <ins
           key={`${slot}-${refreshKey}`}
           ref={adRef}
           className="adsbygoogle"
-          style={{ display: 'block', width: '100%' }}
+          style={{ display: 'block', width: '100%', minHeight: '50px' }}
           data-ad-format="horizontal"
           data-full-width-responsive="true"
           data-ad-client={clientId}
@@ -271,13 +276,13 @@ export const AuctionSidebarActivityAd = ({
           Sponsored Link
         </span>
       </div>
-      <div className="w-full flex items-center justify-center min-h-[110px] max-h-[170px] overflow-hidden">
+      <div className="w-full block min-h-[50px] overflow-hidden text-center">
         <ins
           key={`${slot}-${refreshKey}`}
           ref={adRef}
           className="adsbygoogle"
           style={{ display: 'block', width: '100%' }}
-          data-ad-format="auto"
+          data-ad-format="rectangle, horizontal"
           data-full-width-responsive="true"
           data-ad-client={clientId}
           data-ad-slot={slot}
@@ -288,7 +293,7 @@ export const AuctionSidebarActivityAd = ({
 };
 
 export const AuctionTeamsInFeedAd = ({
-  slot = import.meta.env.VITE_ADSENSE_SIDEBAR_ACTIVITY_SLOT || import.meta.env.VITE_ADSENSE_LANDING_SLOT_2 || DEFAULT_SIDEBAR_ACTIVITY_SLOT,
+  slot = import.meta.env.VITE_ADSENSE_TEAMS_AD_SLOT || DEFAULT_TEAMS_AD_SLOT,
   className = '',
   autoRefresh = true,
   refreshIntervalSec = 60
@@ -311,13 +316,13 @@ export const AuctionTeamsInFeedAd = ({
           Sponsored
         </span>
       </div>
-      <div className="w-full flex items-center justify-center min-h-[90px] overflow-hidden">
+      <div className="w-full block min-h-[50px] overflow-hidden text-center">
         <ins
           key={`${slot}-${refreshKey}`}
           ref={adRef}
           className="adsbygoogle"
           style={{ display: 'block', width: '100%' }}
-          data-ad-format="auto"
+          data-ad-format="rectangle, horizontal"
           data-full-width-responsive="true"
           data-ad-client={clientId}
           data-ad-slot={slot}
