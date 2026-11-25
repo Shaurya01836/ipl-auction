@@ -40,13 +40,12 @@ body:has(.auction-room-shell) {
   height: 100% !important;
 }
 
-/* Suppress Google Auto-Ads (Vignettes & Floating Anchors) inside live auction room so gameplay is never blocked */
-html:has(.auction-room-shell) .google-auto-placed,
-html:has(.auction-room-shell) ins.adsbygoogle[data-anchor-status],
-html:has(.auction-room-shell) .adsbygoogle-noablate,
-html:has(.auction-room-shell) iframe[id^="aswift_"][style*="position: fixed"],
-html:has(.auction-room-shell) iframe[id^="google_ads_iframe"][style*="position: fixed"],
-html:has(.auction-room-shell) div[id^="google_ads_iframe"][style*="position: fixed"] {
+/* Suppress full-screen Google Vignette interstitials inside live auction room while allowing sticky top/bottom anchor ads */
+html:has(.auction-room-shell) .adsbygoogle-abroad,
+html:has(.auction-room-shell) div[data-vignette-loaded],
+html:has(.auction-room-shell) iframe[src*="vignette"],
+html:has(.auction-room-shell) iframe[id*="vignette"],
+html:has(.auction-room-shell) div[id^="google_ads_iframe"][id*="vignette"] {
   display: none !important;
   pointer-events: none !important;
   visibility: hidden !important;
