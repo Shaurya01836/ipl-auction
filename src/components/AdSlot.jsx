@@ -194,14 +194,14 @@ export const AuctionRoomAd = ({
   }
 
   return (
-    <div className={`w-full rounded-2xl border border-white/10 bg-[#0c0d10]/90 backdrop-blur-md overflow-hidden p-2.5 transition-all shadow-md ${className}`}>
-      <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/5 px-1">
+    <div className={`w-full rounded-2xl border border-white/10 bg-[#0c0d10]/90 backdrop-blur-md overflow-hidden p-2 sm:p-2.5 transition-all shadow-md ${className}`}>
+      <div className="flex items-center justify-between pb-1.5 mb-1.5 sm:pb-2 sm:mb-2 border-b border-white/5 px-1">
         <span className="text-[9px] font-bold uppercase tracking-wider text-gray-500">
           Sponsored
         </span>
       </div>
 
-      <div className="w-full flex items-center justify-center">
+      <div className="w-full block text-center">
         <SingleAdUnit
           slot={slot}
           clientId={clientId}
