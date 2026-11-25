@@ -2462,7 +2462,7 @@ export function getMiniAuctionPoolIndices(userReleasedPlayerIds = []) {
   const indices = [];
 
   IPL_PLAYERS.forEach((p, idx) => {
-    if (p.set === 'Legends') return;
+    if (p.set === 'Legends' && !p.includeInMini) return;
     if (p.excludeFromMini) return;
     if (!p.team || userReleasedSet.has(p.id)) {
       indices.push(idx);

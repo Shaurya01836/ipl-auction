@@ -182,7 +182,7 @@ test('Auqib Nabi (p_1173) is retained in DC and duplicate p_311 is removed, neve
 
 test('generatePlayerOrder(mini): lot sequence contains all 100 unassigned modern players, zero retained, zero legends', () => {
   const miniOrder = generatePlayerOrder('mini');
-  assert.equal(miniOrder.length, 100, 'Mini auction order must contain all 100 unassigned modern players');
+  assert.equal(miniOrder.length, 117, 'Mini auction order must contain all 117 unassigned mini-auction players');
 
   // Collect all retained player IDs across all 10 franchises
   const retainedIds = new Set();
@@ -193,7 +193,9 @@ test('generatePlayerOrder(mini): lot sequence contains all 100 unassigned modern
   miniOrder.forEach((playerIdx) => {
     const player = IPL_PLAYERS[playerIdx];
     assert.ok(!retainedIds.has(player.id), `Retained player ${player.name} (${player.id}) must NOT appear in mini auction pool`);
-    assert.notEqual(player.set, 'Legends', `Legend ${player.name} must NOT appear in mini auction pool`);
+    if (player.set === 'Legends') {
+      assert.equal(player.includeInMini, true, `Legend ${player.name} in mini auction pool must have includeInMini: true`);
+    }
     assert.ok(!player.team, `Player in mini auction pool must not have an assigned team`);
     assert.equal(player.excludeFromMini, undefined, `Player ${player.name} marked excludeFromMini must not be in mini pool`);
   });
@@ -226,7 +228,7 @@ test('calculateCustomTeamState: dynamic purse refunds when user releases a playe
 
   // When generating mini lot order with user release, Rahul Chahar is included!
   const customOrder = generatePlayerOrder('mini', { userReleasedPlayerIds: [rahul.id] });
-  assert.equal(customOrder.length, 101, 'Order length should increase to 101 with the released player');
+  assert.equal(customOrder.length, 118, 'Order length should increase to 118 with the released player');
   const hasRahul = customOrder.some((idx) => IPL_PLAYERS[idx].id === rahul.id);
   assert.ok(hasRahul, 'Rahul Chahar must now be present in the auction pool');
 });
@@ -265,15 +267,15 @@ test('localAuctionEngine: INIT_AUCTION in mini mode initializes authentic squads
   assert.equal(gtTeam.squad.length, 22, 'GT starting squad must have 22 retained players');
 
   // Verify first live lot is from the unassigned open pool
-  assert.equal(state.playerOrder.length, 100, 'Auction order should have the 100 open pool players');
+  assert.equal(state.playerOrder.length, 117, 'Auction order should have the 117 open pool players');
   const firstPlayer = IPL_PLAYERS[state.playerOrder[0]];
   assert.ok(firstPlayer, 'First live lot must exist');
   assert.ok(!firstPlayer.team, 'First lot player must not have an assigned team');
-  assert.notEqual(firstPlayer.set, 'Legends', 'First lot player must not be a legend');
+  assert.ok(firstPlayer.set !== 'Legends' || firstPlayer.includeInMini === true, 'First lot player must not be an excluded legend');
 });
 
 test('player images: every player has a valid image (Wikipedia URL if available, initial SVG fallback otherwise)', () => {
-  assert.equal(IPL_PLAYERS.length, 445);
+  assert.equal(IPL_PLAYERS.length, 460);
   assert.equal(IPL_PLAYERS.some((p) => p.id === 'p_200'), false, 'Shahrukh Khan must not exist in IPL_PLAYERS');
   const withoutImage = IPL_PLAYERS.filter(p => !p.image || typeof p.image !== 'string' || p.image.trim() === '');
   assert.equal(withoutImage.length, 0, 'Zero players should have missing or empty image');

@@ -1214,8 +1214,8 @@ const AuctionRoom = () => {
 
          <header className="w-full h-14 compact:h-12 bg-[#0c0d10] backdrop-blur-md border-b border-white/10 flex flex-row items-center justify-between px-2.5 sm:px-4 md:px-6 z-50 gap-2 shrink-0">
             <div className="flex items-center gap-1.5 sm:gap-4 shrink-0">
-               <div className="flex items-center gap-1">
-                  <span className="text-slate-500 text-[8px] sm:text-[10px] compact:text-[9px] font-black uppercase tracking-widest hidden xs:inline">ID:</span>
+               <div className={`${isSoloVsBots ? 'hidden sm:flex' : 'flex'} items-center gap-1`}>
+                  <span className="text-slate-500 text-[8px] sm:text-[10px] compact:text-[9px] font-black uppercase tracking-widest hidden sm:inline">ID:</span>
                   <span className="text-white font-mono font-bold tracking-widest text-[10px] sm:text-sm compact:text-xs">{id}</span>
                   {spectateMode && (
                      <div className="flex items-center gap-1 px-2 py-0.5 bg-white/5 border border-white/10 rounded-full text-slate-300 font-black text-[8px] sm:text-[9px] compact:text-[8px] uppercase tracking-widest ml-1 shrink-0">
@@ -1224,19 +1224,13 @@ const AuctionRoom = () => {
                      </div>
                   )}
                </div>
-               <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full" title="Active Team Managers">
+               <div className={`${isSoloVsBots ? 'hidden sm:flex' : 'flex'} items-center gap-1.5 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full`} title="Active Team Managers">
                   <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shrink-0" />
                   <span className="text-[9px] compact:text-[8px] font-black text-slate-300">
                      {currentAuction?.players?.filter(p => p.team).length || 0}/10
                   </span>
                </div>
-               {isSoloVsBots && (
-                  <div className="hidden xs:flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 font-extrabold text-[8px] sm:text-[9px] uppercase tracking-wider" title="Saved locally in browser storage">
-                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                     <span>Saved on this device</span>
-                  </div>
-               )}
-               <div className="flex items-center border-l border-white/10 pl-1.5 sm:pl-3">
+               <div className={`${isSoloVsBots ? 'hidden sm:flex' : 'flex'} items-center border-l border-white/10 pl-1.5 sm:pl-3`}>
                   <button onClick={copyRoomId} className="p-1 sm:p-1.5 bg-white/5 text-slate-400 rounded-lg hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Copy Room ID">
                      {copied ? <CheckCircle2 size={13} className="text-emerald-400" /> : <Copy size={13} />}
                   </button>

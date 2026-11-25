@@ -1539,7 +1539,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 1,
+    "basePrice": 2,
     "set": "Set 2",
     "image": "https://documents.iplt20.com/ipl/IPLHeadshot2025/109.png",
     "stats": {
@@ -1579,7 +1579,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 1,
+    "basePrice": 2,
     "set": "Set 2",
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/7b/Deepak_Chahar.jpg",
     "stats": {
@@ -2468,7 +2468,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 0.5,
+    "basePrice": 1,
     "set": "Set 3",
     "image": "https://upload.wikimedia.org/wikipedia/commons/e/e0/Tushar_Deshpande.jpg",
     "stats": {
@@ -2486,7 +2486,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 0.5,
+    "basePrice": 0.75,
     "set": "Set 3",
     "image": "https://upload.wikimedia.org/wikipedia/commons/9/93/Umran_Malik_in_GGM.jpg",
     "stats": {
@@ -2854,7 +2854,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 0.75,
+    "basePrice": 1,
     "set": "Set 4",
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/7f/2_09_Jaydev_Unadkat_1.jpg",
     "stats": {
@@ -3032,7 +3032,7 @@ export const IPL_PLAYERS = [
     "role": "Batsman",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 0.5,
+    "basePrice": 0.75,
     "set": "Set 4",
     "image": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Karun_nair_With_Rashid_Zirak.jpg",
     "stats": {
@@ -4369,7 +4369,7 @@ export const IPL_PLAYERS = [
     "type": "Indian",
     "country": "IND",
     "basePrice": 0.5,
-    "set": "USP1",
+    "set": "Legends",
     "image": "https://upload.wikimedia.org/wikipedia/commons/2/28/Karn_Sharma_2015.jpg",
     "stats": {
       "matches": 0,
@@ -4783,7 +4783,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Indian",
     "country": "IND",
-    "basePrice": 1.5,
+    "basePrice": 1,
     "set": "FA2",
     "image": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Umesh_Yadav.jpg",
     "stats": {
@@ -5585,6 +5585,7 @@ export const IPL_PLAYERS = [
     "country": "AUS",
     "basePrice": 2,
     "set": "Legends",
+    "includeInMini": true,
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/DAVID_WARNER_%2811704782453%29.jpg/500px-DAVID_WARNER_%2811704782453%29.jpg",
     "stats": {
       "matches": 184,
@@ -6197,6 +6198,7 @@ export const IPL_PLAYERS = [
     "country": "ENG",
     "basePrice": 1.5,
     "set": "Legends",
+    "includeInMini": true,
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/2_05_Bairstow_out.jpg/500px-2_05_Bairstow_out.jpg",
     "stats": {
       "matches": 50,
@@ -7727,6 +7729,7 @@ export const IPL_PLAYERS = [
     "country": "ENG",
     "basePrice": 1,
     "set": "Legends",
+    "includeInMini": true,
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Sam_Billings_Kent_V_Surrey_2015_at_Kia_Oval_Cricket_Ground_%2827190750944%29.jpg/500px-Sam_Billings_Kent_V_Surrey_2015_at_Kia_Oval_Cricket_Ground_%2827190750944%29.jpg",
     "stats": {
       "matches": 35,
@@ -8704,6 +8707,272 @@ export const IPL_PLAYERS = [
     "retentionPrice": 0.3,
     "isRetained": true,
     "isTraded": false
+  },
+  {
+    "id": "p_1184",
+    "name": "Fazalhaq Farooqi",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "AFG",
+    "basePrice": 1.5,
+    "set": "FA1",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2a/Fazalhaq_Farooqi.jpg/500px-Fazalhaq_Farooqi.jpg",
+    "rating": 73,
+    "stats": {
+      "matches": 12,
+      "wickets": 11,
+      "econ": 9.3,
+      "avg": 34.5,
+      "bb": "3/25"
+    }
+  },
+  {
+    "id": "p_1185",
+    "name": "Mujeeb Ur Rahman",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "AFG",
+    "basePrice": 1.5,
+    "set": "SP1",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/e/e1/Mujeeb_Ur_Rahman_celebrating.jpg",
+    "rating": 72,
+    "stats": {
+      "matches": 20,
+      "wickets": 19,
+      "econ": 8.15,
+      "avg": 30.8,
+      "bb": "3/27"
+    }
+  },
+  {
+    "id": "p_1186",
+    "name": "Rahmanullah Gurbaz",
+    "role": "Wicket-Keeper",
+    "type": "Overseas",
+    "country": "AFG",
+    "basePrice": 1.5,
+    "set": "WK1",
+    "rating": 75,
+    "stats": {
+      "matches": 19,
+      "runs": 363,
+      "avg": 20.17,
+      "sr": 136.47,
+      "hs": "81"
+    }
+  },
+  {
+    "id": "p_1187",
+    "name": "Jake Fraser-McGurk",
+    "role": "Batsman",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 2,
+    "set": "BA1",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/c/c1/260328_D3_Jake_Fraser-McGurk_01.jpg",
+    "rating": 76,
+    "stats": {
+      "matches": 15,
+      "runs": 385,
+      "avg": 25.67,
+      "sr": 182.46,
+      "hs": "84"
+    }
+  },
+  {
+    "id": "p_1188",
+    "name": "Jhye Richardson",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 1.5,
+    "set": "FA1",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/04/1_07_Jhye.jpg/500px-1_07_Jhye.jpg",
+    "rating": 73,
+    "stats": {
+      "matches": 4,
+      "wickets": 3,
+      "econ": 10.64,
+      "avg": 49.67,
+      "bb": "2/52"
+    }
+  },
+  {
+    "id": "p_1189",
+    "name": "Mahli Beardman",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "AUS",
+    "basePrice": 0.75,
+    "set": "FA2",
+    "rating": 67,
+    "stats": {
+      "matches": 14,
+      "wickets": 21,
+      "econ": 8.1,
+      "avg": 21.4,
+      "bb": "4/22"
+    }
+  },
+  {
+    "id": "p_1190",
+    "name": "Ben Stokes",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "ENG",
+    "basePrice": 2,
+    "set": "Marquee Set 1",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/db/3_14_Captain_Ben_%28cropped%29_%28cropped%29.jpg/500px-3_14_Captain_Ben_%28cropped%29_%28cropped%29.jpg",
+    "rating": 82,
+    "stats": {
+      "matches": 45,
+      "runs": 935,
+      "sr": 133.95,
+      "wickets": 28,
+      "econ": 8.65
+    }
+  },
+  {
+    "id": "p_1191",
+    "name": "Sonny Baker",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "ENG",
+    "basePrice": 0.75,
+    "set": "FA2",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/16/3_34_Sonny_Baker_mugshot.jpg/500px-3_34_Sonny_Baker_mugshot.jpg",
+    "rating": 66,
+    "stats": {
+      "matches": 12,
+      "wickets": 15,
+      "econ": 8.5,
+      "avg": 24.8,
+      "bb": "3/26"
+    }
+  },
+  {
+    "id": "p_1192",
+    "name": "Tom Curran",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "ENG",
+    "basePrice": 1.5,
+    "set": "AL2",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2a/Tom_Curran_cricketer.jpg/500px-Tom_Curran_cricketer.jpg",
+    "rating": 70,
+    "stats": {
+      "matches": 13,
+      "runs": 127,
+      "sr": 127,
+      "wickets": 13,
+      "econ": 10.89
+    }
+  },
+  {
+    "id": "p_1193",
+    "name": "Ben Sears",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "NZ",
+    "basePrice": 1,
+    "set": "FA2",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c4/2_10_Ben_Sears_%28cropped%29.jpg/500px-2_10_Ben_Sears_%28cropped%29.jpg",
+    "rating": 71,
+    "stats": {
+      "matches": 22,
+      "wickets": 26,
+      "econ": 8.6,
+      "avg": 24.5,
+      "bb": "4/28"
+    }
+  },
+  {
+    "id": "p_1194",
+    "name": "Bevon Jacobs",
+    "role": "All-Rounder",
+    "type": "Overseas",
+    "country": "NZ",
+    "basePrice": 0.75,
+    "set": "AL2",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/04/Bevon_Jacobs.jpg/500px-Bevon_Jacobs.jpg",
+    "rating": 66,
+    "stats": {
+      "matches": 18,
+      "runs": 380,
+      "sr": 146.2,
+      "wickets": 4,
+      "econ": 8.9
+    }
+  },
+  {
+    "id": "p_1195",
+    "name": "Devon Conway",
+    "role": "Wicket-Keeper",
+    "type": "Overseas",
+    "country": "NZ",
+    "basePrice": 2,
+    "set": "WK1",
+    "rating": 81,
+    "stats": {
+      "matches": 29,
+      "runs": 1080,
+      "avg": 43.2,
+      "sr": 139.72,
+      "hs": "92*"
+    }
+  },
+  {
+    "id": "p_1196",
+    "name": "Will O'Rourke",
+    "role": "Bowler",
+    "type": "Overseas",
+    "country": "NZ",
+    "basePrice": 1.5,
+    "set": "FA1",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/74/2_14_Will_O%27Rourke_mugshot.jpg/500px-2_14_Will_O%27Rourke_mugshot.jpg",
+    "rating": 75,
+    "stats": {
+      "matches": 14,
+      "wickets": 18,
+      "econ": 8.35,
+      "avg": 23.1,
+      "bb": "3/19"
+    }
+  },
+  {
+    "id": "p_1197",
+    "name": "Shai Hope",
+    "role": "Wicket-Keeper",
+    "type": "Overseas",
+    "country": "WI",
+    "basePrice": 1.5,
+    "set": "WK1",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c3/Shai_Hope.jpg/500px-Shai_Hope.jpg",
+    "rating": 74,
+    "stats": {
+      "matches": 9,
+      "runs": 183,
+      "avg": 22.88,
+      "sr": 150,
+      "hs": "55"
+    }
+  },
+  {
+    "id": "p_1198",
+    "name": "Saransh Jain",
+    "role": "All-Rounder",
+    "type": "Indian",
+    "country": "IND",
+    "basePrice": 0.75,
+    "set": "AL2",
+    "rating": 65,
+    "stats": {
+      "matches": 32,
+      "runs": 420,
+      "sr": 131.5,
+      "wickets": 34,
+      "econ": 7.45
+    }
   }
 ];
 
