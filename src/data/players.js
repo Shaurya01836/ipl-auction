@@ -8838,7 +8838,7 @@ export const IPL_PLAYERS = [
     "role": "Bowler",
     "type": "Overseas",
     "country": "ENG",
-    "basePrice": 0.75,
+    "basePrice": 2,
     "set": "FA2",
     "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/16/3_34_Sonny_Baker_mugshot.jpg/500px-3_34_Sonny_Baker_mugshot.jpg",
     "rating": 66,

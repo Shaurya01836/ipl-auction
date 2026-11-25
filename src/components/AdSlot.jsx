@@ -20,23 +20,34 @@ const ensureAdSenseScript = (clientId) => {
   }
 };
 
-export const SingleAdUnit = ({
+/**
+ * Shared AdSense lifecycle hook:
+ * - Pushes ads only once layout width > 0 (retries via ResizeObserver + IntersectionObserver so hidden/animating tabs never get stuck uninitialized)
+ * - Hides unfilled slots via MutationObserver
+ * - Supports policy-compliant in-viewport auto-refresh
+ */
+const useAdSenseSlot = ({
   slot,
   clientId,
-  bare = false,
   autoRefresh = false,
-  refreshIntervalSec = 60
+  refreshIntervalSec = 60,
+  rootMargin = '0px',
+  label = 'AdSlot',
 }) => {
   const containerRef = useRef(null);
   const adRef = useRef(null);
+  const pushedRef = useRef(false);
   const [isUnfilled, setIsUnfilled] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    const el = adRef.current;
-    if (!el) return;
-
     setIsUnfilled(false);
+    pushedRef.current = false;
+  }, [slot, clientId, refreshKey]);
+
+  useEffect(() => {
+    const el = adRef.current;
+    if (!el || isUnfilled) return;
 
     const checkStatus = () => {
       if (el.getAttribute('data-ad-status') === 'unfilled') {
@@ -46,37 +57,69 @@ export const SingleAdUnit = ({
 
     checkStatus();
 
-    const observer = new MutationObserver(() => checkStatus());
+    const observer = new MutationObserver(checkStatus);
     observer.observe(el, { attributes: true, attributeFilter: ['data-ad-status'] });
     return () => observer.disconnect();
-  }, [slot, clientId, refreshKey]);
+  }, [slot, clientId, refreshKey, isUnfilled]);
 
   useEffect(() => {
-    if (!slot || !clientId) return;
+    if (!slot || !clientId || isUnfilled) return;
 
     ensureAdSenseScript(clientId);
 
-    // Delay push slightly so DOM layout completes and offsetWidth is non-zero
-    const timer = setTimeout(() => {
+    const tryPush = () => {
+      if (pushedRef.current) return;
       const el = adRef.current;
       if (!el) return;
-      if (el.getAttribute('data-adsbygoogle-status')) return;
-      if (el.children.length > 0) return;
+      if (el.getAttribute('data-adsbygoogle-status') || el.children.length > 0) {
+        pushedRef.current = true;
+        return;
+      }
       if (el.offsetWidth === 0) return;
 
       try {
+        pushedRef.current = true;
         (window.adsbygoogle = window.adsbygoogle || []).push({});
       } catch (err) {
+        pushedRef.current = false;
         if (import.meta.env.DEV) {
-          console.warn('[AdSlot] AdSense push error:', err);
+          console.warn(`[${label}] AdSense push error:`, err);
         }
       }
-    }, 120);
+    };
 
-    return () => clearTimeout(timer);
-  }, [slot, clientId, refreshKey]);
+    const t1 = setTimeout(tryPush, 120);
+    const t2 = setTimeout(tryPush, 600);
 
-  // Smart in-view auto-refresh timer (Google policy compliant: visible tab & in-viewport only)
+    let io;
+    if (typeof IntersectionObserver !== 'undefined' && containerRef.current) {
+      io = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting && entry.boundingClientRect.width > 0) {
+              tryPush();
+            }
+          }
+        },
+        { rootMargin }
+      );
+      io.observe(containerRef.current);
+    }
+
+    let ro;
+    if (typeof ResizeObserver !== 'undefined' && containerRef.current) {
+      ro = new ResizeObserver(() => tryPush());
+      ro.observe(containerRef.current);
+    }
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      if (io) io.disconnect();
+      if (ro) ro.disconnect();
+    };
+  }, [slot, clientId, refreshKey, isUnfilled, rootMargin, label]);
+
   useEffect(() => {
     if (!autoRefresh) return;
 
@@ -93,6 +136,24 @@ export const SingleAdUnit = ({
 
     return () => clearInterval(interval);
   }, [autoRefresh, refreshIntervalSec]);
+
+  return { containerRef, adRef, isUnfilled, refreshKey };
+};
+
+export const SingleAdUnit = ({
+  slot,
+  clientId,
+  bare = false,
+  autoRefresh = false,
+  refreshIntervalSec = 60
+}) => {
+  const { containerRef, adRef, isUnfilled, refreshKey } = useAdSenseSlot({
+    slot,
+    clientId,
+    autoRefresh,
+    refreshIntervalSec,
+    label: 'AdSlot',
+  });
 
   if (!slot || !clientId || isUnfilled) return null;
 
@@ -129,14 +190,12 @@ export const AuctionRoomAd = ({
 
   return (
     <div className={`w-full rounded-2xl border border-white/10 bg-[#0c0d10]/90 backdrop-blur-md overflow-hidden p-2.5 transition-all shadow-md ${className}`}>
-      {/* Header bar */}
       <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/5 px-1">
         <span className="text-[9px] font-bold uppercase tracking-wider text-gray-500">
           Sponsored
         </span>
       </div>
 
-      {/* Ad slot with smart auto-refresh */}
       <div className="w-full flex items-center justify-center">
         <SingleAdUnit
           slot={slot}
@@ -156,68 +215,14 @@ export const AuctionMobileBannerAd = ({
   autoRefresh = true,
   refreshIntervalSec = 60
 }) => {
-  const containerRef = useRef(null);
-  const adRef = useRef(null);
-  const [isUnfilled, setIsUnfilled] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
   const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
-
-  useEffect(() => {
-    const el = adRef.current;
-    if (!el) return;
-
-    setIsUnfilled(false);
-
-    const checkStatus = () => {
-      if (el.getAttribute('data-ad-status') === 'unfilled') {
-        setIsUnfilled(true);
-      }
-    };
-
-    checkStatus();
-
-    const observer = new MutationObserver(() => checkStatus());
-    observer.observe(el, { attributes: true, attributeFilter: ['data-ad-status'] });
-    return () => observer.disconnect();
-  }, [slot, clientId, refreshKey]);
-
-  useEffect(() => {
-    if (!slot || !clientId) return;
-
-    ensureAdSenseScript(clientId);
-
-    const timer = setTimeout(() => {
-      const el = adRef.current;
-      if (!el) return;
-      if (el.getAttribute('data-adsbygoogle-status')) return;
-      if (el.children.length > 0) return;
-      if (el.offsetWidth === 0) return;
-
-      try {
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-      } catch (err) {
-        if (import.meta.env.DEV) {
-          console.warn('[AuctionMobileBannerAd] AdSense push error:', err);
-        }
-      }
-    }, 120);
-
-    return () => clearTimeout(timer);
-  }, [slot, clientId, refreshKey]);
-
-  useEffect(() => {
-    if (!autoRefresh) return;
-    const intervalMs = Math.max(30, refreshIntervalSec) * 1000;
-    const interval = setInterval(() => {
-      if (typeof document !== 'undefined' && document.hidden) return;
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        if (rect.top >= window.innerHeight || rect.bottom <= 0 || rect.width === 0) return;
-      }
-      setRefreshKey((k) => k + 1);
-    }, intervalMs);
-    return () => clearInterval(interval);
-  }, [autoRefresh, refreshIntervalSec]);
+  const { containerRef, adRef, isUnfilled, refreshKey } = useAdSenseSlot({
+    slot,
+    clientId,
+    autoRefresh,
+    refreshIntervalSec,
+    label: 'AuctionMobileBannerAd',
+  });
 
   if (!slot || !clientId || isUnfilled) return null;
 
@@ -245,96 +250,14 @@ export const AuctionSidebarActivityAd = ({
   autoRefresh = true,
   refreshIntervalSec = 60
 }) => {
-  const containerRef = useRef(null);
-  const adRef = useRef(null);
-  const [isUnfilled, setIsUnfilled] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const pushedRef = useRef(false);
   const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
-
-  useEffect(() => {
-    const el = adRef.current;
-    if (!el) return;
-
-    setIsUnfilled(false);
-    pushedRef.current = false;
-
-    const checkStatus = () => {
-      if (el.getAttribute('data-ad-status') === 'unfilled') {
-        setIsUnfilled(true);
-      }
-    };
-
-    checkStatus();
-
-    const observer = new MutationObserver(() => checkStatus());
-    observer.observe(el, { attributes: true, attributeFilter: ['data-ad-status'] });
-    return () => observer.disconnect();
-  }, [slot, clientId, refreshKey]);
-
-  useEffect(() => {
-    if (!slot || !clientId) return;
-
-    ensureAdSenseScript(clientId);
-
-    const tryPush = () => {
-      if (pushedRef.current) return;
-      const el = adRef.current;
-      if (!el) return;
-      if (el.getAttribute('data-adsbygoogle-status')) {
-        pushedRef.current = true;
-        return;
-      }
-      if (el.children.length > 0) {
-        pushedRef.current = true;
-        return;
-      }
-      if (el.offsetWidth === 0) return;
-
-      try {
-        pushedRef.current = true;
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-      } catch (err) {
-        pushedRef.current = false;
-        if (import.meta.env.DEV) {
-          console.warn('[AuctionSidebarActivityAd] AdSense push error:', err);
-        }
-      }
-    };
-
-    const timer = setTimeout(tryPush, 150);
-
-    let io;
-    if (typeof IntersectionObserver !== 'undefined' && adRef.current) {
-      io = new IntersectionObserver((entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting && entry.boundingClientRect.width > 0) {
-            tryPush();
-          }
-        }
-      });
-      io.observe(adRef.current);
-    }
-
-    return () => {
-      clearTimeout(timer);
-      if (io) io.disconnect();
-    };
-  }, [slot, clientId, refreshKey]);
-
-  useEffect(() => {
-    if (!autoRefresh) return;
-    const intervalMs = Math.max(30, refreshIntervalSec) * 1000;
-    const interval = setInterval(() => {
-      if (typeof document !== 'undefined' && document.hidden) return;
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        if (rect.top >= window.innerHeight || rect.bottom <= 0 || rect.width === 0) return;
-      }
-      setRefreshKey((k) => k + 1);
-    }, intervalMs);
-    return () => clearInterval(interval);
-  }, [autoRefresh, refreshIntervalSec]);
+  const { containerRef, adRef, isUnfilled, refreshKey } = useAdSenseSlot({
+    slot,
+    clientId,
+    autoRefresh,
+    refreshIntervalSec,
+    label: 'AuctionSidebarActivityAd',
+  });
 
   if (!slot || !clientId || isUnfilled) return null;
 
@@ -370,97 +293,14 @@ export const AuctionTeamsInFeedAd = ({
   autoRefresh = true,
   refreshIntervalSec = 60
 }) => {
-  const containerRef = useRef(null);
-  const adRef = useRef(null);
-  const [isUnfilled, setIsUnfilled] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const pushedRef = useRef(false);
   const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
-
-  useEffect(() => {
-    const el = adRef.current;
-    if (!el) return;
-
-    setIsUnfilled(false);
-    pushedRef.current = false;
-
-    const checkStatus = () => {
-      if (el.getAttribute('data-ad-status') === 'unfilled') {
-        setIsUnfilled(true);
-      }
-    };
-
-    checkStatus();
-
-    const observer = new MutationObserver(() => checkStatus());
-    observer.observe(el, { attributes: true, attributeFilter: ['data-ad-status'] });
-    return () => observer.disconnect();
-  }, [slot, clientId, refreshKey]);
-
-  useEffect(() => {
-    if (!slot || !clientId) return;
-
-    ensureAdSenseScript(clientId);
-
-    const tryPush = () => {
-      if (pushedRef.current) return;
-      const el = adRef.current;
-      if (!el) return;
-      if (el.getAttribute('data-adsbygoogle-status')) {
-        pushedRef.current = true;
-        return;
-      }
-      if (el.children.length > 0) {
-        pushedRef.current = true;
-        return;
-      }
-      // Never push when container is hidden (availableWidth === 0, e.g. inactive mobile tab)
-      if (el.offsetWidth === 0) return;
-
-      try {
-        pushedRef.current = true;
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-      } catch (err) {
-        pushedRef.current = false;
-        if (import.meta.env.DEV) {
-          console.warn('[AuctionTeamsInFeedAd] AdSense push error:', err);
-        }
-      }
-    };
-
-    const timer = setTimeout(tryPush, 150);
-
-    let io;
-    if (typeof IntersectionObserver !== 'undefined' && adRef.current) {
-      io = new IntersectionObserver((entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting && entry.boundingClientRect.width > 0) {
-            tryPush();
-          }
-        }
-      });
-      io.observe(adRef.current);
-    }
-
-    return () => {
-      clearTimeout(timer);
-      if (io) io.disconnect();
-    };
-  }, [slot, clientId, refreshKey]);
-
-  useEffect(() => {
-    if (!autoRefresh) return;
-    const intervalMs = Math.max(30, refreshIntervalSec) * 1000;
-    const interval = setInterval(() => {
-      if (typeof document !== 'undefined' && document.hidden) return;
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        if (rect.top >= window.innerHeight || rect.bottom <= 0 || rect.width === 0) return;
-      }
-      setRefreshKey((k) => k + 1);
-    }, intervalMs);
-    return () => clearInterval(interval);
-  }, [autoRefresh, refreshIntervalSec]);
+  const { containerRef, adRef, isUnfilled, refreshKey } = useAdSenseSlot({
+    slot,
+    clientId,
+    autoRefresh,
+    refreshIntervalSec,
+    label: 'AuctionTeamsInFeedAd',
+  });
 
   if (!slot || !clientId || isUnfilled) return null;
 
@@ -492,77 +332,13 @@ export const LandingDisplayBannerAd = ({
   className = '',
   label = 'Sponsored'
 }) => {
-  const containerRef = useRef(null);
-  const adRef = useRef(null);
-  const [isUnfilled, setIsUnfilled] = useState(false);
-  const pushedRef = useRef(false);
   const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
-
-  useEffect(() => {
-    const el = adRef.current;
-    if (!el) return;
-
-    const checkStatus = () => {
-      if (el.getAttribute('data-ad-status') === 'unfilled') {
-        setIsUnfilled(true);
-      }
-    };
-
-    checkStatus();
-
-    const observer = new MutationObserver(() => checkStatus());
-    observer.observe(el, { attributes: true, attributeFilter: ['data-ad-status'] });
-    return () => observer.disconnect();
-  }, [slot, clientId]);
-
-  useEffect(() => {
-    if (!slot || !clientId) return;
-
-    ensureAdSenseScript(clientId);
-
-    const tryPush = () => {
-      if (pushedRef.current) return;
-      const el = adRef.current;
-      if (!el) return;
-      if (el.getAttribute('data-adsbygoogle-status') || el.children.length > 0) {
-        pushedRef.current = true;
-        return;
-      }
-      if (el.offsetWidth === 0) return;
-
-      try {
-        pushedRef.current = true;
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-      } catch (err) {
-        pushedRef.current = false;
-        if (import.meta.env.DEV) {
-          console.warn('[LandingDisplayBannerAd] AdSense push error:', err);
-        }
-      }
-    };
-
-    let io;
-    if (typeof IntersectionObserver !== 'undefined' && containerRef.current) {
-      io = new IntersectionObserver(
-        (entries) => {
-          for (const entry of entries) {
-            if (entry.isIntersecting && entry.boundingClientRect.width > 0) {
-              tryPush();
-              if (io) io.disconnect();
-            }
-          }
-        },
-        { rootMargin: '250px 0px' }
-      );
-      io.observe(containerRef.current);
-    } else {
-      setTimeout(tryPush, 200);
-    }
-
-    return () => {
-      if (io) io.disconnect();
-    };
-  }, [slot, clientId]);
+  const { containerRef, adRef, isUnfilled } = useAdSenseSlot({
+    slot,
+    clientId,
+    rootMargin: '250px 0px',
+    label: 'LandingDisplayBannerAd',
+  });
 
   if (!slot || !clientId || isUnfilled) return null;
 
@@ -604,77 +380,13 @@ export const AuctionSummaryInFeedAd = ({
   className = '',
   label = 'Sponsored'
 }) => {
-  const containerRef = useRef(null);
-  const adRef = useRef(null);
-  const [isUnfilled, setIsUnfilled] = useState(false);
-  const pushedRef = useRef(false);
   const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
-
-  useEffect(() => {
-    const el = adRef.current;
-    if (!el) return;
-
-    const checkStatus = () => {
-      if (el.getAttribute('data-ad-status') === 'unfilled') {
-        setIsUnfilled(true);
-      }
-    };
-
-    checkStatus();
-
-    const observer = new MutationObserver(() => checkStatus());
-    observer.observe(el, { attributes: true, attributeFilter: ['data-ad-status'] });
-    return () => observer.disconnect();
-  }, [slot, clientId]);
-
-  useEffect(() => {
-    if (!slot || !clientId) return;
-
-    ensureAdSenseScript(clientId);
-
-    const tryPush = () => {
-      if (pushedRef.current) return;
-      const el = adRef.current;
-      if (!el) return;
-      if (el.getAttribute('data-adsbygoogle-status') || el.children.length > 0) {
-        pushedRef.current = true;
-        return;
-      }
-      if (el.offsetWidth === 0) return;
-
-      try {
-        pushedRef.current = true;
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-      } catch (err) {
-        pushedRef.current = false;
-        if (import.meta.env.DEV) {
-          console.warn('[AuctionSummaryInFeedAd] AdSense push error:', err);
-        }
-      }
-    };
-
-    let io;
-    if (typeof IntersectionObserver !== 'undefined' && containerRef.current) {
-      io = new IntersectionObserver(
-        (entries) => {
-          for (const entry of entries) {
-            if (entry.isIntersecting && entry.boundingClientRect.width > 0) {
-              tryPush();
-              if (io) io.disconnect();
-            }
-          }
-        },
-        { rootMargin: '250px 0px' }
-      );
-      io.observe(containerRef.current);
-    } else {
-      setTimeout(tryPush, 200);
-    }
-
-    return () => {
-      if (io) io.disconnect();
-    };
-  }, [slot, clientId]);
+  const { containerRef, adRef, isUnfilled } = useAdSenseSlot({
+    slot,
+    clientId,
+    rootMargin: '250px 0px',
+    label: 'AuctionSummaryInFeedAd',
+  });
 
   if (!slot || !clientId || isUnfilled) return null;
 
@@ -709,7 +421,6 @@ const AdSlot = ({
 }) => {
   const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
 
-  // If a single slot prop is passed explicitly, only render that one
   const activeSlots = (
     slot
       ? [slot]
