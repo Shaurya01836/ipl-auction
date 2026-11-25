@@ -40,12 +40,8 @@ body:has(.auction-room-shell) {
   height: 100% !important;
 }
 
-/* Suppress full-screen Google Vignette interstitials inside live auction room while allowing sticky top/bottom anchor ads */
-html:has(.auction-room-shell) .adsbygoogle-abroad,
-html:has(.auction-room-shell) div[data-vignette-loaded],
-html:has(.auction-room-shell) iframe[src*="vignette"],
-html:has(.auction-room-shell) iframe[id*="vignette"],
-html:has(.auction-room-shell) div[id^="google_ads_iframe"][id*="vignette"] {
+/* Suppress in-page Auto-Ads (.google-auto-placed) inside live auction room so they don't cover the bidding card, while allowing Vignettes & sticky anchor ads */
+html:has(.auction-room-shell) .google-auto-placed {
   display: none !important;
   pointer-events: none !important;
   visibility: hidden !important;
