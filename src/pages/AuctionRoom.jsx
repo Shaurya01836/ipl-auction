@@ -763,16 +763,37 @@ const AuctionRoom = () => {
    }, [currentAuction, user]);
 
    const audioCtxRef = useRef(null);
+   const hasUserGestureRef = useRef(false);
+
+   useEffect(() => {
+      if (typeof window === 'undefined') return;
+      const unlockAudio = () => {
+         hasUserGestureRef.current = true;
+         if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+            audioCtxRef.current.resume().catch(() => {});
+         }
+      };
+      window.addEventListener('pointerdown', unlockAudio, { passive: true });
+      window.addEventListener('keydown', unlockAudio, { passive: true });
+      return () => {
+         window.removeEventListener('pointerdown', unlockAudio);
+         window.removeEventListener('keydown', unlockAudio);
+      };
+   }, []);
+
    const playBeep = useCallback((freq = 440, duration = 0.1) => {
       if (displayAuctionState?.status === 'paused') return;
+      const canPlay = hasUserGestureRef.current || (typeof navigator !== 'undefined' && navigator.userActivation?.hasBeenActive);
+      if (!canPlay) return;
       try {
          if (!audioCtxRef.current) {
             audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
          }
          const audioCtx = audioCtxRef.current;
          if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
+            audioCtx.resume().catch(() => {});
          }
+         if (audioCtx.state !== 'running') return;
          const oscillator = audioCtx.createOscillator();
          const gainNode = audioCtx.createGain();
 
@@ -1864,12 +1885,10 @@ const AuctionRoom = () => {
                      </AnimatePresence>
 
                      {/* Arena Ad Slot (bottom half of mobile 50/50 split) */}
-                     <div className="w-full block min-h-[220px] sm:min-h-0">
-                        <AuctionRoomAd
-                           slot={import.meta.env.VITE_ADSENSE_AUCTION_ROOM_SLOT || DEFAULT_AUCTION_ROOM_SLOT}
-                           className="w-full mt-0 sm:mt-2 mb-2 sm:mb-6"
-                        />
-                     </div>
+                     <AuctionRoomAd
+                        slot={import.meta.env.VITE_ADSENSE_AUCTION_ROOM_SLOT || DEFAULT_AUCTION_ROOM_SLOT}
+                        className="w-full mt-0 sm:mt-2 mb-2 sm:mb-6"
+                     />
                   </div>
                </main>
             </div>
