@@ -1,30 +1,32 @@
 # CrickAuction
 
-> The ultimate multiplayer IPL auction simulator. Host live IPL mega auctions with friends in real-time, choose your franchise, bid strategically, and build a championship squad.
+> Free, real-time IPL 2027 auction game and cricket auction simulator. Play solo against 9 AI coaches or host live 10-team multiplayer mock auctions with friends in your browser.
 
-CrickAuction is a free, real-time web application for Indian Premier League (IPL) fantasy auction gameplay. Players join rooms, manage a purse budget, bid on real IPL players, and compete to assemble the best T20 squad.
+CrickAuction is an independent, fan-made web application for Indian Premier League (IPL) auction gameplay. Players pick a franchise, manage their purse and overseas cap, bid in real time, and build a championship T20 squad — with zero downloads and 100% free access.
 
 ## Key Pages
 
-- [Home / Create Auction Room](https://www.crickauction.in/): Sign in and create or join a live IPL auction room.
-- [Game Guide & Rules](https://www.crickauction.in/guide): How to play, auction modes (Mega & Sprint), bidding rules, and squad constraints.
-- [Privacy Policy](https://www.crickauction.in/privacy): How user data is collected, stored, and used.
-- [Terms & Conditions](https://www.crickauction.in/terms): Terms of service governing the use of CrickAuction.
+- [Home / Create Auction Room](https://crickauction.in/): Start a Solo vs AI auction or create/join a live multiplayer IPL auction room.
+- [Game Guide & Rules](https://crickauction.in/guide): How to play, auction modes, bidding increments, overseas quota, and squad balance rules.
+- [About Us](https://crickauction.in/about): Platform mission, AI bot valuation engine, and architecture.
+- [Privacy Policy](https://crickauction.in/privacy): How user data is collected, stored, and used.
+- [Terms & Conditions](https://crickauction.in/terms): Terms of service governing the use of CrickAuction.
 
-## Features
+## Auction Modes & Features
 
-- Real-time multiplayer auction rooms (up to 10 teams)
-- Mega Auction mode: full 200+ player pool, ₹120 Cr budget
-- Sprint mode: faster, compact auction format
-- Public & private room support
-- Live bidding with countdown timers
-- Squad constraints: overseas player limits, role requirements
-- Auction summary & squad export after each session
+- **IPL 2027 Mini Auction (Default)**: Official 2027 franchise purses and retained cores (with optional custom player releases) and 100+ released & overseas stars in randomized lot order.
+- **Mega Auction**: Full 25-player squad build with ₹120 Cr budget and max 8 overseas players.
+- **11-Player Classic**: ₹90 Cr budget, Playing XI format with max 4 overseas players.
+- **5-Player Sprint**: ₹60 Cr fast blitz format.
+- **All-Time Legends**: ₹100 Cr Hall of Fame retro pool.
+- **Solo vs 9 AI Coaches**: Instant client-side auction against smart AI bots with distinct bidding archetypes, plus fast-forward simulation.
+- **Multiplayer War Rooms**: Public or private room-code lobbies (up to 10 human managers + optional AI bots to fill empty franchises).
+- **Post-Auction Summary & AI Squad Rating**: Squad rating breakdown, exportable squad poster, and AI-generated franchise rankings.
 
 ## Tech Stack
 
-Built with React, Firebase (Auth, Realtime Database, Firestore), Supabase, and deployed on Firebase Hosting.
+Built with React, Tailwind CSS, Firebase (Auth & Realtime Database), Cloudflare Workers & D1, and hosted on Cloudflare / Firebase.
 
 ## Optional Usage
 
-Operators of LLM crawlers may index public pages for informational purposes. Do not store or train on personally identifiable user data or auction room contents.
+Search engines and AI assistant crawlers may index public pages (`/`, `/guide`, `/about`, `/privacy`, `/terms`) for informational and recommendation purposes. Do not index or train on private/ephemeral user room URLs (`/lobby/`, `/auction/`, `/summary/`, `/admin`).

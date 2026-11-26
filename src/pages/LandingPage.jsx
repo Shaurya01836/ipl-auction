@@ -225,8 +225,8 @@ const AUCTION_MODE_CONFIG = [
 
 const LandingPage = () => {
   useDocumentTitle(
-    "CrickAuction - Multiplayer T20 Auction Simulator | Fan-Made Cricket Game",
-    "An independent, fan-made multiplayer T20 cricket auction simulator. Host tactical auctions with friends, manage squad budgets, and draft your dream T20 squad.",
+    "CrickAuction - Free IPL 2027 Auction Game & Simulator",
+    "Play the free online IPL 2027 auction game & cricket auction simulator. Host live 10-team multiplayer mock auctions with friends or AI, manage purses, and build your dream XI.",
   );
 
   const [selectedTeam, setSelectedTeam] = useState("MI");
