@@ -1726,33 +1726,6 @@ const AuctionRoom = () => {
                                              );
                                           })()}
 
-                                          {/* Quick Jump Bid Buttons */}
-                                          {!spectateMode && displayAuctionState?.status === 'bidding' && (
-                                             <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 px-1">
-                                                <span className="text-[10px] font-pixel text-slate-400 uppercase tracking-widest mr-auto hidden xs:inline">Jump Bid:</span>
-                                                {[0.5, 0.75, 1].map((jump) => {
-                                                   const current = toFiniteNumber(displayAuctionState?.currentBid, 0);
-                                                   const targetAmount = r2(current === 0 ? toFiniteNumber(currentPlayer?.basePrice, 0) + jump : current + jump);
-                                                   const isAffordable = (team?.budgetRemaining || 0) >= targetAmount;
-                                                   const isLeading = displayAuctionState?.highBidderId === user?.uid;
-                                                   const disabled = !team || isLeading || !isAffordable || isBiddingInFlight;
-
-                                                   return (
-                                                      <button
-                                                         key={jump}
-                                                         type="button"
-                                                         onClick={() => handleBid(targetAmount)}
-                                                         disabled={disabled}
-                                                         className="flex-1 sm:flex-initial px-2.5 sm:px-3 py-1 sm:py-1 rounded-xl text-xs font-mono font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:border-emerald-500/60 disabled:opacity-30 disabled:border-white/5 disabled:text-slate-500 disabled:pointer-events-none transition-all active:scale-95 cursor-pointer text-center"
-                                                         title={disabled ? (isLeading ? 'Leading bidder' : 'Insufficient budget') : `Jump bid to ₹${formatCrores(targetAmount)} Cr`}
-                                                      >
-                                                         +{jump} Cr <span className="opacity-70 text-[10px] hidden sm:inline">(₹{formatCrores(targetAmount)})</span>
-                                                      </button>
-                                                   );
-                                                })}
-                                             </div>
-                                          )}
-
                                           <div className="flex gap-2 sm:gap-3 md:gap-3">
                                              {/* Pass / Next Lot Button (Every Human Manager during bidding; Host during celebration) */}
                                              {!spectateMode && (displayAuctionState?.status === 'bidding' || isAdmin) && (

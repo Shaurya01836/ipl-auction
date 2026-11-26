@@ -1,5 +1,5 @@
 import { IPL_PLAYERS } from '../data/players.js';
-import { TEAMS } from '../data/teams.js';
+import { TEAMS, pickRandomBotName, getTeamBotName } from '../data/teams.js';
 import { calculateCustomTeamState } from '../data/retentions.js';
 import { toFiniteNumber, countOverseas, isOverseasPlayer, r2 } from './auctionDisplay.js';
 import { getNextBidAmount, generatePlayerOrder } from './auctionRules.js';
@@ -121,15 +121,19 @@ export function localAuctionReducer(state, action) {
       ];
 
       const ARCHETYPES = ['star_hunter', 'moneyball', 'bowling_first', 'balanced'];
+      const usedBotNames = [humanUser.displayName || 'Manager'];
+      const initRng = createSeededRng(seed);
       TEAMS.forEach((t, idx) => {
         if (t.id === humanTeamId) return;
         const botId = `bot_${t.id}`;
         const botState = isMini ? calculateCustomTeamState(t.id) : null;
         const botArchetype = ARCHETYPES[(idx + (Math.abs(Number(seed)) || 0)) % ARCHETYPES.length];
+        const botName = pickRandomBotName(usedBotNames, initRng);
+        usedBotNames.push(botName);
 
         players.push({
           id: botId,
-          name: t.botName || `${t.name} Bot`,
+          name: botName,
           team: t.id,
           teamName: t.name,
           isHost: false,
@@ -255,8 +259,9 @@ export function localAuctionReducer(state, action) {
 
       const timerSec = state.settings?.bidTimer || 10;
       const teamObj = TEAMS.find((t) => t.id === bidderTeam.teamId);
+      const bidderPlayer = (state.players || []).find((p) => p.id === bidderId);
       const bidderName = bidderTeam.userId.startsWith('bot_')
-        ? (teamObj?.botName || `${teamObj?.name || 'Bot'} Bot`)
+        ? (bidderPlayer?.name || getTeamBotName(teamObj))
         : state.hostName || 'Manager';
 
       const updatedLot = {
@@ -316,7 +321,8 @@ export function localAuctionReducer(state, action) {
 
         if (decision && decision.shouldBid) {
           const teamObj = TEAMS.find((t) => t.id === decision.teamId);
-          const botName = teamObj?.botName || (teamObj ? `${teamObj.name} Bot` : 'Bot');
+          const botPlayer = (state.players || []).find((p) => p.id === decision.botUserId);
+          const botName = botPlayer?.name || getTeamBotName(teamObj);
           const timerSec = state.settings?.bidTimer || 10;
 
           const updatedLot = {

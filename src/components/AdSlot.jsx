@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { detectAdBlocker, isAdScriptBlocked, markAdScriptBlocked } from '../lib/adBlockDetect';
 
 const DEFAULT_CLIENT_ID = 'ca-pub-2952599241278941';
 const DEFAULT_LANDING_SLOT_1 = '6078587405';
@@ -9,16 +10,91 @@ export const DEFAULT_AUCTION_ROOM_MOBILE_SLOT = '8939145929';
 export const DEFAULT_SIDEBAR_ACTIVITY_SLOT = '2911895830';
 export const DEFAULT_TEAMS_AD_SLOT = '1476385035';
 
-const ensureAdSenseScript = (clientId) => {
+const ensureAdSenseScript = (clientId, onBlocked) => {
   if (typeof document === 'undefined') return;
-  if (!document.querySelector('script[src*="adsbygoogle.js"]')) {
-    const script = document.createElement('script');
+  let script = document.querySelector('script[src*="adsbygoogle.js"]');
+  if (!script) {
+    script = document.createElement('script');
     script.id = 'google-adsense-script';
     script.async = true;
     script.crossOrigin = 'anonymous';
     script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${clientId}`;
     document.head.appendChild(script);
   }
+  script.addEventListener(
+    'error',
+    () => {
+      markAdScriptBlocked();
+      onBlocked?.();
+    },
+    { once: true }
+  );
+};
+
+const AdBlockedNotice = ({ compact = false }) => (
+  <div
+    className={`w-full bg-[#0c0d10] border border-white/10 text-center shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)] ${
+      compact ? 'rounded-xl px-3 py-2.5' : 'rounded-[1.5rem] px-5 py-6'
+    }`}
+  >
+    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-slate-400 font-pixel text-[8px] uppercase tracking-wider mb-2">
+      Ad Blocker Detected
+    </div>
+    <p
+      className={`font-pixel uppercase tracking-tight text-white ${
+        compact ? 'text-[10px]' : 'text-xs sm:text-sm'
+      }`}
+    >
+      Please turn off your ad blocker
+    </p>
+    <p
+      className={`text-slate-400 font-sans leading-relaxed mt-1 ${
+        compact ? 'text-[10px]' : 'text-xs'
+      }`}
+    >
+      Disable your ad blocker for this site to keep CrickAuction 100% free.
+    </p>
+  </div>
+);
+
+/**
+ * Mounts <ins class="adsbygoogle"> imperatively inside a React-owned div so
+ * ad blockers removing the <ins> node cannot cause React NotFoundError crashes.
+ */
+const AdIns = ({
+  slot,
+  clientId,
+  refreshKey = 0,
+  adRef,
+  style = { display: 'block', width: '100%' },
+  format = 'auto',
+  responsive = 'true',
+}) => {
+  const hostRef = useRef(null);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    host.innerHTML = '';
+
+    const ins = document.createElement('ins');
+    ins.className = 'adsbygoogle';
+    Object.assign(ins.style, style);
+    ins.setAttribute('data-ad-client', clientId);
+    ins.setAttribute('data-ad-slot', slot);
+    if (format) ins.setAttribute('data-ad-format', format);
+    if (responsive) ins.setAttribute('data-full-width-responsive', responsive);
+
+    host.appendChild(ins);
+    adRef.current = ins;
+
+    return () => {
+      adRef.current = null;
+      host.innerHTML = '';
+    };
+  }, [slot, clientId, refreshKey, format, responsive]);
+
+  return <div ref={hostRef} className="w-full" />;
 };
 
 /**
@@ -39,6 +115,7 @@ const useAdSenseSlot = ({
   const adRef = useRef(null);
   const pushedRef = useRef(false);
   const [isUnfilled, setIsUnfilled] = useState(false);
+  const [isAdBlocked, setIsAdBlocked] = useState(() => isAdScriptBlocked() || detectAdBlocker());
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -48,7 +125,7 @@ const useAdSenseSlot = ({
 
   useEffect(() => {
     const el = adRef.current;
-    if (!el || isUnfilled) return;
+    if (!el || isUnfilled || isAdBlocked) return;
 
     const checkStatus = () => {
       if (el.getAttribute('data-ad-status') === 'unfilled') {
@@ -61,14 +138,18 @@ const useAdSenseSlot = ({
     const observer = new MutationObserver(checkStatus);
     observer.observe(el, { attributes: true, attributeFilter: ['data-ad-status'] });
     return () => observer.disconnect();
-  }, [slot, clientId, refreshKey, isUnfilled]);
+  }, [slot, clientId, refreshKey, isUnfilled, isAdBlocked]);
 
   useEffect(() => {
-    if (!slot || !clientId || isUnfilled) return;
+    if (!slot || !clientId || isUnfilled || isAdBlocked) return;
 
-    ensureAdSenseScript(clientId);
+    ensureAdSenseScript(clientId, () => setIsAdBlocked(true));
 
     const tryPush = () => {
+      if (isAdScriptBlocked() || detectAdBlocker()) {
+        setIsAdBlocked(true);
+        return;
+      }
       if (pushedRef.current) return;
       const el = adRef.current;
       if (!el) return;
@@ -123,10 +204,10 @@ const useAdSenseSlot = ({
       if (io) io.disconnect();
       if (ro) ro.disconnect();
     };
-  }, [slot, clientId, refreshKey, isUnfilled, rootMargin, label]);
+  }, [slot, clientId, refreshKey, isUnfilled, isAdBlocked, rootMargin, label]);
 
   useEffect(() => {
-    if (!autoRefresh) return;
+    if (!autoRefresh || isAdBlocked) return;
 
     const intervalMs = Math.max(30, refreshIntervalSec) * 1000;
     const interval = setInterval(() => {
@@ -140,9 +221,9 @@ const useAdSenseSlot = ({
     }, intervalMs);
 
     return () => clearInterval(interval);
-  }, [autoRefresh, refreshIntervalSec]);
+  }, [autoRefresh, refreshIntervalSec, isAdBlocked]);
 
-  return { containerRef, adRef, isUnfilled, refreshKey };
+  return { containerRef, adRef, isUnfilled, isAdBlocked, refreshKey };
 };
 
 export const SingleAdUnit = ({
@@ -152,7 +233,7 @@ export const SingleAdUnit = ({
   autoRefresh = false,
   refreshIntervalSec = 60
 }) => {
-  const { containerRef, adRef, isUnfilled, refreshKey } = useAdSenseSlot({
+  const { containerRef, adRef, isUnfilled, isAdBlocked, refreshKey } = useAdSenseSlot({
     slot,
     clientId,
     autoRefresh,
@@ -161,22 +242,20 @@ export const SingleAdUnit = ({
   });
 
   if (!slot || !clientId || isUnfilled) return null;
+  if (isAdBlocked) {
+    return (
+      <div ref={containerRef} className="w-full">
+        <AdBlockedNotice compact={bare} />
+      </div>
+    );
+  }
 
   return (
     <div
       ref={containerRef}
       className={bare ? "w-full text-center overflow-hidden" : "w-full text-center overflow-hidden rounded-xl border border-white/5 bg-white/[0.015] p-2 min-h-[140px] flex items-center justify-center"}
     >
-      <ins
-        key={`${slot}-${refreshKey}`}
-        ref={adRef}
-        className="adsbygoogle"
-        style={{ display: 'block', width: '100%' }}
-        data-ad-client={clientId}
-        data-ad-slot={slot}
-        data-ad-format="auto"
-        data-full-width-responsive="true"
-      />
+      <AdIns slot={slot} clientId={clientId} refreshKey={refreshKey} adRef={adRef} />
     </div>
   );
 };
@@ -213,7 +292,7 @@ export const AuctionMobileBannerAd = ({
   refreshIntervalSec = 60
 }) => {
   const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
-  const { containerRef, adRef, isUnfilled, refreshKey } = useAdSenseSlot({
+  const { containerRef, adRef, isUnfilled, isAdBlocked, refreshKey } = useAdSenseSlot({
     slot,
     clientId,
     autoRefresh,
@@ -222,19 +301,24 @@ export const AuctionMobileBannerAd = ({
   });
 
   if (!slot || !clientId || isUnfilled) return null;
+  if (isAdBlocked) {
+    return (
+      <div ref={containerRef} className={`w-full block sm:hidden ${className}`}>
+        <AdBlockedNotice compact />
+      </div>
+    );
+  }
 
   return (
     <div ref={containerRef} className={`w-full block sm:hidden overflow-hidden text-center ${className}`}>
       <div className="w-full max-w-[360px] mx-auto min-h-[50px] block overflow-hidden">
-        <ins
-          key={`${slot}-${refreshKey}`}
-          ref={adRef}
-          className="adsbygoogle"
+        <AdIns
+          slot={slot}
+          clientId={clientId}
+          refreshKey={refreshKey}
+          adRef={adRef}
           style={{ display: 'block', width: '100%', minHeight: '50px' }}
-          data-ad-format="horizontal"
-          data-full-width-responsive="true"
-          data-ad-client={clientId}
-          data-ad-slot={slot}
+          format="horizontal"
         />
       </div>
     </div>
@@ -248,7 +332,7 @@ export const AuctionSidebarActivityAd = ({
   refreshIntervalSec = 60
 }) => {
   const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
-  const { containerRef, adRef, isUnfilled, refreshKey } = useAdSenseSlot({
+  const { containerRef, adRef, isUnfilled, isAdBlocked, refreshKey } = useAdSenseSlot({
     slot,
     clientId,
     autoRefresh,
@@ -257,6 +341,13 @@ export const AuctionSidebarActivityAd = ({
   });
 
   if (!slot || !clientId || isUnfilled) return null;
+  if (isAdBlocked) {
+    return (
+      <div ref={containerRef} className={`hidden md:flex w-full shrink-0 p-2 sm:p-2.5 ${className}`}>
+        <AdBlockedNotice compact />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -269,15 +360,12 @@ export const AuctionSidebarActivityAd = ({
         </span>
       </div>
       <div className="w-full block min-h-[50px] overflow-hidden text-center">
-        <ins
-          key={`${slot}-${refreshKey}`}
-          ref={adRef}
-          className="adsbygoogle"
-          style={{ display: 'block', width: '100%' }}
-          data-ad-format="rectangle, horizontal"
-          data-full-width-responsive="true"
-          data-ad-client={clientId}
-          data-ad-slot={slot}
+        <AdIns
+          slot={slot}
+          clientId={clientId}
+          refreshKey={refreshKey}
+          adRef={adRef}
+          format="rectangle, horizontal"
         />
       </div>
     </div>
@@ -291,7 +379,7 @@ export const AuctionTeamsInFeedAd = ({
   refreshIntervalSec = 60
 }) => {
   const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
-  const { containerRef, adRef, isUnfilled, refreshKey } = useAdSenseSlot({
+  const { containerRef, adRef, isUnfilled, isAdBlocked, refreshKey } = useAdSenseSlot({
     slot,
     clientId,
     autoRefresh,
@@ -300,6 +388,13 @@ export const AuctionTeamsInFeedAd = ({
   });
 
   if (!slot || !clientId || isUnfilled) return null;
+  if (isAdBlocked) {
+    return (
+      <div ref={containerRef} className={`my-2 ${className}`}>
+        <AdBlockedNotice compact />
+      </div>
+    );
+  }
 
   return (
     <div ref={containerRef} className={`my-2 p-2 rounded-xl border border-white/10 bg-[#0e1015]/90 overflow-hidden ${className}`}>
@@ -309,15 +404,12 @@ export const AuctionTeamsInFeedAd = ({
         </span>
       </div>
       <div className="w-full block min-h-[50px] overflow-hidden text-center">
-        <ins
-          key={`${slot}-${refreshKey}`}
-          ref={adRef}
-          className="adsbygoogle"
-          style={{ display: 'block', width: '100%' }}
-          data-ad-format="rectangle, horizontal"
-          data-full-width-responsive="true"
-          data-ad-client={clientId}
-          data-ad-slot={slot}
+        <AdIns
+          slot={slot}
+          clientId={clientId}
+          refreshKey={refreshKey}
+          adRef={adRef}
+          format="rectangle, horizontal"
         />
       </div>
     </div>
@@ -330,7 +422,7 @@ export const LandingDisplayBannerAd = ({
   label = 'Sponsored'
 }) => {
   const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
-  const { containerRef, adRef, isUnfilled } = useAdSenseSlot({
+  const { containerRef, adRef, isUnfilled, isAdBlocked } = useAdSenseSlot({
     slot,
     clientId,
     rootMargin: '250px 0px',
@@ -338,6 +430,13 @@ export const LandingDisplayBannerAd = ({
   });
 
   if (!slot || !clientId || isUnfilled) return null;
+  if (isAdBlocked) {
+    return (
+      <section ref={containerRef} className={`relative z-10 w-full max-w-6xl mx-auto ${className}`} aria-label={label}>
+        <AdBlockedNotice />
+      </section>
+    );
+  }
 
   return (
     <section ref={containerRef} className={`relative z-10 w-full max-w-6xl mx-auto ${className}`} aria-label={label}>
@@ -348,15 +447,7 @@ export const LandingDisplayBannerAd = ({
       </div>
 
       <div className="w-full text-center overflow-hidden rounded-2xl border border-white/5 bg-white/[0.015] p-2.5 sm:p-4 min-h-[140px] flex items-center justify-center">
-        <ins
-          ref={adRef}
-          className="adsbygoogle"
-          style={{ display: 'block', width: '100%' }}
-          data-ad-format="auto"
-          data-full-width-responsive="true"
-          data-ad-client={clientId}
-          data-ad-slot={slot}
-        />
+        <AdIns slot={slot} clientId={clientId} adRef={adRef} />
       </div>
     </section>
   );
@@ -378,7 +469,7 @@ export const AuctionSummaryInFeedAd = ({
   label = 'Sponsored'
 }) => {
   const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || DEFAULT_CLIENT_ID;
-  const { containerRef, adRef, isUnfilled } = useAdSenseSlot({
+  const { containerRef, adRef, isUnfilled, isAdBlocked } = useAdSenseSlot({
     slot,
     clientId,
     rootMargin: '250px 0px',
@@ -386,6 +477,13 @@ export const AuctionSummaryInFeedAd = ({
   });
 
   if (!slot || !clientId || isUnfilled) return null;
+  if (isAdBlocked) {
+    return (
+      <div ref={containerRef} className={`w-full max-w-5xl mx-auto my-3 sm:my-4 ${className}`}>
+        <AdBlockedNotice />
+      </div>
+    );
+  }
 
   return (
     <div ref={containerRef} className={`w-full max-w-5xl mx-auto my-3 sm:my-4 ${className}`}>
@@ -395,15 +493,7 @@ export const AuctionSummaryInFeedAd = ({
         <div className="h-px w-8 bg-white/10" />
       </div>
       <div className="w-full text-center overflow-hidden rounded-2xl border border-white/5 bg-white/[0.015] p-2.5 sm:p-4 min-h-[120px] flex items-center justify-center">
-        <ins
-          ref={adRef}
-          className="adsbygoogle"
-          style={{ display: 'block', width: '100%' }}
-          data-ad-format="auto"
-          data-full-width-responsive="true"
-          data-ad-client={clientId}
-          data-ad-slot={slot}
-        />
+        <AdIns slot={slot} clientId={clientId} adRef={adRef} />
       </div>
     </div>
   );

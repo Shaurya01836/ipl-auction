@@ -115,7 +115,7 @@ test('localAuctionReducer: initializes 1 human + 9 bots with mode budgets', () =
   const botPlayers = state.players.filter((p) => p.isBot);
   assert.equal(botPlayers.length, 9);
   const gtBot = botPlayers.find((p) => p.team === 'GT');
-  assert.equal(gtBot?.name, 'Nehra Ji');
+  assert.ok(gtBot?.name && !gtBot.name.endsWith('Bot'));
   assert.equal(state.roomTeams.every((t) => t.budgetRemaining === 120.0), true);
 
   // Initial lot check: opens at 0 so the first bid is exactly the base price
@@ -568,4 +568,22 @@ test('localAuctionReducer: SKIP_LOT enters celebration state with celebrationEnd
   });
   assert.equal(state.currentAuction.status, 'bidding');
   assert.notEqual(state.currentAuction.playerId, firstPlayerId);
+});
+
+test('localAuctionReducer: INIT_AUCTION assigns unique realistic human names to bots', () => {
+  const state = localAuctionReducer(null, {
+    type: 'INIT_AUCTION',
+    roomId: 'SOLO-BOTNAMES',
+    humanUser: { uid: 'human_1', displayName: 'Aarav', team: 'MI' },
+    auctionType: 'mini',
+    seed: 9876,
+    now: 1000000,
+  });
+
+  const bots = state.players.filter((p) => p.isBot);
+  assert.equal(bots.length, 9);
+  const botNames = bots.map((b) => b.name);
+  assert.equal(new Set(botNames).size, 9);
+  assert.ok(!botNames.includes('Aarav'));
+  assert.ok(botNames.every((n) => !n.endsWith('Bot')));
 });

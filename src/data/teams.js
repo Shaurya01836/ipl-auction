@@ -11,6 +11,24 @@ export const BOT_COACHES = {
   LSG: 'Langer Bhai',
 };
 
+export const REALISTIC_BOT_NAMES = [
+  'Aarav', 'Rohan', 'Kabir', 'Vivaan', 'Arjun', 'Siddharth', 'Dev', 'Karan',
+  'Nikhil', 'Aditya', 'Pranav', 'Yash', 'Ishaan', 'Tanmay', 'Varun', 'Shubham',
+  'Harsh', 'Kunal', 'Dhruv', 'Manav', 'Vikram', 'Samir', 'Zaid', 'Farhan',
+  'Ananya', 'Riya', 'Oliver', 'Liam', 'Callum', 'Aryan',
+];
+
+export const pickRandomBotName = (usedNames = [], randomFn = Math.random) => {
+  const taken = new Set(
+    Array.from(usedNames, (n) => String(n || '').trim().toLowerCase()).filter(Boolean),
+  );
+  const available = REALISTIC_BOT_NAMES.filter((n) => !taken.has(n.toLowerCase()));
+  if (available.length > 0) {
+    return available[Math.floor(randomFn() * available.length)];
+  }
+  return `Player ${Math.floor(100 + randomFn() * 900)}`;
+};
+
 export const getTeamBotName = (teamOrId) => {
   const id = typeof teamOrId === 'string' ? teamOrId : teamOrId?.id;
   if (id && BOT_COACHES[id]) return BOT_COACHES[id];

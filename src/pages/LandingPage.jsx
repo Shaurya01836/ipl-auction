@@ -231,7 +231,7 @@ const LandingPage = () => {
 
   const [selectedTeam, setSelectedTeam] = useState("MI");
   const [activeTab, setActiveTab] = useState("new");
-  const [auctionType, setAuctionType] = useState("mega"); 
+  const [auctionType, setAuctionType] = useState("mini"); 
   const miniTeamState = useMemo(() => {
     return calculateCustomTeamState(selectedTeam);
   }, [selectedTeam]); 

@@ -1,14 +1,18 @@
 import React from 'react';
 import PageBackground from './PageBackground';
+import { detectAdBlocker, isAdBlockerError } from '../lib/adBlockDetect';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
+    this.state = { hasError: false, isAdBlocked: false, error: null, errorInfo: null };
   }
 
   static getDerivedStateFromError(error) {
-    return { hasError: true };
+    return {
+      hasError: true,
+      isAdBlocked: isAdBlockerError(error) || detectAdBlocker(),
+    };
   }
 
   componentDidCatch(error, errorInfo) {
@@ -16,6 +20,7 @@ class ErrorBoundary extends React.Component {
       console.error("Uncaught error:", error, errorInfo);
     }
     this.setState({
+      isAdBlocked: isAdBlockerError(error) || detectAdBlocker(),
       error: error,
       errorInfo: errorInfo
     });
@@ -23,21 +28,24 @@ class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
+      const adBlocked = this.state.isAdBlocked;
       return (
         <div className="min-h-screen flex items-center justify-center bg-black text-white p-4 sm:p-6 relative overflow-hidden">
           <PageBackground showArt={false} />
 
           <div className="max-w-lg w-full bg-[#0c0d10] border border-white/10 rounded-[1.75rem] sm:rounded-[2.5rem] p-6 sm:p-10 text-center relative z-10 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.85)]">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-slate-400 font-pixel text-[9px] uppercase tracking-wider mb-4">
-              Something went wrong
+              {adBlocked ? 'Ad Blocker Detected' : 'Something went wrong'}
             </div>
             
             <h1 className="font-pixel text-xl sm:text-2xl text-white tracking-tight uppercase mb-3">
-              We ran into an unexpected issue
+              {adBlocked ? 'Please turn off your ad blocker' : 'We ran into an unexpected issue'}
             </h1>
             
             <p className="text-slate-400 font-sans text-sm sm:text-base leading-relaxed mb-8">
-              An error occurred while loading this page. Your auction rooms and saved data are safe. Try reloading or heading back to the home page.
+              {adBlocked
+                ? 'Your ad blocker blocked or removed page elements needed to run CrickAuction. Please turn off your ad blocker for this site and reload the page.'
+                : 'An error occurred while loading this page. Your auction rooms and saved data are safe. Try reloading or heading back to the home page.'}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">

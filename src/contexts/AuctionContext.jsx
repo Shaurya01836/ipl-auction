@@ -21,6 +21,7 @@ import {
 } from '../lib/directoryApi';
 import { IPL_PLAYERS } from '../data/players';
 import { calculateCustomTeamState } from '../data/retentions';
+import { pickRandomBotName } from '../data/teams';
 import { evaluateBotBid } from '../lib/botEngine';
 import { isSoloBotRoom, simulateBotLot, simulateRemainingAuction } from '../lib/botSimulation';
 import { 
@@ -2641,13 +2642,13 @@ export const AuctionProvider = ({ children }) => {
     if (!teamDetails) return;
 
     const botUserId = `bot_${teamId}`;
-    const botName = teamDetails.botName || `${teamDetails.name} Bot`;
 
     const playersTx = await runTransactionRtdb(
       ref(rtdb, `auctions/${roomId}/room/players`),
       (currentPlayers) => {
         const players = mapRoomPlayers(currentPlayers, (p) => p);
         if (players.some(p => p.id === botUserId || p.team === teamId)) return; // abort
+        const botName = pickRandomBotName(players.map(p => p.name));
         return [...players, {
           id: botUserId,
           name: botName,
@@ -2703,16 +2704,21 @@ export const AuctionProvider = ({ children }) => {
       (currentPlayers) => {
         const players = mapRoomPlayers(currentPlayers, (p) => p);
         const takenTeamIds = new Set(players.map(p => p.team).filter(Boolean));
+        const usedNames = players.map(p => p.name);
         const bots = TEAMS
           .filter(t => !takenTeamIds.has(t.id))
-          .map(t => ({
-            id: `bot_${t.id}`,
-            name: t.botName || `${t.name} Bot`,
-            team: t.id,
-            teamName: t.name,
-            isHost: false,
-            isBot: true,
-          }));
+          .map(t => {
+            const botName = pickRandomBotName(usedNames);
+            usedNames.push(botName);
+            return {
+              id: `bot_${t.id}`,
+              name: botName,
+              team: t.id,
+              teamName: t.name,
+              isHost: false,
+              isBot: true,
+            };
+          });
         return bots.length > 0 ? [...players, ...bots] : players;
       },
     );
