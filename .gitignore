@@ -35,3 +35,6 @@ scripts/
 # Agent tooling
 .agents/
 AGENTS.md
+
+# Local-only promo poster tool
+src/pages/PromoGenerator.jsx

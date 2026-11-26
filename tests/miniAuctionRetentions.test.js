@@ -255,7 +255,7 @@ test('localAuctionEngine: INIT_AUCTION in mini mode initializes authentic squads
 
   // AI teams check (e.g. MI, PBKS, GT)
   const miTeam = state.roomTeams.find((t) => t.teamId === 'MI');
-  assert.equal(miTeam.budgetRemaining, 32.60, 'MI starting purse must be 32.60 Cr');
+  assert.equal(miTeam.budgetRemaining, 30.25, 'MI starting purse must be 30.25 Cr');
   assert.equal(miTeam.squad.length, 16, 'MI starting squad must have 16 retained players');
 
   const pbksTeam = state.roomTeams.find((t) => t.teamId === 'PBKS');

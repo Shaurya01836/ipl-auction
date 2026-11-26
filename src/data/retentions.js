@@ -785,7 +785,8 @@ export const IPL_2027_RETENTIONS = {
   "MI": {
     "name": "MI",
     "totalSpent": 97.4,
-    "remainingPurse": 32.6,
+    "retentionDeduction": 2.35,
+    "remainingPurse": 30.25,
     "players": [
       {
         "id": "p_101",

@@ -19,6 +19,8 @@ const PrivacyPolicy   = lazy(() => import('./pages/PrivacyPolicy'))
 const TermsConditions = lazy(() => import('./pages/TermsConditions'))
 const PhotoCredits    = lazy(() => import('./pages/PhotoCredits'))
 const AdminPanel      = lazy(() => import('./pages/AdminPanel'))
+const promoModules    = import.meta.env.DEV ? import.meta.glob('./pages/PromoGenerator.jsx') : {}
+const PromoGenerator  = promoModules['./pages/PromoGenerator.jsx'] ? lazy(promoModules['./pages/PromoGenerator.jsx']) : null
 const NotFound        = lazy(() => import('./pages/NotFound'))
 
 // ── Lazy-loaded heavy modals (defer until after first paint) ──────────────────
@@ -85,6 +87,11 @@ function App() {
                   <Route path="/summary/:id" element={
                     <Suspense fallback={<PageFallback />}><AuctionSummary /></Suspense>
                   } />
+                  {import.meta.env.DEV && PromoGenerator && (
+                    <Route path="/promo" element={
+                      <Suspense fallback={<PageFallback />}><PromoGenerator /></Suspense>
+                    } />
+                  )}
                   <Route path="*" element={
                     <Suspense fallback={<PageFallback />}><NotFound /></Suspense>
                   } />
