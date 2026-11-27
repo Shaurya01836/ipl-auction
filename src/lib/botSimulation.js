@@ -1,7 +1,8 @@
 import { IPL_PLAYERS } from '../data/players.js';
-import { TEAMS } from '../data/teams.js';
+import { findTeamById, getTeamBotName } from '../data/teams.js';
 import { toFiniteNumber } from './auctionDisplay.js';
 import { evaluateBotBid } from './botEngine.js';
+import { ALL_PLAYERS, getPlayerByOrderIndex } from './auctionRules.js';
 
 /**
  * Checks whether a room qualifies as a single-player solo room against bots.
@@ -79,8 +80,8 @@ export function simulateBotLot({
         runningBid = decision.nextBid;
         leadingBidderId = decision.botUserId;
         leadingTeamId = decision.teamId;
-        const teamObj = TEAMS.find((t) => t.id === decision.teamId);
-        leadingBidderName = teamObj?.botName || (teamObj ? `${teamObj.name} Bot` : 'Bot');
+        const teamObj = findTeamById(decision.teamId);
+        leadingBidderName = botTeam.botName || botTeam.name || getTeamBotName(teamObj || decision.teamId);
         someoneBid = true;
         bidsPlaced++;
         break; // Next bid step
@@ -139,7 +140,7 @@ export function simulateRemainingAuction({
 
   // 1. Resolve current live lot if active
   if (currentLive && currentLive.status === 'bidding' && currentLive.playerId) {
-    const livePlayer = IPL_PLAYERS.find((p) => p.id === currentLive.playerId);
+    const livePlayer = ALL_PLAYERS.find((p) => p.id === currentLive.playerId);
     if (livePlayer && !alreadyOwnedIds.has(livePlayer.id)) {
       // If human is leading bidder, award to human!
       if (currentLive.highBidderId === humanUserId) {
@@ -195,7 +196,7 @@ export function simulateRemainingAuction({
   const remainingIndices = playerOrder.slice(currentPlayerIndex + 1);
 
   for (const pIdx of remainingIndices) {
-    const player = IPL_PLAYERS[pIdx];
+    const player = getPlayerByOrderIndex(pIdx, initialBudget <= 10 ? 'hundred' : null);
     if (!player || alreadyOwnedIds.has(player.id)) continue;
 
     const botTeams = simulatedTeams.filter((t) => t.userId !== humanUserId);

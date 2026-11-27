@@ -587,3 +587,41 @@ test('localAuctionReducer: INIT_AUCTION assigns unique realistic human names to 
   assert.ok(!botNames.includes('Aarav'));
   assert.ok(botNames.every((n) => !n.endsWith('Bot')));
 });
+
+test('localAuctionReducer: INIT_AUCTION supports The Hundred UK mode (8 teams, £2.05M cap, 16 squad, 4 overseas)', () => {
+  const state = localAuctionReducer(null, {
+    type: 'INIT_AUCTION',
+    roomId: 'SOLO-HUNDRED',
+    humanUser: { uid: 'human_1', displayName: 'Oliver', team: 'LSP' },
+    auctionType: 'hundred',
+    seed: 100,
+    now: 1000000,
+  });
+
+  assert.equal(state.auctionType, 'hundred');
+  assert.equal(state.players.length, 8);
+  assert.equal(state.roomTeams.length, 8);
+  assert.equal(state.squadLimit, 16);
+  assert.equal(state.overseasLimit, 4);
+  assert.equal(state.settings.budget, 2.05);
+  assert.ok(state.currentAuction.playerId.startsWith('h_'));
+
+  // Human bid from 0.45 -> 0.50 must succeed with £0.03M slot reserve (not 0.30 Cr IPL reserve)
+  const seeded = {
+    ...state,
+    currentAuction: {
+      ...state.currentAuction,
+      currentBid: 0.45,
+      highBidderId: 'bot_BPH',
+      highBidderName: 'Harry',
+      highBidderTeamId: 'BPH',
+    },
+  };
+  const afterBid = localAuctionReducer(seeded, {
+    type: 'PLACE_BID',
+    bidderId: 'human_1',
+    now: 1001000,
+  });
+  assert.equal(afterBid.currentAuction.currentBid, 0.50);
+  assert.equal(afterBid.currentAuction.highBidderId, 'human_1');
+});

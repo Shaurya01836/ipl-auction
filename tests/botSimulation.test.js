@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { isSoloBotRoom, simulateBotLot, simulateRemainingAuction } from '../src/lib/botSimulation.js';
-import { computeBotValuation, evaluateBotBid } from '../src/lib/botEngine.js';
+import { computeBotValuation, computeHundredStatsMultiplier, evaluateBotBid } from '../src/lib/botEngine.js';
 import { IPL_PLAYERS } from '../src/data/players.js';
+import { HUNDRED_BOT_NAMES, getTeamBotName, pickRandomBotName } from '../src/data/teams.js';
 
 test('isSoloBotRoom: accurately detects 1 human + bots', () => {
   const soloRoom = [
@@ -268,4 +269,84 @@ test('computeBotValuation: manager archetype modifies bidding strategy', () => {
   const valMoneyball = computeBotValuation({ player: superstar, botTeam: moneyballBot, budgetRemaining: 120, initialBudget: 120, squadLimit: 25, randomFn: () => 0.5 });
 
   assert.ok(valHunter > valMoneyball, `Star hunter bot (${valHunter}) must value 92-rated star higher than moneyball bot (${valMoneyball})`);
+});
+
+test('The Hundred: bot names use local UK names and team coaches', () => {
+  const picked = pickRandomBotName([], () => 0.1, 'hundred');
+  assert.ok(HUNDRED_BOT_NAMES.includes(picked), `Expected local UK bot name, got ${picked}`);
+  assert.equal(getTeamBotName('BPH'), 'Gaffer Dan');
+  assert.equal(getTeamBotName('OIN'), 'Coach Alistair');
+});
+
+test('The Hundred: bots bid aggressively based on player stats while respecting £2.05M budget', () => {
+  const starWithBigStats = {
+    id: 'h_star',
+    name: 'Star Opener',
+    role: 'Batsman',
+    country: 'ENG',
+    basePrice: 0.15,
+    rating: 88,
+    set: 'Hundred',
+    stats: { matches: 140, runs: 4500, avg: 38.5, sr: 154.2 },
+  };
+  const sameRatingWeakStats = {
+    id: 'h_weak',
+    name: 'Quiet Batter',
+    role: 'Batsman',
+    country: 'ENG',
+    basePrice: 0.15,
+    rating: 88,
+    set: 'Hundred',
+    stats: { matches: 20, runs: 320, avg: 18.0, sr: 118.5 },
+  };
+
+  assert.ok(
+    computeHundredStatsMultiplier(starWithBigStats) > computeHundredStatsMultiplier(sameRatingWeakStats),
+    'High-stats Hundred player should get a higher stats multiplier',
+  );
+
+  const botTeam = { userId: 'bot_BPH', teamId: 'BPH', budgetRemaining: 2.05, squad: [] };
+  const starVal = computeBotValuation({
+    player: starWithBigStats,
+    botTeam,
+    squadLimit: 16,
+    budgetRemaining: 2.05,
+    initialBudget: 2.05,
+    randomFn: () => 0.5,
+  });
+  const weakVal = computeBotValuation({
+    player: sameRatingWeakStats,
+    botTeam,
+    squadLimit: 16,
+    budgetRemaining: 2.05,
+    initialBudget: 2.05,
+    randomFn: () => 0.5,
+  });
+
+  assert.ok(starVal > weakVal, `Star (${starVal}) must be valued higher than weak-stats player (${weakVal})`);
+  assert.ok(starVal <= 2.05, `Valuation (${starVal}) must stay within £2.05M budget`);
+
+  const bid = evaluateBotBid({
+    player: starWithBigStats,
+    currentBid: 0.25,
+    highBidderId: 'human_1',
+    botTeam,
+    squadLimit: 16,
+    overseasLimit: 4,
+    initialBudget: 2.05,
+    randomFn: () => 0.5,
+  });
+  assert.equal(bid?.shouldBid, true);
+
+  // simulateBotLot must preserve the room bot's assigned name (e.g. Zaid) instead of coach fallback
+  const sim = simulateBotLot({
+    player: { id: 'p_srh', name: 'Test Star', role: 'Batsman', country: 'IND', basePrice: 2.0, rating: 90, set: 'Marquee Set 1' },
+    botTeams: [{ userId: 'bot_SRH', teamId: 'SRH', botName: 'Zaid', budgetRemaining: 120, squad: [] }],
+    initialBudget: 120,
+    squadLimit: 25,
+    overseasLimit: 8,
+    randomFn: () => 0.1,
+  });
+  assert.equal(sim.isSold, true);
+  assert.equal(sim.winnerName, 'Zaid');
 });

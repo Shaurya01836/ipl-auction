@@ -16,6 +16,8 @@ export function transactBid(currentData, {
   timerMs,
   budget,
   basePrice,
+  playerSet,
+  auctionType,
   targetBid,
 }) {
   if (!currentData) return currentData;
@@ -26,9 +28,10 @@ export function transactBid(currentData, {
   if (currentData.timerEndsAt && now >= currentData.timerEndsAt) return;
 
   const currentBid = toFiniteNumber(currentData.currentBid, 0);
+  const resolvedSet = playerSet || (auctionType === 'hundred' ? 'Hundred' : undefined);
   const minNextBid = currentBid === 0
     ? toFiniteNumber(basePrice, 0)
-    : getNextBidAmount({ basePrice }, currentBid);
+    : getNextBidAmount({ basePrice, set: resolvedSet }, currentBid);
 
   const requestedBid = typeof targetBid === 'number' && Number.isFinite(targetBid)
     ? toFiniteNumber(targetBid, 0)

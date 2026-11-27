@@ -1,6 +1,18 @@
 import { IPL_PLAYERS } from '../data/players.js';
+import { HUNDRED_PLAYERS } from '../data/hundredPlayers.js';
 import { getMiniAuctionPoolIndices } from '../data/retentions.js';
 import { countOverseas, isOverseasPlayer, r2, toFiniteNumber } from './auctionDisplay.js';
+
+export const ALL_PLAYERS = [...IPL_PLAYERS, ...HUNDRED_PLAYERS];
+
+export const getPlayerPoolForMode = (auctionType) =>
+  auctionType === 'hundred' ? HUNDRED_PLAYERS : IPL_PLAYERS;
+
+export const getPlayerByOrderIndex = (idx, auctionType) =>
+  getPlayerPoolForMode(auctionType)[idx];
+
+export const findPlayerById = (id) =>
+  ALL_PLAYERS.find((p) => p.id === id);
 
 /**
  * Pure auction rules used by the cloud (RTDB) engine. Keeping these in one
@@ -30,6 +42,16 @@ export function generatePlayerOrder(auctionType = 'mega', options = {}) {
       if (byRole[role]) order.push(...shuffleArray(byRole[role]));
     });
     return order;
+  }
+
+  if (auctionType === 'hundred') {
+    const marquee = [];
+    const rest = [];
+    HUNDRED_PLAYERS.forEach((p, i) => {
+      if (p.basePrice >= 0.05) marquee.push(i);
+      else rest.push(i);
+    });
+    return [...shuffleArray(marquee), ...shuffleArray(rest)];
   }
 
   if (auctionType === 'mini') {
@@ -62,7 +84,8 @@ export function generatePlayerOrder(auctionType = 'mega', options = {}) {
  * @param {Iterable<string>|Array<object>|Set<string>} teamsOrSoldIds - Teams array or Set of sold player IDs
  * @returns {number|undefined} The index in IPL_PLAYERS of the next unsold player, or undefined if auction is complete
  */
-export function getNextUnsoldPlayerIndex(playerOrder, currentPlayerId, teamsOrSoldIds) {
+export function getNextUnsoldPlayerIndex(playerOrder, currentPlayerId, teamsOrSoldIds, auctionType = 'mega') {
+  const pool = getPlayerPoolForMode(auctionType);
   const order = Array.isArray(playerOrder)
     ? playerOrder
     : playerOrder && typeof playerOrder === 'object'
@@ -91,13 +114,13 @@ export function getNextUnsoldPlayerIndex(playerOrder, currentPlayerId, teamsOrSo
   }
 
   // Find where the current player was in order
-  const curPos = order.findIndex((idx) => IPL_PLAYERS[idx] && IPL_PLAYERS[idx].id === currentPlayerId);
+  const curPos = order.findIndex((idx) => pool[idx] && pool[idx].id === currentPlayerId);
   const startPos = curPos !== -1 ? curPos + 1 : 0;
 
   // Search forward from current position for the first player not yet sold
   for (let i = startPos; i < order.length; i++) {
     const candidateIdx = order[i];
-    const candidate = IPL_PLAYERS[candidateIdx];
+    const candidate = pool[candidateIdx];
     if (candidate && !soldIds.has(candidate.id)) {
       return candidateIdx;
     }
@@ -132,6 +155,10 @@ export function countAuctionTeams(players) {
 export function getNextBidAmount(player, currentBid) {
   const current = toFiniteNumber(currentBid, 0);
   if (current === 0) return toFiniteNumber(player?.basePrice, 0);
+  if (player?.set === 'Hundred') {
+    const step = current < 0.10 ? 0.01 : current < 0.30 ? 0.02 : 0.05;
+    return r2(current + step);
+  }
   return r2(current + (current < 5 ? 0.2 : 0.25));
 }
 
@@ -159,8 +186,9 @@ export function getSquadConstraintError({
     return 'Squad is full';
   }
 
-  if (isOverseasPlayer(player)) {
-    const overseas = countOverseas(squad, playerIndex);
+  const modeHint = player?.set === 'Hundred' ? 'hundred' : null;
+  if (isOverseasPlayer(player, modeHint)) {
+    const overseas = countOverseas(squad, playerIndex || ALL_PLAYERS, modeHint);
     if (overseas >= toFiniteNumber(overseasLimit, 8)) {
       return 'Overseas player limit reached';
     }

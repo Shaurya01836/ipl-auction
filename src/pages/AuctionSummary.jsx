@@ -4,7 +4,8 @@ import { useAuction } from '../contexts/AuctionContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useQuota } from '../contexts/QuotaContext';
 import { IPL_PLAYERS } from '../data/players';
-import { TEAMS } from '../data/teams';
+import { TEAMS, getTeamsForMode, findTeamById } from '../data/teams';
+import { ALL_PLAYERS } from '../lib/auctionRules';
 import { toPng } from 'html-to-image';
 import confetti from 'canvas-confetti';
 import { fetchAuctionRecord, fetchTeamsForAuction } from '../lib/directoryApi';
@@ -36,6 +37,7 @@ import {
   computeTeamSpent,
   countOverseas,
   formatCrores,
+  formatPurse,
   getPlayerAvatar,
   isOverseasPlayer,
   toFiniteNumber,
@@ -361,8 +363,8 @@ const AuctionSummary = () => {
         // Legacy string entries have no bid information: keep it unknown (null)
         // instead of fabricating a 0 value.
         const bidVal = typeof s === 'string' ? null : (s.bid ?? null);
-        const teamInfo = TEAMS.find(t => t.id === rt.teamId);
-        const pInfo = IPL_PLAYERS.find(p => p.id === pid);
+        const teamInfo = findTeamById(rt.teamId);
+        const pInfo = ALL_PLAYERS.find(p => p.id === pid);
         return { 
           ...pInfo, 
           id: pid,
@@ -528,7 +530,7 @@ const AuctionSummary = () => {
                             {player.teamId}
                           </div>
                           <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
-                            {player.role} • {player.teamId || TEAMS.find(t => t.id === player.team)?.name || player.teamName}
+                            {player.role} • {player.teamId || findTeamById(player.team)?.name || player.teamName}
                           </p>
                         </div>
                       </div>
@@ -539,7 +541,7 @@ const AuctionSummary = () => {
                         {player.bidVal == null ? (
                           <span>—</span>
                         ) : (
-                          <>₹{formatCrores(player.bidVal)}<span className="text-xs ml-1 font-bold not-italic text-slate-400">Cr</span></>
+                          <>{formatPurse(player.bidVal, activeAuction?.auctionType)}</>
                         )}
                       </div>
                     </div>
@@ -571,7 +573,8 @@ const AuctionSummary = () => {
               className="max-w-5xl mx-auto space-y-3 sm:space-y-4"
             >
               {(() => {
-                const teamsWithSquads = TEAMS.map((t) => {
+                const summaryMode = activeAuction?.auctionType;
+                const teamsWithSquads = getTeamsForMode(summaryMode).map((t) => {
                   const teamDoc = activeTeams.find(doc => (doc.teamId || doc.team_id) === t.id);
                   const manager = activeAuction?.players?.find(p => p.team === t.id);
                   const rawSquad = teamDoc?.squad;
@@ -579,7 +582,7 @@ const AuctionSummary = () => {
                   const squad = squadArr.map(s => {
                     const pid = typeof s === 'string' ? s : s.id;
                     const bid = typeof s === 'string' ? null : (s.bid ?? null);
-                    const playerInfo = IPL_PLAYERS.find(p => p.id === pid);
+                    const playerInfo = ALL_PLAYERS.find(p => p.id === pid);
                     return { ...(playerInfo || {}), id: pid, name: playerInfo?.name || pid, bid };
                   }).filter(p => p && p.id);
                   return { t, teamDoc, manager, squad };
@@ -587,7 +590,7 @@ const AuctionSummary = () => {
 
                 return teamsWithSquads.map(({ t, teamDoc, manager, squad }, idx) => {
                   const isExpanded = expandedTeam === t.id;
-                  const osCount = countOverseas(teamDoc?.squad, IPL_PLAYERS);
+                  const osCount = countOverseas(teamDoc?.squad, ALL_PLAYERS, summaryMode);
                   const totalBudget = toFiniteNumber(activeAuction?.settings?.budget, 120);
                   const totalSpent = computeTeamSpent({
                     budget: totalBudget,
@@ -633,7 +636,7 @@ const AuctionSummary = () => {
                           </div>
                           <div className="shrink-0">
                             <span className="block text-[7px] sm:text-[8px] font-pixel text-slate-400 uppercase tracking-wider mb-0.5">Spent</span>
-                            <span className="text-xs sm:text-base font-black text-white">{totalSpent === null ? '—' : `₹${formatCrores(totalSpent, 1)}Cr`}</span>
+                            <span className="text-xs sm:text-base font-black text-white">{totalSpent === null ? '—' : formatPurse(totalSpent, summaryMode, summaryMode === 'hundred' ? 2 : 1)}</span>
                           </div>
                         </div>
 
@@ -718,7 +721,7 @@ const AuctionSummary = () => {
                                          </div>
                                        </div>
                                        <div className="text-right shrink-0">
-                                         <div className="text-[12px] sm:text-[13px] font-black text-white">{p.bid == null ? '—' : `₹${formatCrores(p.bid)}Cr`}</div>
+                                         <div className="text-[12px] sm:text-[13px] font-black text-white">{p.bid == null ? '—' : formatPurse(p.bid, summaryMode)}</div>
                                        </div>
                                      </div>
                                    ))}
@@ -812,7 +815,7 @@ const AuctionSummary = () => {
                           </div>
                           <div className="bg-white/[0.02] p-2.5 rounded-xl border border-white/5">
                             <div className="text-[8px] font-pixel uppercase tracking-wider text-slate-400 mb-1">Purse Spent</div>
-                            <div className="text-base font-black text-white">₹{totalSpent === null ? '—' : formatCrores(totalSpent)}Cr</div>
+                            <div className="text-base font-black text-white">{totalSpent === null ? '—' : formatPurse(totalSpent, activeAuction?.auctionType)}</div>
                           </div>
                         </div>
 
@@ -847,7 +850,7 @@ const AuctionSummary = () => {
                                   </div>
                                 </div>
                                 <div className="text-right shrink-0">
-                                  <span className="text-[10px] font-black text-white">{p.bid == null ? '—' : `₹${formatCrores(p.bid)}Cr`}</span>
+                                  <span className="text-[10px] font-black text-white">{p.bid == null ? '—' : formatPurse(p.bid, activeAuction?.auctionType)}</span>
                                 </div>
                               </div>
                             ))}

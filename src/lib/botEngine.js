@@ -1,7 +1,7 @@
 import { IPL_PLAYERS } from '../data/players.js';
 import { TEAMS } from '../data/teams.js';
 import { countOverseas, isOverseasPlayer, toFiniteNumber } from './auctionDisplay.js';
-import { getNextBidAmount } from './auctionRules.js';
+import { ALL_PLAYERS, getNextBidAmount } from './auctionRules.js';
 
 /**
  * Player Set → Tier Multipliers
@@ -31,6 +31,7 @@ const SET_TIER = {
   'UAL2':          { base: 0.6, max: 1.0 },  // Uncapped All-Rounders T2
   'UWK2':          { base: 0.5, max: 0.9 },  // Uncapped WK T2
   'UFA2':          { base: 0.5, max: 0.9 },  // Uncapped Fast T2
+  'Hundred':       { base: 1.9, max: 4.2 },  // The Hundred (UK) — aggressive bidding
 };
 
 /**
@@ -89,7 +90,56 @@ const TEAM_PREFERENCES = {
     sets: { 'WK1': 1.25, 'Set 2': 1.15 },
     personality: 'balanced',
   },
+  // The Hundred (UK) franchises
+  BPH: { roles: { 'Batsman': 1.30, 'All-Rounder': 1.25 }, personality: 'aggressive' },
+  LSP: { roles: { 'Bowler': 1.30, 'Wicket-Keeper': 1.20 }, personality: 'balanced' },
+  MOR: { roles: { 'Batsman': 1.35, 'Wicket-Keeper': 1.25 }, personality: 'aggressive' },
+  NSC: { roles: { 'All-Rounder': 1.30, 'Bowler': 1.25 }, personality: 'aggressive' },
+  OIN: { roles: { 'Bowler': 1.35, 'All-Rounder': 1.20 }, personality: 'balanced' },
+  SBR: { roles: { 'Bowler': 1.30, 'Batsman': 1.25 }, personality: 'aggressive' },
+  TRT: { roles: { 'All-Rounder': 1.35, 'Batsman': 1.20 }, personality: 'balanced' },
+  WFR: { roles: { 'Bowler': 1.30, 'Wicket-Keeper': 1.20 }, personality: 'value' },
 };
+
+/**
+ * Computes a stats-driven aggression multiplier for The Hundred players.
+ * Rewards high strike rates, strong batting averages, wicket volume, and tight economy.
+ */
+export function computeHundredStatsMultiplier(player) {
+  const s = player?.stats;
+  if (!s || typeof s !== 'object') return 1.0;
+
+  let bonus = 0;
+  const sr = Number(s.sr) || 0;
+  const avg = Number(s.avg) || 0;
+  const runs = Number(s.runs) || 0;
+  const wickets = Number(s.wickets) || 0;
+  const econ = Number(s.econ) || 0;
+  const matches = Number(s.matches) || 0;
+
+  if (sr >= 150) bonus += 0.18;
+  else if (sr >= 140) bonus += 0.10;
+
+  if (runs > 0) {
+    if (avg >= 35) bonus += 0.14;
+    else if (avg >= 28) bonus += 0.07;
+    if (runs >= 4000) bonus += 0.12;
+    else if (runs >= 2000) bonus += 0.06;
+  }
+
+  if (wickets >= 150) bonus += 0.16;
+  else if (wickets >= 80) bonus += 0.09;
+
+  if (econ > 0) {
+    if (econ <= 7.5) bonus += 0.14;
+    else if (econ <= 8.0) bonus += 0.07;
+  }
+
+  if (runs >= 1500 && wickets >= 50) bonus += 0.10; // dual-threat all-rounder
+  if (matches >= 120) bonus += 0.06;
+
+  return Math.min(1.65, 1.0 + bonus);
+}
 
 /**
  * Computes a bot's max valuation for a player.
@@ -142,7 +192,7 @@ export function computeBotValuation({
     for (const s of squad) {
       const pid = typeof s === 'string' ? s : s?.id;
       const sRole = typeof s === 'object' && s?.role ? s.role : null;
-      const pInfo = sRole ? null : IPL_PLAYERS.find((p) => p.id === pid);
+      const pInfo = sRole ? null : ALL_PLAYERS.find((p) => p.id === pid);
       const role = sRole || pInfo?.role;
       if (role === player.role) {
         roleCount++;
@@ -205,7 +255,8 @@ export function computeBotValuation({
 
   // 8. Final max valuation calculation
   const effectiveBase = set === 'Legends' ? Math.max(basePrice, 1.0) : basePrice;
-  let maxVal = effectiveBase * willingnessFactor * ratingMult * loyaltyMult * roleNeedMult * personalityMult * archetypeMult * urgencyBoost * squadUrgency;
+  const statsMult = set === 'Hundred' ? computeHundredStatsMultiplier(player) : 1.0;
+  let maxVal = effectiveBase * willingnessFactor * ratingMult * statsMult * loyaltyMult * roleNeedMult * personalityMult * archetypeMult * urgencyBoost * squadUrgency;
 
   // Spend cap safeguards
   const maxCapPercent = (archetype === 'star_hunter' || prefs.personality === 'aggressive') ? 0.45
@@ -213,9 +264,10 @@ export function computeBotValuation({
     : 0.35;
   maxVal = Math.min(maxVal, budgetRemaining * maxCapPercent);
 
-  // Reserve budget safety: minimum 0.30 Cr per remaining slot
+  // Reserve budget safety: minimum 0.30 Cr (or £0.01M in Hundred) per remaining slot
+  const slotReserve = (initialBudget || 120) <= 10 ? 0.01 : 0.30;
   if (slotsLeft > 1) {
-    const maxAffordable = Math.max(basePrice, budgetRemaining - (slotsLeft - 1) * 0.30);
+    const maxAffordable = Math.max(basePrice, budgetRemaining - (slotsLeft - 1) * slotReserve);
     maxVal = Math.min(maxVal, maxAffordable);
   }
 
@@ -259,9 +311,10 @@ export function evaluateBotBid({
   if (currentSquad.length >= squadLimit) return null;
 
   // 3. Overseas limit check
-  const isOverseas = isOverseasPlayer(player);
+  const modeHint = player?.set === 'Hundred' ? 'hundred' : null;
+  const isOverseas = isOverseasPlayer(player, modeHint);
   if (isOverseas) {
-    const currentOverseasCount = countOverseas(currentSquad, IPL_PLAYERS);
+    const currentOverseasCount = countOverseas(currentSquad, ALL_PLAYERS, modeHint);
     if (currentOverseasCount >= overseasLimit) return null;
   }
 
@@ -269,7 +322,7 @@ export function evaluateBotBid({
   const slotsRemaining = squadLimit - currentSquad.length;
   const currentRoleCount = currentSquad.reduce((acc, s) => {
     const sRole = typeof s === 'object' && s?.role ? s.role : null;
-    const pInfo = sRole ? null : IPL_PLAYERS.find(p => p.id === (typeof s === 'string' ? s : s.id));
+    const pInfo = sRole ? null : ALL_PLAYERS.find(p => p.id === (typeof s === 'string' ? s : s.id));
     const role = sRole || pInfo?.role;
     return role === player.role ? acc + 1 : acc;
   }, 0);
@@ -285,7 +338,8 @@ export function evaluateBotBid({
 
   // Reserve budget safety: ensure enough average budget for remaining slots
   const remainingAfterBid = budgetRemaining - nextBid;
-  if (slotsRemaining > 1 && (remainingAfterBid / (slotsRemaining - 1)) < 0.30) {
+  const slotReserve = (initialBudget || 120) <= 10 ? 0.01 : 0.30;
+  if (slotsRemaining > 1 && (remainingAfterBid / (slotsRemaining - 1)) < slotReserve) {
     return null; // protect purse for remaining squad slots
   }
 
@@ -305,10 +359,13 @@ export function evaluateBotBid({
   // 9. Graduated willingness — as price climbs toward max, bot gets progressively
   //    less likely to bid (simulates hesitation / second thoughts mid-auction)
   const priceRatio = nextBid / maxValuation; // 0 = cheap, 1 = at max
-  let baseBidChance = priceRatio < 0.50 ? 0.95   // well below max → almost always bid
-    : priceRatio < 0.70 ? 0.82                      // mid-range → usually bid
-    : priceRatio < 0.85 ? 0.65                      // getting pricey → sometimes drop
-    : 0.40;                                          // near ceiling → coin-flip drop-off
+  const isHundred = player.set === 'Hundred';
+  let baseBidChance = isHundred
+    ? (priceRatio < 0.55 ? 0.97 : priceRatio < 0.75 ? 0.88 : priceRatio < 0.90 ? 0.74 : 0.52)
+    : (priceRatio < 0.50 ? 0.95
+      : priceRatio < 0.70 ? 0.82
+      : priceRatio < 0.85 ? 0.65
+      : 0.40);
 
   // Franchise loyalty tenacity: team fights harder near ceiling for their own icon
   const isLoyalFranchise = Boolean(

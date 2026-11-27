@@ -32,7 +32,9 @@ import {
 } from "../lib/auctionServers";
 import { localAuctionReducer, saveLocalSoloRoom, listLocalSoloRooms, deleteLocalSoloRoom } from "../lib/localAuctionEngine";
 import { IPL_PLAYERS } from "../data/players";
-import { TEAMS } from "../data/teams";
+import { TEAMS, getTeamsForMode, findTeamById } from "../data/teams";
+import { ALL_PLAYERS } from "../lib/auctionRules";
+import { formatPurse } from "../lib/auctionDisplay";
 import {
   Zap,
   Loader2,
@@ -98,7 +100,7 @@ const buildLocalHistorySessions = (userId) =>
       const squad = (humanTeam?.squad || [])
         .map((entry) => {
           const pid = typeof entry === "string" ? entry : entry.id;
-          const info = IPL_PLAYERS.find((p) => p.id === pid);
+          const info = ALL_PLAYERS.find((p) => p.id === pid);
           return {
             id: pid,
             name: info?.name || pid,
@@ -155,9 +157,15 @@ const isSessionLocal = (session) =>
     String(session?.roomId || "").startsWith("SOLO-")
   );
 
+const LEAGUE_CONFIG = [
+  { id: "ipl", label: "IPL", sublabel: "10 Teams", defaultMode: "mini" },
+  { id: "hundred", label: "The Hundred", sublabel: "8 UK Teams", badge: "NEW", defaultMode: "hundred" },
+];
+
 const AUCTION_MODE_CONFIG = [
   {
     id: "mini",
+    league: "ipl",
     title: "Mini 2027",
     mobileTitle: "IPL 2027 Mini",
     tag: "OFFICIAL",
@@ -171,6 +179,7 @@ const AUCTION_MODE_CONFIG = [
   },
   {
     id: "mega",
+    league: "ipl",
     title: "Mega",
     mobileTitle: "Mega Auction",
     tag: "FULL SQUAD",
@@ -184,6 +193,7 @@ const AUCTION_MODE_CONFIG = [
   },
   {
     id: "sprint11",
+    league: "ipl",
     title: "Classic",
     mobileTitle: "11-Player Classic",
     tag: "PLAYING XI",
@@ -197,6 +207,7 @@ const AUCTION_MODE_CONFIG = [
   },
   {
     id: "sprint5",
+    league: "ipl",
     title: "Sprint",
     mobileTitle: "5-Player Sprint",
     tag: "BLITZ",
@@ -210,6 +221,7 @@ const AUCTION_MODE_CONFIG = [
   },
   {
     id: "legends",
+    league: "ipl",
     title: "Legends",
     mobileTitle: "All-Time Legends",
     tag: "RETRO",
@@ -221,17 +233,51 @@ const AUCTION_MODE_CONFIG = [
     summarySubtitle: () =>
       "11 Squad Limit • Iconic Hall of Famers • Classic IPL & International Greats",
   },
+  {
+    id: "hundred",
+    league: "hundred",
+    title: "The Hundred",
+    mobileTitle: "The Hundred UK",
+    tag: "UK 100",
+    icon: Shield,
+    format: "16 Players",
+    budget: "£2.05M Cap",
+    badgeLabel: "8 UK Franchises • Max 4 Overseas",
+    summaryTitle: () => "The Hundred Auction • £2.05M Salary Cap",
+    summarySubtitle: () =>
+      "16 Squad Limit • Max 4 Overseas • 8 Official UK Franchises",
+  },
 ];
 
 const LandingPage = () => {
   useDocumentTitle(
-    "CrickAuction - Free IPL 2027 Auction Game & Simulator",
-    "Play the free online IPL 2027 auction game & cricket auction simulator. Host live 10-team multiplayer mock auctions with friends or AI, manage purses, and build your dream XI.",
+    "CrickAuction - IPL 2027 & The Hundred Auction Game | Free Simulator",
+    "Play the free online IPL 2027 & The Hundred auction game and cricket auction simulator. Host live multiplayer mock auctions with friends or AI, manage purses, and build your dream XI.",
   );
 
   const [selectedTeam, setSelectedTeam] = useState("MI");
   const [activeTab, setActiveTab] = useState("new");
-  const [auctionType, setAuctionType] = useState("mini"); 
+  const [auctionType, setAuctionType] = useState("mini");
+  const activeLeague = useMemo(
+    () => AUCTION_MODE_CONFIG.find((m) => m.id === auctionType)?.league || "ipl",
+    [auctionType],
+  );
+  const displayedTeams = useMemo(() => getTeamsForMode(auctionType), [auctionType]);
+  const displayedModes = useMemo(
+    () => AUCTION_MODE_CONFIG.filter((m) => m.league === activeLeague),
+    [activeLeague],
+  );
+  const handleSelectMode = (modeId) => {
+    setAuctionType(modeId);
+    const nextTeams = getTeamsForMode(modeId);
+    if (!nextTeams.some((t) => t.id === selectedTeam)) {
+      setSelectedTeam(nextTeams[0].id);
+    }
+  };
+  const handleSelectLeague = (leagueId) => {
+    const cfg = LEAGUE_CONFIG.find((l) => l.id === leagueId);
+    if (cfg) handleSelectMode(cfg.defaultMode);
+  }; 
   const miniTeamState = useMemo(() => {
     return calculateCustomTeamState(selectedTeam);
   }, [selectedTeam]); 
@@ -463,7 +509,7 @@ const LandingPage = () => {
             .map((s) => {
               const pid = typeof s === "string" ? s : s.id;
               const bid = typeof s === "string" ? null : (s.bid ?? null);
-              const playerInfo = IPL_PLAYERS.find((p) => p.id === pid);
+              const playerInfo = ALL_PLAYERS.find((p) => p.id === pid);
               return {
                 id: pid,
                 name: playerInfo?.name || pid,
@@ -1029,19 +1075,58 @@ const LandingPage = () => {
                 onSubmit={playSolo ? handleStartSoloAuction : handleFormSubmit}
                 className="space-y-3.5 sm:space-y-4"
               >
-                {/* 1. Franchise Selector: 2 Rows of 5 on all screen sizes */}
+                {/* 0. League Switcher: Immediate visibility for IPL vs The Hundred (and future leagues) */}
+                <div className="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-white/[0.02] border border-white/5">
+                  {LEAGUE_CONFIG.map((lg) => {
+                    const isActive = activeLeague === lg.id;
+                    return (
+                      <button
+                        key={lg.id}
+                        type="button"
+                        onClick={() => handleSelectLeague(lg.id)}
+                        className={`relative flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg text-left transition-all cursor-pointer border ${
+                          isActive
+                            ? "bg-white/[0.12] border-white/25 text-white shadow-[0_4px_16px_rgba(0,0,0,0.5)]"
+                            : "border-transparent text-gray-400 hover:bg-white/[0.05] hover:text-white"
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <div className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider leading-tight truncate">
+                            {lg.label}
+                          </div>
+                          <div className={`text-[8px] font-bold uppercase tracking-tight ${isActive ? "text-slate-300" : "text-gray-500"}`}>
+                            {lg.sublabel}
+                          </div>
+                        </div>
+                        {lg.badge && (
+                          <span
+                            className={`text-[7.5px] font-pixel uppercase tracking-widest px-1.5 py-0.5 rounded-full shrink-0 border ${
+                              isActive
+                                ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/40"
+                                : "bg-emerald-500/10 text-emerald-300 border-emerald-500/25"
+                            }`}
+                          >
+                            {lg.badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* 1. Franchise Selector: 2 Rows of 5 (IPL) or 2 Rows of 4 (The Hundred) */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5 ml-0.5">
                     <h2 className="text-[10px] sm:text-[11px] font-black uppercase text-gray-400 tracking-wider">
                       Select Franchise
                     </h2>
                     <span className="text-[9px] font-mono text-gray-500 uppercase">
-                      {TEAMS.find((t) => t.id === selectedTeam)?.name || selectedTeam}
+                      {findTeamById(selectedTeam)?.name || selectedTeam}
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
-                    {TEAMS.map((t) => {
+                  <div className={`grid ${displayedTeams.length === 8 ? "grid-cols-4" : "grid-cols-5"} gap-1.5 sm:gap-2`}>
+                    {displayedTeams.map((t) => {
                       const isSelected = selectedTeam === t.id;
                       return (
                         <button
@@ -1102,8 +1187,8 @@ const LandingPage = () => {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 sm:gap-2">
-                    {AUCTION_MODE_CONFIG.map((m) => {
+                  <div className={`grid ${displayedModes.length === 1 ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-5"} gap-1.5 sm:gap-2`}>
+                    {displayedModes.map((m) => {
                       const isSelected = auctionType === m.id;
                       const IconComponent = m.icon;
 
@@ -1111,7 +1196,7 @@ const LandingPage = () => {
                         <button
                           key={m.id}
                           type="button"
-                          onClick={() => setAuctionType(m.id)}
+                          onClick={() => handleSelectMode(m.id)}
                           className={`relative overflow-hidden group/mode rounded-xl p-2 sm:p-2.5 transition-all duration-200 text-left cursor-pointer active:scale-[0.98] ${
                             isSelected
                               ? "bg-white/[0.12] border border-white/25 scale-[1.02] shadow-[0_4px_16px_rgba(0,0,0,0.5)]"
@@ -1168,7 +1253,7 @@ const LandingPage = () => {
                         Solo vs AI Bots
                       </h3>
                       <p className="text-[8px] sm:text-[8.5px] text-gray-400 truncate">
-                        {playSolo ? "Runs 100% on device • No room code" : "Play vs 9 AI franchises offline"}
+                        {playSolo ? "Runs 100% on device • No room code" : `Play vs ${Math.max(1, displayedTeams.length - 1)} AI franchises offline`}
                       </p>
                     </div>
                     <button
@@ -1352,6 +1437,7 @@ const LandingPage = () => {
                         { id: "sprint11", label: "11-Classic" },
                         { id: "sprint5", label: "5-Sprint" },
                         { id: "legends", label: "Legends" },
+                        { id: "hundred", label: "The Hundred" },
                       ].map((mode) => (
                         <button
                           key={mode.id}
@@ -1415,6 +1501,8 @@ const LandingPage = () => {
                                 <span className="text-gray-400 truncate">
                                   {room.type === "legends"
                                     ? "Legends"
+                                    : room.type === "hundred"
+                                      ? "The Hundred"
                                     : room.type === "mini"
                                     ? "IPL 2027 Mini"
                                     : room.type === "sprint5"
@@ -1608,15 +1696,13 @@ const LandingPage = () => {
                     {/* Session List */}
                     <div className="space-y-2 sm:space-y-3 max-h-[330px] sm:max-h-[400px] overflow-y-auto custom-scrollbar pr-0.5 sm:pr-1">
                       {filteredHistory.map((session) => {
-                        const teamMeta = TEAMS.find(
-                          (t) => t.id === session.teamId,
-                        );
+                        const teamMeta = findTeamById(session.teamId);
                         const isExpanded = expandedSession === session.id;
                         const isCompleted = session.status === "completed";
                         const isActive = session.status === "active";
                         const overseasCount = countOverseas(
                           session.squad,
-                          IPL_PLAYERS,
+                          ALL_PLAYERS,
                         );
 
                         return (
@@ -1685,7 +1771,7 @@ const LandingPage = () => {
                                   <span className="text-[9px] sm:text-xs font-black italic text-yellow-500 block">
                                     {session.spent === null
                                       ? "—"
-                                      : `₹${formatCrores(session.spent, 1)} Cr`}
+                                      : formatPurse(session.spent, session.mode, 1)}
                                   </span>
                                   <span className="block text-[7px] sm:text-[8px] font-bold text-gray-400">
                                     {session.squad.length} players
@@ -1726,7 +1812,7 @@ const LandingPage = () => {
                                           <span className="text-green-400">
                                             {session.budgetRemaining == null
                                               ? "—"
-                                              : `₹${formatCrores(session.budgetRemaining)} Cr`}
+                                              : formatPurse(session.budgetRemaining, session.mode)}
                                           </span>
                                         </span>
                                         <span className="text-gray-400">
@@ -1799,7 +1885,7 @@ const LandingPage = () => {
                                                   <span className="text-[8px] sm:text-[10px] font-black italic text-yellow-500 shrink-0">
                                                     {p?.bid == null
                                                       ? "—"
-                                                      : `₹${formatCrores(p.bid)} Cr`}
+                                                      : formatPurse(p.bid, session.mode)}
                                                   </span>
                                                 </div>
                                               ))}

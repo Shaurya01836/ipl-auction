@@ -29,10 +29,15 @@ export const r2 = (value) => {
 
 /**
  * Canonical overseas rule for Crick Auction:
- * only the exact country code "IND" is Indian. Missing, empty, or any other
- * country value is overseas.
+ * - For The Hundred (`hundred` mode / `set === 'Hundred'`), only "ENG" is domestic.
+ * - For all IPL modes, only "IND" is domestic.
+ * Missing, empty, or any other country value is overseas.
  */
-export const isOverseasPlayer = (player) => player?.country !== 'IND';
+export const isOverseasPlayer = (player, auctionType = null) => {
+  const domesticCountry =
+    auctionType === 'hundred' || player?.set === 'Hundred' ? 'ENG' : 'IND';
+  return player?.country !== domesticCountry;
+};
 
 const lookupPlayer = (id, playerIndex) => {
   if (!playerIndex) return null;
@@ -64,12 +69,12 @@ export const resolveSquadPlayer = (entry, playerIndex) => {
  * Count overseas players in a saved squad. Unresolvable entries have no
  * country, so the canonical rule counts them as overseas.
  */
-export const countOverseas = (squad, playerIndex) => {
+export const countOverseas = (squad, playerIndex, auctionType = null) => {
   if (!Array.isArray(squad)) return 0;
 
   return squad.reduce((count, entry) => {
     if (entry === null || entry === undefined) return count;
-    return count + (isOverseasPlayer(resolveSquadPlayer(entry, playerIndex)) ? 1 : 0);
+    return count + (isOverseasPlayer(resolveSquadPlayer(entry, playerIndex), auctionType) ? 1 : 0);
   }, 0);
 };
 
@@ -80,6 +85,16 @@ export const countOverseas = (squad, playerIndex) => {
 export const formatCrores = (value, digits = 2) => {
   const numeric = toFiniteNumber(value, null);
   return numeric === null ? '—' : numeric.toFixed(digits);
+};
+
+/**
+ * Format a purse/bid value with the appropriate currency unit for the mode
+ * (£M for The Hundred, ₹ Cr for IPL modes).
+ */
+export const formatPurse = (value, auctionType = null, digits = 2) => {
+  const formatted = formatCrores(value, digits);
+  if (formatted === '—') return '—';
+  return auctionType === 'hundred' ? `£${formatted}M` : `₹${formatted} Cr`;
 };
 
 /**

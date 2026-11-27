@@ -24,10 +24,10 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { TEAMS } from '../data/teams';
+import { TEAMS, getTeamsForMode, findTeamById } from '../data/teams';
 import { IPL_2027_RETENTIONS } from '../data/retentions';
 import { countAuctionTeams, MIN_TEAMS_TO_START } from '../lib/auctionRules';
-import { formatCrores, toFiniteNumber } from '../lib/auctionDisplay';
+import { formatCrores, formatPurse, toFiniteNumber } from '../lib/auctionDisplay';
 import TextChat from '../components/TextChat';
 import Footer from '../components/Footer';
 import PageLoader from '../components/PageLoader';
@@ -528,7 +528,7 @@ const Lobby = () => {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5 sm:gap-4">
-            {TEAMS.map((team) => {
+            {getTeamsForMode(currentAuction?.auctionType).map((team) => {
               const isTaken = teamAssignments[team.id];
               const miniMeta = currentAuction?.auctionType === 'mini' ? IPL_2027_RETENTIONS[team.id] : null;
               return (
@@ -663,6 +663,7 @@ const Lobby = () => {
                     {currentAuction?.auctionType === 'sprint5' ? '5-Player Sprint' :
                       currentAuction?.auctionType === 'sprint11' ? '11-Player Classic' :
                       currentAuction?.auctionType === 'legends' ? 'All-Time Legends XI' :
+                      currentAuction?.auctionType === 'hundred' ? 'The Hundred (UK)' :
                       currentAuction?.auctionType === 'mini' ? 'TATA IPL 2027 Mini' :
                         'Mega Auction'}
                   </span>
@@ -676,7 +677,7 @@ const Lobby = () => {
                       ? `₹${formatCrores(IPL_2027_RETENTIONS[currentUserPlayer.team].remainingPurse, 1)} Cr`
                       : currentAuction?.auctionType === 'mini'
                         ? '₹8.75 - 47.45 Cr'
-                        : `₹${formatCrores(toFiniteNumber(currentAuction?.settings?.budget, 120), 1)} Cr`}
+                        : formatPurse(toFiniteNumber(currentAuction?.settings?.budget, 120), currentAuction?.auctionType, currentAuction?.auctionType === 'hundred' ? 2 : 1)}
                   </span>
                 </div>
                 <div className="p-3 bg-white/[0.02] rounded-xl border border-white/5">
@@ -709,7 +710,7 @@ const Lobby = () => {
               </div>
 
               <div className="grid grid-cols-5 gap-2 sm:gap-2.5">
-                {TEAMS.map((team) => {
+                {getTeamsForMode(currentAuction?.auctionType).map((team) => {
                   const isTaken = teamAssignments[team.id];
                   const isMine = currentUserPlayer?.team === team.id;
                   const miniMeta = currentAuction?.auctionType === 'mini' ? IPL_2027_RETENTIONS[team.id] : null;
@@ -872,7 +873,7 @@ const Lobby = () => {
                     className="space-y-3 sm:space-y-3.5"
                   >
                     {players.map((player, idx) => {
-                      const playerTeam = TEAMS.find(t => t.id === player.team);
+                      const playerTeam = findTeamById(player.team);
                       return (
                         <motion.div
                           key={`${player.id}-${idx}`}

@@ -1,8 +1,8 @@
 import { IPL_PLAYERS } from '../data/players.js';
-import { TEAMS, pickRandomBotName, getTeamBotName } from '../data/teams.js';
+import { TEAMS, pickRandomBotName, getTeamBotName, getTeamsForMode, findTeamById } from '../data/teams.js';
 import { calculateCustomTeamState } from '../data/retentions.js';
-import { toFiniteNumber, countOverseas, isOverseasPlayer, r2 } from './auctionDisplay.js';
-import { getNextBidAmount, generatePlayerOrder } from './auctionRules.js';
+import { toFiniteNumber, countOverseas, isOverseasPlayer, formatPurse, r2 } from './auctionDisplay.js';
+import { ALL_PLAYERS, getPlayerByOrderIndex, getNextBidAmount, generatePlayerOrder } from './auctionRules.js';
 import { evaluateBotBid } from './botEngine.js';
 import { simulateBotLot, simulateRemainingAuction } from './botSimulation.js';
 
@@ -81,13 +81,15 @@ export function localAuctionReducer(state, action) {
       const isSprint11 = auctionType === 'sprint11';
       const isLegends = auctionType === 'legends';
       const isMini = auctionType === 'mini';
+      const isHundred = auctionType === 'hundred';
 
-      const budget = isSprint5 ? 60.0 : isSprint11 ? 90.0 : isLegends ? 100.0 : isMini ? 130.0 : 120.0;
-      const squadLimit = isSprint5 ? 5 : (isSprint11 || isLegends) ? 11 : 25;
-      const overseasLimit = isSprint5 ? 2 : (isSprint11 || isLegends) ? 4 : 8;
+      const modeTeams = getTeamsForMode(auctionType);
+      const budget = isHundred ? 2.05 : isSprint5 ? 60.0 : isSprint11 ? 90.0 : isLegends ? 100.0 : isMini ? 130.0 : 120.0;
+      const squadLimit = isHundred ? 16 : isSprint5 ? 5 : (isSprint11 || isLegends) ? 11 : 25;
+      const overseasLimit = isHundred ? 4 : isSprint5 ? 2 : (isSprint11 || isLegends) ? 4 : 8;
 
       const humanTeamId = humanUser.team;
-      const humanTeamObj = TEAMS.find((t) => t.id === humanTeamId) || TEAMS[0];
+      const humanTeamObj = modeTeams.find((t) => t.id === humanTeamId) || modeTeams[0];
 
       const humanState = isMini
         ? calculateCustomTeamState(humanTeamId, action.customRetainedIds || action.customRetentions?.[humanTeamId])
@@ -123,12 +125,12 @@ export function localAuctionReducer(state, action) {
       const ARCHETYPES = ['star_hunter', 'moneyball', 'bowling_first', 'balanced'];
       const usedBotNames = [humanUser.displayName || 'Manager'];
       const initRng = createSeededRng(seed);
-      TEAMS.forEach((t, idx) => {
+      modeTeams.forEach((t, idx) => {
         if (t.id === humanTeamId) return;
         const botId = `bot_${t.id}`;
         const botState = isMini ? calculateCustomTeamState(t.id) : null;
         const botArchetype = ARCHETYPES[(idx + (Math.abs(Number(seed)) || 0)) % ARCHETYPES.length];
-        const botName = pickRandomBotName(usedBotNames, initRng);
+        const botName = pickRandomBotName(usedBotNames, initRng, auctionType);
         usedBotNames.push(botName);
 
         players.push({
@@ -148,6 +150,7 @@ export function localAuctionReducer(state, action) {
           userId: botId,
           teamId: t.id,
           teamName: t.name,
+          botName,
           archetype: botArchetype,
           budgetRemaining: botState ? botState.remainingPurse : budget,
           spent: botState ? botState.totalSpent : 0,
@@ -159,7 +162,7 @@ export function localAuctionReducer(state, action) {
       const userReleased = humanState ? humanState.releasedPlayers.map(p => p.id) : [];
       const playerOrder = generatePlayerOrder(auctionType, { userReleasedPlayerIds: userReleased });
 
-      const firstPlayer = IPL_PLAYERS[playerOrder[0]] || IPL_PLAYERS[0];
+      const firstPlayer = getPlayerByOrderIndex(playerOrder[0], auctionType) || getPlayerByOrderIndex(0, auctionType);
       const now = action.now || Date.now();
 
       return {
@@ -222,7 +225,7 @@ export function localAuctionReducer(state, action) {
       const bidderTeam = state.roomTeams.find((t) => t.userId === bidderId);
       if (!bidderTeam) return state;
 
-      const player = IPL_PLAYERS.find((p) => p.id === live.playerId);
+      const player = ALL_PLAYERS.find((p) => p.id === live.playerId);
       if (!player) return state;
 
       // Don't bid against self
@@ -242,23 +245,24 @@ export function localAuctionReducer(state, action) {
       const slotsRemaining = state.squadLimit - currentSquad.length;
       if (slotsRemaining <= 0) return state;
 
-      // Reserve budget check for human
+      // Reserve budget safety for human
       const slotsAfterThis = Math.max(0, slotsRemaining - 1);
-      const minReserve = slotsAfterThis * 0.30;
       const budgetRemaining = toFiniteNumber(bidderTeam.budgetRemaining, state.settings?.budget || 120);
+      const slotReserve = (state.auctionType === 'hundred' || toFiniteNumber(state.settings?.budget, 120) <= 10) ? 0.01 : 0.30;
+      const minReserve = slotsAfterThis * slotReserve;
 
       if (budgetRemaining < nextBid || (budgetRemaining - nextBid) < minReserve) {
         return state;
       }
 
       // Overseas check
-      if (isOverseasPlayer(player)) {
-        const count = countOverseas(currentSquad, IPL_PLAYERS);
+      if (isOverseasPlayer(player, state.auctionType)) {
+        const count = countOverseas(currentSquad, ALL_PLAYERS, state.auctionType);
         if (count >= state.overseasLimit) return state;
       }
 
       const timerSec = state.settings?.bidTimer || 10;
-      const teamObj = TEAMS.find((t) => t.id === bidderTeam.teamId);
+      const teamObj = findTeamById(bidderTeam.teamId);
       const bidderPlayer = (state.players || []).find((p) => p.id === bidderId);
       const bidderName = bidderTeam.userId.startsWith('bot_')
         ? (bidderPlayer?.name || getTeamBotName(teamObj))
@@ -281,7 +285,7 @@ export function localAuctionReducer(state, action) {
           ...state.messages.slice(-50),
           {
             id: `bid_${now}_${Math.random().toString(36).slice(2, 7)}`,
-            text: `New bid: ₹${nextBid.toFixed(2)} Cr by ${bidderName}`,
+            text: `New bid: ${formatPurse(nextBid, state.auctionType)} by ${bidderName}`,
             type: 'log',
             timestamp: now,
           },
@@ -295,7 +299,7 @@ export function localAuctionReducer(state, action) {
       if (!live || live.status !== 'bidding') return state;
 
       const { now = Date.now() } = action;
-      const player = IPL_PLAYERS.find((p) => p.id === live.playerId);
+      const player = ALL_PLAYERS.find((p) => p.id === live.playerId);
       if (!player) return state;
 
       // Filter eligible bots
@@ -320,7 +324,7 @@ export function localAuctionReducer(state, action) {
         });
 
         if (decision && decision.shouldBid) {
-          const teamObj = TEAMS.find((t) => t.id === decision.teamId);
+          const teamObj = findTeamById(decision.teamId);
           const botPlayer = (state.players || []).find((p) => p.id === decision.botUserId);
           const botName = botPlayer?.name || getTeamBotName(teamObj);
           const timerSec = state.settings?.bidTimer || 10;
@@ -343,7 +347,7 @@ export function localAuctionReducer(state, action) {
               ...state.messages.slice(-50),
               {
                 id: `bid_bot_${now}_${Math.random().toString(36).slice(2, 7)}`,
-                text: `New bid: ₹${decision.nextBid.toFixed(2)} Cr by ${botName}`,
+                text: `New bid: ${formatPurse(decision.nextBid, state.auctionType)} by ${botName}`,
                 type: 'log',
                 timestamp: now,
               },
@@ -367,7 +371,7 @@ export function localAuctionReducer(state, action) {
       if (live.status !== 'bidding') return state;
 
       const { now = Date.now() } = action;
-      const player = IPL_PLAYERS.find((p) => p.id === live.playerId);
+      const player = ALL_PLAYERS.find((p) => p.id === live.playerId);
       if (!player) return state;
 
       const isSold = Boolean(live.highBidderId && live.currentBid > 0);
@@ -419,7 +423,7 @@ export function localAuctionReducer(state, action) {
       let nextIndex = state.currentPlayerIndex + 1;
       while (nextIndex < state.playerOrder.length) {
         const candidateIdx = state.playerOrder[nextIndex];
-        const candidate = IPL_PLAYERS[candidateIdx];
+        const candidate = getPlayerByOrderIndex(candidateIdx, state.auctionType);
         if (candidate && !soldIds.has(candidate.id)) {
           break;
         }
@@ -429,7 +433,7 @@ export function localAuctionReducer(state, action) {
       const allDone = nextIndex >= state.playerOrder.length;
 
       const resultMsg = isSold
-        ? `${player.name} SOLD to ${live.highBidderName} for ₹${live.currentBid.toFixed(2)} Cr`
+        ? `${player.name} SOLD to ${live.highBidderName} for ${formatPurse(live.currentBid, state.auctionType)}`
         : `${player.name} UNSOLD`;
 
       const newMessages = [
@@ -497,7 +501,7 @@ export function localAuctionReducer(state, action) {
       }
 
       const nextPlayerId = state.playerOrder[nextIndex];
-      const nextPlayer = IPL_PLAYERS[nextPlayerId];
+      const nextPlayer = getPlayerByOrderIndex(nextPlayerId, state.auctionType);
       if (!nextPlayer) {
         // Safe completion if no player exists
         return {
@@ -548,7 +552,7 @@ export function localAuctionReducer(state, action) {
       let nextIndex = state.currentPlayerIndex + 1;
       while (nextIndex < state.playerOrder.length) {
         const candidateIdx = state.playerOrder[nextIndex];
-        const candidate = IPL_PLAYERS[candidateIdx];
+        const candidate = getPlayerByOrderIndex(candidateIdx, state.auctionType);
         if (candidate && !soldIds.has(candidate.id)) {
           break;
         }
@@ -581,7 +585,7 @@ export function localAuctionReducer(state, action) {
       }
 
       const nextPlayerId = state.playerOrder[nextIndex];
-      const nextPlayer = IPL_PLAYERS[nextPlayerId];
+      const nextPlayer = getPlayerByOrderIndex(nextPlayerId, state.auctionType);
       if (!nextPlayer) {
         // Safe completion if no player exists
         return {
@@ -664,10 +668,15 @@ export function localAuctionReducer(state, action) {
       if (live.status !== 'bidding') return state;
 
       const { now = Date.now() } = action;
-      const player = IPL_PLAYERS.find((p) => p.id === live.playerId);
+      const player = ALL_PLAYERS.find((p) => p.id === live.playerId);
       if (!player) return state;
 
-      const botTeams = state.roomTeams.filter((t) => t.userId !== state.hostId);
+      const botTeams = state.roomTeams
+        .filter((t) => t.userId !== state.hostId)
+        .map((t) => ({
+          ...t,
+          botName: t.botName || state.players?.find((p) => p.id === t.userId)?.name,
+        }));
       const rng = createSeededRng(state.rngSeed + now);
 
       const simRes = simulateBotLot({

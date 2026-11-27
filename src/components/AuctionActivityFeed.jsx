@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { IPL_PLAYERS } from '../data/players';
-import { TEAMS } from '../data/teams';
+import { HUNDRED_PLAYERS } from '../data/hundredPlayers';
+import { TEAMS, HUNDRED_TEAMS } from '../data/teams';
+import { formatPurse } from '../lib/auctionDisplay';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SingleAdUnit } from './AdSlot';
 
@@ -18,22 +20,27 @@ const getShortName = (name) => {
 };
 
 const generateMockNotification = (existingIds = new Set()) => {
+  const isHundred = Math.random() < 0.35;
+  const playerPool = isHundred ? HUNDRED_PLAYERS : IPL_PLAYERS;
+  const teamPool = isHundred ? HUNDRED_TEAMS : TEAMS;
+
   // 1. Pick a random player
-  let player = IPL_PLAYERS[Math.floor(Math.random() * IPL_PLAYERS.length)];
+  let player = playerPool[Math.floor(Math.random() * playerPool.length)];
   let attempts = 0;
   while (existingIds.has(player.id) && attempts < 5) {
-    player = IPL_PLAYERS[Math.floor(Math.random() * IPL_PLAYERS.length)];
+    player = playerPool[Math.floor(Math.random() * playerPool.length)];
     attempts++;
   }
 
   // 2. Pick a random team
-  const team = TEAMS[Math.floor(Math.random() * TEAMS.length)];
+  const team = teamPool[Math.floor(Math.random() * teamPool.length)];
 
-
-  // 4. Generate realistic pricing
-  const base = player.basePrice || 2.0;
+  // 3. Generate realistic pricing
+  const base = player.basePrice || (isHundred ? 0.05 : 2.0);
   let multiplier = 1.0;
-  if (base >= 2.0) {
+  if (isHundred) {
+    multiplier = 1.1 + Math.random() * 2.5;
+  } else if (base >= 2.0) {
     multiplier = 1.2 + Math.random() * 8.8; // up to 20 Cr
   } else {
     multiplier = 1.0 + Math.random() * 4.0; // up to 5-10 Cr
@@ -44,7 +51,8 @@ const generateMockNotification = (existingIds = new Set()) => {
     id: Math.random().toString(36).substring(2, 9),
     player,
     team,
-    price: finalPrice
+    price: finalPrice,
+    mode: isHundred ? 'hundred' : 'mega',
   };
 };
 
@@ -168,7 +176,7 @@ export default function AuctionActivityFeed({ activeCount = 0, stats = null }) {
 
                   {/* Right Column: Price */}
                   <div className="text-right flex-shrink-0 text-white font-black italic tracking-wide group-hover:text-yellow-400 transition-colors">
-                    ₹{notif.price.toFixed(2)} Cr
+                    {formatPurse(notif.price, notif.mode)}
                   </div>
                 </div>
               </div>

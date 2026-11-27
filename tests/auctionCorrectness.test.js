@@ -8,7 +8,7 @@ import {
   transactSale,
   transactTeamSale,
 } from '../src/lib/auctionTransactions.js';
-import { normalizeSquad } from '../src/lib/auctionRules.js';
+import { getNextBidAmount, normalizeSquad } from '../src/lib/auctionRules.js';
 
 // Production live-bid transaction, with the same inputs the old local
 // simulation used so these tests now guard the shipped function.
@@ -868,4 +868,35 @@ test('quick jump bids: transactBid accepts valid targetBid, rejects sub-minimum 
     targetBid: 10.0,
   });
   assert.equal(overBudgetJump, undefined, 'Jump bid exceeding budget must abort');
+});
+
+test('The Hundred: transactBid uses Hundred £0.05M increments above £0.20M', () => {
+  const lot = {
+    status: 'bidding',
+    playerId: 'h_001',
+    currentBid: 0.45,
+    highBidderId: 'u1',
+    timerEndsAt: 10000,
+  };
+  const next = transactBid(lot, {
+    userId: 'u2',
+    userName: 'Oliver',
+    teamId: 'LSP',
+    playerId: 'h_001',
+    now: 5000,
+    timerMs: 10000,
+    budget: 2.05,
+    basePrice: 0.15,
+    playerSet: 'Hundred',
+    auctionType: 'hundred',
+    targetBid: 0.50,
+  });
+  assert.equal(next.currentBid, 0.50);
+  assert.equal(next.highBidderId, 'u2');
+
+  // Verify tiered £2.05M-scaled increments: +0.01 (<0.10), +0.02 (0.10..0.29), +0.05 (>=0.30)
+  const hp = { basePrice: 0.01, set: 'Hundred' };
+  assert.equal(getNextBidAmount(hp, 0.04), 0.05);
+  assert.equal(getNextBidAmount(hp, 0.14), 0.16);
+  assert.equal(getNextBidAmount(hp, 0.35), 0.40);
 });

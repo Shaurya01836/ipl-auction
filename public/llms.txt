@@ -1,6 +1,6 @@
 # CrickAuction
 
-> Free, real-time IPL 2027 auction game and cricket auction simulator. Play solo against 9 AI coaches or host live 10-team multiplayer mock auctions with friends in your browser.
+> Free, real-time IPL 2027 and The Hundred (UK) cricket auction game and simulator. Play solo against AI coaches or host live multiplayer mock auctions with friends in your browser.
 
 CrickAuction is an independent, fan-made web application for Indian Premier League (IPL) auction gameplay. Players pick a franchise, manage their purse and overseas cap, bid in real time, and build a championship T20 squad — with zero downloads and 100% free access.
 
@@ -18,6 +18,7 @@ CrickAuction is an independent, fan-made web application for Indian Premier Leag
 - **Mega Auction**: Full 25-player squad build with ₹120 Cr budget and max 8 overseas players.
 - **11-Player Classic**: ₹90 Cr budget, Playing XI format with max 4 overseas players.
 - **5-Player Sprint**: ₹60 Cr fast blitz format.
+- **The Hundred (UK) Auction**: 8 official UK franchises (Birmingham Phoenix, London Spirit, Manchester Originals, Northern Superchargers, Oval Invincibles, Southern Brave, Trent Rockets, Welsh Fire), £2.05M salary cap, 16-player squad limit, max 4 overseas players, and 160+ players.
 - **All-Time Legends**: ₹100 Cr Hall of Fame retro pool.
 - **Solo vs 9 AI Coaches**: Instant client-side auction against smart AI bots with distinct bidding archetypes, plus fast-forward simulation.
 - **Multiplayer War Rooms**: Public or private room-code lobbies (up to 10 human managers + optional AI bots to fill empty franchises).
