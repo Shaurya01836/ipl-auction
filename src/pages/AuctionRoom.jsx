@@ -820,7 +820,16 @@ const AuctionRoom = () => {
                'RR': ['#EA1A85', '#004B8D', '#254AA5'],
                'SRH': ['#FF8228', '#000000', '#F26522'],
                'GT': ['#1B2133', '#C1AA77', '#0B132B'],
-               'LSG': ['#0057E7', '#D11D55', '#01153E']
+               'LSG': ['#0057E7', '#D11D55', '#01153E'],
+               // The Hundred (UK) franchises
+               'BPH': ['#F97316', '#09090B', '#FDBA74'],
+               'LSP': ['#002BFF', '#FFFFFF', '#60A5FA'],
+               'MOR': ['#09090B', '#FFFFFF', '#94A3B8'],
+               'NSC': ['#3B0764', '#F43F5E', '#FFFFFF'],
+               'OIN': ['#00F59B', '#09090B', '#34D399'],
+               'SBR': ['#B8D91C', '#09090B', '#ECFCCB'],
+               'TRT': ['#FACC15', '#EA580C', '#09090B'],
+               'WFR': ['#FF2A85', '#09090B', '#F9A8D4'],
             };
             const colors = teamId && colorMap[teamId] ? colorMap[teamId] : ['#FFD700', '#FFA500', '#FF4500'];
 

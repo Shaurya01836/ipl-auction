@@ -1,7 +1,7 @@
 import { IPL_PLAYERS } from '../data/players.js';
 import { TEAMS, pickRandomBotName, getTeamBotName, getTeamsForMode, findTeamById } from '../data/teams.js';
 import { calculateCustomTeamState } from '../data/retentions.js';
-import { toFiniteNumber, countOverseas, isOverseasPlayer, formatPurse, r2 } from './auctionDisplay.js';
+import { toFiniteNumber, countOverseas, isOverseasPlayer, formatPurse, r2, r4 } from './auctionDisplay.js';
 import { ALL_PLAYERS, getPlayerByOrderIndex, getNextBidAmount, generatePlayerOrder } from './auctionRules.js';
 import { evaluateBotBid } from './botEngine.js';
 import { simulateBotLot, simulateRemainingAuction } from './botSimulation.js';
@@ -238,7 +238,8 @@ export function localAuctionReducer(state, action) {
         : null;
       if (requestedBid != null && requestedBid < minNextBid) return state;
 
-      const nextBid = requestedBid != null ? r2(requestedBid) : minNextBid;
+      const isHundredLot = state.auctionType === 'hundred' || player.set === 'Hundred';
+      const nextBid = requestedBid != null ? (isHundredLot ? r4(requestedBid) : r2(requestedBid)) : minNextBid;
 
       // Validate budget
       const currentSquad = bidderTeam.squad || [];
@@ -248,7 +249,7 @@ export function localAuctionReducer(state, action) {
       // Reserve budget safety for human
       const slotsAfterThis = Math.max(0, slotsRemaining - 1);
       const budgetRemaining = toFiniteNumber(bidderTeam.budgetRemaining, state.settings?.budget || 120);
-      const slotReserve = (state.auctionType === 'hundred' || toFiniteNumber(state.settings?.budget, 120) <= 10) ? 0.01 : 0.30;
+      const slotReserve = (isHundredLot || toFiniteNumber(state.settings?.budget, 120) <= 10) ? 0.031 : 0.30;
       const minReserve = slotsAfterThis * slotReserve;
 
       if (budgetRemaining < nextBid || (budgetRemaining - nextBid) < minReserve) {

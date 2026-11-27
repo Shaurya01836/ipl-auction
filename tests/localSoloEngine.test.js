@@ -622,6 +622,6 @@ test('localAuctionReducer: INIT_AUCTION supports The Hundred UK mode (8 teams, Â
     bidderId: 'human_1',
     now: 1001000,
   });
-  assert.equal(afterBid.currentAuction.currentBid, 0.50);
+  assert.equal(afterBid.currentAuction.currentBid, 0.46);
   assert.equal(afterBid.currentAuction.highBidderId, 'human_1');
 });

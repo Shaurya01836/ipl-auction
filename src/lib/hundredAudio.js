@@ -33,8 +33,8 @@ export function playHundredCelebration(audioCtxRef, teamId = '') {
     const activeNodes = [];
     const offset = TEAM_ROOT_SEMITONES[String(teamId || '').toLowerCase()] ?? 0;
     const rootMidi = 60 + offset;
-    const now = ctx.currentTime + 0.03;
-    const beat = 0.21; // ~142 BPM stadium energy
+    const now = ctx.currentTime + 0.02;
+    const beat = 0.16; // Fast, punchy UK stadium broadcast tempo (~187 eighth-note grid)
 
     // Master bus: Compressor -> Master Gain -> Destination
     const compressor = ctx.createDynamicsCompressor();
@@ -134,44 +134,46 @@ export function playHundredCelebration(audioCtxRef, teamId = '') {
       activeNodes.push(sub);
     };
 
-    // 2. Opening cinematic sub-drop + crash (hammer-down impact)
+    // 2. Opening cinematic sub-drop + crash + instant stadium power chord
     const impact = ctx.createOscillator();
     const impactGain = ctx.createGain();
     impact.type = 'sine';
-    impact.frequency.setValueAtTime(130, now);
-    impact.frequency.exponentialRampToValueAtTime(34, now + 0.55);
-    impactGain.gain.setValueAtTime(0.75, now);
-    impactGain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+    impact.frequency.setValueAtTime(140, now);
+    impact.frequency.exponentialRampToValueAtTime(36, now + 0.42);
+    impactGain.gain.setValueAtTime(0.8, now);
+    impactGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
     impact.connect(impactGain);
     impactGain.connect(compressor);
     impact.start(now);
-    impact.stop(now + 0.68);
+    impact.stop(now + 0.52);
     activeNodes.push(impact);
 
-    triggerNoise(now, 1.1, 'highpass', 2200, 0.28);
+    triggerNoise(now, 0.9, 'highpass', 2400, 0.30);
+    for (const interval of [0, 7, 12]) {
+      triggerSupersaw(now, rootMidi + interval, 0.28, 0.16);
+    }
 
-    // 3. Heroic rising stadium brass melody (octave leap climax!)
+    // 3. Fast, catchy UK stadium synth-brass hook (lands climax inside 1.5s)
     const melody = [
-      { t: 0, note: 0, dur: 0.34, peak: 0.24 },
-      { t: 1.5, note: 4, dur: 0.24, peak: 0.20 },
-      { t: 2.5, note: 7, dur: 0.34, peak: 0.24 },
-      { t: 4, note: 12, dur: 0.52, peak: 0.28 },
-      { t: 6.5, note: 11, dur: 0.22, peak: 0.22 },
-      { t: 7.5, note: 12, dur: 0.22, peak: 0.24 },
-      { t: 8.5, note: 14, dur: 0.34, peak: 0.26 },
-      { t: 10, note: 16, dur: 0.42, peak: 0.28 },
-      { t: 12, note: 19, dur: 1.25, peak: 0.32 }, // High G climax!
+      { t: 0, note: 12, dur: 0.22, peak: 0.24 },
+      { t: 1.5, note: 16, dur: 0.18, peak: 0.22 },
+      { t: 2.5, note: 19, dur: 0.24, peak: 0.26 },
+      { t: 4, note: 16, dur: 0.18, peak: 0.22 },
+      { t: 5, note: 19, dur: 0.20, peak: 0.25 },
+      { t: 6.5, note: 21, dur: 0.20, peak: 0.26 },
+      { t: 7.5, note: 23, dur: 0.18, peak: 0.27 },
+      { t: 9, note: 24, dur: 1.15, peak: 0.32 }, // High octave stadium climax!
     ];
     for (const m of melody) {
       triggerSupersaw(now + m.t * beat, rootMidi + m.note, m.dur, m.peak);
     }
 
-    // 4. Deep heroic bassline progression (I -> V -> vi -> IV -> I)
+    // 4. Driving stadium bassline (I -> V -> VI -> I)
     const bassline = [
-      { t: 0, note: -24, dur: 0.8 },
-      { t: 4, note: -17, dur: 0.8 },
-      { t: 8, note: -15, dur: 0.8 },
-      { t: 12, note: -12, dur: 1.35 },
+      { t: 0, note: -24, dur: 0.55 },
+      { t: 4, note: -17, dur: 0.55 },
+      { t: 8, note: -15, dur: 0.35 },
+      { t: 9, note: -12, dur: 1.2 },
     ];
     for (const b of bassline) {
       const start = now + b.t * beat;
@@ -180,10 +182,10 @@ export function playHundredCelebration(audioCtxRef, teamId = '') {
       osc.type = 'sawtooth';
       const flt = ctx.createBiquadFilter();
       flt.type = 'lowpass';
-      flt.frequency.setValueAtTime(280, start);
+      flt.frequency.setValueAtTime(340, start);
       osc.frequency.setValueAtTime(midiToFreq(rootMidi + b.note), start);
       g.gain.setValueAtTime(0.001, start);
-      g.gain.linearRampToValueAtTime(0.35, start + 0.03);
+      g.gain.linearRampToValueAtTime(0.38, start + 0.02);
       g.gain.exponentialRampToValueAtTime(0.001, start + b.dur);
       osc.connect(flt);
       flt.connect(g);
@@ -193,32 +195,35 @@ export function playHundredCelebration(audioCtxRef, teamId = '') {
       activeNodes.push(osc);
     }
 
-    // 5. Driving stadium kick + snare/clap groove
-    for (let step = 0; step < 14; step += 2) {
-      const kStart = now + step * beat;
-      const kick = ctx.createOscillator();
-      const kGain = ctx.createGain();
-      kick.type = 'sine';
-      kick.frequency.setValueAtTime(145, kStart);
-      kick.frequency.exponentialRampToValueAtTime(42, kStart + 0.13);
-      kGain.gain.setValueAtTime(0.55, kStart);
-      kGain.gain.exponentialRampToValueAtTime(0.001, kStart + 0.16);
-      kick.connect(kGain);
-      kGain.connect(compressor);
-      kick.start(kStart);
-      kick.stop(kStart + 0.18);
-      activeNodes.push(kick);
-
+    // 5. Punchy stadium kick + snare/clap + crisp hi-hat shimmer
+    for (let step = 0; step < 12; step++) {
+      const sTime = now + step * beat;
+      if (step % 2 === 0) {
+        const kick = ctx.createOscillator();
+        const kGain = ctx.createGain();
+        kick.type = 'sine';
+        kick.frequency.setValueAtTime(155, sTime);
+        kick.frequency.exponentialRampToValueAtTime(42, sTime + 0.11);
+        kGain.gain.setValueAtTime(0.6, sTime);
+        kGain.gain.exponentialRampToValueAtTime(0.001, sTime + 0.14);
+        kick.connect(kGain);
+        kGain.connect(compressor);
+        kick.start(sTime);
+        kick.stop(sTime + 0.16);
+        activeNodes.push(kick);
+      }
       if (step % 4 === 2) {
-        triggerNoise(kStart, 0.16, 'bandpass', 1800, 0.24);
+        triggerNoise(sTime, 0.14, 'bandpass', 1900, 0.28);
+      } else {
+        triggerNoise(sTime, 0.045, 'highpass', 6500, 0.10);
       }
     }
 
-    // 6. Climax power chord + crash at t = 12 * beat
-    const climaxTime = now + 12 * beat;
-    triggerNoise(climaxTime, 1.25, 'highpass', 2400, 0.24);
+    // 6. Climax power chord + crash at t = 9 * beat (~1.44s)
+    const climaxTime = now + 9 * beat;
+    triggerNoise(climaxTime, 1.15, 'highpass', 2600, 0.28);
     for (const interval of [0, 7, 12, 16]) {
-      triggerSupersaw(climaxTime, rootMidi + interval, 1.3, 0.14);
+      triggerSupersaw(climaxTime, rootMidi + interval, 1.2, 0.15);
     }
 
     return () => {

@@ -28,6 +28,14 @@ export const r2 = (value) => {
 };
 
 /**
+ * Round a numeric value to four decimal places (e.g. £0.0325M = £32.5k in The Hundred).
+ */
+export const r4 = (value) => {
+  const num = toFiniteNumber(value, 0);
+  return Math.round((num + Number.EPSILON) * 10000) / 10000;
+};
+
+/**
  * Canonical overseas rule for Crick Auction:
  * - For The Hundred (`hundred` mode / `set === 'Hundred'`), only "ENG" is domestic.
  * - For all IPL modes, only "IND" is domestic.
@@ -92,9 +100,17 @@ export const formatCrores = (value, digits = 2) => {
  * (£M for The Hundred, ₹ Cr for IPL modes).
  */
 export const formatPurse = (value, auctionType = null, digits = 2) => {
-  const formatted = formatCrores(value, digits);
-  if (formatted === '—') return '—';
-  return auctionType === 'hundred' ? `£${formatted}M` : `₹${formatted} Cr`;
+  const numeric = toFiniteNumber(value, null);
+  if (numeric === null) return '—';
+  if (auctionType === 'hundred') {
+    if (numeric === 0 || Math.abs(numeric) >= 1) {
+      return `£${numeric.toFixed(digits)}M`;
+    }
+    const k = r4(numeric * 1000);
+    const kText = Math.abs(k - Math.round(k)) < 0.01 ? String(Math.round(k)) : String(Number(k.toFixed(1)));
+    return `£${kText}k`;
+  }
+  return `₹${numeric.toFixed(digits)} Cr`;
 };
 
 /**

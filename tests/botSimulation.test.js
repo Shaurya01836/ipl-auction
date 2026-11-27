@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { isSoloBotRoom, simulateBotLot, simulateRemainingAuction } from '../src/lib/botSimulation.js';
 import { computeBotValuation, computeHundredStatsMultiplier, evaluateBotBid } from '../src/lib/botEngine.js';
 import { IPL_PLAYERS } from '../src/data/players.js';
-import { HUNDRED_BOT_NAMES, getTeamBotName, pickRandomBotName } from '../src/data/teams.js';
+import { HUNDRED_BOT_NAMES, HUNDRED_TEAMS, getTeamBotName, pickRandomBotName } from '../src/data/teams.js';
+import { generatePlayerOrder } from '../src/lib/auctionRules.js';
 
 test('isSoloBotRoom: accurately detects 1 human + bots', () => {
   const soloRoom = [
@@ -284,7 +285,7 @@ test('The Hundred: bots bid aggressively based on player stats while respecting 
     name: 'Star Opener',
     role: 'Batsman',
     country: 'ENG',
-    basePrice: 0.15,
+    basePrice: 0.08,
     rating: 88,
     set: 'Hundred',
     stats: { matches: 140, runs: 4500, avg: 38.5, sr: 154.2 },
@@ -294,7 +295,7 @@ test('The Hundred: bots bid aggressively based on player stats while respecting 
     name: 'Quiet Batter',
     role: 'Batsman',
     country: 'ENG',
-    basePrice: 0.15,
+    basePrice: 0.08,
     rating: 88,
     set: 'Hundred',
     stats: { matches: 20, runs: 320, avg: 18.0, sr: 118.5 },
@@ -349,4 +350,40 @@ test('The Hundred: bots bid aggressively based on player stats while respecting 
   });
   assert.equal(sim.isSold, true);
   assert.equal(sim.winnerName, 'Zaid');
+});
+
+test('The Hundred: 8-bot simulation completes 16-player squads within £2.05M without IPL-style price spikes', () => {
+  const order = generatePlayerOrder('hundred');
+  const teams = HUNDRED_TEAMS.map((t) => ({
+    userId: `bot_${t.id}`,
+    teamId: t.id,
+    botName: getTeamBotName(t.id),
+    squad: [],
+    budgetRemaining: 2.05,
+    spent: 0,
+  }));
+
+  let seed = 1;
+  const rng = () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+
+  const { simulatedTeams } = simulateRemainingAuction({
+    playerOrder: order,
+    currentPlayerIndex: -1,
+    teams,
+    settings: { budget: 2.05 },
+    squadLimit: 16,
+    overseasLimit: 4,
+    randomFn: rng,
+  });
+
+  for (const t of simulatedTeams) {
+    assert.equal(t.squad.length, 16, `${t.teamId} should complete 16-player squad, got ${t.squad.length}`);
+    assert.ok(t.spent <= 2.05, `${t.teamId} exceeded £2.05M purse (${t.spent})`);
+    for (const p of t.squad) {
+      assert.ok(p.bid <= 0.42, `${p.name} bid £${p.bid}M exceeded realistic Hundred cap`);
+    }
+  }
 });

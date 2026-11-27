@@ -1,7 +1,7 @@
 import { IPL_PLAYERS } from '../data/players.js';
 import { HUNDRED_PLAYERS } from '../data/hundredPlayers.js';
 import { getMiniAuctionPoolIndices } from '../data/retentions.js';
-import { countOverseas, isOverseasPlayer, r2, toFiniteNumber } from './auctionDisplay.js';
+import { countOverseas, isOverseasPlayer, r2, r4, toFiniteNumber } from './auctionDisplay.js';
 
 export const ALL_PLAYERS = [...IPL_PLAYERS, ...HUNDRED_PLAYERS];
 
@@ -48,7 +48,7 @@ export function generatePlayerOrder(auctionType = 'mega', options = {}) {
     const marquee = [];
     const rest = [];
     HUNDRED_PLAYERS.forEach((p, i) => {
-      if (p.basePrice >= 0.05) marquee.push(i);
+      if (p.basePrice >= 0.075) marquee.push(i);
       else rest.push(i);
     });
     return [...shuffleArray(marquee), ...shuffleArray(rest)];
@@ -156,8 +156,11 @@ export function getNextBidAmount(player, currentBid) {
   const current = toFiniteNumber(currentBid, 0);
   if (current === 0) return toFiniteNumber(player?.basePrice, 0);
   if (player?.set === 'Hundred') {
-    const step = current < 0.10 ? 0.01 : current < 0.30 ? 0.02 : 0.05;
-    return r2(current + step);
+    const step = current < 0.0325 ? 0.0015
+      : current < 0.05 ? 0.0025
+      : current < 0.10 ? 0.005
+      : 0.01;
+    return r4(current + step);
   }
   return r2(current + (current < 5 ? 0.2 : 0.25));
 }

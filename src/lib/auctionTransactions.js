@@ -1,4 +1,4 @@
-import { r2, toFiniteNumber } from './auctionDisplay.js';
+import { r2, r4, toFiniteNumber } from './auctionDisplay.js';
 import { getNextBidAmount, mapRoomPlayers, normalizeSquad } from './auctionRules.js';
 
 /**
@@ -38,7 +38,9 @@ export function transactBid(currentData, {
     : null;
   if (requestedBid != null && requestedBid < minNextBid) return;
 
-  const nextBid = requestedBid != null ? r2(requestedBid) : minNextBid;
+  const nextBid = requestedBid != null
+    ? (resolvedSet === 'Hundred' ? r4(requestedBid) : r2(requestedBid))
+    : minNextBid;
 
   if (nextBid > toFiniteNumber(budget, 0)) return;
 

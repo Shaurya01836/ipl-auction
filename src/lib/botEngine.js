@@ -31,7 +31,7 @@ const SET_TIER = {
   'UAL2':          { base: 0.6, max: 1.0 },  // Uncapped All-Rounders T2
   'UWK2':          { base: 0.5, max: 0.9 },  // Uncapped WK T2
   'UFA2':          { base: 0.5, max: 0.9 },  // Uncapped Fast T2
-  'Hundred':       { base: 1.9, max: 4.2 },  // The Hundred (UK) — aggressive bidding
+  'Hundred':       { base: 1.45, max: 2.85 },  // The Hundred (UK) — stats-driven, £2.05M-paced
 };
 
 /**
@@ -117,28 +117,28 @@ export function computeHundredStatsMultiplier(player) {
   const econ = Number(s.econ) || 0;
   const matches = Number(s.matches) || 0;
 
-  if (sr >= 150) bonus += 0.18;
-  else if (sr >= 140) bonus += 0.10;
+  if (sr >= 150) bonus += 0.10;
+  else if (sr >= 140) bonus += 0.05;
 
   if (runs > 0) {
-    if (avg >= 35) bonus += 0.14;
-    else if (avg >= 28) bonus += 0.07;
-    if (runs >= 4000) bonus += 0.12;
-    else if (runs >= 2000) bonus += 0.06;
+    if (avg >= 35) bonus += 0.08;
+    else if (avg >= 28) bonus += 0.04;
+    if (runs >= 4000) bonus += 0.06;
+    else if (runs >= 2000) bonus += 0.03;
   }
 
-  if (wickets >= 150) bonus += 0.16;
-  else if (wickets >= 80) bonus += 0.09;
+  if (wickets >= 150) bonus += 0.09;
+  else if (wickets >= 80) bonus += 0.05;
 
   if (econ > 0) {
-    if (econ <= 7.5) bonus += 0.14;
-    else if (econ <= 8.0) bonus += 0.07;
+    if (econ <= 7.5) bonus += 0.08;
+    else if (econ <= 8.0) bonus += 0.04;
   }
 
-  if (runs >= 1500 && wickets >= 50) bonus += 0.10; // dual-threat all-rounder
-  if (matches >= 120) bonus += 0.06;
+  if (runs >= 1500 && wickets >= 50) bonus += 0.05; // dual-threat all-rounder
+  if (matches >= 120) bonus += 0.03;
 
-  return Math.min(1.65, 1.0 + bonus);
+  return Math.min(1.35, 1.0 + bonus);
 }
 
 /**
@@ -259,20 +259,30 @@ export function computeBotValuation({
   let maxVal = effectiveBase * willingnessFactor * ratingMult * statsMult * loyaltyMult * roleNeedMult * personalityMult * archetypeMult * urgencyBoost * squadUrgency;
 
   // Spend cap safeguards
-  const maxCapPercent = (archetype === 'star_hunter' || prefs.personality === 'aggressive') ? 0.45
+  const isHundredMode = set === 'Hundred' || (initialBudget || 120) <= 10;
+  const maxCapPercent = isHundredMode
+    ? 0.20 // Cap single Hundred buy around £0.40M (matching real £390k top buy)
+    : (archetype === 'star_hunter' || prefs.personality === 'aggressive') ? 0.45
     : (archetype === 'moneyball' || prefs.personality === 'conservative') ? 0.26
     : 0.35;
-  maxVal = Math.min(maxVal, budgetRemaining * maxCapPercent);
+  maxVal = Math.min(maxVal, (initialBudget || 120) * maxCapPercent, budgetRemaining * (isHundredMode ? 0.35 : maxCapPercent));
 
-  // Reserve budget safety: minimum 0.30 Cr (or £0.01M in Hundred) per remaining slot
-  const slotReserve = (initialBudget || 120) <= 10 ? 0.01 : 0.30;
+  // Purse pacing for The Hundred: keep per-slot average healthy so bots finish all 16 slots
+  if (isHundredMode && slotsLeft > 1) {
+    const avgPerSlot = budgetRemaining / slotsLeft;
+    const pacingMult = rating >= 87 ? 2.8 : rating >= 81 ? 2.1 : 1.45;
+    maxVal = Math.min(maxVal, Math.max(basePrice, avgPerSlot * pacingMult));
+  }
+
+  // Reserve budget safety: minimum 0.30 Cr (or £31k = £0.031M in Hundred) per remaining slot
+  const slotReserve = isHundredMode ? 0.031 : 0.30;
   if (slotsLeft > 1) {
     const maxAffordable = Math.max(basePrice, budgetRemaining - (slotsLeft - 1) * slotReserve);
     maxVal = Math.min(maxVal, maxAffordable);
   }
 
   maxVal = Math.max(basePrice, maxVal);
-  return parseFloat(maxVal.toFixed(2));
+  return parseFloat(maxVal.toFixed(isHundredMode ? 4 : 2));
 }
 
 /**
@@ -338,7 +348,8 @@ export function evaluateBotBid({
 
   // Reserve budget safety: ensure enough average budget for remaining slots
   const remainingAfterBid = budgetRemaining - nextBid;
-  const slotReserve = (initialBudget || 120) <= 10 ? 0.01 : 0.30;
+  const isHundredReserve = player.set === 'Hundred' || (initialBudget || 120) <= 10;
+  const slotReserve = isHundredReserve ? 0.031 : 0.30;
   if (slotsRemaining > 1 && (remainingAfterBid / (slotsRemaining - 1)) < slotReserve) {
     return null; // protect purse for remaining squad slots
   }
@@ -361,7 +372,9 @@ export function evaluateBotBid({
   const priceRatio = nextBid / maxValuation; // 0 = cheap, 1 = at max
   const isHundred = player.set === 'Hundred';
   let baseBidChance = isHundred
-    ? (priceRatio < 0.55 ? 0.97 : priceRatio < 0.75 ? 0.88 : priceRatio < 0.90 ? 0.74 : 0.52)
+    ? (currentBid === 0 && slotsRemaining <= 6
+      ? 1.0
+      : priceRatio < 0.55 ? 0.97 : priceRatio < 0.75 ? 0.88 : priceRatio < 0.90 ? 0.74 : 0.52)
     : (priceRatio < 0.50 ? 0.95
       : priceRatio < 0.70 ? 0.82
       : priceRatio < 0.85 ? 0.65

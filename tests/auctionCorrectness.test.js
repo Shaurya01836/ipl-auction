@@ -870,11 +870,11 @@ test('quick jump bids: transactBid accepts valid targetBid, rejects sub-minimum 
   assert.equal(overBudgetJump, undefined, 'Jump bid exceeding budget must abort');
 });
 
-test('The Hundred: transactBid uses Hundred £0.05M increments above £0.20M', () => {
+test('The Hundred: transactBid uses official 2026 Hundred increments', () => {
   const lot = {
     status: 'bidding',
     playerId: 'h_001',
-    currentBid: 0.45,
+    currentBid: 0.10,
     highBidderId: 'u1',
     timerEndsAt: 10000,
   };
@@ -886,17 +886,18 @@ test('The Hundred: transactBid uses Hundred £0.05M increments above £0.20M', (
     now: 5000,
     timerMs: 10000,
     budget: 2.05,
-    basePrice: 0.15,
+    basePrice: 0.031,
     playerSet: 'Hundred',
     auctionType: 'hundred',
-    targetBid: 0.50,
+    targetBid: 0.11,
   });
-  assert.equal(next.currentBid, 0.50);
+  assert.equal(next.currentBid, 0.11);
   assert.equal(next.highBidderId, 'u2');
 
-  // Verify tiered £2.05M-scaled increments: +0.01 (<0.10), +0.02 (0.10..0.29), +0.05 (>=0.30)
-  const hp = { basePrice: 0.01, set: 'Hundred' };
-  assert.equal(getNextBidAmount(hp, 0.04), 0.05);
-  assert.equal(getNextBidAmount(hp, 0.14), 0.16);
-  assert.equal(getNextBidAmount(hp, 0.35), 0.40);
+  // Official 2026 ECB Hundred increments: +£1.5k (<32.5k), +£2.5k (<50k), +£5k (<100k), +£10k (>=100k)
+  const hp = { basePrice: 0.031, set: 'Hundred' };
+  assert.equal(getNextBidAmount(hp, 0.031), 0.0325);
+  assert.equal(getNextBidAmount(hp, 0.0325), 0.035);
+  assert.equal(getNextBidAmount(hp, 0.05), 0.055);
+  assert.equal(getNextBidAmount(hp, 0.10), 0.11);
 });

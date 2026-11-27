@@ -990,12 +990,22 @@ const iplImageByName = new Map(
   IPL_PLAYERS.filter((p) => p.image).map((p) => [p.name.toLowerCase(), p.image])
 );
 
-const scaleHundredBasePrice = (rawBase) =>
-  rawBase <= 0.03 ? 0.01 : Math.round(rawBase * 0.5 * 100) / 100;
+const HUNDRED_BASE_PRICE_MAP = {
+  0.03: 0.031, // £31,000 official minimum reserve
+  0.04: 0.035, // £35,000
+  0.05: 0.04,  // £40,000
+  0.06: 0.045, // £45,000
+  0.07: 0.05,  // £50,000
+  0.08: 0.06,  // £60,000
+  0.09: 0.06,  // £60,000
+  0.10: 0.075, // £75,000
+  0.12: 0.09,  // £90,000
+  0.15: 0.10,  // £100,000 marquee reserve
+};
 
 export const HUNDRED_PLAYERS = RAW_HUNDRED_PLAYERS.map((p) => ({
   ...p,
-  basePrice: scaleHundredBasePrice(p.basePrice),
+  basePrice: HUNDRED_BASE_PRICE_MAP[p.basePrice] ?? 0.031,
   image: p.image || iplImageByName.get(p.name.toLowerCase()) || getPlayerAvatar(p.name),
 }));
 
