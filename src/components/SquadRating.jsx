@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Users, Loader2, RefreshCw, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { IPL_PLAYERS } from '../data/players';
-import { TEAMS } from '../data/teams';
+import { ALL_PLAYERS } from '../lib/auctionRules';
+import { findTeamById } from '../data/teams';
 import { getAuctionAiRating, generateAuctionAiRating } from '../lib/directoryApi';
 import { computeSquadDepartmentBalance } from '../lib/auctionDisplay';
 
@@ -98,6 +98,7 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
   const minPlayers = useMemo(() => {
     const type = currentAuction?.auctionType || 'mega';
     if (type === 'mega' || type === 'mini') return 18;
+    if (type === 'hundred') return 11;
     if (type === 'sprint11' || type === 'legends') return 11;
     if (type === 'sprint5') return 5;
     return currentAuction?.settings?.minPlayers || 18;
@@ -139,7 +140,9 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
       // 2. Host-initiated evaluation: build token-friendly payload with all squad players + format context
       const auctionType = currentAuction?.auctionType || 'mega';
       const mode =
-        auctionType === 'legends'
+        auctionType === 'hundred'
+          ? 'The Hundred UK (11-16 players per team, £2.05M cap, max 4 overseas. Requires explosive top order, 1 keeper, and balanced 100-ball bowling depth.)'
+          : auctionType === 'legends'
           ? 'Legends XI (11 players per team. All-time T20/IPL legends dream XI: Requires iconic top order, legendary keeper, and ATG bowling attack.)'
           : auctionType === 'sprint11'
           ? '11-Classic (11 players per team, no bench. Requires balanced playing XI: solid top order, reliable keeper, and at least 5 bowling options.)'
@@ -153,12 +156,12 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
         const teamId = team.teamId || team.team_id;
         const squad = team.squad || [];
         const squadArr = Array.isArray(squad) ? squad : squad ? Object.values(squad) : [];
-        const teamInfo = TEAMS.find((t) => t.id === teamId);
+        const teamInfo = findTeamById(teamId);
 
         const playersWithInfo = squadArr
           .map((s) => {
             const pid = typeof s === 'string' ? s : s?.id;
-            const info = IPL_PLAYERS.find((p) => p.id === pid);
+            const info = ALL_PLAYERS.find((p) => p.id === pid);
             return {
               name: info?.name || pid,
               role: info?.role || 'Player',
@@ -277,7 +280,7 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
       const playersWithInfo = [];
 
       normalizedPlayers.forEach(pId => {
-        const playerInfo = IPL_PLAYERS.find(p => p.id === pId);
+        const playerInfo = ALL_PLAYERS.find(p => p.id === pId);
         if (playerInfo && playerInfo.rating) {
           totalRating += playerInfo.rating;
         }
@@ -286,7 +289,7 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
         }
       });
 
-      const teamInfo = TEAMS.find(t => t.id === teamId);
+      const teamInfo = findTeamById(teamId);
       const isDisqualified = normalizedPlayers.length < minPlayers;
       const departmentBalance = computeSquadDepartmentBalance(playersWithInfo, isDisqualified);
       const aiTeam = aiAnalysis?.teams?.find(
@@ -329,7 +332,7 @@ const SquadRating = ({ roomTeams = [], currentAuction, auctionId: propAuctionId,
 
   const winnerTeam = useMemo(() => {
     if (!aiAnalysis?.winner?.teamId) return null;
-    return TEAMS.find(t => t.id === aiAnalysis.winner.teamId) || { name: aiAnalysis.winner.teamId };
+    return findTeamById(aiAnalysis.winner.teamId) || { name: aiAnalysis.winner.teamId };
   }, [aiAnalysis]);
 
   const topNormalTeam = useMemo(() => {

@@ -42,7 +42,6 @@ import { AuctionRoomAd, AuctionTeamsInFeedAd, AuctionSidebarActivityAd, DEFAULT_
 import useRoomServer from '../hooks/useRoomServer';
 import { SERVER_LOCAL, withServerParam } from '../lib/auctionServers';
 import { isLocalRoom, loadLocalSoloRoom } from '../lib/localAuctionEngine';
-import { playHundredCelebration } from '../lib/hundredAudio';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import { ALL_PLAYERS, getNextBidAmount, generatePlayerOrder, getPlayerByOrderIndex, getPlayerPoolForMode } from '../lib/auctionRules';
 import {
@@ -106,7 +105,6 @@ const AuctionRoom = () => {
    const [sidebarTab, setSidebarTab] = useState('activity'); // activity or chat
    const celebrationAudioRef = useRef(null);
    const fallbackAudioRef = useRef(null);
-   const stopHundredMusicRef = useRef(null);
    const redirectedToLobbyRef = useRef(false);
    const roomShellCleanupRef = useRef(null);
 
@@ -861,12 +859,13 @@ const AuctionRoom = () => {
                });
             }, 200);
 
-            if (teamId && TEAM_SONGS[teamId.toLowerCase()]) {
+            const celebrationSong = (teamId && TEAM_SONGS[teamId.toLowerCase()]) || (roomMode === 'hundred' ? '/sold-celebration.mp3' : null);
+            if (celebrationSong) {
                if (!celebrationAudioRef.current) celebrationAudioRef.current = new Audio();
                const audio = celebrationAudioRef.current;
                try {
                   audio.pause();
-                  audio.src = TEAM_SONGS[teamId.toLowerCase()];
+                  audio.src = celebrationSong;
                   audio.volume = 0.5;
                   audio.play().catch(() => {
                      // Autoplay can be blocked until a user gesture; non-fatal.
@@ -874,9 +873,6 @@ const AuctionRoom = () => {
                } catch (e) {
                   console.warn('[auction audio] Celebration playback failed', e);
                }
-            } else if (roomMode === 'hundred') {
-               stopHundredMusicRef.current?.();
-               stopHundredMusicRef.current = playHundredCelebration(audioCtxRef, teamId);
             }
          }
       } else if (status === 'unsold') {
@@ -915,8 +911,6 @@ const AuctionRoom = () => {
          }
       } else {
          lastHandledSoundStatusRef.current = null;
-         stopHundredMusicRef.current?.();
-         stopHundredMusicRef.current = null;
          const audio = celebrationAudioRef.current;
          if (audio) {
             audio.pause();
