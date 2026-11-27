@@ -29,7 +29,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import SquadRating from '../components/SquadRating';
 import PageLoader from '../components/PageLoader';
-import { AuctionSummaryAd, AuctionSummaryInFeedAd } from '../components/AdSlot';
+import { AuctionSummaryInFeedAd } from '../components/AdSlot';
 import useRoomServer from '../hooks/useRoomServer';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import { isLocalRoom, loadLocalSoloRoom } from '../lib/localAuctionEngine';
@@ -886,9 +886,6 @@ const AuctionSummary = () => {
         </motion.section>
           )}
         </AnimatePresence>
-
-        {/* Post-Auction Summary Display Ad Section */}
-        <AuctionSummaryAd className="mt-10 sm:mt-14 mb-6" />
 
         {/* Bottom CTA to return home (semantic anchor tag triggers Google Auto-Ad Vignette interstitial) */}
         <div className="mt-8 mb-12 flex flex-col items-center justify-center gap-3">
